@@ -42,7 +42,7 @@ dependencies:
     path: ../../packages/kinetic_qr_scanner
 
   # Database and ORM — encrypted via sqlite3mc hooks at workspace root
-  drift: ^2.26.1
+  drift: ^2.34.4
   sqlite3: ^3.0.0
   path: ^1.9.0
   path_provider: ^2.1.5

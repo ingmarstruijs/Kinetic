@@ -10,8 +10,8 @@ f-droid.org requires a merge request against
 2. Create an annotated release tag matching the metadata `commit:` field:
    ```bash
    git checkout main && git pull
-   git tag -a v0.3.3 -m "Kinetic 0.3.3 for F-Droid"
-   git push origin v0.3.3
+   git tag -a v0.3.4 -m "Kinetic 0.3.4 for F-Droid"
+   git push origin v0.3.4
    ```
 3. Confirm Flutter **3.44.1** builds both APKs locally:
    ```bash

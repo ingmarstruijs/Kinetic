@@ -10,7 +10,20 @@ enum SuggestionReason {
   loadBalance,
   stale,
   calendar,
+  categorize,
 }
+
+List<String> parseRelatedTaskIds(String? raw) {
+  if (raw == null || raw.isEmpty) return const [];
+  return raw
+      .split(',')
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+}
+
+String joinRelatedTaskIds(Iterable<String> ids) =>
+    ids.where((id) => id.isNotEmpty).join(',');
 
 extension SuggestionReasonLabel on SuggestionReason {
   String label(AppLocalizations l10n) => switch (this) {
@@ -20,13 +33,15 @@ extension SuggestionReasonLabel on SuggestionReason {
     SuggestionReason.loadBalance => l10n.suggestReasonLoadBalance,
     SuggestionReason.stale => l10n.suggestReasonStale,
     SuggestionReason.calendar => l10n.suggestReasonCalendar,
+    SuggestionReason.categorize => l10n.suggestReasonCategorize,
   };
 
   bool get isSelfTargeted =>
       this == SuggestionReason.habit ||
       this == SuggestionReason.seasonal ||
       this == SuggestionReason.stale ||
-      this == SuggestionReason.calendar;
+      this == SuggestionReason.calendar ||
+      this == SuggestionReason.categorize;
 
   bool get isPartnerTargeted =>
       this == SuggestionReason.partnerComplement ||
@@ -47,6 +62,8 @@ class AiSuggestion {
   final SuggestionStatus status;
   final DateTime? snoozeUntil;
   final String? explanation;
+  final String dedupeKey;
+  final List<String> relatedTaskIds;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -61,6 +78,8 @@ class AiSuggestion {
     required this.status,
     this.snoozeUntil,
     this.explanation,
+    this.dedupeKey = '',
+    this.relatedTaskIds = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -75,6 +94,8 @@ class AiSuggestion {
     DateTime? suggestedDueDate,
     required SuggestionReason reason,
     String? explanation,
+    String dedupeKey = '',
+    List<String> relatedTaskIds = const [],
   }) {
     final now = DateTime.now().toUtc();
     return AiSuggestion(
@@ -87,6 +108,8 @@ class AiSuggestion {
       reason: reason,
       status: SuggestionStatus.pending,
       explanation: explanation,
+      dedupeKey: dedupeKey,
+      relatedTaskIds: relatedTaskIds,
       createdAt: now,
       updatedAt: now,
     );
@@ -108,6 +131,8 @@ class AiSuggestion {
       status: status ?? this.status,
       snoozeUntil: snoozeUntil ?? this.snoozeUntil,
       explanation: explanation,
+      dedupeKey: dedupeKey,
+      relatedTaskIds: relatedTaskIds,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

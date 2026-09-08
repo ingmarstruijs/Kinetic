@@ -25,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,6 +82,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 13) {
         await m.addColumn(appSettings, appSettings.localeCode);
       }
+      if (from < 14) {
+        await m.addColumn(aiSuggestions, aiSuggestions.dedupeKey);
+        await m.addColumn(aiSuggestions, aiSuggestions.relatedTaskIds);
+      }
     },
   );
 
@@ -93,4 +97,3 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 }
-

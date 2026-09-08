@@ -47,7 +47,7 @@ class SuggestionBanner extends StatelessWidget {
         final suggestion = suggestions.first;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
-          child: _BannerCard(
+          child: SuggestionCard(
             key: ValueKey(suggestion.id),
             suggestion: suggestion,
             suggestionRepo: suggestionRepo,
@@ -63,7 +63,7 @@ class SuggestionBanner extends StatelessWidget {
   }
 }
 
-class _BannerCard extends StatelessWidget {
+class SuggestionCard extends StatelessWidget {
   final AiSuggestion suggestion;
   final AiSuggestionRepository suggestionRepo;
   final TodoRepository todoRepo;
@@ -71,8 +71,10 @@ class _BannerCard extends StatelessWidget {
   final String? myParentId;
   final bool partnerPaired;
   final String? activeListId;
+  final bool partnerOnly;
+  final EdgeInsetsGeometry margin;
 
-  const _BannerCard({
+  const SuggestionCard({
     super.key,
     required this.suggestion,
     required this.suggestionRepo,
@@ -81,13 +83,22 @@ class _BannerCard extends StatelessWidget {
     this.myParentId,
     required this.partnerPaired,
     this.activeListId,
+    this.partnerOnly = false,
+    this.margin = const EdgeInsets.fromLTRB(12, 8, 12, 0),
   });
-
-  String _reasonLabel(SuggestionReason r, AppLocalizations l10n) =>
-      r.label(l10n);
 
   Future<void> _accept(BuildContext context) async {
     await acceptSelfSuggestion(
+      suggestion: suggestion,
+      todoRepo: todoRepo,
+      suggestionRepo: suggestionRepo,
+      listId: activeListId,
+    );
+  }
+
+  Future<void> _openWithReminder(BuildContext context) async {
+    await openSuggestionAsTaskWithReminder(
+      context: context,
       suggestion: suggestion,
       todoRepo: todoRepo,
       suggestionRepo: suggestionRepo,
@@ -114,11 +125,27 @@ class _BannerCard extends StatelessWidget {
     await suggestionRepo.snooze(suggestion.id);
   }
 
+  bool get _isNewTaskSuggestion =>
+      suggestion.reason == SuggestionReason.habit ||
+      suggestion.reason == SuggestionReason.seasonal ||
+      suggestion.reason == SuggestionReason.calendar;
+
+  String _primaryLabel(AppLocalizations l10n) {
+    if (suggestion.reason == SuggestionReason.categorize) {
+      return l10n.suggestAddCategory;
+    }
+    if (suggestion.reason == SuggestionReason.stale) {
+      return l10n.tasksAddReminder;
+    }
+    return l10n.suggestAdd;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final explanation = suggestionDisplayExplanation(suggestion, l10n);
 
     return GestureDetector(
       onLongPress: () async {
@@ -145,7 +172,7 @@ class _BannerCard extends StatelessWidget {
         if (ok == true) await _snooze();
       },
       child: Card(
-        margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        margin: margin,
         color: colorScheme.secondaryContainer,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -166,7 +193,7 @@ class _BannerCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            suggestion.title,
+                            suggestionDisplayTitle(suggestion, l10n),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: colorScheme.onSecondaryContainer,
@@ -177,7 +204,7 @@ class _BannerCard extends StatelessWidget {
                         ),
                         Chip(
                           label: Text(
-                            _reasonLabel(suggestion.reason, l10n),
+                            suggestion.reason.label(l10n),
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: colorScheme.onSecondaryContainer,
                             ),
@@ -189,11 +216,10 @@ class _BannerCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (suggestion.explanation != null &&
-                        suggestion.explanation!.isNotEmpty) ...[
+                    if (explanation.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        suggestion.explanation!,
+                        explanation,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSecondaryContainer.withValues(
                             alpha: 0.8,
@@ -206,15 +232,32 @@ class _BannerCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
+                      runSpacing: 4,
                       children: [
-                        _ActionButton(
-                          label: l10n.suggestAdd,
-                          icon: Icons.add,
-                          onPressed: () => _accept(context),
-                          colorScheme: colorScheme,
-                          filled: true,
-                        ),
-                        if (partnerPaired && proposalRepo != null)
+                        if (!partnerOnly)
+                          _ActionButton(
+                            label: _primaryLabel(l10n),
+                            icon: suggestion.reason == SuggestionReason.stale
+                                ? Icons.alarm_add_outlined
+                                : suggestion.reason ==
+                                      SuggestionReason.categorize
+                                ? Icons.label_outline
+                                : Icons.add,
+                            onPressed: () => _accept(context),
+                            colorScheme: colorScheme,
+                            filled: true,
+                          ),
+                        if (!partnerOnly && _isNewTaskSuggestion)
+                          _ActionButton(
+                            label: l10n.suggestAddWithReminder,
+                            icon: Icons.alarm_add_outlined,
+                            onPressed: () => _openWithReminder(context),
+                            colorScheme: colorScheme,
+                          ),
+                        if (partnerPaired &&
+                            proposalRepo != null &&
+                            suggestion.reason != SuggestionReason.stale &&
+                            suggestion.reason != SuggestionReason.categorize)
                           _ActionButton(
                             label: '→ ${l10n.commonPartner}',
                             icon: Icons.person_outline,

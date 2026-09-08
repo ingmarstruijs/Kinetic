@@ -67,7 +67,15 @@ class ReminderProposalEngine {
     'afspraak': (hour: 9, minute: 0, label: 'Tomorrow 09:00'),
   };
 
-  static const _weekdayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const _weekdayShort = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
 
   List<ReminderChipProposal> propose({
     required String title,
@@ -122,6 +130,23 @@ class ReminderProposalEngine {
     }
 
     return picked;
+  }
+
+  /// Highest-scoring chip, or null when nothing could be proposed.
+  ReminderChipProposal? best({
+    required String title,
+    TaskCategory? category,
+    required List<PersonalTask> completedTasks,
+    DateTime? now,
+  }) {
+    final chips = propose(
+      title: title,
+      category: category,
+      completedTasks: completedTasks,
+      now: now,
+      maxChips: 1,
+    );
+    return chips.isEmpty ? null : chips.first;
   }
 
   List<ReminderChipProposal> _fallbackChips(DateTime clock, int maxChips) {
@@ -216,8 +241,7 @@ class ReminderProposalEngine {
         at: at,
         label: label,
         score: _scoreHabitInterval,
-        explanation:
-            'About every $median days, last $daysSince days ago',
+        explanation: 'About every $median days, last $daysSince days ago',
         source: _ReminderProposalSource.habitInterval,
       ),
     ];
@@ -369,12 +393,7 @@ class ReminderProposalEngine {
     return _tomorrowAt(clock, hour, minute);
   }
 
-  DateTime _nextWeekdayAt(
-    DateTime clock,
-    int weekday,
-    int hour,
-    int minute,
-  ) {
+  DateTime _nextWeekdayAt(DateTime clock, int weekday, int hour, int minute) {
     var candidate = DateTime(clock.year, clock.month, clock.day, hour, minute);
     while (candidate.weekday != weekday || !candidate.isAfter(clock)) {
       candidate = candidate.add(const Duration(days: 1));

@@ -282,19 +282,30 @@ class TodoRepository {
     onWrite?.call();
   }
 
-  /// Sets a due date + reminder on the first open task whose title matches
-  /// [title]. Returns false when no matching open task exists.
+  /// Sets a due date + reminder on an open task. Prefers [taskId] when set;
+  /// otherwise matches the first open task whose title equals [title].
   Future<bool> applyReminderToOpenTask({
     required String title,
     required DateTime dueDate,
+    String? taskId,
   }) async {
     final open = await watchOpenTasks().first;
-    final needle = title.trim().toLowerCase();
     PersonalTask? match;
-    for (final t in open) {
-      if (t.title.trim().toLowerCase() == needle) {
-        match = t;
-        break;
+    if (taskId != null && taskId.isNotEmpty) {
+      for (final t in open) {
+        if (t.id == taskId) {
+          match = t;
+          break;
+        }
+      }
+    }
+    if (match == null) {
+      final needle = title.trim().toLowerCase();
+      for (final t in open) {
+        if (t.title.trim().toLowerCase() == needle) {
+          match = t;
+          break;
+        }
       }
     }
     if (match == null) return false;
@@ -302,6 +313,21 @@ class TodoRepository {
       match.copyWith(dueDate: dueDate, isAllDay: false, remindAt: dueDate),
     );
     return true;
+  }
+
+  /// Assign [category] to open tasks in [taskIds] that still have none.
+  Future<void> applyCustomCategoryToTasks({
+    required List<String> taskIds,
+    required String category,
+  }) async {
+    if (taskIds.isEmpty || category.trim().isEmpty) return;
+    final open = await watchOpenTasks().first;
+    final byId = {for (final t in open) t.id: t};
+    for (final id in taskIds) {
+      final task = byId[id];
+      if (task == null || task.customCategory != null) continue;
+      await updateTaskCustomCategory(id, category);
+    }
   }
 
   Future<void> completeTask(String taskId) async {

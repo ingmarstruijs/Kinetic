@@ -32,6 +32,12 @@ class TaskDetailSheet extends StatefulWidget {
   final String? myParentId;
   final String? initialListId;
   final String? initialTitle;
+  final String? initialNotes;
+  final TaskPriority? initialPriority;
+  final DateTime? initialDueDate;
+  final bool? initialIsAllDay;
+  final bool prefillReminder;
+  final VoidCallback? onSaved;
   final bool hasFamilyKey;
   final bool partnerPaired;
   final WebDavConfigRepository? configRepo;
@@ -45,6 +51,12 @@ class TaskDetailSheet extends StatefulWidget {
     this.myParentId,
     this.initialListId,
     this.initialTitle,
+    this.initialNotes,
+    this.initialPriority,
+    this.initialDueDate,
+    this.initialIsAllDay,
+    this.prefillReminder = false,
+    this.onSaved,
     this.hasFamilyKey = false,
     this.partnerPaired = false,
     this.configRepo,
@@ -75,6 +87,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   List<FamilyMemberStatus> _kidStatuses = [];
   Timer? _chipDebounce;
   final _reminderEngine = ReminderProposalEngine();
+  bool _didPrefillReminder = false;
 
   @override
   void initState() {
@@ -83,11 +96,13 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     _titleCtrl = TextEditingController(
       text: t?.title ?? widget.initialTitle ?? '',
     );
-    _notesCtrl = TextEditingController(text: t?.notes ?? '');
+    _notesCtrl = TextEditingController(
+      text: t?.notes ?? widget.initialNotes ?? '',
+    );
     _xpCtrl = TextEditingController(text: '${t?.xpReward ?? 10}');
-    _priority = t?.priority ?? TaskPriority.none;
-    _dueDate = t?.dueDate;
-    _isAllDay = t?.isAllDay ?? true;
+    _priority = t?.priority ?? widget.initialPriority ?? TaskPriority.none;
+    _dueDate = t?.dueDate ?? widget.initialDueDate;
+    _isAllDay = t?.isAllDay ?? widget.initialIsAllDay ?? true;
     _recurrenceRule = t?.recurrenceRule;
     _listId = t?.listId ?? widget.initialListId;
     _customCategory = t?.customCategory;
@@ -145,7 +160,21 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       category: widget.task?.category,
       completedTasks: _completedTasks,
     );
-    setState(() => _reminderChips = chips);
+    var dueDate = _dueDate;
+    var isAllDay = _isAllDay;
+    if (widget.prefillReminder &&
+        !_didPrefillReminder &&
+        dueDate == null &&
+        chips.isNotEmpty) {
+      _didPrefillReminder = true;
+      dueDate = chips.first.at.toUtc();
+      isAllDay = false;
+    }
+    setState(() {
+      _reminderChips = chips;
+      _dueDate = dueDate;
+      _isAllDay = isAllDay;
+    });
   }
 
   Future<void> _loadEnrolledKids() async {
@@ -187,6 +216,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           recurrenceRule: _recurrenceRule,
           isPrivate: false,
           customCategory: _customCategory,
+          remindAt: _isAllDay ? null : _dueDate,
         );
       } else {
         await widget.repo.updateTask(
@@ -203,16 +233,21 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             customCategory: _customCategory,
             clearCustomCategory: _customCategory == null,
             clearDueDate: _dueDate == null,
+            remindAt: _isAllDay ? null : _dueDate,
+            clearRemindAt: _isAllDay || _dueDate == null,
           ),
         );
       }
+      widget.onSaved?.call();
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).commonSaveError('$e'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).commonSaveError('$e')),
+          ),
+        );
       }
     }
   }
@@ -261,7 +296,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
     if (!_canSend) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).taskNoConnectedFamily)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).taskNoConnectedFamily),
+        ),
       );
       return;
     }
@@ -289,7 +326,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 if (task.kidsTaskId != null)
                   ListTile(
                     leading: const Icon(Icons.bolt, color: kColorTeal),
-                    title: Text(AppLocalizations.of(context).taskAssignmentCreated),
+                    title: Text(
+                      AppLocalizations.of(context).taskAssignmentCreated,
+                    ),
                     enabled: false,
                   )
                 else ...[
@@ -309,7 +348,11 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                             : Theme.of(context).disabledColor,
                       ),
                       title: Text(_partnerStatus!.name),
-                      subtitle: Text(_partnerStatus!.statusLabel(AppLocalizations.of(context))),
+                      subtitle: Text(
+                        _partnerStatus!.statusLabel(
+                          AppLocalizations.of(context),
+                        ),
+                      ),
                       enabled: _partnerStatus!.isConnected,
                       selected: selectedPartner != null,
                       onTap: _partnerStatus!.isConnected
@@ -337,7 +380,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                               : Theme.of(context).disabledColor,
                         ),
                         title: Text(kid.name),
-                        subtitle: Text(kid.statusLabel(AppLocalizations.of(context))),
+                        subtitle: Text(
+                          kid.statusLabel(AppLocalizations.of(context)),
+                        ),
                         enabled: kid.isConnected,
                         selected: selectedKid?.id == kid.id,
                         onTap: kid.isConnected
@@ -355,7 +400,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                       children: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: Text(AppLocalizations.of(context).commonCancel),
+                          child: Text(
+                            AppLocalizations.of(context).commonCancel,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         FilledButton(
@@ -396,7 +443,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           title: Text(AppLocalizations.of(context).taskStaleConnectionTitle),
           content: Text(
             AppLocalizations.of(context).taskStalePartnerBody(
-              _partnerStatus!.statusLabel(AppLocalizations.of(context)).toLowerCase(),
+              _partnerStatus!
+                  .statusLabel(AppLocalizations.of(context))
+                  .toLowerCase(),
             ),
           ),
           actions: [
@@ -463,7 +512,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           content: Text(
             AppLocalizations.of(context).taskStaleKidBody(
               selectedKid.name,
-              selectedKid.statusLabel(AppLocalizations.of(context)).toLowerCase(),
+              selectedKid
+                  .statusLabel(AppLocalizations.of(context))
+                  .toLowerCase(),
             ),
           ),
           actions: [
@@ -493,7 +544,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).taskSendToKidTitle(enrolledKid.name)),
+        title: Text(
+          AppLocalizations.of(context).taskSendToKidTitle(enrolledKid.name),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -750,7 +803,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           ),
           DetailMetaRow(
             icon: Icons.label_outline,
-            label: _customCategory ?? AppLocalizations.of(context).taskAddCategory,
+            label:
+                _customCategory ?? AppLocalizations.of(context).taskAddCategory,
             active: _customCategory != null,
             onTap: () => _pickCategory(context),
             trailing: _customCategory != null
@@ -800,7 +854,11 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 const SizedBox(width: 12),
                 FilledButton(
                   onPressed: _saving ? null : _save,
-                  child: Text(widget.task == null ? AppLocalizations.of(context).commonAdd : AppLocalizations.of(context).commonSave),
+                  child: Text(
+                    widget.task == null
+                        ? AppLocalizations.of(context).commonAdd
+                        : AppLocalizations.of(context).commonSave,
+                  ),
                 ),
               ],
             ),
@@ -960,7 +1018,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 title: Text(switch (p) {
                   TaskPriority.none => AppLocalizations.of(context).commonNone,
                   TaskPriority.low => AppLocalizations.of(context).commonLow,
-                  TaskPriority.medium => AppLocalizations.of(context).commonMedium,
+                  TaskPriority.medium => AppLocalizations.of(
+                    context,
+                  ).commonMedium,
                   TaskPriority.high => AppLocalizations.of(context).commonHigh,
                 }),
                 trailing: _priority == p
@@ -981,9 +1041,15 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     // Simple recurrence picker — RRULE strings
     final options = <(String, String)>[
       (AppLocalizations.of(context).taskRecurrenceDaily, 'FREQ=DAILY'),
-      (AppLocalizations.of(context).taskRecurrenceWeekdays, 'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR'),
+      (
+        AppLocalizations.of(context).taskRecurrenceWeekdays,
+        'FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR',
+      ),
       (AppLocalizations.of(context).taskRecurrenceWeekly, 'FREQ=WEEKLY'),
-      (AppLocalizations.of(context).taskRecurrenceBiweekly, 'FREQ=WEEKLY;INTERVAL=2'),
+      (
+        AppLocalizations.of(context).taskRecurrenceBiweekly,
+        'FREQ=WEEKLY;INTERVAL=2',
+      ),
       (AppLocalizations.of(context).taskRecurrenceMonthly, 'FREQ=MONTHLY'),
     ];
     showModalBottomSheet(

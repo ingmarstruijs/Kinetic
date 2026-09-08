@@ -1,20 +1,25 @@
+import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
 
 /// Calendar prompts that fire in a given month without needing last-year
 /// history. [skipIfTitleContains] suppresses the prompt when an open task
-/// already covers the same theme.
+/// already covers the same theme. [id] is a stable dismiss key.
 class CalendarPrompt {
+  final String id;
   final List<int> months;
   final String title;
   final List<String> skipIfTitleContains;
   final String explanation;
 
   const CalendarPrompt({
+    required this.id,
     required this.months,
     required this.title,
     required this.skipIfTitleContains,
     required this.explanation,
   });
+
+  String get dedupeKey => 'calendar:$id';
 }
 
 /// Generic partner hint. Never includes the source task title or notes.
@@ -36,18 +41,21 @@ class PartnerHintTemplate {
 
 const calendarPrompts = <CalendarPrompt>[
   CalendarPrompt(
+    id: 'tax-return',
     months: [3],
     title: 'Check tax return',
     skipIfTitleContains: ['belasting', 'aangifte', 'tax', 'return'],
     explanation: 'March — time to check the tax return.',
   ),
   CalendarPrompt(
+    id: 'school-supplies',
     months: [8],
     title: 'Prepare school supplies',
     skipIfTitleContains: ['schoolspul', 'schooltas', 'etui', 'school supplies'],
     explanation: 'August — prepare school supplies for the new year.',
   ),
   CalendarPrompt(
+    id: 'christmas',
     months: [12],
     title: 'Prepare for Christmas',
     skipIfTitleContains: ['kerst', 'cadeau', 'christmas', 'gift'],
@@ -193,3 +201,35 @@ String categoryLabel(String category) => switch (category) {
   'finance' => 'Finance',
   _ => 'Other',
 };
+
+/// English + Dutch names that map onto a [TaskCategory], used to reuse an
+/// existing custom category instead of inventing a parallel label.
+List<String> categoryNameAliases(String categoryName) => switch (categoryName) {
+  'household' => const ['household', 'huishouden', 'huis'],
+  'health' => const ['health', 'gezondheid', 'zorg'],
+  'admin' => const ['admin', 'administratie'],
+  'school' => const ['school'],
+  'finance' => const ['finance', 'financien', 'financiën'],
+  _ => [categoryName],
+};
+
+/// Prefer an existing custom category whose name matches [categoryName].
+String resolveCategoryLabel(String categoryName, List<String> existing) {
+  final aliases = categoryNameAliases(
+    categoryName,
+  ).map((a) => a.toLowerCase()).toSet();
+  for (final e in existing) {
+    if (aliases.contains(e.trim().toLowerCase())) return e;
+  }
+  return categoryLabel(categoryName);
+}
+
+String suggestionDedupeKey({
+  required SuggestionReason reason,
+  required String title,
+  String? extra,
+}) {
+  final base = '${reason.name}:${normalizeSuggestionText(title)}';
+  if (extra == null || extra.isEmpty) return base;
+  return '$base:$extra';
+}

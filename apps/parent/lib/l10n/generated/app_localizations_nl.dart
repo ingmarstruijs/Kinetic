@@ -1333,6 +1333,43 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestReasonCalendar => 'Kalender';
 
   @override
+  String get suggestReasonCategorize => 'Categorie';
+
+  @override
+  String get suggestAddWithReminder => 'Met herinnering';
+
+  @override
+  String get suggestAddCategory => 'Categorie toevoegen';
+
+  @override
+  String suggestCategorizeTitle(int count, String category) {
+    return '$count taken toevoegen aan $category?';
+  }
+
+  @override
+  String suggestCategorizeExplanation(int count) {
+    return '$count open taken hebben geen categorie.';
+  }
+
+  @override
+  String get categoryHousehold => 'Huishouden';
+
+  @override
+  String get categoryHealth => 'Gezondheid';
+
+  @override
+  String get categoryAdmin => 'Administratie';
+
+  @override
+  String get categorySchool => 'School';
+
+  @override
+  String get categoryFinance => 'Financiën';
+
+  @override
+  String get categoryOther => 'Overig';
+
+  @override
   String get categoryTitle => 'Categorie';
 
   @override

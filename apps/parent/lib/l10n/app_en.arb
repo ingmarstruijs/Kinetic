@@ -672,6 +672,28 @@
   "suggestReasonLoadBalance": "Load balance",
   "suggestReasonStale": "Open task",
   "suggestReasonCalendar": "Calendar",
+  "suggestReasonCategorize": "Category",
+  "suggestAddWithReminder": "With reminder",
+  "suggestAddCategory": "Add category",
+  "suggestCategorizeTitle": "Add {count} tasks to {category}?",
+  "@suggestCategorizeTitle": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "category": {"type": "String"}
+    }
+  },
+  "suggestCategorizeExplanation": "{count} open tasks have no category.",
+  "@suggestCategorizeExplanation": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "categoryHousehold": "Household",
+  "categoryHealth": "Health",
+  "categoryAdmin": "Admin",
+  "categorySchool": "School",
+  "categoryFinance": "Finance",
+  "categoryOther": "Other",
 
   "categoryTitle": "Category",
   "categoryNewHint": "New category",

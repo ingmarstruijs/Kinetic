@@ -2,11 +2,13 @@ import 'package:drift/drift.dart';
 
 import '../../db/app_database.dart';
 import '../../partner/services/partner_proposal_repository.dart';
+import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/todo_repository.dart';
 import '../models/ai_suggestion.dart';
 import '../reminder_time.dart';
 import 'ai_suggestion_repository.dart';
+import 'reminder_proposal_engine.dart';
 import 'suggestion_heuristics.dart';
 
 /// Heuristic-based suggestion engine.
@@ -27,6 +29,9 @@ class AiSuggestionEngine {
   static const _staleAfterDays = 7;
   static const _singleHabitSilenceDays = 14;
   static const _privacyBudget = Duration(days: 14);
+  static const _uncategorizedThreshold = 3;
+
+  final _reminderEngine = ReminderProposalEngine();
 
   AiSuggestionEngine({
     required AppDatabase db,
@@ -63,7 +68,8 @@ class AiSuggestionEngine {
       await _runHabitDetector(completedTasks, openTitlesNorm);
       await _runSeasonalDetector(completedTasks, openTitlesNorm);
       await _runCalendarDetector(openTitlesNorm);
-      await _runStaleDetector(openTasks);
+      await _runStaleDetector(openTasks, completedTasks);
+      await _runCategorizeDetector(openTasks);
       final after = await _suggestionRepo.countPendingSelf();
       if (after > before) await _updateLastRun(selfPath: true);
     }
@@ -123,6 +129,10 @@ class AiSuggestionEngine {
             .add(Duration(days: median.round()))
             .toLocal(),
         reason: SuggestionReason.habit,
+        dedupeKey: suggestionDedupeKey(
+          reason: SuggestionReason.habit,
+          title: original.title,
+        ),
         explanation: times.length >= 2
             ? 'You did "${original.title}" about every $median days. '
                   'Last time: $daysSince days ago.'
@@ -165,6 +175,7 @@ class AiSuggestionEngine {
             ? task.category.name
             : hint.categories.first.name,
         reason: SuggestionReason.partnerComplement,
+        dedupeKey: 'partnerComplement:${hint.familyId}',
         explanation: hint.explanation,
       );
       await _suggestionRepo.upsertSuggestion(suggested);
@@ -204,12 +215,32 @@ class AiSuggestionEngine {
         (t) => normalizeSuggestionText(t.title) == entry.key,
       );
       final monthName = _monthName(currentMonth);
+      final lastDone = original.completedAt!;
+      final thisYear = DateTime(
+        currentYear,
+        lastDone.month,
+        lastDone.day,
+        lastDone.hour,
+        lastDone.minute,
+      );
+      final suggestedDue = thisYear.isAfter(_now())
+          ? thisYear
+          : _proposeReminder(
+              title: original.title,
+              category: original.category,
+              completed: completed,
+            );
       final suggested = AiSuggestion.create(
         title: original.title,
         notes: original.notes,
         priority: original.priority.index,
         category: original.category.name,
+        suggestedDueDate: suggestedDue,
         reason: SuggestionReason.seasonal,
+        dedupeKey: suggestionDedupeKey(
+          reason: SuggestionReason.seasonal,
+          title: original.title,
+        ),
         explanation:
             'You completed "${original.title}" in $monthName last year.',
       );
@@ -233,7 +264,12 @@ class AiSuggestionEngine {
       await _suggestionRepo.upsertSuggestion(
         AiSuggestion.create(
           title: prompt.title,
+          suggestedDueDate: _proposeReminder(
+            title: prompt.title,
+            completed: const [],
+          ),
           reason: SuggestionReason.calendar,
+          dedupeKey: prompt.dedupeKey,
           explanation: prompt.explanation,
         ),
       );
@@ -244,7 +280,10 @@ class AiSuggestionEngine {
   // Detector 3c — Stale open tasks (→ self)
   // ---------------------------------------------------------------------------
 
-  Future<void> _runStaleDetector(List<PersonalTask> openTasks) async {
+  Future<void> _runStaleDetector(
+    List<PersonalTask> openTasks,
+    List<PersonalTask> completed,
+  ) async {
     if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) return;
 
     for (final task in openTasks) {
@@ -254,16 +293,85 @@ class AiSuggestionEngine {
       if (ageDays < _staleAfterDays) continue;
       if (await _suggestionRepo.hasPendingWithTitle(task.title)) continue;
 
+      final proposal = _reminderEngine.best(
+        title: task.title,
+        category: task.category,
+        completedTasks: completed,
+        now: _now(),
+      );
+      final at = proposal?.at ?? suggestedReminderAt(_now());
+
       await _suggestionRepo.upsertSuggestion(
         AiSuggestion.create(
           title: task.title,
           notes: task.notes,
           priority: task.priority.index,
           category: task.category.name,
-          suggestedDueDate: suggestedReminderAt(_now()),
+          suggestedDueDate: at,
           reason: SuggestionReason.stale,
+          dedupeKey: 'stale:${task.id}',
+          relatedTaskIds: [task.id],
+          explanation: proposal == null
+              ? '"${task.title}" has been open for $ageDays days without a reminder.'
+              : '"${task.title}" has been open for $ageDays days without a reminder. Suggested: ${proposal.label}.',
+        ),
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Detector 3d — Uncategorized open tasks (→ self)
+  // ---------------------------------------------------------------------------
+
+  Future<void> _runCategorizeDetector(List<PersonalTask> openTasks) async {
+    if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) return;
+
+    final declined = await _suggestionRepo.dismissedRelatedTaskIds(
+      SuggestionReason.categorize,
+    );
+    final existing = openTasks
+        .map((t) => t.customCategory)
+        .whereType<String>()
+        .toSet()
+        .toList();
+
+    final byCategory = <TaskCategory, List<PersonalTask>>{};
+    for (final task in openTasks) {
+      if (task.customCategory != null) continue;
+      if (declined.contains(task.id)) continue;
+      if (task.category == TaskCategory.other) continue;
+      byCategory.putIfAbsent(task.category, () => []).add(task);
+    }
+
+    for (final entry in byCategory.entries) {
+      if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) break;
+      if (entry.value.length < _uncategorizedThreshold) continue;
+
+      final pending = await _suggestionRepo.watchPendingSelf().first;
+      if (pending.any(
+        (s) =>
+            s.reason == SuggestionReason.categorize &&
+            s.category == entry.key.name,
+      )) {
+        continue;
+      }
+
+      final ids = entry.value.map((t) => t.id).toList();
+      final label = resolveCategoryLabel(entry.key.name, existing);
+      final preview = entry.value.take(3).map((t) => t.title).join(', ');
+
+      await _suggestionRepo.upsertSuggestion(
+        AiSuggestion.create(
+          title: 'Add ${ids.length} tasks to $label',
+          notes: label,
+          category: entry.key.name,
+          reason: SuggestionReason.categorize,
+          dedupeKey:
+              'categorize:${entry.key.name}:${(ids.toList()..sort()).join(',')}',
+          relatedTaskIds: ids,
           explanation:
-              '"${task.title}" has been open for $ageDays days without a reminder.',
+              '${ids.length} open tasks have no category ($preview). '
+              'Suggested: $label.',
         ),
       );
     }
@@ -302,12 +410,28 @@ class AiSuggestionEngine {
         title: title,
         category: entry.key,
         reason: SuggestionReason.loadBalance,
+        dedupeKey: 'loadBalance:${entry.key}',
         explanation:
             'You have ${entry.value.length} open tasks in '
             '${categoryLabel(entry.key)}. The suggestion is intentionally generic.',
       );
       await _suggestionRepo.upsertSuggestion(suggested);
     }
+  }
+
+  DateTime? _proposeReminder({
+    required String title,
+    TaskCategory? category,
+    List<PersonalTask> completed = const [],
+  }) {
+    return _reminderEngine
+        .best(
+          title: title,
+          category: category,
+          completedTasks: completed,
+          now: _now(),
+        )
+        ?.at;
   }
 
   bool _isDue(DateTime? lastRun, DateTime now) {

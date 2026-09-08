@@ -5,6 +5,7 @@ import 'package:parent/partner/services/partner_proposal_repository.dart';
 import 'package:parent/todo/models/ai_suggestion.dart';
 import 'package:parent/todo/services/ai_suggestion_engine.dart';
 import 'package:parent/todo/services/ai_suggestion_repository.dart';
+import 'package:parent/todo/services/reminder_proposal_engine.dart';
 import 'package:parent/todo/services/todo_repository.dart';
 import '../../helpers/test_database.dart';
 
@@ -42,6 +43,7 @@ Future<void> _insertOpenTask(
   bool isPrivate = false,
   DateTime? createdAt,
   DateTime? dueDate,
+  String? customCategory,
 }) async {
   final ts = (createdAt ?? DateTime.now()).toUtc();
   await db
@@ -54,6 +56,7 @@ Future<void> _insertOpenTask(
           category: Value(category),
           isPrivate: Value(isPrivate),
           dueDate: Value(dueDate),
+          customCategory: Value(customCategory),
           createdAt: Value(ts),
           updatedAt: Value(ts),
         ),
@@ -289,10 +292,7 @@ void main() {
           suggestions.any((s) => s.reason == SuggestionReason.calendar),
           isTrue,
         );
-        expect(
-          suggestions.any((s) => s.title == 'Belastingaangifte checken'),
-          isTrue,
-        );
+        expect(suggestions.any((s) => s.title == 'Check tax return'), isTrue);
       });
 
       test(
@@ -308,11 +308,30 @@ void main() {
 
           final suggestions = await suggestionRepo.watchPendingSelf().first;
           expect(
-            suggestions.any((s) => s.title == 'Belastingaangifte checken'),
+            suggestions.any((s) => s.title == 'Check tax return'),
             isFalse,
           );
         },
       );
+
+      test('does not recreate a dismissed calendar prompt after 24h', () async {
+        testNow = DateTime.utc(2026, 8, 10, 12);
+        final engine = _engine();
+        await engine.runIfDue();
+
+        final pending = await suggestionRepo.watchPendingSelf().first;
+        final school = pending.firstWhere(
+          (s) => s.reason == SuggestionReason.calendar,
+        );
+        expect(school.title, 'Prepare school supplies');
+        await suggestionRepo.dismiss(school.id);
+
+        testNow = testNow.add(const Duration(hours: 25));
+        await engine.runIfDue();
+
+        final after = await suggestionRepo.watchPendingSelf().first;
+        expect(after.any((s) => s.title == 'Prepare school supplies'), isFalse);
+      });
     });
 
     group('stale detector', () {
@@ -343,6 +362,148 @@ void main() {
         await _engine().runIfDue();
 
         expect(await suggestionRepo.countPending(), 0);
+      });
+
+      test(
+        'uses a title-aware reminder instead of a generic +1 hour',
+        () async {
+          await _insertOpenTask(
+            db,
+            id: 'school1',
+            title: 'Schooltas controleren',
+            createdAt: testNow.subtract(const Duration(days: 10)),
+          );
+
+          await _engine().runIfDue();
+
+          final suggestions = await suggestionRepo.watchPendingSelf().first;
+          expect(suggestions, hasLength(1));
+          expect(suggestions.first.relatedTaskIds, ['school1']);
+          final expected = ReminderProposalEngine()
+              .best(
+                title: 'Schooltas controleren',
+                completedTasks: const [],
+                now: testNow,
+              )!
+              .at;
+          expect(suggestions.first.suggestedDueDate, expected);
+        },
+      );
+
+      test('does not re-suggest a dismissed stale task', () async {
+        await _insertOpenTask(
+          db,
+          id: 'stale1',
+          title: 'Oude klus',
+          createdAt: testNow.subtract(const Duration(days: 10)),
+        );
+        final engine = _engine();
+        await engine.runIfDue();
+        final id = (await suggestionRepo.watchPendingSelf().first).first.id;
+        await suggestionRepo.dismiss(id);
+
+        testNow = testNow.add(const Duration(hours: 25));
+        await engine.runIfDue();
+        expect(await suggestionRepo.countPending(), 0);
+      });
+    });
+
+    group('categorize detector', () {
+      test('proposes a category for ≥3 uncategorized themed tasks', () async {
+        await _insertOpenTask(
+          db,
+          id: 'c1',
+          title: 'Ramen lappen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c2',
+          title: 'Plinten doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c3',
+          title: 'Deurknoppen poetsen',
+          category: 'household',
+        );
+
+        await _engine().runIfDue();
+
+        final suggestions = await suggestionRepo.watchPendingSelf().first;
+        expect(
+          suggestions.where((s) => s.reason == SuggestionReason.categorize),
+          hasLength(1),
+        );
+        final suggestion = suggestions.firstWhere(
+          (s) => s.reason == SuggestionReason.categorize,
+        );
+        expect(suggestion.relatedTaskIds, containsAll(['c1', 'c2', 'c3']));
+        expect(suggestion.notes, 'Household');
+      });
+
+      test('does not re-ask for tasks that were declined', () async {
+        await _insertOpenTask(
+          db,
+          id: 'c1',
+          title: 'Ramen lappen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c2',
+          title: 'Plinten doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c3',
+          title: 'Deurknoppen poetsen',
+          category: 'household',
+        );
+        final engine = _engine();
+        await engine.runIfDue();
+        final id = (await suggestionRepo.watchPendingSelf().first)
+            .firstWhere((s) => s.reason == SuggestionReason.categorize)
+            .id;
+        await suggestionRepo.dismiss(id);
+
+        testNow = testNow.add(const Duration(hours: 25));
+        await engine.runIfDue();
+        expect(
+          (await suggestionRepo.watchPendingSelf().first).where(
+            (s) => s.reason == SuggestionReason.categorize,
+          ),
+          isEmpty,
+        );
+
+        await _insertOpenTask(
+          db,
+          id: 'c4',
+          title: 'Afwas doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c5',
+          title: 'Stofzuigen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c6',
+          title: 'Was ophangen',
+          category: 'household',
+        );
+        await engine.runIfDue();
+
+        final next = (await suggestionRepo.watchPendingSelf().first).where(
+          (s) => s.reason == SuggestionReason.categorize,
+        );
+        expect(next, hasLength(1));
+        expect(next.first.relatedTaskIds, containsAll(['c4', 'c5', 'c6']));
+        expect(next.first.relatedTaskIds, isNot(contains('c1')));
       });
     });
 
@@ -377,7 +538,7 @@ void main() {
           final suggestions = await suggestionRepo.watchPendingPartner().first;
           expect(suggestions, hasLength(1));
           expect(suggestions.first.reason, SuggestionReason.loadBalance);
-          expect(suggestions.first.title, contains('huishouden'));
+          expect(suggestions.first.title, contains('house'));
           expect(suggestions.first.title, isNot(contains('Ramen')));
           expect(suggestions.first.notes, isNull);
         },
@@ -440,7 +601,7 @@ void main() {
         final suggestions = await suggestionRepo.watchPendingPartner().first;
         expect(suggestions, hasLength(1));
         expect(suggestions.first.reason, SuggestionReason.loadBalance);
-        expect(suggestions.first.title.toLowerCase(), contains('huishouden'));
+        expect(suggestions.first.title.toLowerCase(), contains('house'));
         expect(suggestions.first.title, isNot(contains('Privé')));
         expect(suggestions.first.notes, isNull);
       });

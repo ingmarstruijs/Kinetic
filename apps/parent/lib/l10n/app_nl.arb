@@ -672,6 +672,28 @@
   "suggestReasonLoadBalance": "Taakverdeling",
   "suggestReasonStale": "Open taak",
   "suggestReasonCalendar": "Kalender",
+  "suggestReasonCategorize": "Categorie",
+  "suggestAddWithReminder": "Met herinnering",
+  "suggestAddCategory": "Categorie toevoegen",
+  "suggestCategorizeTitle": "{count} taken toevoegen aan {category}?",
+  "@suggestCategorizeTitle": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "category": {"type": "String"}
+    }
+  },
+  "suggestCategorizeExplanation": "{count} open taken hebben geen categorie.",
+  "@suggestCategorizeExplanation": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "categoryHousehold": "Huishouden",
+  "categoryHealth": "Gezondheid",
+  "categoryAdmin": "Administratie",
+  "categorySchool": "School",
+  "categoryFinance": "Financiën",
+  "categoryOther": "Overig",
 
   "categoryTitle": "Categorie",
   "categoryNewHint": "Nieuwe categorie",

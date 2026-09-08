@@ -212,5 +212,44 @@ void main() {
       await repo.accept(id);
       expect(await repo.hasPendingWithTitle('Tandenpoetsen'), isFalse);
     });
+
+    test('upsertSuggestion does not recreate a dismissed suggestion', () async {
+      await repo.upsertSuggestion(
+        AiSuggestion.create(
+          title: 'Prepare school supplies',
+          reason: SuggestionReason.calendar,
+          dedupeKey: 'calendar:school-supplies',
+        ),
+      );
+      final id = (await repo.watchPending().first).first.id;
+      await repo.dismiss(id);
+      await repo.upsertSuggestion(
+        AiSuggestion.create(
+          title: 'Prepare school supplies',
+          reason: SuggestionReason.calendar,
+          dedupeKey: 'calendar:school-supplies',
+        ),
+      );
+      expect(await repo.countPending(), 0);
+    });
+
+    test(
+      'dismissedRelatedTaskIds returns ids from categorize dismiss',
+      () async {
+        await repo.upsertSuggestion(
+          AiSuggestion.create(
+            title: 'Add 3 tasks to Household',
+            reason: SuggestionReason.categorize,
+            relatedTaskIds: const ['a', 'b', 'c'],
+          ),
+        );
+        final id = (await repo.watchPending().first).first.id;
+        await repo.dismiss(id);
+        expect(
+          await repo.dismissedRelatedTaskIds(SuggestionReason.categorize),
+          {'a', 'b', 'c'},
+        );
+      },
+    );
   });
 }

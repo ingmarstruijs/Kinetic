@@ -7,12 +7,14 @@ f-droid.org requires a merge request against
 ## Before opening the GitLab MR
 
 1. Merge the screenshots / metadata PR to `main` (icons already on main).
-2. Create an annotated release tag matching the metadata `commit:` field:
+2. After the version bump is on `main`, create an annotated release tag
+   matching the metadata `commit:` field:
    ```bash
    git checkout main && git pull
    git tag -a v0.3.4 -m "Kinetic 0.3.4 for F-Droid"
    git push origin v0.3.4
    ```
+   GitHub Releases are created only for tags whose commit is already on `main`.
 3. Confirm Flutter **3.44.1** builds both APKs locally:
    ```bash
    ./tool/fdroid_build.sh parent

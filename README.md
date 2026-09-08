@@ -73,7 +73,7 @@ cd apps/parent   # or apps/kids
 flutter build apk --release
 ```
 
-CI builds and signs both APKs on every push to `main`, `develop`, or `feature/**`, and on any `v*` tag (see [`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)).
+CI builds and signs both APKs on every push to `main`, `develop`, or `feature/**`, and on any `v*` tag (see [`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)). GitHub Releases are published only when that tag’s commit is already on `main`.
 
 ## Localization
 
@@ -140,10 +140,11 @@ A one-time **Legacy backup (.kbak2)** path on the welcome screen restores the 0.
 
 ## Releases
 
-Push a version tag to trigger a GitHub Release:
+Merge the version bump to `main` first, then tag that commit. A `v*` tag on a branch that is not yet on `main` builds APKs but does **not** publish GitHub Releases.
 
 ```bash
-git tag v0.2.0
+git checkout main && git pull
+git tag -a v0.2.0 -m "Kinetic 0.2.0"
 git push origin v0.2.0
 ```
 

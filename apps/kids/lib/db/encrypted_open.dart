@@ -77,9 +77,7 @@ Future<void> _migratePlaintextIfNeeded({
 String _escape(String source) => source.replaceAll("'", "''");
 
 class _DbEncryptionKeyStore {
-  static const _androidOptions = AndroidOptions(
-    encryptedSharedPreferences: true,
-  );
+  static const _androidOptions = AndroidOptions();
   static const _iosOptions = IOSOptions(
     accessibility: KeychainAccessibility.first_unlock_this_device,
   );

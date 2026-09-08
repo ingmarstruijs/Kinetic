@@ -14,10 +14,8 @@ class VaultBiometrics {
       if (!supported) return null;
       return _auth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
+        persistAcrossBackgrounding: true,
+        biometricOnly: false,
       );
     } catch (_) {
       return null;

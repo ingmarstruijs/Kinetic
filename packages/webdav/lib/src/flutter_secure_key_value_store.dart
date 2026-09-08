@@ -4,15 +4,13 @@ import 'secure_key_value_store.dart';
 
 /// Production [SecureKeyValueStore] backed by Android Keystore / iOS Keychain.
 ///
-/// Android: uses [EncryptedSharedPreferences] — hardware-backed on devices
-/// with a secure element (including GrapheneOS).
+/// Android: hardware-backed when the device has a secure element (including
+/// GrapheneOS). v10 migrates EncryptedSharedPreferences automatically.
 ///
 /// iOS: uses the Keychain with [firstUnlockThisDeviceOnly] accessibility,
 /// which prevents iCloud backup and is unavailable before first device unlock.
 class FlutterSecureKeyValueStore implements SecureKeyValueStore {
-  static const _androidOptions = AndroidOptions(
-    encryptedSharedPreferences: true,
-  );
+  static const _androidOptions = AndroidOptions();
 
   static const _iosOptions = IOSOptions(
     accessibility: KeychainAccessibility.first_unlock_this_device,

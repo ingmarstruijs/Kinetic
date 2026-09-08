@@ -2372,6 +2372,72 @@ abstract class AppLocalizations {
   /// **'Calendar'**
   String get suggestReasonCalendar;
 
+  /// No description provided for @suggestReasonCategorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get suggestReasonCategorize;
+
+  /// No description provided for @suggestAddWithReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'With reminder'**
+  String get suggestAddWithReminder;
+
+  /// No description provided for @suggestAddCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add category'**
+  String get suggestAddCategory;
+
+  /// No description provided for @suggestCategorizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {count} tasks to {category}?'**
+  String suggestCategorizeTitle(int count, String category);
+
+  /// No description provided for @suggestCategorizeExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} open tasks have no category.'**
+  String suggestCategorizeExplanation(int count);
+
+  /// No description provided for @categoryHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'Household'**
+  String get categoryHousehold;
+
+  /// No description provided for @categoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get categoryHealth;
+
+  /// No description provided for @categoryAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get categoryAdmin;
+
+  /// No description provided for @categorySchool.
+  ///
+  /// In en, this message translates to:
+  /// **'School'**
+  String get categorySchool;
+
+  /// No description provided for @categoryFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get categoryFinance;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
   /// No description provided for @categoryTitle.
   ///
   /// In en, this message translates to:

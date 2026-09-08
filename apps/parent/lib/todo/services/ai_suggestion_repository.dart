@@ -30,6 +30,8 @@ class AiSuggestionRepository {
       ),
       snoozeUntil: row.snoozeUntil,
       explanation: row.explanation,
+      dedupeKey: row.dedupeKey,
+      relatedTaskIds: parseRelatedTaskIds(row.relatedTaskIds),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
@@ -47,6 +49,10 @@ class AiSuggestionRepository {
       status: Value(s.status.name),
       snoozeUntil: Value(s.snoozeUntil),
       explanation: Value(s.explanation),
+      dedupeKey: Value(s.dedupeKey),
+      relatedTaskIds: Value(
+        s.relatedTaskIds.isEmpty ? null : joinRelatedTaskIds(s.relatedTaskIds),
+      ),
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
     );
@@ -112,7 +118,7 @@ class AiSuggestionRepository {
     return all.length;
   }
 
-  /// Returns true if a pending/snoozed suggestion with [title] already exists.
+  /// True if a pending/snoozed suggestion with [title] already exists.
   Future<bool> hasPendingWithTitle(String title) async {
     final normalized = title.trim().toLowerCase();
     final rows =
@@ -121,6 +127,51 @@ class AiSuggestionRepository {
             ))
             .get();
     return rows.any((r) => r.title.trim().toLowerCase() == normalized);
+  }
+
+  /// True if a pending/snoozed suggestion with [dedupeKey] already exists.
+  Future<bool> hasPendingWithDedupeKey(String dedupeKey) async {
+    if (dedupeKey.isEmpty) return false;
+    final rows =
+        await (_db.select(_db.aiSuggestions)..where(
+              (t) =>
+                  t.dedupeKey.equals(dedupeKey) &
+                  (t.status.equals('pending') | t.status.equals('snoozed')),
+            ))
+            .get();
+    return rows.isNotEmpty;
+  }
+
+  /// Dismissed suggestions are never re-proposed (same key, or legacy
+  /// title+reason when the key was empty).
+  Future<bool> isSuppressed(AiSuggestion suggestion) async {
+    final rows = await (_db.select(
+      _db.aiSuggestions,
+    )..where((t) => t.status.equals('dismissed'))).get();
+    final titleNorm = suggestion.title.trim().toLowerCase();
+    for (final row in rows) {
+      if (suggestion.dedupeKey.isNotEmpty &&
+          row.dedupeKey == suggestion.dedupeKey) {
+        return true;
+      }
+      if (suggestion.reason == SuggestionReason.categorize) continue;
+      if (row.reason == suggestion.reason.name &&
+          row.title.trim().toLowerCase() == titleNorm) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Task ids the user already declined for [reason] (categorize / stale).
+  Future<Set<String>> dismissedRelatedTaskIds(SuggestionReason reason) async {
+    final rows =
+        await (_db.select(_db.aiSuggestions)..where(
+              (t) =>
+                  t.status.equals('dismissed') & t.reason.equals(reason.name),
+            ))
+            .get();
+    return {for (final row in rows) ...parseRelatedTaskIds(row.relatedTaskIds)};
   }
 
   /// True if any suggestion with [title] was created within [within].
@@ -140,8 +191,13 @@ class AiSuggestionRepository {
   // Mutations
   // ---------------------------------------------------------------------------
 
-  /// Insert or ignore (deduplicate by title among pending/snoozed suggestions).
+  /// Insert or ignore. Never recreates a dismissed suggestion.
   Future<void> upsertSuggestion(AiSuggestion suggestion) async {
+    if (await isSuppressed(suggestion)) return;
+    if (suggestion.dedupeKey.isNotEmpty &&
+        await hasPendingWithDedupeKey(suggestion.dedupeKey)) {
+      return;
+    }
     if (await hasPendingWithTitle(suggestion.title)) return;
     await _db
         .into(_db.aiSuggestions)

@@ -15,7 +15,6 @@ import '../../todo/models/ai_suggestion.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/ai_suggestion_repository.dart';
-import '../../todo/services/suggestion_actions.dart';
 import '../../todo/services/todo_repository.dart';
 import '../../todo/widgets/quick_add_bar.dart';
 import '../../todo/widgets/suggestion_banner.dart';
@@ -179,7 +178,10 @@ class _TasksScreenState extends State<TasksScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: AppHeader(title: AppLocalizations.of(context).tasksTitle, centerTitle: false),
+        title: AppHeader(
+          title: AppLocalizations.of(context).tasksTitle,
+          centerTitle: false,
+        ),
         centerTitle: false,
         actions: [
           if (widget.syncStatus != null)
@@ -223,7 +225,8 @@ class _TasksScreenState extends State<TasksScreen>
                 ),
               ),
             ),
-            if (widget.enrolledKidsCount > 0) Tab(text: AppLocalizations.of(context).tasksTabKids),
+            if (widget.enrolledKidsCount > 0)
+              Tab(text: AppLocalizations.of(context).tasksTabKids),
           ],
         ),
       ),
@@ -455,7 +458,9 @@ class _OpenTasksTabState extends State<_OpenTasksTab> {
             if (item is _HeaderItem) {
               return _CategoryHeader(
                 key: ValueKey('header_${item.category}'),
-                label: item.category ?? AppLocalizations.of(context).commonNoCategory,
+                label:
+                    item.category ??
+                    AppLocalizations.of(context).commonNoCategory,
                 index: index,
               );
             }
@@ -733,7 +738,9 @@ class _VoorstlagenTabState extends State<_VoorstlagenTab> {
                                 : IconButton(
                                     icon: const Icon(Icons.refresh, size: 20),
                                     onPressed: _refresh,
-                                    tooltip: AppLocalizations.of(context).tasksRefreshSuggestions,
+                                    tooltip: AppLocalizations.of(
+                                      context,
+                                    ).tasksRefreshSuggestions,
                                     color: scheme.onSurfaceVariant,
                                   ),
                           ],
@@ -793,7 +800,9 @@ class _VoorstlagenTabState extends State<_VoorstlagenTab> {
                               : IconButton(
                                   icon: const Icon(Icons.refresh, size: 20),
                                   onPressed: _refresh,
-                                  tooltip: AppLocalizations.of(context).tasksRefreshSuggestions,
+                                  tooltip: AppLocalizations.of(
+                                    context,
+                                  ).tasksRefreshSuggestions,
                                   color: scheme.onSurfaceVariant,
                                 ),
                         ],
@@ -836,8 +845,6 @@ class _SuggestionSection extends StatelessWidget {
     this.partnerOnly = false,
   });
 
-  String _reasonLabel(SuggestionReason r, AppLocalizations l10n) => r.label(l10n);
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<AiSuggestion>>(
@@ -861,103 +868,15 @@ class _SuggestionSection extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               for (final suggestion in suggestions)
-                Card(
+                SuggestionCard(
+                  suggestion: suggestion,
+                  suggestionRepo: suggestionRepo,
+                  todoRepo: todoRepo,
+                  proposalRepo: proposalRepo,
+                  myParentId: myParentId,
+                  partnerPaired: partnerPaired,
+                  partnerOnly: partnerOnly,
                   margin: const EdgeInsets.only(bottom: 8),
-                  color: scheme.secondaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                suggestion.title,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            Chip(
-                              label: Text(
-                                _reasonLabel(suggestion.reason, AppLocalizations.of(context)),
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                            ),
-                          ],
-                        ),
-                        if (suggestion.explanation != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            suggestion.explanation!,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: scheme.onSecondaryContainer.withValues(
-                                    alpha: 0.85,
-                                  ),
-                                ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          children: [
-                            if (!partnerOnly)
-                              FilledButton.icon(
-                                onPressed: () async {
-                                  await acceptSelfSuggestion(
-                                    suggestion: suggestion,
-                                    todoRepo: todoRepo,
-                                    suggestionRepo: suggestionRepo,
-                                  );
-                                },
-                                icon: const Icon(Icons.add, size: 16),
-                                label: Text(
-                                  suggestion.reason == SuggestionReason.stale
-                                      ? AppLocalizations.of(context).tasksAddReminder
-                                      : AppLocalizations.of(context).tasksAddTask,
-                                ),
-                                style: FilledButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
-                            if (partnerPaired && proposalRepo != null)
-                              OutlinedButton.icon(
-                                onPressed: () async {
-                                  if (!context.mounted) return;
-                                  await confirmAndSendSuggestionToPartner(
-                                    context: context,
-                                    suggestion: suggestion,
-                                    proposalRepo: proposalRepo!,
-                                    suggestionRepo: suggestionRepo,
-                                    myParentId: myParentId,
-                                  );
-                                },
-                                icon: const Icon(
-                                  Icons.person_outline,
-                                  size: 16,
-                                ),
-                                label: Text(AppLocalizations.of(context).tasksToPartner),
-                                style: OutlinedButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                              ),
-                            OutlinedButton.icon(
-                              onPressed: () =>
-                                  suggestionRepo.dismiss(suggestion.id),
-                              icon: const Icon(Icons.close, size: 16),
-                              label: Text(AppLocalizations.of(context).commonCloseAction),
-                              style: OutlinedButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
             ],
           ),
@@ -1168,9 +1087,11 @@ class _PartnerProposalsSectionState extends State<_PartnerProposalsSection> {
     await widget.proposalRepository.accept(proposalId);
     widget.onSyncRequested?.call();
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).tasksProposalAccepted)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tasksProposalAccepted),
+        ),
+      );
     }
   }
 
@@ -1178,9 +1099,11 @@ class _PartnerProposalsSectionState extends State<_PartnerProposalsSection> {
     await widget.proposalRepository.dismiss(proposalId);
     widget.onSyncRequested?.call();
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).tasksProposalRejected)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).tasksProposalRejected),
+        ),
+      );
     }
   }
 
@@ -1292,9 +1215,7 @@ class _KidsTasksTabState extends State<_KidsTasksTab> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context).tasksXpResetTitle(kid.name)),
-        content: Text(
-          AppLocalizations.of(context).tasksXpResetBody,
-        ),
+        content: Text(AppLocalizations.of(context).tasksXpResetBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -1321,16 +1242,22 @@ class _KidsTasksTabState extends State<_KidsTasksTab> {
     try {
       await service.pushXpReset(kid.id, DateTime.now().toUtc());
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).tasksXpResetDone(kid.name))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).tasksXpResetDone(kid.name),
+            ),
+          ),
+        );
         _reload();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).tasksXpResetError('$e'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).tasksXpResetError('$e')),
+          ),
+        );
       }
     } finally {
       client.dispose();
@@ -1446,7 +1373,8 @@ class _KidsTasksTabState extends State<_KidsTasksTab> {
                               fontWeight: FontWeight.bold,
                             ),
                       ),
-                      if (entry.key != AppLocalizations.of(context).commonEveryone) ...[
+                      if (entry.key !=
+                          AppLocalizations.of(context).commonEveryone) ...[
                         const SizedBox(width: 8),
                         TextButton(
                           style: TextButton.styleFrom(
@@ -1458,7 +1386,9 @@ class _KidsTasksTabState extends State<_KidsTasksTab> {
                           ),
                           onPressed: () =>
                               _resetXp(entry.key, data.enrolledKids),
-                          child: Text(AppLocalizations.of(context).tasksResetXp),
+                          child: Text(
+                            AppLocalizations.of(context).tasksResetXp,
+                          ),
                         ),
                       ],
                     ],
@@ -1501,7 +1431,11 @@ class _KidsTaskTile extends StatelessWidget {
       subtitleParts.add('${due.toLocal().day}/${due.toLocal().month}');
     }
     if (completedAt != null) {
-      subtitleParts.add(AppLocalizations.of(context).tasksDoneOn(completedAt.day, completedAt.month));
+      subtitleParts.add(
+        AppLocalizations.of(
+          context,
+        ).tasksDoneOn(completedAt.day, completedAt.month),
+      );
     }
 
     return ListTile(
@@ -1584,7 +1518,9 @@ class _CompletedBottomSheet extends StatelessWidget {
                       TextButton.icon(
                         onPressed: () => _confirmDeleteAll(ctx, repo),
                         icon: const Icon(Icons.delete_sweep_outlined, size: 16),
-                        label: Text(AppLocalizations.of(context).tasksDeleteAll),
+                        label: Text(
+                          AppLocalizations.of(context).tasksDeleteAll,
+                        ),
                         style: TextButton.styleFrom(
                           foregroundColor: Theme.of(
                             context,
@@ -1626,9 +1562,7 @@ class _CompletedBottomSheet extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalizations.of(context).tasksDeleteCompletedTitle),
-        content: Text(
-          AppLocalizations.of(context).tasksDeleteCompletedBody,
-        ),
+        content: Text(AppLocalizations.of(context).tasksDeleteCompletedBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),

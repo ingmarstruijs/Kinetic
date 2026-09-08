@@ -4528,6 +4528,29 @@ class $AiSuggestionsTable extends AiSuggestions
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dedupeKeyMeta = const VerificationMeta(
+    'dedupeKey',
+  );
+  @override
+  late final GeneratedColumn<String> dedupeKey = GeneratedColumn<String>(
+    'dedupe_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _relatedTaskIdsMeta = const VerificationMeta(
+    'relatedTaskIds',
+  );
+  @override
+  late final GeneratedColumn<String> relatedTaskIds = GeneratedColumn<String>(
+    'related_task_ids',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4562,6 +4585,8 @@ class $AiSuggestionsTable extends AiSuggestions
     status,
     snoozeUntil,
     explanation,
+    dedupeKey,
+    relatedTaskIds,
     createdAt,
     updatedAt,
   ];
@@ -4649,6 +4674,21 @@ class $AiSuggestionsTable extends AiSuggestions
         ),
       );
     }
+    if (data.containsKey('dedupe_key')) {
+      context.handle(
+        _dedupeKeyMeta,
+        dedupeKey.isAcceptableOrUnknown(data['dedupe_key']!, _dedupeKeyMeta),
+      );
+    }
+    if (data.containsKey('related_task_ids')) {
+      context.handle(
+        _relatedTaskIdsMeta,
+        relatedTaskIds.isAcceptableOrUnknown(
+          data['related_task_ids']!,
+          _relatedTaskIdsMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4714,6 +4754,14 @@ class $AiSuggestionsTable extends AiSuggestions
         DriftSqlType.string,
         data['${effectivePrefix}explanation'],
       ),
+      dedupeKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dedupe_key'],
+      )!,
+      relatedTaskIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}related_task_ids'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4744,6 +4792,14 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
 
   /// Human-readable explanation of why this suggestion was generated.
   final String? explanation;
+
+  /// Stable identity used to suppress a dismissed suggestion forever.
+  /// Example: `calendar:school-supplies`, `stale:<taskId>`.
+  final String dedupeKey;
+
+  /// Comma-separated personal-task ids this suggestion applies to
+  /// (stale reminder, categorize).
+  final String? relatedTaskIds;
   final DateTime createdAt;
   final DateTime updatedAt;
   const AiSuggestionRow({
@@ -4757,6 +4813,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
     required this.status,
     this.snoozeUntil,
     this.explanation,
+    required this.dedupeKey,
+    this.relatedTaskIds,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -4780,6 +4838,10 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
     }
     if (!nullToAbsent || explanation != null) {
       map['explanation'] = Variable<String>(explanation);
+    }
+    map['dedupe_key'] = Variable<String>(dedupeKey);
+    if (!nullToAbsent || relatedTaskIds != null) {
+      map['related_task_ids'] = Variable<String>(relatedTaskIds);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -4806,6 +4868,10 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
       explanation: explanation == null && nullToAbsent
           ? const Value.absent()
           : Value(explanation),
+      dedupeKey: Value(dedupeKey),
+      relatedTaskIds: relatedTaskIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(relatedTaskIds),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -4829,6 +4895,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
       status: serializer.fromJson<String>(json['status']),
       snoozeUntil: serializer.fromJson<DateTime?>(json['snoozeUntil']),
       explanation: serializer.fromJson<String?>(json['explanation']),
+      dedupeKey: serializer.fromJson<String>(json['dedupeKey']),
+      relatedTaskIds: serializer.fromJson<String?>(json['relatedTaskIds']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -4847,6 +4915,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
       'status': serializer.toJson<String>(status),
       'snoozeUntil': serializer.toJson<DateTime?>(snoozeUntil),
       'explanation': serializer.toJson<String?>(explanation),
+      'dedupeKey': serializer.toJson<String>(dedupeKey),
+      'relatedTaskIds': serializer.toJson<String?>(relatedTaskIds),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -4863,6 +4933,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
     String? status,
     Value<DateTime?> snoozeUntil = const Value.absent(),
     Value<String?> explanation = const Value.absent(),
+    String? dedupeKey,
+    Value<String?> relatedTaskIds = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => AiSuggestionRow(
@@ -4878,6 +4950,10 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
     status: status ?? this.status,
     snoozeUntil: snoozeUntil.present ? snoozeUntil.value : this.snoozeUntil,
     explanation: explanation.present ? explanation.value : this.explanation,
+    dedupeKey: dedupeKey ?? this.dedupeKey,
+    relatedTaskIds: relatedTaskIds.present
+        ? relatedTaskIds.value
+        : this.relatedTaskIds,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -4899,6 +4975,10 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
       explanation: data.explanation.present
           ? data.explanation.value
           : this.explanation,
+      dedupeKey: data.dedupeKey.present ? data.dedupeKey.value : this.dedupeKey,
+      relatedTaskIds: data.relatedTaskIds.present
+          ? data.relatedTaskIds.value
+          : this.relatedTaskIds,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -4917,6 +4997,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
           ..write('status: $status, ')
           ..write('snoozeUntil: $snoozeUntil, ')
           ..write('explanation: $explanation, ')
+          ..write('dedupeKey: $dedupeKey, ')
+          ..write('relatedTaskIds: $relatedTaskIds, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -4935,6 +5017,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
     status,
     snoozeUntil,
     explanation,
+    dedupeKey,
+    relatedTaskIds,
     createdAt,
     updatedAt,
   );
@@ -4952,6 +5036,8 @@ class AiSuggestionRow extends DataClass implements Insertable<AiSuggestionRow> {
           other.status == this.status &&
           other.snoozeUntil == this.snoozeUntil &&
           other.explanation == this.explanation &&
+          other.dedupeKey == this.dedupeKey &&
+          other.relatedTaskIds == this.relatedTaskIds &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -4967,6 +5053,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
   final Value<String> status;
   final Value<DateTime?> snoozeUntil;
   final Value<String?> explanation;
+  final Value<String> dedupeKey;
+  final Value<String?> relatedTaskIds;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -4981,6 +5069,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
     this.status = const Value.absent(),
     this.snoozeUntil = const Value.absent(),
     this.explanation = const Value.absent(),
+    this.dedupeKey = const Value.absent(),
+    this.relatedTaskIds = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4996,6 +5086,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
     this.status = const Value.absent(),
     this.snoozeUntil = const Value.absent(),
     this.explanation = const Value.absent(),
+    this.dedupeKey = const Value.absent(),
+    this.relatedTaskIds = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -5015,6 +5107,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
     Expression<String>? status,
     Expression<DateTime>? snoozeUntil,
     Expression<String>? explanation,
+    Expression<String>? dedupeKey,
+    Expression<String>? relatedTaskIds,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -5030,6 +5124,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
       if (status != null) 'status': status,
       if (snoozeUntil != null) 'snooze_until': snoozeUntil,
       if (explanation != null) 'explanation': explanation,
+      if (dedupeKey != null) 'dedupe_key': dedupeKey,
+      if (relatedTaskIds != null) 'related_task_ids': relatedTaskIds,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -5047,6 +5143,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
     Value<String>? status,
     Value<DateTime?>? snoozeUntil,
     Value<String?>? explanation,
+    Value<String>? dedupeKey,
+    Value<String?>? relatedTaskIds,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -5062,6 +5160,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
       status: status ?? this.status,
       snoozeUntil: snoozeUntil ?? this.snoozeUntil,
       explanation: explanation ?? this.explanation,
+      dedupeKey: dedupeKey ?? this.dedupeKey,
+      relatedTaskIds: relatedTaskIds ?? this.relatedTaskIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -5101,6 +5201,12 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
     if (explanation.present) {
       map['explanation'] = Variable<String>(explanation.value);
     }
+    if (dedupeKey.present) {
+      map['dedupe_key'] = Variable<String>(dedupeKey.value);
+    }
+    if (relatedTaskIds.present) {
+      map['related_task_ids'] = Variable<String>(relatedTaskIds.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5126,6 +5232,8 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
           ..write('status: $status, ')
           ..write('snoozeUntil: $snoozeUntil, ')
           ..write('explanation: $explanation, ')
+          ..write('dedupeKey: $dedupeKey, ')
+          ..write('relatedTaskIds: $relatedTaskIds, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -7786,6 +7894,8 @@ typedef $$AiSuggestionsTableCreateCompanionBuilder =
       Value<String> status,
       Value<DateTime?> snoozeUntil,
       Value<String?> explanation,
+      Value<String> dedupeKey,
+      Value<String?> relatedTaskIds,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -7802,6 +7912,8 @@ typedef $$AiSuggestionsTableUpdateCompanionBuilder =
       Value<String> status,
       Value<DateTime?> snoozeUntil,
       Value<String?> explanation,
+      Value<String> dedupeKey,
+      Value<String?> relatedTaskIds,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -7863,6 +7975,16 @@ class $$AiSuggestionsTableFilterComposer
 
   ColumnFilters<String> get explanation => $composableBuilder(
     column: $table.explanation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dedupeKey => $composableBuilder(
+    column: $table.dedupeKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relatedTaskIds => $composableBuilder(
+    column: $table.relatedTaskIds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7936,6 +8058,16 @@ class $$AiSuggestionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get dedupeKey => $composableBuilder(
+    column: $table.dedupeKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relatedTaskIds => $composableBuilder(
+    column: $table.relatedTaskIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7992,6 +8124,14 @@ class $$AiSuggestionsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get dedupeKey =>
+      $composableBuilder(column: $table.dedupeKey, builder: (column) => column);
+
+  GeneratedColumn<String> get relatedTaskIds => $composableBuilder(
+    column: $table.relatedTaskIds,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8040,6 +8180,8 @@ class $$AiSuggestionsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozeUntil = const Value.absent(),
                 Value<String?> explanation = const Value.absent(),
+                Value<String> dedupeKey = const Value.absent(),
+                Value<String?> relatedTaskIds = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -8054,6 +8196,8 @@ class $$AiSuggestionsTableTableManager
                 status: status,
                 snoozeUntil: snoozeUntil,
                 explanation: explanation,
+                dedupeKey: dedupeKey,
+                relatedTaskIds: relatedTaskIds,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -8070,6 +8214,8 @@ class $$AiSuggestionsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> snoozeUntil = const Value.absent(),
                 Value<String?> explanation = const Value.absent(),
+                Value<String> dedupeKey = const Value.absent(),
+                Value<String?> relatedTaskIds = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -8084,6 +8230,8 @@ class $$AiSuggestionsTableTableManager
                 status: status,
                 snoozeUntil: snoozeUntil,
                 explanation: explanation,
+                dedupeKey: dedupeKey,
+                relatedTaskIds: relatedTaskIds,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

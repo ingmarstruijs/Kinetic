@@ -16,9 +16,9 @@ void main() {
   });
 
   group('calendarPromptsForMonth', () {
-    test('March has belasting', () {
+    test('March has tax return', () {
       final prompts = calendarPromptsForMonth(3);
-      expect(prompts.any((p) => p.title.contains('Belasting')), isTrue);
+      expect(prompts.any((p) => p.title.contains('tax')), isTrue);
     });
 
     test('June has none', () {
@@ -37,7 +37,14 @@ void main() {
   });
 
   test('loadBalanceTitle never uses a source task name', () {
-    expect(loadBalanceTitle('household'), contains('huishouden'));
+    expect(loadBalanceTitle('household'), contains('house'));
     expect(loadBalanceTitle('household'), isNot(contains('Afwas')));
+  });
+
+  test('resolveCategoryLabel reuses an existing Dutch name', () {
+    expect(
+      resolveCategoryLabel('household', ['Huishouden', 'School']),
+      'Huishouden',
+    );
   });
 }

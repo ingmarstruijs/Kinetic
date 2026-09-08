@@ -224,6 +224,14 @@ class AiSuggestions extends Table {
   /// Human-readable explanation of why this suggestion was generated.
   TextColumn get explanation => text().nullable()();
 
+  /// Stable identity used to suppress a dismissed suggestion forever.
+  /// Example: `calendar:school-supplies`, `stale:<taskId>`.
+  TextColumn get dedupeKey => text().withDefault(const Constant(''))();
+
+  /// Comma-separated personal-task ids this suggestion applies to
+  /// (stale reminder, categorize).
+  TextColumn get relatedTaskIds => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

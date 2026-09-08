@@ -1330,6 +1330,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestReasonCalendar => 'Calendar';
 
   @override
+  String get suggestReasonCategorize => 'Category';
+
+  @override
+  String get suggestAddWithReminder => 'With reminder';
+
+  @override
+  String get suggestAddCategory => 'Add category';
+
+  @override
+  String suggestCategorizeTitle(int count, String category) {
+    return 'Add $count tasks to $category?';
+  }
+
+  @override
+  String suggestCategorizeExplanation(int count) {
+    return '$count open tasks have no category.';
+  }
+
+  @override
+  String get categoryHousehold => 'Household';
+
+  @override
+  String get categoryHealth => 'Health';
+
+  @override
+  String get categoryAdmin => 'Admin';
+
+  @override
+  String get categorySchool => 'School';
+
+  @override
+  String get categoryFinance => 'Finance';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
   String get categoryTitle => 'Category';
 
   @override

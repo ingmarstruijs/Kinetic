@@ -55,7 +55,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- flutter_local_notifications: reschedule alarms after reboot -->
+        <!-- flutter_local_notifications: tap actions on scheduled reminders -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <receiver
             android:exported="false"
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />

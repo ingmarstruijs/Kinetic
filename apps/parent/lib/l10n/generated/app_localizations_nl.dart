@@ -1379,6 +1379,68 @@ class AppLocalizationsNl extends AppLocalizations {
   String get categoryNewAction => 'Nieuwe categorie…';
 
   @override
+  String get categoryRename => 'Categorie hernoemen';
+
+  @override
+  String get categoryRenameHint => 'Categorienaam';
+
+  @override
+  String get suggestionsTitle => 'Suggesties';
+
+  @override
+  String get suggestionsSubtitle => 'Handige taken om vandaag te overwegen';
+
+  @override
+  String get suggestionsProposedByPartner => 'Voorgesteld door je partner';
+
+  @override
+  String get tasksDecline => 'Weigeren';
+
+  @override
+  String get kidsSectionTitle => 'Kids';
+
+  @override
+  String get kidsAllFilter => 'Alle kids';
+
+  @override
+  String kidsOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open taken',
+      one: '1 open taak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get snoozeTitle => 'Herinnering uitstellen';
+
+  @override
+  String get snooze10min => '10 minuten';
+
+  @override
+  String get snooze1hour => '1 uur';
+
+  @override
+  String get snooze3hours => '3 uur';
+
+  @override
+  String get snoozeTomorrowMorning => 'Morgen 09:00';
+
+  @override
+  String get snoozeCustom => 'Kies een tijd…';
+
+  @override
+  String get snoozeDone => 'Herinnering uitgesteld';
+
+  @override
+  String get reminderDone => 'Taak afgerond';
+
+  @override
+  String get noteReminderCleared => 'Herinnering gewist';
+
+  @override
   String get quickAddHint => 'Nieuwe taak…';
 
   @override

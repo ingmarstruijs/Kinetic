@@ -7,53 +7,19 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../notifications/notification_service.dart';
-
-// ---------------------------------------------------------------------------
-// Top-level constants — shared between the service and the background isolate
-// handler so they can be referenced from a @pragma('vm:entry-point') function.
-// ---------------------------------------------------------------------------
+import '../notifications/reminder_action.dart';
 
 const _kChannelId = 'task_reminders';
 const _kChannelName = 'Task reminders';
 const _kChannelDesc = 'Reminders for tasks and assignments';
+const _kDarwinCategory = 'task_reminders';
 
-const _kNotifDetails = NotificationDetails(
-  android: AndroidNotificationDetails(
-    _kChannelId,
-    _kChannelName,
-    channelDescription: _kChannelDesc,
-    importance: Importance.high,
-    priority: Priority.high,
-    icon: 'ic_notification',
-  ),
-  iOS: DarwinNotificationDetails(
-    presentAlert: true,
-    presentBadge: true,
-    presentSound: true,
-  ),
-);
-
-// ---------------------------------------------------------------------------
-// Background notification handler.
-//
-// Must be a top-level function with @pragma so the Dart VM can call it in a
-// background isolate when the app is in the background or terminated.
-// "Negeren" simply dismisses — the notification is already gone from the
-// tray, so nothing needs to happen.  "Snooze 10min" re-schedules using a
-// freshly created plugin instance; title/body are recovered from the payload
-// that was stored when the notification was first scheduled.
-// ---------------------------------------------------------------------------
-
-
-
-// ---------------------------------------------------------------------------
-// ParentNotificationService
-//
-// Production implementation of [NotificationService] using
-// flutter_local_notifications.  Initialization is lazy: the first call to any
-// scheduling method triggers the underlying plugin setup so the service can be
-// created synchronously in [_RootShellState.initState].
-// ---------------------------------------------------------------------------
+@pragma('vm:entry-point')
+void reminderTapBackground(NotificationResponse response) {
+  // Actions use showsUserInterface / foreground options so the main isolate
+  // handles Done/Snooze (encrypted DB + dialog). This entry-point exists so
+  // the plugin can register the background callback.
+}
 
 class ParentNotificationService implements NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
@@ -61,8 +27,6 @@ class ParentNotificationService implements NotificationService {
 
   bool _initialized = false;
 
-  // Stores any error that occurred during initialisation so callers can
-  // surface it to the user in both debug and release builds.
   Object? initError;
 
   @override
@@ -74,7 +38,7 @@ class ParentNotificationService implements NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    if (android == null) return true; // iOS/other: assume granted
+    if (android == null) return true;
     return await android.areNotificationsEnabled() ?? true;
   }
 
@@ -94,8 +58,6 @@ class ParentNotificationService implements NotificationService {
     if (_initialized) return;
 
     try {
-      // Timezone setup — fall back to UTC if the device returns an unknown
-      // identifier, so a timezone failure never blocks notification init.
       try {
         tz.initializeTimeZones();
         final tzInfo = await FlutterTimezone.getLocalTimezone();
@@ -106,38 +68,99 @@ class ParentNotificationService implements NotificationService {
       }
 
       await _plugin.initialize(
-        const InitializationSettings(
-          android: AndroidInitializationSettings('ic_notification'),
+        InitializationSettings(
+          android: const AndroidInitializationSettings('ic_notification'),
           iOS: DarwinInitializationSettings(
             requestAlertPermission: true,
             requestBadgePermission: true,
             requestSoundPermission: true,
+            notificationCategories: [
+              DarwinNotificationCategory(
+                _kDarwinCategory,
+                actions: [
+                  DarwinNotificationAction.plain(
+                    ReminderActionId.done,
+                    ReminderActionLabels.done,
+                    options: {DarwinNotificationActionOption.foreground},
+                  ),
+                  DarwinNotificationAction.plain(
+                    ReminderActionId.snooze,
+                    ReminderActionLabels.snooze,
+                    options: {DarwinNotificationActionOption.foreground},
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-
+        onDidReceiveNotificationResponse: _onResponse,
+        onDidReceiveBackgroundNotificationResponse: reminderTapBackground,
       );
 
-      // Request Android 13+ POST_NOTIFICATIONS permission.
       await _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.requestNotificationsPermission();
 
-      // Request exact-alarm permission (Android 12+).
       await _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.requestExactAlarmsPermission();
 
+      final launch = await _plugin.getNotificationAppLaunchDetails();
+      if (launch?.didNotificationLaunchApp == true) {
+        final response = launch!.notificationResponse;
+        if (response != null) _onResponse(response);
+      }
+
       _initialized = true;
       initError = null;
     } catch (e, st) {
       initError = e;
-      // Rethrow so the caller (main.dart) can surface the error.
       Error.throwWithStackTrace(e, st);
     }
+  }
+
+  void _onResponse(NotificationResponse response) {
+    ReminderActionBus.instance.dispatch(
+      actionId: response.actionId,
+      payload: response.payload,
+    );
+  }
+
+  NotificationDetails _reminderDetails() {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        _kChannelId,
+        _kChannelName,
+        channelDescription: _kChannelDesc,
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: 'ic_notification',
+        actions: [
+          AndroidNotificationAction(
+            ReminderActionId.done,
+            ReminderActionLabels.done,
+            showsUserInterface: true,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            ReminderActionId.snooze,
+            ReminderActionLabels.snooze,
+            showsUserInterface: true,
+            cancelNotification: true,
+          ),
+        ],
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: _kDarwinCategory,
+      ),
+    );
   }
 
   @override
@@ -146,25 +169,25 @@ class ParentNotificationService implements NotificationService {
     required String title,
     required String body,
     required DateTime at,
+    String? payload,
   }) async {
     await _ensureInitialized();
 
     final scheduled = tz.TZDateTime.from(at, tz.local);
-    if (scheduled.isBefore(DateTime.now())) return; // skip past reminders
+    if (scheduled.isBefore(DateTime.now())) return;
 
-    // Try exact alarm first (fires on time). If the OS throws a
-    // SecurityException because SCHEDULE_EXACT_ALARM was not granted (Android
-    // 12+), fall back to inexact which fires within ±15 minutes.
+    final details = _reminderDetails();
     try {
       await _plugin.zonedSchedule(
         id,
         title,
         body,
         scheduled,
-        _kNotifDetails,
+        details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
       );
     } catch (_) {
       await _plugin.zonedSchedule(
@@ -172,10 +195,11 @@ class ParentNotificationService implements NotificationService {
         title,
         body,
         scheduled,
-        _kNotifDetails,
+        details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
       );
     }
   }
@@ -193,7 +217,6 @@ class ParentNotificationService implements NotificationService {
     String? payload,
   }) async {
     await _ensureInitialized();
-    await _plugin.show(0, title, body, _kNotifDetails, payload: payload);
+    await _plugin.show(0, title, body, _reminderDetails(), payload: payload);
   }
-
 }

@@ -2456,6 +2456,114 @@ abstract class AppLocalizations {
   /// **'New category…'**
   String get categoryNewAction;
 
+  /// No description provided for @categoryRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename category'**
+  String get categoryRename;
+
+  /// No description provided for @categoryRenameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name'**
+  String get categoryRenameHint;
+
+  /// No description provided for @suggestionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get suggestionsTitle;
+
+  /// No description provided for @suggestionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handy tasks to consider today'**
+  String get suggestionsSubtitle;
+
+  /// No description provided for @suggestionsProposedByPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested by your partner'**
+  String get suggestionsProposedByPartner;
+
+  /// No description provided for @tasksDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get tasksDecline;
+
+  /// No description provided for @kidsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Kids'**
+  String get kidsSectionTitle;
+
+  /// No description provided for @kidsAllFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'All kids'**
+  String get kidsAllFilter;
+
+  /// No description provided for @kidsOpenTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 open task} other{{count} open tasks}}'**
+  String kidsOpenTasks(int count);
+
+  /// No description provided for @snoozeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Snooze reminder'**
+  String get snoozeTitle;
+
+  /// No description provided for @snooze10min.
+  ///
+  /// In en, this message translates to:
+  /// **'10 minutes'**
+  String get snooze10min;
+
+  /// No description provided for @snooze1hour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get snooze1hour;
+
+  /// No description provided for @snooze3hours.
+  ///
+  /// In en, this message translates to:
+  /// **'3 hours'**
+  String get snooze3hours;
+
+  /// No description provided for @snoozeTomorrowMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow 09:00'**
+  String get snoozeTomorrowMorning;
+
+  /// No description provided for @snoozeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a time…'**
+  String get snoozeCustom;
+
+  /// No description provided for @snoozeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder snoozed'**
+  String get snoozeDone;
+
+  /// No description provided for @reminderDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Task completed'**
+  String get reminderDone;
+
+  /// No description provided for @noteReminderCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder cleared'**
+  String get noteReminderCleared;
+
   /// No description provided for @quickAddHint.
   ///
   /// In en, this message translates to:

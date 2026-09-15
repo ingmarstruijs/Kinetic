@@ -187,12 +187,13 @@ class _TaskTileContentState extends State<_TaskTileContent> {
         isOverdue(widget.task.dueDate!, isAllDay: widget.task.isAllDay) &&
         !widget.task.isCompleted;
 
-    return Card(
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
         onTap: () => _openDetail(context),
         onLongPress: () => _pickCategory(context),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -264,7 +265,10 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                         children: [
                           if (hasDate)
                             Text(
-                              formatDueDate(widget.task.dueDate!, AppLocalizations.of(context), allDay: widget.task.isAllDay,
+                              formatDueDate(
+                                widget.task.dueDate!,
+                                AppLocalizations.of(context),
+                                allDay: widget.task.isAllDay,
                               ),
                               style: tt.labelSmall?.copyWith(
                                 color: overdue

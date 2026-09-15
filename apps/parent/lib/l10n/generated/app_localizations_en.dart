@@ -1376,6 +1376,68 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryNewAction => 'New category…';
 
   @override
+  String get categoryRename => 'Rename category';
+
+  @override
+  String get categoryRenameHint => 'Category name';
+
+  @override
+  String get suggestionsTitle => 'Suggestions';
+
+  @override
+  String get suggestionsSubtitle => 'Handy tasks to consider today';
+
+  @override
+  String get suggestionsProposedByPartner => 'Suggested by your partner';
+
+  @override
+  String get tasksDecline => 'Decline';
+
+  @override
+  String get kidsSectionTitle => 'Kids';
+
+  @override
+  String get kidsAllFilter => 'All kids';
+
+  @override
+  String kidsOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open tasks',
+      one: '1 open task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get snoozeTitle => 'Snooze reminder';
+
+  @override
+  String get snooze10min => '10 minutes';
+
+  @override
+  String get snooze1hour => '1 hour';
+
+  @override
+  String get snooze3hours => '3 hours';
+
+  @override
+  String get snoozeTomorrowMorning => 'Tomorrow 09:00';
+
+  @override
+  String get snoozeCustom => 'Pick a time…';
+
+  @override
+  String get snoozeDone => 'Reminder snoozed';
+
+  @override
+  String get reminderDone => 'Task completed';
+
+  @override
+  String get noteReminderCleared => 'Reminder cleared';
+
+  @override
   String get quickAddHint => 'New task…';
 
   @override

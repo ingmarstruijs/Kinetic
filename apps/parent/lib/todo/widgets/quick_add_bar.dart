@@ -67,76 +67,69 @@ class _QuickAddBarState extends State<QuickAddBar> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withAlpha(40),
+    final scheme = Theme.of(context).colorScheme;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: Material(
+          color: scheme.surface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+            side: BorderSide(color: scheme.outline.withAlpha(50)),
           ),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            // Circle add button
-            GestureDetector(
-              onTap: _submit,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: _hasText
-                        ? kColorTeal
-                        : Theme.of(context).colorScheme.outlineVariant,
-                    width: 2,
-                  ),
-                  color: _hasText ? kColorTeal : Colors.transparent,
-                ),
-                child: _hasText
-                    ? const Icon(Icons.add, size: 18, color: Colors.white)
-                    : Icon(
-                        Icons.add,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.outlineVariant,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: _submit,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _hasText ? kColorTeal : scheme.outlineVariant,
+                        width: 2,
                       ),
-              ),
-            ),
-            const SizedBox(width: 12),
-
-            // Text field
-            Expanded(
-              child: TextField(
-                controller: _ctrl,
-                style: Theme.of(context).textTheme.bodyLarge,
-                decoration: InputDecoration(
-                  hintText: l10n.quickAddHint,
-                  hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: _hasText ? kColorTeal : Colors.transparent,
+                    ),
+                    child: _hasText
+                        ? const Icon(Icons.add, size: 18, color: Colors.white)
+                        : Icon(
+                            Icons.add,
+                            size: 18,
+                            color: scheme.outlineVariant,
+                          ),
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
                 ),
-                textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _submit(),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _ctrl,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: l10n.quickAddHint,
+                      hintStyle: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.expand_less, color: scheme.onSurfaceVariant),
+                  tooltip: l10n.quickAddMoreOptions,
+                  onPressed: _openFull,
+                ),
+              ],
             ),
-
-            // Expand to full detail
-            IconButton(
-              icon: Icon(
-                Icons.expand_less,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              tooltip: l10n.quickAddMoreOptions,
-              onPressed: _openFull,
-            ),
-          ],
+          ),
         ),
       ),
     );

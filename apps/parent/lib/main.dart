@@ -8,6 +8,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'db/app_database.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'notifications/notification_service.dart';
+import 'notifications/reminder_action.dart';
 import 'partner/services/partner_proposal_repository.dart';
 import 'settings/settings_repository.dart';
 import 'settings/settings_screen.dart';
@@ -21,6 +22,7 @@ import 'todo/services/ai_suggestion_engine.dart';
 import 'todo/services/ai_suggestion_repository.dart';
 import 'todo/services/note_repository.dart';
 import 'todo/services/todo_repository.dart';
+import 'todo/widgets/snooze_dialog.dart';
 import 'vault/vault_gate.dart';
 
 // Global theme notifier — allows theme changes from anywhere in the app
@@ -111,7 +113,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   final enrolledKidsCount = ValueNotifier<int>(0);
   final webDavConfigured = ValueNotifier<bool>(false);
 
-  /// Incremented after every successful sync — lets the Kinderen tab reload.
+  /// Incremented after every successful sync — lets the kids panel reload.
   final _syncDoneCount = ValueNotifier<int>(0);
 
   /// False when the user has permanently blocked notifications in system settings.
@@ -123,6 +125,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   /// Non-null when notification plugin initialization failed.
   final notifInitError = ValueNotifier<String?>(null);
   Timer? _syncDebounce;
+  StreamSubscription<ReminderActionEvent>? _reminderSub;
 
   int _selectedIndex = 0;
 
@@ -149,6 +152,10 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
     _aiSuggestionRepository = AiSuggestionRepository(widget.db);
 
+    ReminderActionLabels.languageCode = localeNotifier.value.languageCode;
+    localeNotifier.addListener(_onLocaleChanged);
+    _reminderSub = ReminderActionBus.instance.stream.listen(_onReminderAction);
+
     _initSync();
     // Request notification permissions immediately so the Android dialog
     // is shown on first launch rather than waiting for the first reminder.
@@ -164,6 +171,47 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
         if (mounted) notifInitError.value = e.toString();
       }
     });
+  }
+
+  void _onLocaleChanged() {
+    ReminderActionLabels.languageCode = localeNotifier.value.languageCode;
+  }
+
+  Future<void> _onReminderAction(ReminderActionEvent event) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+
+    if (event.actionId == ReminderActionId.done) {
+      if (event.payload.kind == ReminderKind.task) {
+        await _todoRepository.completeTask(event.payload.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.reminderDone)));
+      } else {
+        await _noteRepository.clearReminder(event.payload.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.noteReminderCleared)));
+      }
+      return;
+    }
+
+    if (event.actionId == ReminderActionId.snooze) {
+      final until = await showSnoozeDialog(context);
+      if (until == null || !mounted) return;
+      if (event.payload.kind == ReminderKind.task) {
+        await _todoRepository.snoozeReminder(event.payload.id, until);
+      } else {
+        await _noteRepository.snoozeReminder(event.payload.id, until);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.snoozeDone)));
+    }
   }
 
   Future<void> _checkNotificationPermission() async {
@@ -269,6 +317,8 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _reminderSub?.cancel();
+    localeNotifier.removeListener(_onLocaleChanged);
     _syncDebounce?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     widget.db.close();
@@ -382,9 +432,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                             horizontal: 16,
                             vertical: 8,
                           ),
-                          content: Text(
-                            l10n.notifServiceFailed(initErr),
-                          ),
+                          content: Text(l10n.notifServiceFailed(initErr)),
                           leading: const Icon(
                             Icons.error_outline,
                             color: Colors.red,

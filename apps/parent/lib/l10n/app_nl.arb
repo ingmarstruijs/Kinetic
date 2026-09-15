@@ -698,6 +698,31 @@
   "categoryTitle": "Categorie",
   "categoryNewHint": "Nieuwe categorie",
   "categoryNewAction": "Nieuwe categorie…",
+  "categoryRename": "Categorie hernoemen",
+  "categoryRenameHint": "Categorienaam",
+
+  "suggestionsTitle": "Suggesties",
+  "suggestionsSubtitle": "Handige taken om vandaag te overwegen",
+  "suggestionsProposedByPartner": "Voorgesteld door je partner",
+  "tasksDecline": "Weigeren",
+  "kidsSectionTitle": "Kids",
+  "kidsAllFilter": "Alle kids",
+  "kidsOpenTasks": "{count, plural, =1{1 open taak} other{{count} open taken}}",
+  "@kidsOpenTasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "snoozeTitle": "Herinnering uitstellen",
+  "snooze10min": "10 minuten",
+  "snooze1hour": "1 uur",
+  "snooze3hours": "3 uur",
+  "snoozeTomorrowMorning": "Morgen 09:00",
+  "snoozeCustom": "Kies een tijd…",
+  "snoozeDone": "Herinnering uitgesteld",
+  "reminderDone": "Taak afgerond",
+  "noteReminderCleared": "Herinnering gewist",
 
   "quickAddHint": "Nieuwe taak…",
   "quickAddMoreOptions": "Meer opties",

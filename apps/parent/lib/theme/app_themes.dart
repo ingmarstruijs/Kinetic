@@ -224,6 +224,13 @@ ThemeData _themeFromScheme(ColorScheme colorScheme, {Color? scaffold}) {
         borderSide: BorderSide(color: colorScheme.primary, width: 3),
       ),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: 72,
+      indicatorShape: const StadiumBorder(),
+      indicatorColor: colorScheme.primaryContainer,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      backgroundColor: background,
+    ),
   );
 }
 

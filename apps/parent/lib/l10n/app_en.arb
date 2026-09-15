@@ -698,6 +698,31 @@
   "categoryTitle": "Category",
   "categoryNewHint": "New category",
   "categoryNewAction": "New category…",
+  "categoryRename": "Rename category",
+  "categoryRenameHint": "Category name",
+
+  "suggestionsTitle": "Suggestions",
+  "suggestionsSubtitle": "Handy tasks to consider today",
+  "suggestionsProposedByPartner": "Suggested by your partner",
+  "tasksDecline": "Decline",
+  "kidsSectionTitle": "Kids",
+  "kidsAllFilter": "All kids",
+  "kidsOpenTasks": "{count, plural, =1{1 open task} other{{count} open tasks}}",
+  "@kidsOpenTasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "snoozeTitle": "Snooze reminder",
+  "snooze10min": "10 minutes",
+  "snooze1hour": "1 hour",
+  "snooze3hours": "3 hours",
+  "snoozeTomorrowMorning": "Tomorrow 09:00",
+  "snoozeCustom": "Pick a time…",
+  "snoozeDone": "Reminder snoozed",
+  "reminderDone": "Task completed",
+  "noteReminderCleared": "Reminder cleared",
 
   "quickAddHint": "New task…",
   "quickAddMoreOptions": "More options",

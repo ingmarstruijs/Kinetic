@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../db/app_database.dart';
 import '../../notifications/notification_service.dart';
+import '../../notifications/reminder_action.dart';
 import '../models/personal_note.dart';
 
 /// NoteRepository — CRUD for personal notes with reminder scheduling.
@@ -102,6 +103,25 @@ class NoteRepository {
     }
   }
 
+  Future<PersonalNote?> getNote(String id) async {
+    final row = await (_db.select(
+      _db.personalNotes,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _noteFromRow(row);
+  }
+
+  Future<void> snoozeReminder(String noteId, DateTime until) async {
+    final note = await getNote(noteId);
+    if (note == null) return;
+    await update(note.copyWith(remindAt: until.toUtc()));
+  }
+
+  Future<void> clearReminder(String noteId) async {
+    final note = await getNote(noteId);
+    if (note == null) return;
+    await update(note.copyWith(clearRemindAt: true));
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   Future<void> updateNoteCategory(String noteId, String? category) async {
     await (_db.update(
@@ -176,6 +196,7 @@ class NoteRepository {
         title: note.title,
         body: body,
         at: note.remindAt!,
+        payload: ReminderPayload.note(note.id).encode(),
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail note operations.

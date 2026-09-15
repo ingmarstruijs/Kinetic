@@ -178,10 +178,11 @@ void main() {
       }
     });
 
-    test('all themes have TabBarThemeData', () {
+    test('all themes have NavigationBarThemeData', () {
       for (final theme in AppTheme.values) {
         final themeData = buildTheme(theme);
-        expect(themeData.tabBarTheme, isNotNull);
+        expect(themeData.navigationBarTheme, isNotNull);
+        expect(themeData.navigationBarTheme.indicatorShape, isNotNull);
       }
     });
   });

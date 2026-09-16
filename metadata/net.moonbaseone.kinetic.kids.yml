@@ -28,9 +28,9 @@ RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.3.4
-    versionCode: 3
-    commit: v0.3.4
+  - versionName: 0.3.5
+    versionCode: 4
+    commit: v0.3.5
     subdir: apps/kids
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
@@ -45,5 +45,5 @@ Builds:
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.3.4
-CurrentVersionCode: 3
+CurrentVersion: 0.3.5
+CurrentVersionCode: 4

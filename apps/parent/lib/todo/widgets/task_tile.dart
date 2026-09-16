@@ -209,34 +209,10 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                     shape: BoxShape.circle,
                     border: widget.task.isCompleted
                         ? null
-                        : Border.all(
-                            color: widget.task.priority != TaskPriority.none
-                                ? priorityColor(widget.task.priority)
-                                : kColorWarmGrey,
-                            width: widget.task.priority == TaskPriority.high
-                                ? 2.5
-                                : 2,
-                          ),
+                        : Border.all(color: kColorWarmGrey, width: 2),
                     color: widget.task.isCompleted
                         ? kColorTeal
-                        : (widget.task.priority != TaskPriority.none
-                              ? priorityColor(
-                                  widget.task.priority,
-                                ).withAlpha(30)
-                              : Colors.transparent),
-                    boxShadow:
-                        widget.task.priority != TaskPriority.none &&
-                            !widget.task.isCompleted
-                        ? [
-                            BoxShadow(
-                              color: priorityColor(
-                                widget.task.priority,
-                              ).withAlpha(50),
-                              blurRadius: 4,
-                              spreadRadius: 0,
-                            ),
-                          ]
-                        : null,
+                        : Colors.transparent,
                   ),
                   child: widget.task.isCompleted
                       ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -248,16 +224,30 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.task.title,
-                      style: tt.bodyLarge?.copyWith(
-                        decoration: widget.task.isCompleted
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: widget.task.isCompleted
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : null,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.task.title,
+                            style: tt.bodyLarge?.copyWith(
+                              decoration: widget.task.isCompleted
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              color: widget.task.isCompleted
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        if (widget.task.priority != TaskPriority.none)
+                          _PriorityMark(
+                            priority: widget.task.priority,
+                            muted: widget.task.isCompleted,
+                          ),
+                      ],
                     ),
                     if (hasDate || widget.task.notes != null) ...[
                       const SizedBox(height: 3),
@@ -436,6 +426,40 @@ class _TaskTileContentState extends State<_TaskTileContent> {
         result.isEmpty ? null : result,
       );
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Priority mark — sits after the title so long headers can wrap freely.
+// ---------------------------------------------------------------------------
+
+class _PriorityMark extends StatelessWidget {
+  final TaskPriority priority;
+  final bool muted;
+
+  const _PriorityMark({required this.priority, required this.muted});
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = priorityIcon(priority);
+    if (icon == null) return const SizedBox.shrink();
+    final l10n = AppLocalizations.of(context);
+    final label = switch (priority) {
+      TaskPriority.high => l10n.commonHigh,
+      TaskPriority.medium => l10n.commonMedium,
+      TaskPriority.low => l10n.commonLow,
+      TaskPriority.none => '',
+    };
+    final color = muted
+        ? Theme.of(context).colorScheme.onSurfaceVariant
+        : priorityColor(priority);
+    return Padding(
+      padding: const EdgeInsets.only(left: 6, top: 2),
+      child: Tooltip(
+        message: '${l10n.commonPriority}: $label',
+        child: Icon(icon, size: 18, color: color),
+      ),
+    );
   }
 }
 

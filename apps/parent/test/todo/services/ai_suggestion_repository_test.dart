@@ -80,6 +80,27 @@ void main() {
       expect(pending, hasLength(2));
     });
 
+    test(
+      'watchPending emits on an existing subscription after dismiss',
+      () async {
+        await repo.upsertSuggestion(
+          AiSuggestion.create(title: 'Koken', reason: SuggestionReason.habit),
+        );
+        final pending = <int>[];
+        final sub = repo.watchPending().listen(
+          (list) => pending.add(list.length),
+        );
+        await pumpEventQueue();
+        expect(pending.last, 1);
+
+        final id = (await repo.watchPending().first).first.id;
+        await repo.dismiss(id);
+        await pumpEventQueue();
+        expect(pending.last, 0);
+        await sub.cancel();
+      },
+    );
+
     test('watchPending excludes dismissed suggestions', () async {
       await repo.upsertSuggestion(
         AiSuggestion.create(title: 'Koken', reason: SuggestionReason.habit),

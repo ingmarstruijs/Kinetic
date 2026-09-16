@@ -6,10 +6,9 @@ Parent-facing Flutter app. Manage personal tasks and notes locally, coordinate w
 
 | Screen | Description |
 |---|---|
-| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **Forward** sends tasks to partner or individual kids with connection-aware gating. A **suggestion banner** on the Private tab shows on-device self suggestions. |
-| **Family** | Conditionally visible when partner is paired or kids are connected. **Proposals** tab: structured sections for self suggestions, partner suggestions (generic templates + **What your partner sees** preview), and incoming partner proposals. **Kids** tab: overview of tasks assigned to each enrolled child. |
-| **Notes** | Markdown notes, personal or shared. List rows show a note icon, title, reminder, and “Shared” — **not** the body. Editor uses the same bottom-sheet layout as tasks. |
-| **Settings** | WebDAV config, connection test, **theme selector** (Light, Sand, Dusk, Night). **Vault**: verify or show the 12-word recovery phrase (device lock). **Family** section: Partner pairing (share/scan QR), Kids enrollment (QR without WebDAV password) with status. **Backup & Restore**: encrypted `.kvault` export/import (passphrase required; no key in the file). Restoring a backup automatically reschedules all notifications. |
+| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **Forward** sends tasks to partner or individual kids with connection-aware gating. A collapsible **suggestions** card sits above the list (self, partner-targeted, and incoming proposals). When kids are enrolled, a collapsible **kids** section shows assignments grouped by child. Reminder notifications offer **Done** and **Snooze**. |
+| **Notes** | Markdown notes, personal or shared. The list uses paper-style cards with title and a short body preview. Editor uses the same bottom-sheet layout as tasks. |
+| **Settings** | WebDAV config, connection test, **theme selector** (Light, Sand, Dusk, Night). **Vault**: verify the 12-word recovery phrase (the words are not stored on device). **Family** section: Partner pairing (share/scan QR), Kids enrollment (QR without WebDAV password) with status. **Backup & Restore**: encrypted `.kvault` export/import (passphrase required; no key in the file). Restoring a backup automatically reschedules all notifications. Debug builds also have **UI scenarios** to load local mock states for screenshots and manual QA. |
 
 ## Family Setup
 
@@ -29,16 +28,15 @@ Each child device enrolls independently:
 
 ## Themes
 
-Four Material 3 themes, chosen in **Settings**:
+Three Material 3 themes, chosen in **Settings**:
 
 | Id | Label | Description |
 |---|---|---|
-| `light` | Light | Bright blue |
-| `sand` | Sand | Warm paper |
-| `dusk` | Dusk | Blue-grey dark |
+| `light` | Default | Light blue |
+| `calm` | Calm | Soft and easy on the eyes |
 | `night` | Night | OLED black |
 
-Persisted name `dark` (pre-0.3) maps to `dusk`.
+Legacy ids `sand` → `calm`, and `dusk` / `dark` → `night`.
 
 ## WebDAV Setup & Encryption Keys
 
@@ -55,7 +53,7 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 - `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. Kids sync orchestrator filters: only displays tasks where `xKineticTargetKidId == myKidId` or `xKineticTargetKidId` is null.
 
 ### Security
-- **Personal vault**: 12 BIP-39 words → derived AES key; 16-byte entropy stored on-device for re-reveal behind the device lock
+- **Personal vault**: 12 BIP-39 words → derived AES key stored on-device. The words and BIP-39 entropy are **not** stored; paper from onboarding is the only recovery. Settings can verify a typed phrase against the derived key.
 - **Family Key**: 12 BIP-39 words (quiz on create); QR v2 entropy; fingerprint; `family.key.enc` on personal WebDAV. A 0.2.x random family key is kept (no words).
 - **Partner Paired Flag**: Stored as `kinetic_partner_paired` secure storage key; set only when QR pairing succeeds
 - **Enrolled Kids List**: Stored as JSON in `kinetic_enrolled_kids` secure storage key; persisted on parent device only
@@ -79,14 +77,14 @@ lib/
 ├── family/        — FamilyConnectionService (presence-based send gating)
 ├── l10n/          — ARB localizations (English template + Dutch)
 ├── notifications/ — local notification scheduling
-├── partner/       — proposals, family screen, services
+├── partner/       — proposals, pairing services
 ├── secure/        — secure storage wrappers
 ├── settings/      — WebDAV config, theme, family key share/scan screens
 ├── sync/          — SyncOrchestrator (WebDAV pull/push, LWW merge, xKineticTargetKidId embedding)
 ├── theme/         — Material 3 themes (Light, Sand, Dusk, Night)
 ├── todo/          — task & note models, repositories, screens, reminder time helper, suggestion engine
 ├── vault/         — BIP-39 onboarding gate, restore (file / WebDAV), verify
-└── main.dart      — root shell with conditional Family nav item
+└── main.dart      — root shell (Tasks, Notes, Settings)
 ```
 
 ## AI Suggestion Engine
@@ -110,14 +108,16 @@ Partner-targeted detectors create suggestions — they do not auto-send proposal
 | **Partner complement** | Keywords in **your** open tasks, including private | Generic partner hint — never copies the private title (→ partner) |
 | **Load balance** | ≥ 3 open tasks in the same category (private counted) | Generic “help with this category?” hint (→ partner) |
 
-Each suggestion stores an `explanation` field with a human-readable reason. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`.
+Each suggestion stores an `explanation` field. Template titles and reasons (load balance, partner hints, calendar) are localized in the UI from the app language. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`.
 
 ### Suggestion UI
 
-- **Private tab**: `SuggestionBanner` shows the first pending self suggestion
-- **Proposals tab**: three sections — **For you**, **For partner**, **From partner** (inbox)
-- Actions per card: **Add** / **Reminder** (stale), **Send to partner** (when paired, with preview), **Dismiss**; long-press to snooze 7 days
-- Proposals created from partner suggestions are marked `autoGenerated` with a "Via suggestion" badge
+- **Tasks screen**: `SuggestionsPanel` is a collapsible card above the list. Hidden when there is nothing pending.
+- Sections: **For you**, **For partner** (when paired), **From partner** (inbox)
+- **For you**: tap accepts (creates the task, applies a stale reminder, or assigns a category); swipe dismisses
+- **For partner**: **Send** opens **What your partner sees**; **Decline** dismisses
+- **From partner**: **Accept** / **Decline** on the incoming proposal
+- Partner-targeted proposals are marked `autoGenerated` in the database
 
 Suggestions are stored in the local `AiSuggestions` table and never synced to WebDAV.
 
@@ -166,14 +166,9 @@ When a device explicitly leaves the family, it writes an encrypted **tombstone**
 
 ## Conditional UI
 
-**Family nav item** is only visible when:
-- Partner is paired (Flag: `kinetic_partner_paired == true`) OR
-- At least one child is enrolled (`enrolledKids.length > 0`)
+**Kids panel** on Tasks is only visible when:
 
-**Proposals tab** in Family screen:
-- Visible only when `partnerPaired == true`
-- Shows "No proposals" when no proposals exist
+- At least one child is enrolled (`enrolledKidsCount > 0`)
+- WebDAV config and sync are available so assignments can be loaded
 
-**Kids tab** in Family screen:
-- Visible only when `enrolledKidsCount > 0`
-- Displays live overview pulled from `/kinetic/shared/tasks/` grouped by enrolled kid name
+**Suggestions panel** on Tasks is hidden when there are no pending self suggestions, partner-targeted hints, or incoming proposals.

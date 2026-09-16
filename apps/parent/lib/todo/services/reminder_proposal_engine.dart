@@ -1,20 +1,123 @@
+import '../../l10n/generated/app_localizations.dart';
 import '../models/enums.dart';
 import '../models/personal_task.dart';
 
+/// How the chip label should be phrased, independent of locale.
+enum ReminderLabelMode { relativeHours, relativeDays, clock }
+
+enum ReminderExplainKind {
+  habitTime,
+  habitInterval,
+  keyword,
+  categorySchool,
+  categoryHousehold,
+  categoryHealth,
+  categoryAdmin,
+  categoryDefault,
+  evening,
+  morning,
+  tomorrowEvening,
+  quick,
+}
+
 /// A single smart reminder chip proposal.
 class ReminderChipProposal {
-  final String label;
   final DateTime at;
   final int score;
-  final String? explanation;
+  final ReminderLabelMode labelMode;
+  final int relativeCount;
+  final ReminderExplainKind explainKind;
+  final int? explainCount;
+  final int? explainWeekday;
+  final int? explainMedianDays;
+  final int? explainDaysSince;
+  final String? explainKeyword;
 
   const ReminderChipProposal({
-    required this.label,
     required this.at,
     required this.score,
-    this.explanation,
+    required this.labelMode,
+    this.relativeCount = 0,
+    required this.explainKind,
+    this.explainCount,
+    this.explainWeekday,
+    this.explainMedianDays,
+    this.explainDaysSince,
+    this.explainKeyword,
   });
 }
+
+String formatReminderChipLabel(
+  ReminderChipProposal chip,
+  AppLocalizations l10n, {
+  DateTime? now,
+}) {
+  final clock = (now ?? DateTime.now()).toLocal();
+  final at = chip.at.toLocal();
+  final time = _hhmm(at);
+
+  switch (chip.labelMode) {
+    case ReminderLabelMode.relativeHours:
+      return l10n.dateInHours(chip.relativeCount);
+    case ReminderLabelMode.relativeDays:
+      return l10n.dateInDays(chip.relativeCount);
+    case ReminderLabelMode.clock:
+      final dayDiff = DateTime(
+        at.year,
+        at.month,
+        at.day,
+      ).difference(DateTime(clock.year, clock.month, clock.day)).inDays;
+      if (dayDiff == 0) {
+        return at.hour >= 17
+            ? l10n.dateTonightTime(time)
+            : l10n.dateTodayTime(time);
+      }
+      if (dayDiff == 1) return l10n.dateTomorrowTime(time);
+      return '${_shortWeekday(at.weekday, l10n)} $time';
+  }
+}
+
+String formatReminderChipExplanation(
+  ReminderChipProposal chip,
+  AppLocalizations l10n,
+) {
+  return switch (chip.explainKind) {
+    ReminderExplainKind.habitTime => l10n.reminderWhyHabitTime(
+      chip.explainCount ?? 0,
+      _shortWeekday(chip.explainWeekday ?? 1, l10n),
+    ),
+    ReminderExplainKind.habitInterval => l10n.reminderWhyHabitInterval(
+      chip.explainMedianDays ?? 0,
+      chip.explainDaysSince ?? 0,
+    ),
+    ReminderExplainKind.keyword => l10n.reminderWhyKeyword(
+      chip.explainKeyword ?? '',
+    ),
+    ReminderExplainKind.categorySchool => l10n.reminderWhyCategorySchool,
+    ReminderExplainKind.categoryHousehold => l10n.reminderWhyCategoryHousehold,
+    ReminderExplainKind.categoryHealth => l10n.reminderWhyCategoryHealth,
+    ReminderExplainKind.categoryAdmin => l10n.reminderWhyCategoryAdmin,
+    ReminderExplainKind.categoryDefault => l10n.reminderWhyDefaultMorning,
+    ReminderExplainKind.evening => l10n.reminderWhyEvening,
+    ReminderExplainKind.morning => l10n.reminderWhyDefaultMorning,
+    ReminderExplainKind.tomorrowEvening => l10n.reminderWhyTomorrowEvening,
+    ReminderExplainKind.quick => l10n.reminderWhyQuick,
+  };
+}
+
+String _hhmm(DateTime at) =>
+    '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
+
+String _shortWeekday(int weekday, AppLocalizations l10n) => switch (weekday) {
+  1 => l10n.dateWeekdayShortMonday,
+  2 => l10n.dateWeekdayShortTuesday,
+  3 => l10n.dateWeekdayShortWednesday,
+  4 => l10n.dateWeekdayShortThursday,
+  5 => l10n.dateWeekdayShortFriday,
+  6 => l10n.dateWeekdayShortSaturday,
+  7 => l10n.dateWeekdayShortSunday,
+  _ => '',
+};
 
 enum _ReminderProposalSource {
   habitTime,
@@ -27,18 +130,43 @@ enum _ReminderProposalSource {
 
 class _ScoredCandidate {
   final DateTime at;
-  final String label;
   final int score;
-  final String? explanation;
   final _ReminderProposalSource source;
+  final ReminderLabelMode labelMode;
+  final int relativeCount;
+  final ReminderExplainKind explainKind;
+  final int? explainCount;
+  final int? explainWeekday;
+  final int? explainMedianDays;
+  final int? explainDaysSince;
+  final String? explainKeyword;
 
   const _ScoredCandidate({
     required this.at,
-    required this.label,
     required this.score,
-    this.explanation,
     required this.source,
+    required this.labelMode,
+    this.relativeCount = 0,
+    required this.explainKind,
+    this.explainCount,
+    this.explainWeekday,
+    this.explainMedianDays,
+    this.explainDaysSince,
+    this.explainKeyword,
   });
+
+  ReminderChipProposal toProposal() => ReminderChipProposal(
+    at: at,
+    score: score,
+    labelMode: labelMode,
+    relativeCount: relativeCount,
+    explainKind: explainKind,
+    explainCount: explainCount,
+    explainWeekday: explainWeekday,
+    explainMedianDays: explainMedianDays,
+    explainDaysSince: explainDaysSince,
+    explainKeyword: explainKeyword,
+  );
 }
 
 /// On-device heuristic engine that proposes contextual reminder chips.
@@ -50,32 +178,22 @@ class ReminderProposalEngine {
   static const _scoreContextual = 30;
   static const _scoreFallback = 10;
 
-  static const _keywordRules = <String, ({int hour, int minute, String label})>{
-    'school': (hour: 7, minute: 0, label: 'Tomorrow 07:00'),
-    'huiswerk': (hour: 7, minute: 0, label: 'Tomorrow 07:00'),
-    'sport': (hour: 18, minute: 0, label: 'Tonight 18:00'),
-    'training': (hour: 18, minute: 0, label: 'Tonight 18:00'),
-    'zwemmen': (hour: 18, minute: 0, label: 'Tonight 18:00'),
-    'boodschappen': (hour: 10, minute: 0, label: 'Sat 10:00'),
-    'supermarkt': (hour: 10, minute: 0, label: 'Sat 10:00'),
-    'belasting': (hour: 9, minute: 0, label: 'In 3 days'),
-    'deadline': (hour: 9, minute: 0, label: 'In 3 days'),
-    'verjaardag': (hour: 10, minute: 0, label: 'In 3 days'),
-    'cadeau': (hour: 10, minute: 0, label: 'In 3 days'),
-    'kapper': (hour: 9, minute: 0, label: 'Tomorrow 09:00'),
-    'tandarts': (hour: 9, minute: 0, label: 'Tomorrow 09:00'),
-    'afspraak': (hour: 9, minute: 0, label: 'Tomorrow 09:00'),
+  static const _keywordRules = <String, ({int hour, int minute})>{
+    'school': (hour: 7, minute: 0),
+    'huiswerk': (hour: 7, minute: 0),
+    'sport': (hour: 18, minute: 0),
+    'training': (hour: 18, minute: 0),
+    'zwemmen': (hour: 18, minute: 0),
+    'boodschappen': (hour: 10, minute: 0),
+    'supermarkt': (hour: 10, minute: 0),
+    'belasting': (hour: 9, minute: 0),
+    'deadline': (hour: 9, minute: 0),
+    'verjaardag': (hour: 10, minute: 0),
+    'cadeau': (hour: 10, minute: 0),
+    'kapper': (hour: 9, minute: 0),
+    'tandarts': (hour: 9, minute: 0),
+    'afspraak': (hour: 9, minute: 0),
   };
-
-  static const _weekdayShort = [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
 
   List<ReminderChipProposal> propose({
     required String title,
@@ -108,14 +226,7 @@ class ReminderProposalEngine {
       if (picked.any((p) => p.at.difference(c.at).inMinutes.abs() < 30)) {
         continue;
       }
-      picked.add(
-        ReminderChipProposal(
-          label: c.label,
-          at: c.at,
-          score: c.score,
-          explanation: c.explanation,
-        ),
-      );
+      picked.add(c.toProposal());
       if (picked.length >= maxChips) break;
     }
 
@@ -153,14 +264,7 @@ class ReminderProposalEngine {
     return _fallbackCandidates(clock)
         .where((c) => c.at.isAfter(clock))
         .take(maxChips)
-        .map(
-          (c) => ReminderChipProposal(
-            label: c.label,
-            at: c.at,
-            score: c.score,
-            explanation: c.explanation,
-          ),
-        )
+        .map((c) => c.toProposal())
         .toList();
   }
 
@@ -189,12 +293,12 @@ class ReminderProposalEngine {
     return [
       _ScoredCandidate(
         at: at,
-        label:
-            '${_weekdayShort[weekday - 1]} ${hour.toString().padLeft(2, '0')}:00',
         score: _scoreHabitTime,
-        explanation:
-            'You did this task ${count}× on ${_weekdayShort[weekday - 1]} mornings',
         source: _ReminderProposalSource.habitTime,
+        labelMode: ReminderLabelMode.clock,
+        explainKind: ReminderExplainKind.habitTime,
+        explainCount: count,
+        explainWeekday: weekday,
       ),
     ];
   }
@@ -232,17 +336,20 @@ class ReminderProposalEngine {
     }
 
     final daysUntil = at.difference(clock).inDays;
-    final label = daysUntil <= 1
-        ? 'Tomorrow ${medianHour.toString().padLeft(2, '0')}:00'
-        : 'In $daysUntil days';
+    final relative = daysUntil <= 1;
 
     return [
       _ScoredCandidate(
         at: at,
-        label: label,
         score: _scoreHabitInterval,
-        explanation: 'About every $median days, last $daysSince days ago',
         source: _ReminderProposalSource.habitInterval,
+        labelMode: relative
+            ? ReminderLabelMode.clock
+            : ReminderLabelMode.relativeDays,
+        relativeCount: relative ? 0 : daysUntil,
+        explainKind: ReminderExplainKind.habitInterval,
+        explainMedianDays: median,
+        explainDaysSince: daysSince,
       ),
     ];
   }
@@ -256,6 +363,8 @@ class ReminderProposalEngine {
       if (!normalizedTitle.contains(entry.key)) continue;
       final rule = entry.value;
       DateTime at;
+      var labelMode = ReminderLabelMode.clock;
+      var relativeCount = 0;
       if (entry.key == 'boodschappen' || entry.key == 'supermarkt') {
         at = _nextWeekdayAt(clock, DateTime.saturday, rule.hour, rule.minute);
       } else if (entry.key == 'belasting' ||
@@ -269,6 +378,8 @@ class ReminderProposalEngine {
           rule.hour,
           rule.minute,
         ).add(const Duration(days: 3));
+        labelMode = ReminderLabelMode.relativeDays;
+        relativeCount = 3;
       } else if (entry.key == 'sport' ||
           entry.key == 'training' ||
           entry.key == 'zwemmen') {
@@ -279,10 +390,12 @@ class ReminderProposalEngine {
       results.add(
         _ScoredCandidate(
           at: at,
-          label: rule.label,
           score: _scoreKeyword,
-          explanation: 'Matches "${entry.key}" in the title',
           source: _ReminderProposalSource.keyword,
+          labelMode: labelMode,
+          relativeCount: relativeCount,
+          explainKind: ReminderExplainKind.keyword,
+          explainKeyword: entry.key,
         ),
       );
     }
@@ -295,40 +408,34 @@ class ReminderProposalEngine {
   ) {
     final cat = category ?? TaskCategory.other;
     final DateTime at;
-    final String label;
-    final String explanation;
+    final ReminderExplainKind explainKind;
 
     switch (cat) {
       case TaskCategory.school:
         at = _tomorrowAt(clock, 7, 0);
-        label = 'Tomorrow 07:00';
-        explanation = 'School tasks are usually planned in the morning';
+        explainKind = ReminderExplainKind.categorySchool;
       case TaskCategory.household:
         at = _nextWeekdayAt(clock, DateTime.saturday, 9, 0);
-        label = 'Sat 09:00';
-        explanation = 'Household tasks are often planned on weekends';
+        explainKind = ReminderExplainKind.categoryHousehold;
       case TaskCategory.health:
         at = _tomorrowAt(clock, 8, 0);
-        label = 'Tomorrow 08:00';
-        explanation = 'Health tasks are often reminded in the morning';
+        explainKind = ReminderExplainKind.categoryHealth;
       case TaskCategory.finance:
       case TaskCategory.admin:
         at = _tomorrowAt(clock, 9, 0);
-        label = 'Tomorrow 09:00';
-        explanation = 'Admin tasks are often planned during the day';
+        explainKind = ReminderExplainKind.categoryAdmin;
       case TaskCategory.other:
         at = _tomorrowAt(clock, 9, 0);
-        label = 'Tomorrow 09:00';
-        explanation = 'Default morning reminder';
+        explainKind = ReminderExplainKind.categoryDefault;
     }
 
     return [
       _ScoredCandidate(
         at: at,
-        label: label,
         score: _scoreCategory,
-        explanation: explanation,
         source: _ReminderProposalSource.category,
+        labelMode: ReminderLabelMode.clock,
+        explainKind: explainKind,
       ),
     ];
   }
@@ -339,30 +446,30 @@ class ReminderProposalEngine {
       results.add(
         _ScoredCandidate(
           at: DateTime(clock.year, clock.month, clock.day, 20, 0),
-          label: 'Tonight 20:00',
           score: _scoreContextual,
-          explanation: 'Quick evening reminder',
           source: _ReminderProposalSource.contextual,
+          labelMode: ReminderLabelMode.clock,
+          explainKind: ReminderExplainKind.evening,
         ),
       );
     }
     results.add(
       _ScoredCandidate(
         at: _tomorrowAt(clock, 9, 0),
-        label: 'Tomorrow 09:00',
         score: _scoreContextual,
-        explanation: 'Default morning reminder',
         source: _ReminderProposalSource.contextual,
+        labelMode: ReminderLabelMode.clock,
+        explainKind: ReminderExplainKind.morning,
       ),
     );
     if (clock.hour < 20) {
       results.add(
         _ScoredCandidate(
           at: _tomorrowAt(clock, 20, 0),
-          label: 'Tomorrow 20:00',
           score: _scoreContextual - 1,
-          explanation: 'Reminder tomorrow evening',
           source: _ReminderProposalSource.contextual,
+          labelMode: ReminderLabelMode.clock,
+          explainKind: ReminderExplainKind.tomorrowEvening,
         ),
       );
     }
@@ -373,10 +480,11 @@ class ReminderProposalEngine {
     return [
       _ScoredCandidate(
         at: clock.add(const Duration(hours: 1)),
-        label: 'In 1 hour',
         score: _scoreFallback,
-        explanation: 'Quick reminder',
         source: _ReminderProposalSource.fallback,
+        labelMode: ReminderLabelMode.relativeHours,
+        relativeCount: 1,
+        explainKind: ReminderExplainKind.quick,
       ),
       ..._contextualCandidates(clock),
     ];

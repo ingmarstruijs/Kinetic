@@ -105,7 +105,7 @@ class AiSuggestionRepository {
     return rows.length;
   }
 
-  /// Watch pending suggestion count (drives the Voorstellen tab badge).
+  /// Watch pending suggestion count (used by tests and count helpers).
   Stream<int> watchPendingCount() => watchPending().map((list) => list.length);
 
   Future<int> countPendingSelf() async {

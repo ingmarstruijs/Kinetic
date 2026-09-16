@@ -135,7 +135,8 @@ class WebDavConfigRepository {
     await _store.write(key: _kPersonalKey, value: base64.encode(personalKey));
   }
 
-  /// 16-byte BIP-39 entropy so the personal phrase can be shown again.
+  /// 16-byte BIP-39 entropy. Kept for tests and leftover cleanup; the
+  /// personal vault no longer persists this (the phrase cannot be re-shown).
   Future<void> savePersonalEntropy(Uint8List entropy) async {
     await _store.write(key: _kPersonalEntropy, value: base64.encode(entropy));
   }

@@ -154,7 +154,7 @@ class PartnerProposalRepository {
     await _storeExclusionFromTitle(taskTitle);
   }
 
-  /// Watch the count of pending proposals from the partner (drives the nav badge).
+  /// Watch the count of pending proposals from the partner.
   ///
   /// [myParentId] excludes own outgoing proposals from the count.
   Stream<int> watchPendingCount({String? myParentId}) {

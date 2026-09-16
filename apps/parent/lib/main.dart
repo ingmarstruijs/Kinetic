@@ -24,6 +24,7 @@ import 'todo/services/note_repository.dart';
 import 'todo/services/todo_repository.dart';
 import 'todo/widgets/snooze_dialog.dart';
 import 'vault/vault_gate.dart';
+import 'debug/demo_session.dart';
 
 // Global theme notifier — allows theme changes from anywhere in the app
 final themeNotifier = ValueNotifier<AppTheme>(AppTheme.light);
@@ -356,156 +357,190 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     bool exactEnabled,
     String? initErr,
   ) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: partnerPaired,
-      builder: (context, paired, _) {
-        return ValueListenableBuilder<int>(
-          valueListenable: enrolledKidsCount,
-          builder: (context, kidsCount, _) {
-            return ValueListenableBuilder<bool>(
-              valueListenable: webDavConfigured,
-              builder: (context, hasWebDav, _) {
-                final screens = <Widget>[
-                  TasksScreen(
-                    repo: _todoRepository,
-                    settingsRepo: widget.settingsRepo,
-                    proposalRepo: paired ? _proposalRepository : null,
-                    suggestionRepo: _aiSuggestionRepository,
-                    myParentId: _syncOrchestrator?.parentId,
-                    syncStatus: hasWebDav ? syncStatus : null,
-                    hasFamilyKey: paired || kidsCount > 0,
-                    partnerPaired: paired,
-                    onSyncRetry: _triggerSync,
-                    configRepo: _webDavConfig,
-                    enrolledKidsCount: kidsCount,
-                    syncDoneCount: _syncDoneCount,
-                    syncConfig: _syncOrchestrator?.config,
-                    pullPresence: _syncOrchestrator?.pullPresence,
-                  ),
-                  NotesScreen(
-                    repo: _noteRepository,
-                    settingsRepo: widget.settingsRepo,
-                    onSyncRetry: _triggerSync,
-                    syncStatus: hasWebDav ? syncStatus : null,
-                    partnerPaired: paired,
-                  ),
-                  SettingsScreen(
-                    db: widget.db,
-                    configRepo: _webDavConfig,
-                    settingsRepo: widget.settingsRepo,
-                    syncOrchestrator: _syncOrchestrator,
-                    onConfigSaved: _initSync,
-                    onRestoreComplete: _onRestoreComplete,
-                  ),
-                ];
-
-                final l10n = AppLocalizations.of(context);
-                final destinations = <NavigationDestination>[
-                  NavigationDestination(
-                    icon: const Icon(Icons.check_circle_outline),
-                    selectedIcon: const Icon(Icons.check_circle),
-                    label: l10n.navTasks,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.note_outlined),
-                    selectedIcon: const Icon(Icons.note),
-                    label: l10n.navNotes,
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.settings_outlined),
-                    selectedIcon: const Icon(Icons.settings),
-                    label: l10n.navSettings,
-                  ),
-                ];
-
-                final clampedIndex = _selectedIndex.clamp(
-                  0,
-                  screens.length - 1,
-                );
-
-                return Scaffold(
-                  body: Column(
-                    children: [
-                      if (initErr != null)
-                        MaterialBanner(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          content: Text(l10n.notifServiceFailed(initErr)),
-                          leading: const Icon(
-                            Icons.error_outline,
-                            color: Colors.red,
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => notifInitError.value = null,
-                              child: Text(l10n.commonClose),
-                            ),
-                          ],
-                        ),
-                      if (!notifEnabled)
-                        MaterialBanner(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          content: Text(l10n.notifDisabledBanner),
-                          leading: const Icon(Icons.notifications_off_outlined),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                const channel = MethodChannel(
-                                  'net.moonbaseone.kinetic.parent/settings',
-                                );
-                                channel
-                                    .invokeMethod<void>(
-                                      'openNotificationSettings',
-                                    )
-                                    .catchError((_) {});
-                              },
-                              child: Text(l10n.navSettings),
-                            ),
-                          ],
-                        ),
-                      if (notifEnabled && !exactEnabled)
-                        MaterialBanner(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          content: Text(l10n.notifExactAlarmBanner),
-                          leading: const Icon(Icons.alarm_off_outlined),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                const channel = MethodChannel(
-                                  'net.moonbaseone.kinetic.parent/settings',
-                                );
-                                channel
-                                    .invokeMethod<void>(
-                                      'openExactAlarmSettings',
-                                    )
-                                    .catchError((_) {});
-                              },
-                              child: Text(l10n.navSettings),
-                            ),
-                          ],
-                        ),
-                      Expanded(
-                        child: IndexedStack(
-                          index: clampedIndex,
-                          children: screens,
-                        ),
+    return ListenableBuilder(
+      listenable: DemoSession.instance,
+      builder: (context, _) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: partnerPaired,
+          builder: (context, pairedReal, _) {
+            return ValueListenableBuilder<int>(
+              valueListenable: enrolledKidsCount,
+              builder: (context, kidsCountReal, _) {
+                return ValueListenableBuilder<bool>(
+                  valueListenable: webDavConfigured,
+                  builder: (context, hasWebDav, _) {
+                    final demo = DemoSession.instance;
+                    final paired = demo.active
+                        ? demo.partnerPaired
+                        : pairedReal;
+                    final kidsCount = demo.active
+                        ? demo.kids.length
+                        : kidsCountReal;
+                    final screens = <Widget>[
+                      TasksScreen(
+                        repo: _todoRepository,
+                        settingsRepo: widget.settingsRepo,
+                        proposalRepo: paired ? _proposalRepository : null,
+                        suggestionRepo: _aiSuggestionRepository,
+                        myParentId: demo.active
+                            ? DemoSession.parentId
+                            : _syncOrchestrator?.parentId,
+                        syncStatus: hasWebDav ? syncStatus : null,
+                        hasFamilyKey: paired || kidsCount > 0,
+                        partnerPaired: paired,
+                        onSyncRetry: _triggerSync,
+                        configRepo: _webDavConfig,
+                        enrolledKidsCount: kidsCount,
+                        syncDoneCount: _syncDoneCount,
+                        syncConfig: demo.active && demo.kids.isNotEmpty
+                            ? demo.dummyConfig()
+                            : _syncOrchestrator?.config,
+                        pullPresence: _syncOrchestrator?.pullPresence,
+                        pullSharedTasks: demo.active && demo.kids.isNotEmpty
+                            ? () async => demo.kidTasks
+                            : null,
+                        enrolledKidsOverride:
+                            demo.active && demo.kids.isNotEmpty
+                            ? demo.kids
+                            : null,
+                        onDeleteKidTask: demo.active
+                            ? (task) async {
+                                DemoSession.instance.removeKidTask(task.uid);
+                              }
+                            : null,
                       ),
-                    ],
-                  ),
-                  bottomNavigationBar: NavigationBar(
-                    selectedIndex: clampedIndex,
-                    onDestinationSelected: (i) =>
-                        setState(() => _selectedIndex = i),
-                    destinations: destinations,
-                  ),
+                      NotesScreen(
+                        repo: _noteRepository,
+                        settingsRepo: widget.settingsRepo,
+                        onSyncRetry: _triggerSync,
+                        syncStatus: hasWebDav ? syncStatus : null,
+                        partnerPaired: paired,
+                      ),
+                      SettingsScreen(
+                        db: widget.db,
+                        configRepo: _webDavConfig,
+                        settingsRepo: widget.settingsRepo,
+                        syncOrchestrator: _syncOrchestrator,
+                        onConfigSaved: _initSync,
+                        onRestoreComplete: _onRestoreComplete,
+                        onOpenTasksTab: () =>
+                            setState(() => _selectedIndex = 0),
+                        onOpenNotesTab: () =>
+                            setState(() => _selectedIndex = 1),
+                      ),
+                    ];
+
+                    final l10n = AppLocalizations.of(context);
+                    final destinations = <NavigationDestination>[
+                      NavigationDestination(
+                        icon: const Icon(Icons.check_circle_outline),
+                        selectedIcon: const Icon(Icons.check_circle),
+                        label: l10n.navTasks,
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.note_outlined),
+                        selectedIcon: const Icon(Icons.note),
+                        label: l10n.navNotes,
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(Icons.settings_outlined),
+                        selectedIcon: const Icon(Icons.settings),
+                        label: l10n.navSettings,
+                      ),
+                    ];
+
+                    final clampedIndex = _selectedIndex.clamp(
+                      0,
+                      screens.length - 1,
+                    );
+
+                    return Scaffold(
+                      body: Column(
+                        children: [
+                          if (initErr != null)
+                            MaterialBanner(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              content: Text(l10n.notifServiceFailed(initErr)),
+                              leading: const Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => notifInitError.value = null,
+                                  child: Text(l10n.commonClose),
+                                ),
+                              ],
+                            ),
+                          if (!notifEnabled)
+                            MaterialBanner(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              content: Text(l10n.notifDisabledBanner),
+                              leading: const Icon(
+                                Icons.notifications_off_outlined,
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    const channel = MethodChannel(
+                                      'net.moonbaseone.kinetic.parent/settings',
+                                    );
+                                    channel
+                                        .invokeMethod<void>(
+                                          'openNotificationSettings',
+                                        )
+                                        .catchError((_) {});
+                                  },
+                                  child: Text(l10n.navSettings),
+                                ),
+                              ],
+                            ),
+                          if (notifEnabled && !exactEnabled)
+                            MaterialBanner(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              content: Text(l10n.notifExactAlarmBanner),
+                              leading: const Icon(Icons.alarm_off_outlined),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    const channel = MethodChannel(
+                                      'net.moonbaseone.kinetic.parent/settings',
+                                    );
+                                    channel
+                                        .invokeMethod<void>(
+                                          'openExactAlarmSettings',
+                                        )
+                                        .catchError((_) {});
+                                  },
+                                  child: Text(l10n.navSettings),
+                                ),
+                              ],
+                            ),
+                          Expanded(
+                            child: IndexedStack(
+                              index: clampedIndex,
+                              children: screens,
+                            ),
+                          ),
+                        ],
+                      ),
+                      bottomNavigationBar: NavigationBar(
+                        selectedIndex: clampedIndex,
+                        onDestinationSelected: (i) =>
+                            setState(() => _selectedIndex = i),
+                        destinations: destinations,
+                      ),
+                    );
+                  },
                 );
               },
             );

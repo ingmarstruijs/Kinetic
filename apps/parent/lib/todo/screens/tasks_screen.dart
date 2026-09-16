@@ -4,6 +4,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../main.dart';
 import '../../partner/services/partner_proposal_repository.dart';
+import '../../settings/models/enrolled_kid.dart';
 import '../../settings/settings_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_header.dart';
@@ -31,6 +32,9 @@ class TasksScreen extends StatefulWidget {
   final ValueNotifier<int>? syncDoneCount;
   final SyncConfig? syncConfig;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+  final Future<List<ICalTask>> Function()? pullSharedTasks;
+  final List<EnrolledKid>? enrolledKidsOverride;
+  final Future<void> Function(ICalTask task)? onDeleteKidTask;
 
   const TasksScreen({
     super.key,
@@ -48,6 +52,9 @@ class TasksScreen extends StatefulWidget {
     this.syncDoneCount,
     this.syncConfig,
     this.pullPresence,
+    this.pullSharedTasks,
+    this.enrolledKidsOverride,
+    this.onDeleteKidTask,
   });
 
   @override
@@ -92,18 +99,23 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  bool get _showKids =>
-      widget.enrolledKidsCount > 0 &&
-      widget.configRepo != null &&
-      widget.syncConfig != null;
+  bool get _showKids {
+    final count =
+        widget.enrolledKidsOverride?.length ?? widget.enrolledKidsCount;
+    if (count <= 0 || widget.configRepo == null) return false;
+    return widget.pullSharedTasks != null || widget.syncConfig != null;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Theme(
       data: Theme.of(context).copyWith(
-        bottomSheetTheme: const BottomSheetThemeData(
+        bottomSheetTheme: BottomSheetThemeData(
           backgroundColor: Colors.transparent,
           elevation: 0,
+          modalBackgroundColor: scheme.surface,
+          modalElevation: 1,
         ),
       ),
       child: Scaffold(
@@ -154,6 +166,7 @@ class _TasksScreenState extends State<TasksScreen> {
           configRepo: widget.configRepo,
           pullPresence: widget.pullPresence,
           header: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.suggestionRepo != null)
                 SuggestionsPanel(
@@ -168,7 +181,11 @@ class _TasksScreenState extends State<TasksScreen> {
                 KidsPanel(
                   key: _kidsKey,
                   configRepo: widget.configRepo!,
-                  syncConfig: widget.syncConfig!,
+                  syncConfig: widget.syncConfig,
+                  pullSharedTasks: widget.pullSharedTasks,
+                  enrolledKidsOverride: widget.enrolledKidsOverride,
+                  todoRepo: widget.repo,
+                  onDeleteKidTask: widget.onDeleteKidTask,
                 ),
             ],
           ),
@@ -207,7 +224,7 @@ class _SyncIcon extends StatelessWidget {
       SyncStatus.idle => IconButton(
         onPressed: onSyncPressed,
         tooltip: AppLocalizations.of(context).tasksSyncing,
-        icon: const Icon(Icons.cloud_outlined),
+        icon: const Icon(Icons.cloud_done_outlined),
       ),
     };
   }
@@ -255,6 +272,8 @@ class _TasksBody extends StatefulWidget {
 
 class _TasksBodyState extends State<_TasksBody> {
   List<String?> _categoryOrder = [];
+  late final Stream<List<PersonalTask>> _openTasks = widget.repo
+      .watchOpenTasks();
 
   List<String?> _mergeOrder(Iterable<String?> streamKeys) {
     final known = Set<String?>.from(streamKeys);
@@ -319,7 +338,7 @@ class _TasksBodyState extends State<_TasksBody> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<PersonalTask>>(
-      stream: widget.repo.watchOpenTasks(),
+      stream: _openTasks,
       builder: (ctx, snap) {
         final tasks = snap.data ?? [];
 
@@ -355,46 +374,55 @@ class _TasksBodyState extends State<_TasksBody> {
           }
         }
 
-        return ReorderableListView.builder(
-          buildDefaultDragHandles: false,
-          header: widget.header,
-          padding: const EdgeInsets.only(top: 4, bottom: 88),
-          itemCount: flatItems.isEmpty ? 1 : flatItems.length,
-          itemBuilder: (context, index) {
-            if (flatItems.isEmpty) {
-              return const _EmptyOpen(key: ValueKey('empty_open'));
-            }
-            final item = flatItems[index];
-            if (item is _HeaderItem) {
-              return _CategoryHeader(
-                key: ValueKey('header_${item.category}'),
-                label:
-                    item.category ??
-                    AppLocalizations.of(context).commonNoCategory,
-                count: item.count,
-                index: index,
-                canRename: item.category != null,
-                onRename: () => _renameCategory(item.category),
-              );
-            }
-            final taskItem = item as _TaskItem;
-            return _DraggableTaskRow(
-              key: ValueKey(taskItem.task.id),
-              index: index,
-              task: taskItem.task,
-              repo: widget.repo,
-              hasFamilyKey: widget.hasFamilyKey,
-              partnerPaired: widget.partnerPaired,
-              proposalRepo: widget.proposalRepo,
-              myParentId: widget.myParentId,
-              configRepo: widget.configRepo,
-              pullPresence: widget.pullPresence,
-            );
-          },
-          onReorder: (oldIndex, newIndex) {
-            if (flatItems.isEmpty) return;
-            _onReorder(flatItems, oldIndex, newIndex);
-          },
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: widget.header),
+            if (flatItems.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: 88),
+                  child: SizedBox(height: 240, child: _EmptyOpen()),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.only(top: 4, bottom: 88),
+                sliver: SliverReorderableList(
+                  itemCount: flatItems.length,
+                  onReorder: (oldIndex, newIndex) {
+                    _onReorder(flatItems, oldIndex, newIndex);
+                  },
+                  itemBuilder: (context, index) {
+                    final item = flatItems[index];
+                    if (item is _HeaderItem) {
+                      return _CategoryHeader(
+                        key: ValueKey('header_${item.category}'),
+                        label:
+                            item.category ??
+                            AppLocalizations.of(context).commonNoCategory,
+                        count: item.count,
+                        index: index,
+                        canRename: item.category != null,
+                        onRename: () => _renameCategory(item.category),
+                      );
+                    }
+                    final taskItem = item as _TaskItem;
+                    return _DraggableTaskRow(
+                      key: ValueKey(taskItem.task.id),
+                      index: index,
+                      task: taskItem.task,
+                      repo: widget.repo,
+                      hasFamilyKey: widget.hasFamilyKey,
+                      partnerPaired: widget.partnerPaired,
+                      proposalRepo: widget.proposalRepo,
+                      myParentId: widget.myParentId,
+                      configRepo: widget.configRepo,
+                      pullPresence: widget.pullPresence,
+                    );
+                  },
+                ),
+              ),
+          ],
         );
       },
     );
@@ -463,11 +491,12 @@ class _CategoryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 0, 4),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
             child: Row(
               children: [
                 Flexible(
@@ -501,29 +530,34 @@ class _CategoryHeader extends StatelessWidget {
               ],
             ),
           ),
-        ),
-        if (canRename)
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_horiz, size: 18, color: scheme.outline),
-            onSelected: (value) {
-              if (value == 'rename') onRename();
-            },
-            itemBuilder: (ctx) => [
-              PopupMenuItem(value: 'rename', child: Text(l10n.categoryRename)),
-            ],
-          ),
-        ReorderableDragStartListener(
-          index: index,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 12, 12, 0),
-            child: Icon(
-              Icons.drag_indicator,
-              size: 18,
-              color: scheme.outlineVariant,
+          if (canRename)
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Icon(Icons.more_horiz, size: 18, color: scheme.outline),
+              onSelected: (value) {
+                if (value == 'rename') onRename();
+              },
+              itemBuilder: (ctx) => [
+                PopupMenuItem(
+                  value: 'rename',
+                  child: Text(l10n.categoryRename),
+                ),
+              ],
+            ),
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 18,
+                color: scheme.outlineVariant,
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -620,11 +654,11 @@ class _CompletedBottomSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
                 child: Row(
                   children: [
-                    Text(
-                      AppLocalizations.of(context).tasksCompletedTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Expanded(
+                      child: AppHeader(
+                        title: AppLocalizations.of(context).tasksCompletedTitle,
+                      ),
                     ),
-                    const Spacer(),
                     if (completed.isNotEmpty)
                       TextButton.icon(
                         onPressed: () => _confirmDeleteAll(ctx, repo),
@@ -691,13 +725,12 @@ class _CompletedBottomSheet extends StatelessWidget {
 }
 
 class _EmptyOpen extends StatelessWidget {
-  const _EmptyOpen({super.key});
+  const _EmptyOpen();
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -34,47 +34,72 @@ class SuggestionsPanel extends StatefulWidget {
 
 class _SuggestionsPanelState extends State<SuggestionsPanel> {
   bool _expanded = true;
+  late Stream<List<AiSuggestion>> _pending;
+  Stream<List<PartnerProposal>>? _proposals;
+
+  @override
+  void initState() {
+    super.initState();
+    _bindStreams();
+  }
+
+  @override
+  void didUpdateWidget(SuggestionsPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.suggestionRepo != widget.suggestionRepo ||
+        oldWidget.proposalRepo != widget.proposalRepo ||
+        oldWidget.partnerPaired != widget.partnerPaired ||
+        oldWidget.myParentId != widget.myParentId) {
+      setState(_bindStreams);
+    }
+  }
+
+  void _bindStreams() {
+    _pending = widget.suggestionRepo.watchPending();
+    _proposals = widget.proposalRepo != null && widget.partnerPaired
+        ? widget.proposalRepo!.watchPending(myParentId: widget.myParentId)
+        : null;
+  }
+
+  void _refresh() {
+    if (mounted) setState(_bindStreams);
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<AiSuggestion>>(
-      stream: widget.suggestionRepo.watchPendingSelf(),
-      builder: (context, selfSnap) {
-        return StreamBuilder<List<AiSuggestion>>(
-          stream: widget.partnerPaired
-              ? widget.suggestionRepo.watchPendingPartner()
-              : Stream<List<AiSuggestion>>.value(const []),
-          builder: (context, partnerSnap) {
-            return StreamBuilder<List<PartnerProposal>>(
-              stream: widget.proposalRepo != null && widget.partnerPaired
-                  ? widget.proposalRepo!.watchPending(
-                      myParentId: widget.myParentId,
-                    )
-                  : Stream<List<PartnerProposal>>.value(const []),
-              builder: (context, proposalSnap) {
-                final self = selfSnap.data ?? const <AiSuggestion>[];
-                final forPartner = partnerSnap.data ?? const <AiSuggestion>[];
-                final fromPartner =
-                    proposalSnap.data ?? const <PartnerProposal>[];
-                final total =
-                    self.length + forPartner.length + fromPartner.length;
-                if (total == 0) return const SizedBox.shrink();
+      stream: _pending,
+      builder: (context, pendingSnap) {
+        return StreamBuilder<List<PartnerProposal>>(
+          stream: _proposals,
+          builder: (context, proposalSnap) {
+            final pending = pendingSnap.data ?? const <AiSuggestion>[];
+            final self = [
+              for (final s in pending)
+                if (s.reason.isSelfTargeted) s,
+            ];
+            final forPartner = [
+              for (final s in pending)
+                if (s.reason.isPartnerTargeted) s,
+            ];
+            final fromPartner = proposalSnap.data ?? const <PartnerProposal>[];
+            final total = self.length + forPartner.length + fromPartner.length;
+            if (total == 0) return const SizedBox.shrink();
 
-                return _SuggestionsCard(
-                  expanded: _expanded,
-                  onToggle: () => setState(() => _expanded = !_expanded),
-                  count: total,
-                  self: self,
-                  forPartner: forPartner,
-                  fromPartner: fromPartner,
-                  suggestionRepo: widget.suggestionRepo,
-                  todoRepo: widget.todoRepo,
-                  proposalRepo: widget.proposalRepo,
-                  myParentId: widget.myParentId,
-                  partnerPaired: widget.partnerPaired,
-                  onSyncRequested: widget.onSyncRequested,
-                );
-              },
+            return _SuggestionsCard(
+              expanded: _expanded,
+              onToggle: () => setState(() => _expanded = !_expanded),
+              count: total,
+              self: self,
+              forPartner: forPartner,
+              fromPartner: fromPartner,
+              suggestionRepo: widget.suggestionRepo,
+              todoRepo: widget.todoRepo,
+              proposalRepo: widget.proposalRepo,
+              myParentId: widget.myParentId,
+              partnerPaired: widget.partnerPaired,
+              onSyncRequested: widget.onSyncRequested,
+              onChanged: _refresh,
             );
           },
         );
@@ -96,6 +121,7 @@ class _SuggestionsCard extends StatelessWidget {
   final String? myParentId;
   final bool partnerPaired;
   final VoidCallback? onSyncRequested;
+  final VoidCallback onChanged;
 
   const _SuggestionsCard({
     required this.expanded,
@@ -110,6 +136,7 @@ class _SuggestionsCard extends StatelessWidget {
     required this.myParentId,
     required this.partnerPaired,
     this.onSyncRequested,
+    required this.onChanged,
   });
 
   @override
@@ -124,6 +151,7 @@ class _SuggestionsCard extends StatelessWidget {
         color: scheme.primaryContainer.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(24),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             InkWell(
@@ -140,6 +168,7 @@ class _SuggestionsCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -183,6 +212,7 @@ class _SuggestionsCard extends StatelessWidget {
                   suggestion: suggestion,
                   suggestionRepo: suggestionRepo,
                   todoRepo: todoRepo,
+                  onChanged: onChanged,
                 ),
               if (forPartner.isNotEmpty)
                 _SectionLabel(label: l10n.tasksForPartner),
@@ -193,6 +223,7 @@ class _SuggestionsCard extends StatelessWidget {
                   proposalRepo: proposalRepo,
                   myParentId: myParentId,
                   partnerPaired: partnerPaired,
+                  onChanged: onChanged,
                 ),
               if (fromPartner.isNotEmpty)
                 _SectionLabel(label: l10n.tasksFromPartner),
@@ -201,6 +232,7 @@ class _SuggestionsCard extends StatelessWidget {
                   proposal: proposal,
                   proposalRepo: proposalRepo!,
                   onSyncRequested: onSyncRequested,
+                  onChanged: onChanged,
                 ),
               const SizedBox(height: 10),
             ],
@@ -260,11 +292,13 @@ class _SelfSuggestionRow extends StatelessWidget {
   final AiSuggestion suggestion;
   final AiSuggestionRepository suggestionRepo;
   final TodoRepository todoRepo;
+  final VoidCallback onChanged;
 
   const _SelfSuggestionRow({
     required this.suggestion,
     required this.suggestionRepo,
     required this.todoRepo,
+    required this.onChanged,
   });
 
   @override
@@ -273,41 +307,29 @@ class _SelfSuggestionRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final date = suggestion.suggestedDueDate;
 
-    return Dismissible(
-      key: ValueKey('sug_${suggestion.id}'),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) => suggestionRepo.dismiss(suggestion.id),
-      background: const SizedBox.shrink(),
-      secondaryBackground: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        child: Icon(Icons.close, color: scheme.error),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-        child: Material(
-          color: scheme.surface.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(16),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () => acceptSelfSuggestion(
-              suggestion: suggestion,
-              todoRepo: todoRepo,
-              suggestionRepo: suggestionRepo,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: Material(
+        color: scheme.surface.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  _LeadingIcon(icon: Icons.lightbulb_outline),
+                  const _LeadingIcon(icon: Icons.lightbulb_outline),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           suggestionDisplayTitle(suggestion, l10n),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
@@ -323,10 +345,35 @@ class _SelfSuggestionRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: scheme.outline),
                 ],
               ),
-            ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      await suggestionRepo.dismiss(suggestion.id);
+                      onChanged();
+                    },
+                    child: Text(l10n.tasksDecline),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: () async {
+                      await acceptSelfSuggestion(
+                        suggestion: suggestion,
+                        todoRepo: todoRepo,
+                        suggestionRepo: suggestionRepo,
+                        l10n: l10n,
+                      );
+                      onChanged();
+                    },
+                    child: Text(l10n.tasksAccept),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -340,6 +387,7 @@ class _PartnerTargetRow extends StatelessWidget {
   final PartnerProposalRepository? proposalRepo;
   final String? myParentId;
   final bool partnerPaired;
+  final VoidCallback onChanged;
 
   const _PartnerTargetRow({
     required this.suggestion,
@@ -347,12 +395,14 @@ class _PartnerTargetRow extends StatelessWidget {
     required this.proposalRepo,
     required this.myParentId,
     required this.partnerPaired,
+    required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final explanation = suggestionDisplayExplanation(suggestion, l10n);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
@@ -362,6 +412,7 @@ class _PartnerTargetRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -369,13 +420,29 @@ class _PartnerTargetRow extends StatelessWidget {
                   const _LeadingIcon(icon: Icons.person_outline),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      suggestionDisplayTitle(suggestion, l10n),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          suggestionDisplayTitle(suggestion, l10n),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (explanation.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              explanation,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -385,20 +452,26 @@ class _PartnerTargetRow extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => suggestionRepo.dismiss(suggestion.id),
+                    onPressed: () async {
+                      await suggestionRepo.dismiss(suggestion.id);
+                      onChanged();
+                    },
                     child: Text(l10n.tasksDecline),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: proposalRepo == null || !partnerPaired
                         ? null
-                        : () => confirmAndSendSuggestionToPartner(
-                            context: context,
-                            suggestion: suggestion,
-                            proposalRepo: proposalRepo!,
-                            suggestionRepo: suggestionRepo,
-                            myParentId: myParentId,
-                          ),
+                        : () async {
+                            await confirmAndSendSuggestionToPartner(
+                              context: context,
+                              suggestion: suggestion,
+                              proposalRepo: proposalRepo!,
+                              suggestionRepo: suggestionRepo,
+                              myParentId: myParentId,
+                            );
+                            onChanged();
+                          },
                     child: Text(l10n.suggestSend),
                   ),
                 ],
@@ -415,11 +488,13 @@ class _IncomingProposalRow extends StatelessWidget {
   final PartnerProposal proposal;
   final PartnerProposalRepository proposalRepo;
   final VoidCallback? onSyncRequested;
+  final VoidCallback onChanged;
 
   const _IncomingProposalRow({
     required this.proposal,
     required this.proposalRepo,
     this.onSyncRequested,
+    required this.onChanged,
   });
 
   @override
@@ -435,6 +510,7 @@ class _IncomingProposalRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -443,6 +519,7 @@ class _IncomingProposalRow extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -471,6 +548,7 @@ class _IncomingProposalRow extends StatelessWidget {
                     onPressed: () async {
                       await proposalRepo.dismiss(proposal.id);
                       onSyncRequested?.call();
+                      onChanged();
                     },
                     child: Text(l10n.tasksDecline),
                   ),
@@ -479,6 +557,7 @@ class _IncomingProposalRow extends StatelessWidget {
                     onPressed: () async {
                       await proposalRepo.accept(proposal.id);
                       onSyncRequested?.call();
+                      onChanged();
                     },
                     child: Text(l10n.tasksAccept),
                   ),

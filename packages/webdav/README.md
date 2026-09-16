@@ -99,7 +99,7 @@ Each app's `WebDavConfigRepository.load()` reads these keys from secure storage:
 ```
 kinetic_webdav_server_url        — WebDAV server URL
 kinetic_webdav_personal_key       — Personal AES key (base64)
-kinetic_webdav_personal_entropy   — 16-byte BIP-39 entropy for re-reveal (optional)
+kinetic_webdav_personal_entropy   — leftover from older builds; wiped once the vault is ready
 kinetic_webdav_username           — WebDAV username
 kinetic_webdav_password           — WebDAV password
 kinetic_vault_ready              — '1' after personal vault create/restore
@@ -118,7 +118,7 @@ Remote files (`.ics`, proposal JSON, presence) are AES-256-GCM. Local SQLite is 
 ### Personal Key
 - 12 English BIP-39 words, shown at vault creation (3-word quiz, no skip)
 - Derived with PBKDF2-HMAC-SHA512 (2048 rounds, salt `mnemonic`); first 32 bytes of the 64-byte seed are the AES-256-GCM key
-- The derived key is stored in Flutter Secure Storage after unlock. The 16-byte entropy may also be stored so Settings can show the words again behind the device lock. Paper is the only off-device backup.
+- The derived key is stored in Flutter Secure Storage after unlock. Personal BIP-39 entropy is **not** stored, so the 12 words cannot be shown again. Paper (written during onboarding) is the only recovery.
 - Encrypts: personal tasks, personal notes, `.kvault` backups, `/kinetic/{user}/vault.meta`
 - **Not** derived from the WebDAV password. The same phrase unlocks a file restore and a WebDAV restore
 

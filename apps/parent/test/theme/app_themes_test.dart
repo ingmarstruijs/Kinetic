@@ -8,17 +8,15 @@ void main() {
     final l10n = lookupAppLocalizations(const Locale('en'));
 
     test('all theme variants are defined', () {
-      expect(AppTheme.values, hasLength(4));
+      expect(AppTheme.values, hasLength(3));
       expect(AppTheme.light, isNotNull);
-      expect(AppTheme.sand, isNotNull);
-      expect(AppTheme.dusk, isNotNull);
+      expect(AppTheme.calm, isNotNull);
       expect(AppTheme.night, isNotNull);
     });
 
     test('theme labels are user-friendly', () {
-      expect(AppTheme.light.label(l10n), equals('Light'));
-      expect(AppTheme.sand.label(l10n), equals('Sand'));
-      expect(AppTheme.dusk.label(l10n), equals('Dusk'));
+      expect(AppTheme.light.label(l10n), equals('Default'));
+      expect(AppTheme.calm.label(l10n), equals('Calm'));
       expect(AppTheme.night.label(l10n), equals('Night'));
     });
 
@@ -38,20 +36,24 @@ void main() {
       expect(theme.brightness, equals(Brightness.light));
     });
 
-    test('returns valid ThemeData for dusk theme', () {
-      final theme = buildTheme(AppTheme.dusk);
+    test('returns valid ThemeData for night theme', () {
+      final theme = buildTheme(AppTheme.night);
 
       expect(theme, isNotNull);
       expect(theme.useMaterial3, isTrue);
       expect(theme.brightness, equals(Brightness.dark));
     });
 
-    test('sand is light and night is dark', () {
-      expect(buildTheme(AppTheme.sand).brightness, Brightness.light);
+    test('calm is light and night is OLED dark', () {
+      expect(buildTheme(AppTheme.calm).brightness, Brightness.light);
       expect(buildTheme(AppTheme.night).brightness, Brightness.dark);
       expect(
         buildTheme(AppTheme.night).scaffoldBackgroundColor,
         equals(Colors.black),
+      );
+      expect(
+        buildTheme(AppTheme.calm).scaffoldBackgroundColor,
+        equals(const Color(0xFFEFF3F2)),
       );
     });
 
@@ -78,16 +80,18 @@ void main() {
       }
     });
 
-    test('light and dusk themes have opposite brightness', () {
+    test('light and night themes have opposite brightness', () {
       final lightTheme = buildTheme(AppTheme.light);
-      final darkTheme = buildTheme(AppTheme.dusk);
+      final darkTheme = buildTheme(AppTheme.night);
 
       expect(lightTheme.brightness, isNot(equals(darkTheme.brightness)));
     });
 
-    test('appThemeFromName maps legacy dark to dusk', () {
-      expect(appThemeFromName('dark'), AppTheme.dusk);
-      expect(appThemeFromName('sand'), AppTheme.sand);
+    test('appThemeFromName maps legacy ids', () {
+      expect(appThemeFromName('dark'), AppTheme.night);
+      expect(appThemeFromName('dusk'), AppTheme.night);
+      expect(appThemeFromName('sand'), AppTheme.calm);
+      expect(appThemeFromName('calm'), AppTheme.calm);
       expect(appThemeFromName('unknown'), AppTheme.light);
     });
   });

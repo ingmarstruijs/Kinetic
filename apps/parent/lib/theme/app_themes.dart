@@ -27,6 +27,13 @@ Color priorityColor(TaskPriority p) => switch (p) {
   TaskPriority.none => Colors.transparent,
 };
 
+IconData? priorityIcon(TaskPriority p) => switch (p) {
+  TaskPriority.high => Icons.keyboard_double_arrow_up_rounded,
+  TaskPriority.medium => Icons.keyboard_arrow_up_rounded,
+  TaskPriority.low => Icons.keyboard_arrow_down_rounded,
+  TaskPriority.none => null,
+};
+
 String priorityLabel(TaskPriority p) => switch (p) {
   TaskPriority.high => 'H',
   TaskPriority.medium => 'M',
@@ -120,31 +127,32 @@ String _month(int m, AppLocalizations l10n) => switch (m) {
 // Theme definitions
 // ---------------------------------------------------------------------------
 
-enum AppTheme { light, sand, dusk, night }
+enum AppTheme { light, calm, night }
 
 extension AppThemeLabel on AppTheme {
   String label(AppLocalizations l10n) => switch (this) {
     AppTheme.light => l10n.themeLight,
-    AppTheme.sand => l10n.themeSand,
-    AppTheme.dusk => l10n.themeDusk,
+    AppTheme.calm => l10n.themeCalm,
     AppTheme.night => l10n.themeNight,
   };
 
   String description(AppLocalizations l10n) => switch (this) {
     AppTheme.light => l10n.themeLightDesc,
-    AppTheme.sand => l10n.themeSandDesc,
-    AppTheme.dusk => l10n.themeDuskDesc,
+    AppTheme.calm => l10n.themeCalmDesc,
     AppTheme.night => l10n.themeNightDesc,
   };
 }
 
-/// Maps a persisted theme name to [AppTheme], including the pre-0.3 `dark` id.
+/// Maps a persisted theme name to [AppTheme], including legacy ids.
 AppTheme appThemeFromName(String? name) {
-  if (name == 'dark') return AppTheme.dusk;
-  return AppTheme.values.firstWhere(
-    (t) => t.name == name,
-    orElse: () => AppTheme.light,
-  );
+  return switch (name) {
+    'sand' => AppTheme.calm,
+    'dusk' || 'dark' => AppTheme.night,
+    'calm' => AppTheme.calm,
+    'night' => AppTheme.night,
+    'light' => AppTheme.light,
+    _ => AppTheme.light,
+  };
 }
 
 ThemeData buildTheme(AppTheme theme) {
@@ -155,26 +163,18 @@ ThemeData buildTheme(AppTheme theme) {
         brightness: Brightness.light,
       ),
     ),
-    AppTheme.sand => _themeFromScheme(
+    // Soft cool sage surfaces — lower contrast, easy on the eyes.
+    AppTheme.calm => _themeFromScheme(
       ColorScheme.fromSeed(
-        seedColor: const Color(0xFFC4783A),
+        seedColor: const Color(0xFF4F7A72),
         brightness: Brightness.light,
-        surface: const Color(0xFFF7F1E6),
-        surfaceContainerLow: const Color(0xFFF1E9DA),
-        surfaceContainerHigh: const Color(0xFFE8DCC8),
+        surface: const Color(0xFFEFF3F2),
+        surfaceContainerLow: const Color(0xFFE6ECEA),
+        surfaceContainerHigh: const Color(0xFFD9E2DF),
       ),
-      scaffold: const Color(0xFFF7F1E6),
+      scaffold: const Color(0xFFEFF3F2),
     ),
-    AppTheme.dusk => _themeFromScheme(
-      ColorScheme.fromSeed(
-        seedColor: kColorKineticBlue,
-        brightness: Brightness.dark,
-        surface: const Color(0xFF1E2030),
-        surfaceContainerLow: const Color(0xFF252839),
-        surfaceContainerHigh: const Color(0xFF2C3050),
-      ),
-      scaffold: const Color(0xFF1E2030),
-    ),
+    // True black scaffold for OLED panels.
     AppTheme.night => _themeFromScheme(
       ColorScheme.fromSeed(
         seedColor: kColorKineticBlue,

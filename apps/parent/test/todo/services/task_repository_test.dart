@@ -224,6 +224,22 @@ void main() {
         ['C'],
       );
     });
+
+    test('removeKidsAssignment tombstones the linked parent task', () async {
+      final created = await repo.createTask(title: 'Shirts');
+      await repo.sendToKids(created.id, targetKidId: 'mees');
+      final linked = await repo.getTask(created.id);
+      expect(linked?.kidsTaskId, isNotNull);
+
+      await repo.removeKidsAssignment(kidsTaskId: linked!.kidsTaskId!);
+      expect(await repo.watchAllTasks().first, isEmpty);
+    });
+
+    test('removeKidsAssignment is a no-op without a matching task', () async {
+      await repo.createTask(title: 'Stay');
+      await repo.removeKidsAssignment(kidsTaskId: 'missing');
+      expect((await repo.watchAllTasks().first).single.title, 'Stay');
+    });
   });
 
   // --------------------------------------------------------------------------

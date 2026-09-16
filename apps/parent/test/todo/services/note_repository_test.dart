@@ -1,21 +1,42 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:parent/todo/services/note_repository.dart';
 
+import '../../helpers/test_database.dart';
+
 void main() {
-  group('NoteRepository API', () {
-    test('NoteRepository exists and can be imported', () {
-      expect(NoteRepository, isNotNull);
-    });
+  test('delete moves a note to trash and restore brings it back', () async {
+    final db = createTestDatabase();
+    addTearDown(db.close);
+    final repo = NoteRepository(db: db);
 
-    test('NoteRepository exposes watch and crud methods', () {
-      // This is a compile-time verification that the API is available
-      // Full integration tests would require database setup
-      expect(NoteRepository, isA<Type>());
-    });
+    final note = await repo.insert(title: 'Shopping', body: 'Milk');
+    expect((await repo.watchAll().first).map((n) => n.id), [note.id]);
+    expect(await repo.watchDeleted().first, isEmpty);
 
-    // Note: Full NoteRepository tests would require database integration.
-    // Unit tests for insert(), update(), delete(), watchAll(), watchOne()
-    // require a real Drift database connection and are best tested via
-    // integration tests or widget tests rather than pure unit tests.
+    await repo.delete(note.id);
+    expect(await repo.watchAll().first, isEmpty);
+    expect((await repo.watchDeleted().first).map((n) => n.id), [note.id]);
+
+    await repo.restore(note.id);
+    expect((await repo.watchAll().first).map((n) => n.id), [note.id]);
+    expect(await repo.watchDeleted().first, isEmpty);
+  });
+
+  test('emptyTrash tombstones trashed notes', () async {
+    final db = createTestDatabase();
+    addTearDown(db.close);
+    final repo = NoteRepository(db: db);
+
+    final note = await repo.insert(title: 'Gone');
+    await repo.delete(note.id);
+    await repo.emptyTrash();
+
+    expect(await repo.watchAll().first, isEmpty);
+    expect(await repo.watchDeleted().first, isEmpty);
+    final row = await (db.select(
+      db.personalNotes,
+    )..where((t) => t.id.equals(note.id))).getSingle();
+    expect(row.syncState, 'deleted');
+    expect(row.deletedAt, isNotNull);
   });
 }

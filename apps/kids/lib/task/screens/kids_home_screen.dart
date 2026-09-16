@@ -15,6 +15,7 @@ class KidsHomeScreen extends StatefulWidget {
   final KidsSyncOrchestrator? orchestrator;
   final VoidCallback? onLeaveFamily;
   final DateTime? xpResetAt;
+  final VoidCallback? onLoadDemo;
 
   const KidsHomeScreen({
     super.key,
@@ -23,6 +24,7 @@ class KidsHomeScreen extends StatefulWidget {
     this.orchestrator,
     this.onLeaveFamily,
     this.xpResetAt,
+    this.onLoadDemo,
   });
 
   @override
@@ -75,22 +77,39 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                 tooltip: l10n.sync,
               ),
           ],
-          if (widget.onLeaveFamily != null)
+          if (widget.onLeaveFamily != null || widget.onLoadDemo != null)
             PopupMenuButton<String>(
               onSelected: (value) {
-                if (value == 'leave') widget.onLeaveFamily!();
+                if (value == 'leave') widget.onLeaveFamily?.call();
+                if (value == 'demo') widget.onLoadDemo?.call();
               },
               itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'leave',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.logout, size: 18),
-                      const SizedBox(width: 8),
-                      Text(l10n.leaveFamily),
-                    ],
+                if (widget.onLoadDemo != null)
+                  PopupMenuItem(
+                    value: 'demo',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.movie_filter_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          Localizations.localeOf(context).languageCode == 'nl'
+                              ? 'Laad demo-klusjes'
+                              : 'Load demo chores',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                if (widget.onLeaveFamily != null)
+                  PopupMenuItem(
+                    value: 'leave',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.logout, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.leaveFamily),
+                      ],
+                    ),
+                  ),
               ],
             ),
         ],
@@ -110,9 +129,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
 
           // XP header
           final xpHeader = StreamBuilder<int>(
-            stream: _taskRepository.watchTotalXp(
-              resetAt: widget.xpResetAt,
-            ),
+            stream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
             builder: (context, xpSnap) {
               final totalXp = xpSnap.data ?? 0;
               return Container(
@@ -139,9 +156,9 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                       '$totalXp XP',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
-                        color: scheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: scheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -160,20 +177,22 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.celebration, size: 64, color: scheme.primary),
+                          Icon(
+                            Icons.celebration,
+                            size: 64,
+                            color: scheme.primary,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             l10n.allDone,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              color: scheme.onSurface,
-                            ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(color: scheme.onSurface),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noTasksRightNow,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                         ],
                       ),

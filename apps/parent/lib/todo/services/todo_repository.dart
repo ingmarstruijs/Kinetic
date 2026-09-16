@@ -549,6 +549,24 @@ class TodoRepository {
     onWrite?.call();
   }
 
+  /// Tombstone the parent task linked to a kids assignment so sync does not
+  /// re-push it after the shared file is deleted.
+  Future<void> removeKidsAssignment({
+    required String kidsTaskId,
+    String? parentTaskId,
+  }) async {
+    var row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
+    if (row == null && parentTaskId != null && parentTaskId.isNotEmpty) {
+      row = await (_db.select(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(parentTaskId))).getSingleOrNull();
+    }
+    if (row == null || row.syncState == 'deleted') return;
+    await deleteTask(row.id);
+  }
+
   /// Batch-update the customCategory and sortOrder for a list of tasks in one
   /// transaction. Used after drag-and-drop reordering.
   Future<void> batchUpdateCategoryAndOrder(

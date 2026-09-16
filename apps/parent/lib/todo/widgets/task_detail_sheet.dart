@@ -607,263 +607,277 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ── Drag handle ──────────────────────────────────────────────────
-          const SizedBox(height: 8),
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outlineVariant.withAlpha(80),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Title ────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _titleCtrl,
-              autofocus: widget.task == null,
-              style: tt.titleLarge,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).taskNameHint,
-                hintStyle: tt.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Drag handle ──────────────────────────────────────────────────
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                border: InputBorder.none,
               ),
-              textCapitalization: TextCapitalization.sentences,
-              onSubmitted: (_) => _save(),
             ),
-          ),
+            const SizedBox(height: 12),
 
-          // ── Notes ────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              controller: _notesCtrl,
-              style: tt.bodyMedium,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).commonNotes,
-                hintStyle: tt.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // ── Title ────────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _titleCtrl,
+                autofocus: widget.task == null,
+                style: tt.titleLarge,
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context).taskNameHint,
+                  hintStyle: tt.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
                 ),
-                border: InputBorder.none,
+                textCapitalization: TextCapitalization.sentences,
+                onSubmitted: (_) => _save(),
               ),
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: null,
             ),
-          ),
 
-          const Divider(height: 16),
+            // ── Notes ────────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                controller: _notesCtrl,
+                style: tt.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context).commonNotes,
+                  hintStyle: tt.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                ),
+                textCapitalization: TextCapitalization.sentences,
+                maxLines: null,
+              ),
+            ),
 
-          // ── Metadata rows ────────────────────────────────────────────────
-          // Herinnering row — combined date + time
-          DetailMetaRow(
-            icon: Icons.alarm_outlined,
-            label: AppLocalizations.of(context).commonReminder,
-            active: _dueDate != null,
-            onTap: _dueDate != null ? null : () => _pickReminder(),
-            titleWidget: _dueDate != null
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      InkWell(
-                        onTap: _pickDateOnly,
-                        borderRadius: BorderRadius.circular(4),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
+            const Divider(height: 16),
+
+            // ── Metadata rows ────────────────────────────────────────────────
+            // Herinnering row — combined date + time
+            DetailMetaRow(
+              icon: Icons.alarm_outlined,
+              label: AppLocalizations.of(context).commonReminder,
+              active: _dueDate != null,
+              onTap: _dueDate != null ? null : () => _pickReminder(),
+              titleWidget: _dueDate != null
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: _pickDateOnly,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Text(
+                              _formatDateOnly(_dueDate!.toLocal()),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: kColorTeal,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                            ),
                           ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
                           child: Text(
-                            _formatDateOnly(_dueDate!.toLocal()),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: kColorTeal,
-                                  decoration: TextDecoration.underline,
-                                ),
+                            '·',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(
-                          '·',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                        InkWell(
+                          onTap: _pickTimeOnly,
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            child: Text(
+                              _isAllDay
+                                  ? AppLocalizations.of(context).taskAddTime
+                                  : _formatTimeOnly(_dueDate!.toLocal()),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: kColorTeal,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                            ),
                           ),
                         ),
-                      ),
-                      InkWell(
-                        onTap: _pickTimeOnly,
-                        borderRadius: BorderRadius.circular(4),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
+                      ],
+                    )
+                  : null,
+              trailing: _dueDate != null
+                  ? IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      onPressed: () => setState(() {
+                        _dueDate = null;
+                        _isAllDay = true;
+                        _recurrenceRule = null;
+                      }),
+                    )
+                  : null,
+              leadingCheckbox: true,
+              checked: _dueDate != null,
+              onCheckChanged: (v) {
+                if (v) {
+                  _setDefaultReminder();
+                } else {
+                  setState(() {
+                    _dueDate = null;
+                    _isAllDay = true;
+                    _recurrenceRule = null;
+                  });
+                }
+              },
+            ),
+            // Smart reminder chips — only when no reminder is set
+            if (_dueDate == null)
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                leading: const SizedBox(width: 40),
+                title: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (var i = 0; i < _reminderChips.length; i++)
+                      Tooltip(
+                        message: formatReminderChipExplanation(
+                          _reminderChips[i],
+                          AppLocalizations.of(context),
+                        ),
+                        child: ActionChip(
+                          avatar: i == 0
+                              ? Icon(
+                                  Icons.auto_awesome,
+                                  size: 14,
+                                  color: i == 0 ? kColorTeal : null,
+                                )
+                              : null,
+                          label: Text(
+                            formatReminderChipLabel(
+                              _reminderChips[i],
+                              AppLocalizations.of(context),
+                            ),
                           ),
-                          child: Text(
-                            _isAllDay
-                                ? AppLocalizations.of(context).taskAddTime
-                                : _formatTimeOnly(_dueDate!.toLocal()),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: kColorTeal,
-                                  decoration: TextDecoration.underline,
-                                ),
-                          ),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () =>
+                              _applyReminderAt(_reminderChips[i].at),
                         ),
                       ),
-                    ],
-                  )
-                : null,
-            trailing: _dueDate != null
-                ? IconButton(
-                    icon: const Icon(Icons.close, size: 16),
-                    onPressed: () => setState(() {
-                      _dueDate = null;
-                      _isAllDay = true;
-                      _recurrenceRule = null;
-                    }),
-                  )
-                : null,
-            leadingCheckbox: true,
-            checked: _dueDate != null,
-            onCheckChanged: (v) {
-              if (v) {
-                _setDefaultReminder();
-              } else {
-                setState(() {
-                  _dueDate = null;
-                  _isAllDay = true;
-                  _recurrenceRule = null;
-                });
-              }
-            },
-          ),
-          // Smart reminder chips — only when no reminder is set
-          if (_dueDate == null)
-            ListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-              leading: const SizedBox(width: 40),
-              title: Wrap(
-                spacing: 8,
-                runSpacing: 4,
+                  ],
+                ),
+              ),
+            DetailMetaRow(
+              icon: Icons.flag_outlined,
+              label: _priority == TaskPriority.none
+                  ? AppLocalizations.of(context).commonPriority
+                  : '${AppLocalizations.of(context).commonPriority}: ${switch (_priority) {
+                      TaskPriority.low => AppLocalizations.of(context).commonLow,
+                      TaskPriority.medium => AppLocalizations.of(context).commonMedium,
+                      TaskPriority.high => AppLocalizations.of(context).commonHigh,
+                      TaskPriority.none => AppLocalizations.of(context).commonNone,
+                    }}',
+              active: _priority != TaskPriority.none,
+              color: _priority != TaskPriority.none
+                  ? priorityColor(_priority)
+                  : null,
+              onTap: () => _pickPriority(context),
+            ),
+            DetailMetaRow(
+              icon: Icons.label_outline,
+              label:
+                  _customCategory ??
+                  AppLocalizations.of(context).taskAddCategory,
+              active: _customCategory != null,
+              onTap: () => _pickCategory(context),
+              trailing: _customCategory != null
+                  ? IconButton(
+                      icon: const Icon(Icons.close, size: 16),
+                      onPressed: () => setState(() => _customCategory = null),
+                    )
+                  : null,
+            ),
+            if (_dueDate != null)
+              DetailMetaRow(
+                icon: Icons.repeat,
+                label:
+                    _recurrenceRule ?? AppLocalizations.of(context).taskRepeat,
+                active: _recurrenceRule != null,
+                onTap: () => _pickRecurrence(context),
+              ),
+
+            const SizedBox(height: 8),
+
+            // ── Action bar ───────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Row(
                 children: [
-                  for (var i = 0; i < _reminderChips.length; i++)
-                    Tooltip(
-                      message: _reminderChips[i].explanation ?? '',
-                      child: ActionChip(
-                        avatar: i == 0
-                            ? Icon(
-                                Icons.auto_awesome,
-                                size: 14,
-                                color: i == 0 ? kColorTeal : null,
-                              )
-                            : null,
-                        label: Text(_reminderChips[i].label),
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () => _applyReminderAt(_reminderChips[i].at),
-                      ),
+                  if (widget.task != null)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      color: Theme.of(context).colorScheme.error,
+                      tooltip: AppLocalizations.of(context).commonDelete,
+                      onPressed: _saving ? null : () => _confirmDelete(context),
                     ),
+                  if (widget.hasFamilyKey && widget.task != null)
+                    IconButton(
+                      icon: const Icon(Icons.send_outlined),
+                      tooltip: _canSend
+                          ? AppLocalizations.of(context).taskForward
+                          : AppLocalizations.of(context).taskNoConnectedFamily,
+                      onPressed: _saving || !_canSend
+                          ? null
+                          : () => _showSendDialog(context),
+                    ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(AppLocalizations.of(context).commonCancel),
+                  ),
+                  const SizedBox(width: 12),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: Text(
+                      widget.task == null
+                          ? AppLocalizations.of(context).commonAdd
+                          : AppLocalizations.of(context).commonSave,
+                    ),
+                  ),
                 ],
               ),
             ),
-          DetailMetaRow(
-            icon: Icons.flag_outlined,
-            label: _priority == TaskPriority.none
-                ? AppLocalizations.of(context).commonPriority
-                : '${AppLocalizations.of(context).commonPriority}: ${switch (_priority) {
-                    TaskPriority.low => AppLocalizations.of(context).commonLow,
-                    TaskPriority.medium => AppLocalizations.of(context).commonMedium,
-                    TaskPriority.high => AppLocalizations.of(context).commonHigh,
-                    TaskPriority.none => AppLocalizations.of(context).commonNone,
-                  }}',
-            active: _priority != TaskPriority.none,
-            color: _priority != TaskPriority.none
-                ? priorityColor(_priority)
-                : null,
-            onTap: () => _pickPriority(context),
-          ),
-          DetailMetaRow(
-            icon: Icons.label_outline,
-            label:
-                _customCategory ?? AppLocalizations.of(context).taskAddCategory,
-            active: _customCategory != null,
-            onTap: () => _pickCategory(context),
-            trailing: _customCategory != null
-                ? IconButton(
-                    icon: const Icon(Icons.close, size: 16),
-                    onPressed: () => setState(() => _customCategory = null),
-                  )
-                : null,
-          ),
-          if (_dueDate != null)
-            DetailMetaRow(
-              icon: Icons.repeat,
-              label: _recurrenceRule ?? AppLocalizations.of(context).taskRepeat,
-              active: _recurrenceRule != null,
-              onTap: () => _pickRecurrence(context),
-            ),
-
-          const SizedBox(height: 8),
-
-          // ── Action bar ───────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-            child: Row(
-              children: [
-                if (widget.task != null)
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    color: Theme.of(context).colorScheme.error,
-                    tooltip: AppLocalizations.of(context).commonDelete,
-                    onPressed: _saving ? null : () => _confirmDelete(context),
-                  ),
-                if (widget.hasFamilyKey && widget.task != null)
-                  IconButton(
-                    icon: const Icon(Icons.send_outlined),
-                    tooltip: _canSend
-                        ? AppLocalizations.of(context).taskForward
-                        : AppLocalizations.of(context).taskNoConnectedFamily,
-                    onPressed: _saving || !_canSend
-                        ? null
-                        : () => _showSendDialog(context),
-                  ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(AppLocalizations.of(context).commonCancel),
-                ),
-                const SizedBox(width: 12),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: Text(
-                    widget.task == null
-                        ? AppLocalizations.of(context).commonAdd
-                        : AppLocalizations.of(context).commonSave,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

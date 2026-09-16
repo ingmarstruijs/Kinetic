@@ -32,14 +32,24 @@ void main() {
     );
   });
 
-  test('unlockWithPhrase stores entropy so the mnemonic can be shown again',
-      () async {
+  test('unlockWithPhrase stores the key but not mnemonic entropy', () async {
     const phrase =
         'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
     await vault.unlockWithPhrase(phrase);
-    final words = await vault.loadPersonalMnemonic();
-    expect(words, isNotNull);
-    expect(words!.join(' '), phrase);
+    expect(await vault.loadPersonalMnemonic(), isNull);
+    expect(await configRepo.loadPersonalEntropy(), isNull);
+  });
+
+  test('isReady clears leftover personal entropy from older builds', () async {
+    const phrase =
+        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    await vault.unlockWithPhrase(phrase);
+    final leftover = Uint8List.fromList(List.filled(16, 7));
+    await configRepo.savePersonalEntropy(leftover);
+    expect(await configRepo.loadPersonalEntropy(), leftover);
+    expect(await vault.isReady(), isTrue);
+    expect(await configRepo.loadPersonalEntropy(), isNull);
+    expect(await vault.loadPersonalMnemonic(), isNull);
   });
 
   test('needsMigration is true when a key exists without vault_ready', () async {

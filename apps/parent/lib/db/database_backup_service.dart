@@ -205,6 +205,7 @@ class DatabaseBackupService {
                 syncState: Value(m['syncState'] as String? ?? 'dirty'),
                 createdAt: DateTime.parse(m['createdAt'] as String),
                 updatedAt: DateTime.parse(m['updatedAt'] as String),
+                deletedAt: Value(_parseDateTime(m['deletedAt'])),
               ),
             );
       }
@@ -278,6 +279,7 @@ class DatabaseBackupService {
     'syncState': r.syncState,
     'createdAt': r.createdAt.toUtc().toIso8601String(),
     'updatedAt': r.updatedAt.toUtc().toIso8601String(),
+    'deletedAt': r.deletedAt?.toUtc().toIso8601String(),
   };
 
   static Map<String, dynamic> _subtaskToJson(PersonalSubtaskRow r) => {

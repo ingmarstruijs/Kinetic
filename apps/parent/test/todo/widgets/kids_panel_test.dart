@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
+import 'package:parent/l10n/generated/app_localizations.dart';
 import 'package:parent/settings/models/enrolled_kid.dart';
+import 'package:parent/sync/webdav_config_repository.dart';
 import 'package:parent/todo/widgets/kids_panel.dart';
 
 void main() {
@@ -76,5 +79,44 @@ void main() {
     expect(kidInitials('Job'), 'J');
     expect(kidInitials('Annemarie de Vries'), 'AV');
     expect(kidAvatarColor('Job'), kidAvatarColor('Job'));
+  });
+
+  testWidgets('parent can delete a kid task from the panel', (tester) async {
+    await tester.runAsync(() async {
+      final deleted = <String>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('en'),
+          home: Scaffold(
+            body: KidsPanel(
+              configRepo: WebDavConfigRepository(InMemoryKeyValueStore()),
+              enrolledKidsOverride: enrolled,
+              pullSharedTasks: () async => [
+                task(uid: '1', summary: 'Shirts', kidId: 'job'),
+              ],
+              onDeleteKidTask: (t) async => deleted.add(t.uid),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Job'));
+      await tester.pump();
+      expect(find.text('Shirts'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Delete'));
+      await tester.pump();
+      expect(find.text('Remove kids task?'), findsOneWidget);
+      await tester.tap(find.text('Delete').last);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+
+      expect(deleted, ['1']);
+    });
   });
 }

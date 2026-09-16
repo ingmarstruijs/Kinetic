@@ -1,8 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import 'db/app_database.dart';
+import 'debug/demo_tasks.dart';
 import 'enrollment/kids_enrollment_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'notifications/kids_notification_service.dart';
@@ -16,7 +20,9 @@ Future<void> main() async {
   final appDb = AppDatabase();
   final notificationService = KidsNotificationService();
   await notificationService.initialize();
-  runApp(KineticKidsApp(appDb: appDb, notificationService: notificationService));
+  runApp(
+    KineticKidsApp(appDb: appDb, notificationService: notificationService),
+  );
 }
 
 class KineticKidsApp extends StatelessWidget {
@@ -80,7 +86,10 @@ class KineticKidsApp extends StatelessWidget {
           backgroundColor: colorScheme.surface,
         ),
       ),
-      home: _KidsAppShell(appDb: appDb, notificationService: notificationService),
+      home: _KidsAppShell(
+        appDb: appDb,
+        notificationService: notificationService,
+      ),
     );
   }
 }
@@ -90,10 +99,7 @@ class _KidsAppShell extends StatefulWidget {
   final AppDatabase appDb;
   final KidsNotificationService notificationService;
 
-  const _KidsAppShell({
-    required this.appDb,
-    required this.notificationService,
-  });
+  const _KidsAppShell({required this.appDb, required this.notificationService});
 
   @override
   State<_KidsAppShell> createState() => _KidsAppShellState();
@@ -176,6 +182,17 @@ class _KidsAppShellState extends State<_KidsAppShell>
     }
   }
 
+  Future<void> _loadDemo() async {
+    final dutch = Localizations.localeOf(context).languageCode == 'nl';
+    await loadKidsDemoTasks(widget.appDb, dutch: dutch);
+    if (!mounted) return;
+    setState(() {
+      _enrolled = true;
+      _initDone = true;
+      _orchestrator = null;
+    });
+  }
+
   Future<void> _leaveFamily() async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -221,6 +238,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
       return KidsEnrollmentScreen(
         configRepo: WebDavConfigRepository(FlutterSecureKeyValueStore()),
         onEnrolled: _initSync,
+        onLoadDemo: kDebugMode ? _loadDemo : null,
       );
     }
 
@@ -229,7 +247,8 @@ class _KidsAppShellState extends State<_KidsAppShell>
       repository: _repository,
       orchestrator: _orchestrator,
       xpResetAt: _xpResetAt,
-      onLeaveFamily: _leaveFamily,
+      onLeaveFamily: _enrolled && _orchestrator != null ? _leaveFamily : null,
+      onLoadDemo: kDebugMode ? _loadDemo : null,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../sync/webdav_config_repository.dart';
+import '../services/todo_repository.dart';
 
 const _kidPalette = [
   Color(0xFF5B8DEF),
@@ -95,12 +96,20 @@ List<KidTaskGroup> groupKidsTasks({
 
 class KidsPanel extends StatefulWidget {
   final WebDavConfigRepository configRepo;
-  final SyncConfig syncConfig;
+  final SyncConfig? syncConfig;
+  final Future<List<ICalTask>> Function()? pullSharedTasks;
+  final List<EnrolledKid>? enrolledKidsOverride;
+  final TodoRepository? todoRepo;
+  final Future<void> Function(ICalTask task)? onDeleteKidTask;
 
   const KidsPanel({
     super.key,
     required this.configRepo,
-    required this.syncConfig,
+    this.syncConfig,
+    this.pullSharedTasks,
+    this.enrolledKidsOverride,
+    this.todoRepo,
+    this.onDeleteKidTask,
   });
 
   @override
@@ -122,7 +131,9 @@ class KidsPanelState extends State<KidsPanel> {
   @override
   void didUpdateWidget(KidsPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.syncConfig != widget.syncConfig) {
+    if (oldWidget.syncConfig != widget.syncConfig ||
+        oldWidget.enrolledKidsOverride != widget.enrolledKidsOverride ||
+        oldWidget.pullSharedTasks != widget.pullSharedTasks) {
       _future = _load();
     }
   }
@@ -130,16 +141,23 @@ class KidsPanelState extends State<KidsPanel> {
   void reload() => setState(() => _future = _load());
 
   Future<_KidsPanelData> _load() async {
-    final enrolledKids = await widget.configRepo.loadEnrolledKids();
+    final enrolledKids =
+        widget.enrolledKidsOverride ??
+        await widget.configRepo.loadEnrolledKids();
+    if (widget.pullSharedTasks != null) {
+      final tasks = await widget.pullSharedTasks!();
+      return _KidsPanelData(tasks: tasks, enrolledKids: enrolledKids);
+    }
+    final config = widget.syncConfig;
+    if (config == null) {
+      return _KidsPanelData(tasks: const [], enrolledKids: enrolledKids);
+    }
     final client = WebDavClient(
-      baseUrl: widget.syncConfig.baseUrl,
-      username: widget.syncConfig.username,
-      password: widget.syncConfig.password,
+      baseUrl: config.baseUrl,
+      username: config.username,
+      password: config.password,
     );
-    final service = WebDavSyncService(
-      client: client,
-      config: widget.syncConfig,
-    );
+    final service = WebDavSyncService(client: client, config: config);
     try {
       final tasks = await service.pullSharedTasks();
       return _KidsPanelData(tasks: tasks, enrolledKids: enrolledKids);
@@ -174,15 +192,14 @@ class KidsPanelState extends State<KidsPanel> {
     );
     if (confirmed != true || !mounted) return;
 
+    final config = widget.syncConfig;
+    if (config == null) return;
     final client = WebDavClient(
-      baseUrl: widget.syncConfig.baseUrl,
-      username: widget.syncConfig.username,
-      password: widget.syncConfig.password,
+      baseUrl: config.baseUrl,
+      username: config.username,
+      password: config.password,
     );
-    final service = WebDavSyncService(
-      client: client,
-      config: widget.syncConfig,
-    );
+    final service = WebDavSyncService(client: client, config: config);
     try {
       await service.pushXpReset(kid.id, DateTime.now().toUtc());
       if (mounted) {
@@ -208,6 +225,62 @@ class KidsPanelState extends State<KidsPanel> {
     }
   }
 
+  bool get _canDeleteKidTask =>
+      widget.onDeleteKidTask != null || widget.syncConfig != null;
+
+  Future<void> _deleteKidTask(ICalTask task) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.kidsDeleteTaskTitle),
+        content: Text(l10n.kidsDeleteTaskBody(task.summary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      if (widget.onDeleteKidTask != null) {
+        await widget.onDeleteKidTask!(task);
+      } else {
+        final config = widget.syncConfig;
+        if (config == null) return;
+        final client = WebDavClient(
+          baseUrl: config.baseUrl,
+          username: config.username,
+          password: config.password,
+        );
+        final service = WebDavSyncService(client: client, config: config);
+        try {
+          await service.deleteSharedTask(task.uid);
+        } finally {
+          client.dispose();
+        }
+      }
+      await widget.todoRepo?.removeKidsAssignment(
+        kidsTaskId: task.uid,
+        parentTaskId: icalProp(task.description, 'xKineticParentId'),
+      );
+      if (mounted) reload();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.commonDeleteError('$e'))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -228,6 +301,7 @@ class KidsPanelState extends State<KidsPanel> {
           return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(l10n.tasksLoadKidsError),
                 TextButton.icon(
@@ -255,6 +329,7 @@ class KidsPanelState extends State<KidsPanel> {
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               InkWell(
@@ -340,6 +415,7 @@ class KidsPanelState extends State<KidsPanel> {
                       onResetXp: group.key == '__everyone__'
                           ? null
                           : () => _resetXp(group.name, data.enrolledKids),
+                      onDeleteTask: _canDeleteKidTask ? _deleteKidTask : null,
                     ),
               ],
             ],
@@ -404,12 +480,14 @@ class _KidGroupCard extends StatelessWidget {
   final bool expanded;
   final VoidCallback onToggle;
   final VoidCallback? onResetXp;
+  final Future<void> Function(ICalTask task)? onDeleteTask;
 
   const _KidGroupCard({
     required this.group,
     required this.expanded,
     required this.onToggle,
     this.onResetXp,
+    this.onDeleteTask,
   });
 
   @override
@@ -425,6 +503,7 @@ class _KidGroupCard extends StatelessWidget {
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             InkWell(
               borderRadius: BorderRadius.circular(16),
@@ -449,6 +528,7 @@ class _KidGroupCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -495,6 +575,7 @@ class _KidGroupCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (open.isEmpty)
                       Align(
@@ -507,7 +588,8 @@ class _KidGroupCard extends StatelessWidget {
                         ),
                       )
                     else
-                      for (final task in open) _KidsTaskTile(task: task),
+                      for (final task in open)
+                        _KidsTaskTile(task: task, onDelete: onDeleteTask),
                   ],
                 ),
               ),
@@ -520,7 +602,9 @@ class _KidGroupCard extends StatelessWidget {
 
 class _KidsTaskTile extends StatelessWidget {
   final ICalTask task;
-  const _KidsTaskTile({required this.task});
+  final Future<void> Function(ICalTask task)? onDelete;
+
+  const _KidsTaskTile({required this.task, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -537,6 +621,13 @@ class _KidsTaskTile extends StatelessWidget {
           : Text(
               '${due.toLocal().day}/${due.toLocal().month}',
               style: Theme.of(context).textTheme.bodySmall,
+            ),
+      trailing: onDelete == null
+          ? null
+          : IconButton(
+              tooltip: AppLocalizations.of(context).commonDelete,
+              icon: Icon(Icons.delete_outline, color: scheme.outline),
+              onPressed: () => onDelete!(task),
             ),
     );
   }

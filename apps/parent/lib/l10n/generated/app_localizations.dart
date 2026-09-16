@@ -191,20 +191,14 @@ abstract class AppLocalizations {
   /// No description provided for @themeLight.
   ///
   /// In en, this message translates to:
-  /// **'Light'**
+  /// **'Default'**
   String get themeLight;
 
-  /// No description provided for @themeSand.
+  /// No description provided for @themeCalm.
   ///
   /// In en, this message translates to:
-  /// **'Sand'**
-  String get themeSand;
-
-  /// No description provided for @themeDusk.
-  ///
-  /// In en, this message translates to:
-  /// **'Dusk'**
-  String get themeDusk;
+  /// **'Calm'**
+  String get themeCalm;
 
   /// No description provided for @themeNight.
   ///
@@ -215,20 +209,14 @@ abstract class AppLocalizations {
   /// No description provided for @themeLightDesc.
   ///
   /// In en, this message translates to:
-  /// **'Bright blue'**
+  /// **'Light blue'**
   String get themeLightDesc;
 
-  /// No description provided for @themeSandDesc.
+  /// No description provided for @themeCalmDesc.
   ///
   /// In en, this message translates to:
-  /// **'Warm paper'**
-  String get themeSandDesc;
-
-  /// No description provided for @themeDuskDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Blue-grey dark'**
-  String get themeDuskDesc;
+  /// **'Soft and easy on the eyes'**
+  String get themeCalmDesc;
 
   /// No description provided for @themeNightDesc.
   ///
@@ -343,18 +331,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check that you still know the 12 words. We will not show them.'**
   String get settingsVerifyPhraseSubtitle;
-
-  /// No description provided for @settingsShowPhrase.
-  ///
-  /// In en, this message translates to:
-  /// **'Show recovery phrase'**
-  String get settingsShowPhrase;
-
-  /// No description provided for @settingsShowPhraseSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Show the 12 words on this device (screen lock).'**
-  String get settingsShowPhraseSubtitle;
 
   /// No description provided for @settingsSectionBackup.
   ///
@@ -551,7 +527,7 @@ abstract class AppLocalizations {
   /// No description provided for @vaultWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'Kinetic Link stores tasks and notes with a 12-word recovery phrase. Write that phrase on paper. On this device you can show it again later (with screen lock).'**
+  /// **'Kinetic Link stores tasks and notes with a 12-word recovery phrase. Write that phrase on paper and keep it safe. We do not store the words on this device.'**
   String get vaultWelcomeBody;
 
   /// No description provided for @vaultNewVault.
@@ -1346,6 +1322,30 @@ abstract class AppLocalizations {
   /// **'In {count} days'**
   String dateInDays(int count);
 
+  /// No description provided for @dateInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{In 1 hour} other{In {count} hours}}'**
+  String dateInHours(int count);
+
+  /// No description provided for @dateTonightTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight {time}'**
+  String dateTonightTime(String time);
+
+  /// No description provided for @dateTodayTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Today {time}'**
+  String dateTodayTime(String time);
+
+  /// No description provided for @dateTomorrowTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow {time}'**
+  String dateTomorrowTime(String time);
+
   /// No description provided for @dateWeekdayMonday.
   ///
   /// In en, this message translates to:
@@ -1387,6 +1387,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunday'**
   String get dateWeekdaySunday;
+
+  /// No description provided for @dateWeekdayShortMonday.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get dateWeekdayShortMonday;
+
+  /// No description provided for @dateWeekdayShortTuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get dateWeekdayShortTuesday;
+
+  /// No description provided for @dateWeekdayShortWednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get dateWeekdayShortWednesday;
+
+  /// No description provided for @dateWeekdayShortThursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get dateWeekdayShortThursday;
+
+  /// No description provided for @dateWeekdayShortFriday.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get dateWeekdayShortFriday;
+
+  /// No description provided for @dateWeekdayShortSaturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get dateWeekdayShortSaturday;
+
+  /// No description provided for @dateWeekdayShortSunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get dateWeekdayShortSunday;
+
+  /// No description provided for @reminderWhyHabitTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You did this task {count}× on {weekday}'**
+  String reminderWhyHabitTime(int count, String weekday);
+
+  /// No description provided for @reminderWhyHabitInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'About every {median} days, last {daysSince} days ago'**
+  String reminderWhyHabitInterval(int median, int daysSince);
+
+  /// No description provided for @reminderWhyKeyword.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches \"{keyword}\" in the title'**
+  String reminderWhyKeyword(String keyword);
+
+  /// No description provided for @reminderWhyCategorySchool.
+  ///
+  /// In en, this message translates to:
+  /// **'School tasks are usually planned in the morning'**
+  String get reminderWhyCategorySchool;
+
+  /// No description provided for @reminderWhyCategoryHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'Household tasks are often planned on weekends'**
+  String get reminderWhyCategoryHousehold;
+
+  /// No description provided for @reminderWhyCategoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health tasks are often reminded in the morning'**
+  String get reminderWhyCategoryHealth;
+
+  /// No description provided for @reminderWhyCategoryAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin tasks are often planned during the day'**
+  String get reminderWhyCategoryAdmin;
+
+  /// No description provided for @reminderWhyDefaultMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Default morning reminder'**
+  String get reminderWhyDefaultMorning;
+
+  /// No description provided for @reminderWhyEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick evening reminder'**
+  String get reminderWhyEvening;
+
+  /// No description provided for @reminderWhyTomorrowEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder tomorrow evening'**
+  String get reminderWhyTomorrowEvening;
+
+  /// No description provided for @reminderWhyQuick.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick reminder'**
+  String get reminderWhyQuick;
 
   /// No description provided for @dateMonthJan.
   ///
@@ -1778,24 +1886,6 @@ abstract class AppLocalizations {
   /// **'Completed tasks'**
   String get tasksCompletedTooltip;
 
-  /// No description provided for @tasksTabPrivate.
-  ///
-  /// In en, this message translates to:
-  /// **'Private'**
-  String get tasksTabPrivate;
-
-  /// No description provided for @tasksTabSuggestions.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestions'**
-  String get tasksTabSuggestions;
-
-  /// No description provided for @tasksTabKids.
-  ///
-  /// In en, this message translates to:
-  /// **'Kids'**
-  String get tasksTabKids;
-
   /// No description provided for @tasksSyncFailed.
   ///
   /// In en, this message translates to:
@@ -1826,77 +1916,11 @@ abstract class AppLocalizations {
   /// **'From partner'**
   String get tasksFromPartner;
 
-  /// No description provided for @tasksRefreshSuggestions.
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh suggestions'**
-  String get tasksRefreshSuggestions;
-
-  /// No description provided for @tasksAddReminder.
-  ///
-  /// In en, this message translates to:
-  /// **'Reminder'**
-  String get tasksAddReminder;
-
-  /// No description provided for @tasksAddTask.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get tasksAddTask;
-
-  /// No description provided for @tasksToPartner.
-  ///
-  /// In en, this message translates to:
-  /// **'To partner'**
-  String get tasksToPartner;
-
-  /// No description provided for @tasksNoPartnerSuggestions.
-  ///
-  /// In en, this message translates to:
-  /// **'No partner suggestions'**
-  String get tasksNoPartnerSuggestions;
-
-  /// No description provided for @tasksNoPartnerSuggestionsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Your partner has not suggested any tasks yet'**
-  String get tasksNoPartnerSuggestionsHint;
-
-  /// No description provided for @tasksViaSuggestion.
-  ///
-  /// In en, this message translates to:
-  /// **'Via suggestion'**
-  String get tasksViaSuggestion;
-
-  /// No description provided for @tasksReject.
-  ///
-  /// In en, this message translates to:
-  /// **'Reject'**
-  String get tasksReject;
-
   /// No description provided for @tasksAccept.
   ///
   /// In en, this message translates to:
   /// **'Accept'**
   String get tasksAccept;
-
-  /// No description provided for @tasksProposalAccepted.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestion accepted'**
-  String get tasksProposalAccepted;
-
-  /// No description provided for @tasksProposalRejected.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestion rejected'**
-  String get tasksProposalRejected;
-
-  /// No description provided for @tasksLoadProposalsError.
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading suggestions'**
-  String get tasksLoadProposalsError;
 
   /// No description provided for @tasksXpResetTitle.
   ///
@@ -1940,12 +1964,6 @@ abstract class AppLocalizations {
   /// **'No kids assignments'**
   String get tasksNoKidsAssignments;
 
-  /// No description provided for @tasksNoKidsAssignmentsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Send a task to the kids app to see it here.'**
-  String get tasksNoKidsAssignmentsHint;
-
   /// No description provided for @tasksResetXp.
   ///
   /// In en, this message translates to:
@@ -1981,24 +1999,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete all completed tasks? This cannot be undone.'**
   String get tasksDeleteCompletedBody;
-
-  /// No description provided for @tasksEmptySuggestionsPartner.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestions from the smart planner and proposals from your partner appear here'**
-  String get tasksEmptySuggestionsPartner;
-
-  /// No description provided for @tasksEmptySuggestionsSolo.
-  ///
-  /// In en, this message translates to:
-  /// **'Suggestions from the smart planner based on your habits appear here'**
-  String get tasksEmptySuggestionsSolo;
-
-  /// No description provided for @tasksNoSuggestions.
-  ///
-  /// In en, this message translates to:
-  /// **'No suggestions'**
-  String get tasksNoSuggestions;
 
   /// No description provided for @tasksAllDone.
   ///
@@ -2267,8 +2267,50 @@ abstract class AppLocalizations {
   /// No description provided for @notesDeleteBody.
   ///
   /// In en, this message translates to:
-  /// **'You cannot undo this.'**
+  /// **'The note moves to the trash. You can restore it from there.'**
   String get notesDeleteBody;
+
+  /// No description provided for @notesTrashTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted notes'**
+  String get notesTrashTooltip;
+
+  /// No description provided for @notesTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted notes'**
+  String get notesTrashTitle;
+
+  /// No description provided for @notesNoTrash.
+  ///
+  /// In en, this message translates to:
+  /// **'No deleted notes'**
+  String get notesNoTrash;
+
+  /// No description provided for @notesNoTrashHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted notes appear here'**
+  String get notesNoTrashHint;
+
+  /// No description provided for @notesRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get notesRestore;
+
+  /// No description provided for @notesEmptyTrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty trash?'**
+  String get notesEmptyTrashTitle;
+
+  /// No description provided for @notesEmptyTrashBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted notes will be permanently removed. This cannot be undone.'**
+  String get notesEmptyTrashBody;
 
   /// No description provided for @notesSharedWithPartner.
   ///
@@ -2312,30 +2354,6 @@ abstract class AppLocalizations {
   /// **'Suggestion sent to partner'**
   String get suggestSent;
 
-  /// No description provided for @suggestSnoozeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Snooze'**
-  String get suggestSnoozeTitle;
-
-  /// No description provided for @suggestSnoozeBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Snooze this suggestion for 7 days?'**
-  String get suggestSnoozeBody;
-
-  /// No description provided for @suggestSnoozeAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Snooze'**
-  String get suggestSnoozeAction;
-
-  /// No description provided for @suggestAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get suggestAdd;
-
   /// No description provided for @suggestReasonHabit.
   ///
   /// In en, this message translates to:
@@ -2378,18 +2396,6 @@ abstract class AppLocalizations {
   /// **'Category'**
   String get suggestReasonCategorize;
 
-  /// No description provided for @suggestAddWithReminder.
-  ///
-  /// In en, this message translates to:
-  /// **'With reminder'**
-  String get suggestAddWithReminder;
-
-  /// No description provided for @suggestAddCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Add category'**
-  String get suggestAddCategory;
-
   /// No description provided for @suggestCategorizeTitle.
   ///
   /// In en, this message translates to:
@@ -2401,6 +2407,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} open tasks have no category.'**
   String suggestCategorizeExplanation(int count);
+
+  /// No description provided for @suggestLoadBalanceTitleHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something around the house this week?'**
+  String get suggestLoadBalanceTitleHousehold;
+
+  /// No description provided for @suggestLoadBalanceTitleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something around care or health this week?'**
+  String get suggestLoadBalanceTitleHealth;
+
+  /// No description provided for @suggestLoadBalanceTitleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something in admin this week?'**
+  String get suggestLoadBalanceTitleAdmin;
+
+  /// No description provided for @suggestLoadBalanceTitleSchool.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something around school this week?'**
+  String get suggestLoadBalanceTitleSchool;
+
+  /// No description provided for @suggestLoadBalanceTitleFinance.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something in finances this week?'**
+  String get suggestLoadBalanceTitleFinance;
+
+  /// No description provided for @suggestLoadBalanceTitleOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick something up this week?'**
+  String get suggestLoadBalanceTitleOther;
+
+  /// No description provided for @suggestLoadBalanceExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} open tasks in {category}. The suggestion is intentionally generic.'**
+  String suggestLoadBalanceExplanation(int count, String category);
+
+  /// No description provided for @suggestLoadBalanceExplanationGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'You have several open tasks in {category}. The suggestion is intentionally generic.'**
+  String suggestLoadBalanceExplanationGeneric(String category);
+
+  /// No description provided for @suggestPartnerTitleSchool.
+  ///
+  /// In en, this message translates to:
+  /// **'School run or childcare this week?'**
+  String get suggestPartnerTitleSchool;
+
+  /// No description provided for @suggestPartnerExplanationSchool.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your tasks (without private details), school looks like a theme this week. Your partner sees this.'**
+  String get suggestPartnerExplanationSchool;
+
+  /// No description provided for @suggestPartnerTitleHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'Can you pick up something around the house this week?'**
+  String get suggestPartnerTitleHousehold;
+
+  /// No description provided for @suggestPartnerExplanationHousehold.
+  ///
+  /// In en, this message translates to:
+  /// **'You have several household tasks open. The suggestion is intentionally generic.'**
+  String get suggestPartnerExplanationHousehold;
+
+  /// No description provided for @suggestPartnerTitleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Something around care or health to pick up?'**
+  String get suggestPartnerTitleHealth;
+
+  /// No description provided for @suggestPartnerExplanationHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Something around care is going on. Your partner only sees this generic question.'**
+  String get suggestPartnerExplanationHealth;
+
+  /// No description provided for @suggestPartnerTitleSport.
+  ///
+  /// In en, this message translates to:
+  /// **'Sports bag or training this week?'**
+  String get suggestPartnerTitleSport;
+
+  /// No description provided for @suggestPartnerExplanationSport.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your tasks, sport looks like a theme. No private details.'**
+  String get suggestPartnerExplanationSport;
+
+  /// No description provided for @suggestPartnerTitleAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'An admin chore this week?'**
+  String get suggestPartnerTitleAdmin;
+
+  /// No description provided for @suggestPartnerExplanationAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'There is admin work open. The suggestion does not name a concrete task.'**
+  String get suggestPartnerExplanationAdmin;
+
+  /// No description provided for @suggestCalendarTaxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check tax return'**
+  String get suggestCalendarTaxTitle;
+
+  /// No description provided for @suggestCalendarTaxExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'March — time to check the tax return.'**
+  String get suggestCalendarTaxExplanation;
+
+  /// No description provided for @suggestCalendarSchoolTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare school supplies'**
+  String get suggestCalendarSchoolTitle;
+
+  /// No description provided for @suggestCalendarSchoolExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'August — prepare school supplies for the new year.'**
+  String get suggestCalendarSchoolExplanation;
+
+  /// No description provided for @suggestCalendarChristmasTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare for Christmas'**
+  String get suggestCalendarChristmasTitle;
+
+  /// No description provided for @suggestCalendarChristmasExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'December — prepare for Christmas.'**
+  String get suggestCalendarChristmasExplanation;
+
+  /// No description provided for @suggestHabitRepeatExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'You did \"{title}\" about every {median} days. Last time: {daysSince} days ago.'**
+  String suggestHabitRepeatExplanation(String title, int median, int daysSince);
+
+  /// No description provided for @suggestHabitOnceExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'You did \"{title}\" {daysSince} days ago. Schedule again?'**
+  String suggestHabitOnceExplanation(String title, int daysSince);
+
+  /// No description provided for @suggestSeasonalExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed \"{title}\" in {month} last year.'**
+  String suggestSeasonalExplanation(String title, String month);
+
+  /// No description provided for @suggestStaleExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" has been open for {days} days without a reminder.'**
+  String suggestStaleExplanation(String title, int days);
+
+  /// No description provided for @monthJanuary.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get monthJanuary;
+
+  /// No description provided for @monthFebruary.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get monthFebruary;
+
+  /// No description provided for @monthMarch.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get monthMarch;
+
+  /// No description provided for @monthApril.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get monthApril;
+
+  /// No description provided for @monthMay.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get monthMay;
+
+  /// No description provided for @monthJune.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get monthJune;
+
+  /// No description provided for @monthJuly.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get monthJuly;
+
+  /// No description provided for @monthAugust.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get monthAugust;
+
+  /// No description provided for @monthSeptember.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get monthSeptember;
+
+  /// No description provided for @monthOctober.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get monthOctober;
+
+  /// No description provided for @monthNovember.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get monthNovember;
+
+  /// No description provided for @monthDecember.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get monthDecember;
 
   /// No description provided for @categoryHousehold.
   ///
@@ -2509,6 +2755,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 open task} other{{count} open tasks}}'**
   String kidsOpenTasks(int count);
+
+  /// No description provided for @kidsDeleteTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove kids task?'**
+  String get kidsDeleteTaskTitle;
+
+  /// No description provided for @kidsDeleteTaskBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" will be removed from the kids app.'**
+  String kidsDeleteTaskBody(String title);
 
   /// No description provided for @snoozeTitle.
   ///

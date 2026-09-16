@@ -22,7 +22,7 @@ import '../theme/app_themes.dart';
 ///   "personalKey": "<base64 of 32-byte personal key>",
 ///   "database": "<base64 of .kbak blob (encrypted by [DatabaseBackupService])>",
 ///   "settings": {
-///     "theme": "<light|sand|dusk|night>",
+  ///     "theme": "<light|calm|night>",
 ///     "webdav": {
 ///       "serverUrl": "<string>",
 ///       "username": "<string>",

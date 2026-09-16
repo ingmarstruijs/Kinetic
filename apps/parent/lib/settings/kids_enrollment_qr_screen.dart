@@ -12,8 +12,8 @@ import '../theme/app_themes.dart';
 // Two-step screen:
 //   1. User enters the child's name.
 //   2. QR code is shown; child scans it to enroll.
-// The child is registered in [configRepo] so the family screen can list and
-// manage enrolled children.
+// The child is registered in [configRepo] so Settings and the Tasks kids
+// panel can list and manage enrolled children.
 // ---------------------------------------------------------------------------
 
 class KidsEnrollmentQrScreen extends StatefulWidget {
@@ -77,10 +77,7 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.kidsEnrollTitle),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: Text(l10n.kidsEnrollTitle), centerTitle: false),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),

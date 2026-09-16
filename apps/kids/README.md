@@ -42,6 +42,8 @@ flutter test       # run all tests
 flutter build apk --release
 ```
 
+Debug builds: on the enrollment screen, **Load demo chores** fills the home list without WebDAV so you can screenshot and tap through the UI.
+
 ## Architecture
 
 ```

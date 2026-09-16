@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../db/app_database.dart';
 import '../../notifications/notification_service.dart';
+import '../../notifications/reminder_action.dart';
 import '../models/personal_note.dart';
 
 /// NoteRepository — CRUD for personal notes with reminder scheduling.
@@ -18,10 +19,12 @@ class NoteRepository {
        _notifications = notifications;
 
   /// All notes, grouped by category (nulls first) then creation date (newest first).
-  /// Excludes soft-deleted notes (syncState='deleted').
+  /// Excludes trashed notes and sync tombstones.
   Stream<List<PersonalNote>> watchAll() {
     return (_db.select(_db.personalNotes)
-          ..where((t) => t.syncState.equals('deleted').not())
+          ..where(
+            (t) => t.deletedAt.isNull() & t.syncState.equals('deleted').not(),
+          )
           ..orderBy([
             (t) => OrderingTerm(
               expression: t.category.isNull(),
@@ -31,6 +34,18 @@ class NoteRepository {
             (t) => OrderingTerm.asc(t.sortOrder),
             (t) => OrderingTerm.desc(t.createdAt),
           ]))
+        .watch()
+        .map((rows) => rows.map(_noteFromRow).toList());
+  }
+
+  /// Notes in the trash, newest first.
+  Stream<List<PersonalNote>> watchDeleted() {
+    return (_db.select(_db.personalNotes)
+          ..where(
+            (t) =>
+                t.deletedAt.isNotNull() & t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.deletedAt)]))
         .watch()
         .map((rows) => rows.map(_noteFromRow).toList());
   }
@@ -84,7 +99,8 @@ class NoteRepository {
     }
   }
 
-  /// Soft-delete a note by marking syncState='deleted'.
+  /// Move a note to the trash. Restore with [restore]; empty with
+  /// [emptyTrash].
   Future<void> delete(String id) async {
     try {
       await _notifications?.cancelReminder(_notifId(id));
@@ -92,7 +108,7 @@ class NoteRepository {
         _db.personalNotes,
       )..where((t) => t.id.equals(id))).write(
         PersonalNotesCompanion(
-          syncState: const Value('deleted'),
+          deletedAt: Value(DateTime.now().toUtc()),
           updatedAt: Value(DateTime.now().toUtc()),
         ),
       );
@@ -100,6 +116,51 @@ class NoteRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  /// Restore a trashed note to the active list.
+  Future<void> restore(String id) async {
+    await (_db.update(_db.personalNotes)..where((t) => t.id.equals(id))).write(
+      PersonalNotesCompanion(
+        deletedAt: const Value(null),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    final note = await getNote(id);
+    if (note != null) await _scheduleReminderFor(note);
+    onWrite?.call();
+  }
+
+  /// Permanently remove all trashed notes (WebDAV tombstones).
+  Future<void> emptyTrash() async {
+    await (_db.update(
+      _db.personalNotes,
+    )..where((t) => t.deletedAt.isNotNull())).write(
+      PersonalNotesCompanion(
+        syncState: const Value('deleted'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  Future<PersonalNote?> getNote(String id) async {
+    final row = await (_db.select(
+      _db.personalNotes,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _noteFromRow(row);
+  }
+
+  Future<void> snoozeReminder(String noteId, DateTime until) async {
+    final note = await getNote(noteId);
+    if (note == null) return;
+    await update(note.copyWith(remindAt: until.toUtc()));
+  }
+
+  Future<void> clearReminder(String noteId) async {
+    final note = await getNote(noteId);
+    if (note == null) return;
+    await update(note.copyWith(clearRemindAt: true));
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -159,6 +220,7 @@ class NoteRepository {
       sortOrder: Value(note.sortOrder),
       createdAt: Value(note.createdAt),
       updatedAt: Value(note.updatedAt),
+      deletedAt: Value(note.deletedAt),
       syncState: const Value('dirty'),
       webdavEtag: const Value(null),
     );
@@ -176,6 +238,7 @@ class NoteRepository {
         title: note.title,
         body: body,
         at: note.remindAt!,
+        payload: ReminderPayload.note(note.id).encode(),
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail note operations.
@@ -187,6 +250,7 @@ class NoteRepository {
   Future<void> rescheduleAllReminders() async {
     final rows = await _db.select(_db.personalNotes).get();
     for (final row in rows) {
+      if (row.deletedAt != null || row.syncState == 'deleted') continue;
       final note = _noteFromRow(row);
       await _scheduleReminderFor(note);
     }

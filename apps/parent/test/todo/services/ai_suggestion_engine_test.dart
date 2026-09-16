@@ -440,7 +440,8 @@ void main() {
           (s) => s.reason == SuggestionReason.categorize,
         );
         expect(suggestion.relatedTaskIds, containsAll(['c1', 'c2', 'c3']));
-        expect(suggestion.notes, 'Household');
+        expect(suggestion.notes, isNull);
+        expect(suggestion.category, 'household');
       });
 
       test('does not re-ask for tasks that were declined', () async {

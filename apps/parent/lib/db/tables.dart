@@ -120,6 +120,9 @@ class PersonalNotes extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
+  /// Set when the note is moved to trash; null = active.
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -245,8 +248,8 @@ class AppSettings extends Table {
   TextColumn get key =>
       text().withDefault(const Constant('default')).unique()();
 
-  // Theme preference: 'light' | 'sand' | 'dusk' | 'night'
-  // Legacy stored value 'dark' is mapped to dusk at read time.
+  // Theme preference: 'light' | 'calm' | 'night'
+  // Legacy ids 'sand', 'dusk', and 'dark' are mapped in appThemeFromName.
   TextColumn get theme => text().withDefault(const Constant('dark'))();
 
   // UI language: 'en' | 'nl'

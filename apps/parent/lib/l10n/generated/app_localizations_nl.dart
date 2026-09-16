@@ -54,13 +54,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get commonUnknown => '(onbekend)';
 
   @override
-  String get themeLight => 'Licht';
+  String get themeLight => 'Standaard';
 
   @override
-  String get themeSand => 'Zand';
-
-  @override
-  String get themeDusk => 'Schemer';
+  String get themeCalm => 'Kalm';
 
   @override
   String get themeNight => 'Nacht';
@@ -69,10 +66,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get themeLightDesc => 'Helder blauw';
 
   @override
-  String get themeSandDesc => 'Warm papier';
-
-  @override
-  String get themeDuskDesc => 'Blauw-grijs donker';
+  String get themeCalmDesc => 'Zacht voor de ogen';
 
   @override
   String get themeNightDesc => 'OLED zwart';
@@ -140,13 +134,6 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settingsVerifyPhraseSubtitle =>
       'Controleer of je de 12 woorden nog kent. We tonen ze niet.';
-
-  @override
-  String get settingsShowPhrase => 'Herstelzin tonen';
-
-  @override
-  String get settingsShowPhraseSubtitle =>
-      'Toon de 12 woorden op dit apparaat (schermvergrendeling).';
 
   @override
   String get settingsSectionBackup => 'Back-up & Herstel';
@@ -267,7 +254,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get vaultWelcomeBody =>
-      'Kinetic Link bewaart taken en notities met een herstelzin van 12 woorden. Schrijf die zin op papier. Op dit apparaat kun je hem later opnieuw tonen (met schermvergrendeling).';
+      'Kinetic Link bewaart taken en notities met een herstelzin van 12 woorden. Schrijf die zin op papier en bewaar hem veilig. We slaan de woorden niet op dit apparaat op.';
 
   @override
   String get vaultNewVault => 'Nieuwe kluis';
@@ -738,6 +725,32 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String dateInHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Over $count uur',
+      one: 'Over 1 uur',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dateTonightTime(String time) {
+    return 'Vanavond $time';
+  }
+
+  @override
+  String dateTodayTime(String time) {
+    return 'Vandaag $time';
+  }
+
+  @override
+  String dateTomorrowTime(String time) {
+    return 'Morgen $time';
+  }
+
+  @override
   String get dateWeekdayMonday => 'Maandag';
 
   @override
@@ -757,6 +770,70 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get dateWeekdaySunday => 'Zondag';
+
+  @override
+  String get dateWeekdayShortMonday => 'Ma';
+
+  @override
+  String get dateWeekdayShortTuesday => 'Di';
+
+  @override
+  String get dateWeekdayShortWednesday => 'Wo';
+
+  @override
+  String get dateWeekdayShortThursday => 'Do';
+
+  @override
+  String get dateWeekdayShortFriday => 'Vr';
+
+  @override
+  String get dateWeekdayShortSaturday => 'Za';
+
+  @override
+  String get dateWeekdayShortSunday => 'Zo';
+
+  @override
+  String reminderWhyHabitTime(int count, String weekday) {
+    return 'Je deed deze taak $count× op $weekday';
+  }
+
+  @override
+  String reminderWhyHabitInterval(int median, int daysSince) {
+    return 'Ongeveer elke $median dagen, voor het laatst $daysSince dagen geleden';
+  }
+
+  @override
+  String reminderWhyKeyword(String keyword) {
+    return 'Komt overeen met \"$keyword\" in de titel';
+  }
+
+  @override
+  String get reminderWhyCategorySchool =>
+      'Schooltaken worden meestal \'s ochtends gepland';
+
+  @override
+  String get reminderWhyCategoryHousehold =>
+      'Huishoudelijke taken worden vaak in het weekend gepland';
+
+  @override
+  String get reminderWhyCategoryHealth =>
+      'Gezondheidstaken worden vaak \'s ochtends herinnerd';
+
+  @override
+  String get reminderWhyCategoryAdmin =>
+      'Administratieve taken worden vaak overdag gepland';
+
+  @override
+  String get reminderWhyDefaultMorning => 'Standaard herinnering in de ochtend';
+
+  @override
+  String get reminderWhyEvening => 'Snelle herinnering vanavond';
+
+  @override
+  String get reminderWhyTomorrowEvening => 'Herinnering morgenavond';
+
+  @override
+  String get reminderWhyQuick => 'Snelle herinnering';
 
   @override
   String get dateMonthJan => 'jan';
@@ -1005,15 +1082,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksCompletedTooltip => 'Voltooide taken';
 
   @override
-  String get tasksTabPrivate => 'Privé';
-
-  @override
-  String get tasksTabSuggestions => 'Voorstellen';
-
-  @override
-  String get tasksTabKids => 'Kinderen';
-
-  @override
   String get tasksSyncFailed => 'Sync mislukt, tap om opnieuw te proberen.';
 
   @override
@@ -1029,41 +1097,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksFromPartner => 'Van partner';
 
   @override
-  String get tasksRefreshSuggestions => 'Vernieuw voorstellen';
-
-  @override
-  String get tasksAddReminder => 'Herinnering';
-
-  @override
-  String get tasksAddTask => 'Toevoegen';
-
-  @override
-  String get tasksToPartner => 'Naar partner';
-
-  @override
-  String get tasksNoPartnerSuggestions => 'Geen partnervoorstellen';
-
-  @override
-  String get tasksNoPartnerSuggestionsHint =>
-      'Je partner heeft nog geen taken voorgesteld';
-
-  @override
-  String get tasksViaSuggestion => 'Via suggestie';
-
-  @override
-  String get tasksReject => 'Afwijzen';
-
-  @override
   String get tasksAccept => 'Accepteren';
-
-  @override
-  String get tasksProposalAccepted => 'Voorstel geaccepteerd';
-
-  @override
-  String get tasksProposalRejected => 'Voorstel afgewezen';
-
-  @override
-  String get tasksLoadProposalsError => 'Fout bij laden van voorstellen';
 
   @override
   String tasksXpResetTitle(String name) {
@@ -1094,10 +1128,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksNoKidsAssignments => 'Geen kinderopdrachten';
 
   @override
-  String get tasksNoKidsAssignmentsHint =>
-      'Stuur een taak naar de kinderenapp om hem hier te zien.';
-
-  @override
   String get tasksResetXp => 'Reset XP';
 
   @override
@@ -1117,17 +1147,6 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get tasksDeleteCompletedBody =>
       'Weet je zeker dat je alle voltooide taken wilt verwijderen? Dit kan niet ongedaan worden gemaakt.';
-
-  @override
-  String get tasksEmptySuggestionsPartner =>
-      'Hier verschijnen suggesties van de slimme planner en voorstellen van je partner';
-
-  @override
-  String get tasksEmptySuggestionsSolo =>
-      'Hier verschijnen suggesties van de slimme planner op basis van je gewoonten';
-
-  @override
-  String get tasksNoSuggestions => 'Geen voorstellen';
 
   @override
   String get tasksAllDone => 'Alles klaar!';
@@ -1276,7 +1295,30 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notesDeleteTitle => 'Notitie verwijderen?';
 
   @override
-  String get notesDeleteBody => 'Je kunt dit niet ongedaan maken.';
+  String get notesDeleteBody =>
+      'De notitie gaat naar de prullenbak. Je kunt hem daar terugzetten.';
+
+  @override
+  String get notesTrashTooltip => 'Verwijderde notities';
+
+  @override
+  String get notesTrashTitle => 'Verwijderde notities';
+
+  @override
+  String get notesNoTrash => 'Geen verwijderde notities';
+
+  @override
+  String get notesNoTrashHint => 'Verwijderde notities verschijnen hier';
+
+  @override
+  String get notesRestore => 'Terugzetten';
+
+  @override
+  String get notesEmptyTrashTitle => 'Prullenbak legen?';
+
+  @override
+  String get notesEmptyTrashBody =>
+      'Verwijderde notities worden definitief gewist. Dit kan niet ongedaan worden gemaakt.';
 
   @override
   String get notesSharedWithPartner => 'Gedeeld met partner';
@@ -1303,18 +1345,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestSent => 'Voorstel naar partner gestuurd';
 
   @override
-  String get suggestSnoozeTitle => 'Uitstellen';
-
-  @override
-  String get suggestSnoozeBody => 'Suggestie 7 dagen uitstellen?';
-
-  @override
-  String get suggestSnoozeAction => 'Uitstellen';
-
-  @override
-  String get suggestAdd => 'Toevoegen';
-
-  @override
   String get suggestReasonHabit => 'Gewoonte';
 
   @override
@@ -1336,12 +1366,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestReasonCategorize => 'Categorie';
 
   @override
-  String get suggestAddWithReminder => 'Met herinnering';
-
-  @override
-  String get suggestAddCategory => 'Categorie toevoegen';
-
-  @override
   String suggestCategorizeTitle(int count, String category) {
     return '$count taken toevoegen aan $category?';
   }
@@ -1350,6 +1374,157 @@ class AppLocalizationsNl extends AppLocalizations {
   String suggestCategorizeExplanation(int count) {
     return '$count open taken hebben geen categorie.';
   }
+
+  @override
+  String get suggestLoadBalanceTitleHousehold =>
+      'Kun jij deze week iets in huis oppakken?';
+
+  @override
+  String get suggestLoadBalanceTitleHealth =>
+      'Kun jij deze week iets rond zorg of gezondheid oppakken?';
+
+  @override
+  String get suggestLoadBalanceTitleAdmin =>
+      'Kun jij deze week iets administratiefs oppakken?';
+
+  @override
+  String get suggestLoadBalanceTitleSchool =>
+      'Kun jij deze week iets rond school oppakken?';
+
+  @override
+  String get suggestLoadBalanceTitleFinance =>
+      'Kun jij deze week iets rond financiën oppakken?';
+
+  @override
+  String get suggestLoadBalanceTitleOther => 'Kun jij deze week iets oppakken?';
+
+  @override
+  String suggestLoadBalanceExplanation(int count, String category) {
+    return 'Je hebt $count open taken in $category. De hint is bewust algemeen.';
+  }
+
+  @override
+  String suggestLoadBalanceExplanationGeneric(String category) {
+    return 'Je hebt meerdere open taken in $category. De hint is bewust algemeen.';
+  }
+
+  @override
+  String get suggestPartnerTitleSchool => 'Schoolrondje of opvang deze week?';
+
+  @override
+  String get suggestPartnerExplanationSchool =>
+      'Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je partner ziet dit.';
+
+  @override
+  String get suggestPartnerTitleHousehold =>
+      'Kun jij deze week iets in huis oppakken?';
+
+  @override
+  String get suggestPartnerExplanationHousehold =>
+      'Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.';
+
+  @override
+  String get suggestPartnerTitleHealth =>
+      'Iets rond zorg of gezondheid oppakken?';
+
+  @override
+  String get suggestPartnerExplanationHealth =>
+      'Er speelt iets rond zorg. Je partner ziet alleen deze algemene vraag.';
+
+  @override
+  String get suggestPartnerTitleSport => 'Sporttas of training deze week?';
+
+  @override
+  String get suggestPartnerExplanationSport =>
+      'Op basis van je taken lijkt sport een thema. Geen privédetails.';
+
+  @override
+  String get suggestPartnerTitleAdmin => 'Een administratieve klus deze week?';
+
+  @override
+  String get suggestPartnerExplanationAdmin =>
+      'Er staat administratie open. De hint noemt geen concrete taak.';
+
+  @override
+  String get suggestCalendarTaxTitle => 'Belastingaangifte controleren';
+
+  @override
+  String get suggestCalendarTaxExplanation =>
+      'Maart — tijd om de belastingaangifte te controleren.';
+
+  @override
+  String get suggestCalendarSchoolTitle => 'Schoolspullen klaarzetten';
+
+  @override
+  String get suggestCalendarSchoolExplanation =>
+      'Augustus — schoolspullen klaarzetten voor het nieuwe jaar.';
+
+  @override
+  String get suggestCalendarChristmasTitle => 'Kerst voorbereiden';
+
+  @override
+  String get suggestCalendarChristmasExplanation =>
+      'December — kerst voorbereiden.';
+
+  @override
+  String suggestHabitRepeatExplanation(
+    String title,
+    int median,
+    int daysSince,
+  ) {
+    return 'Je deed \"$title\" ongeveer elke $median dagen. Vorige keer: $daysSince dagen geleden.';
+  }
+
+  @override
+  String suggestHabitOnceExplanation(String title, int daysSince) {
+    return 'Je deed \"$title\" $daysSince dagen geleden. Opnieuw inplannen?';
+  }
+
+  @override
+  String suggestSeasonalExplanation(String title, String month) {
+    return 'Je hebt \"$title\" vorig jaar in $month afgerond.';
+  }
+
+  @override
+  String suggestStaleExplanation(String title, int days) {
+    return '\"$title\" staat $days dagen open zonder herinnering.';
+  }
+
+  @override
+  String get monthJanuary => 'januari';
+
+  @override
+  String get monthFebruary => 'februari';
+
+  @override
+  String get monthMarch => 'maart';
+
+  @override
+  String get monthApril => 'april';
+
+  @override
+  String get monthMay => 'mei';
+
+  @override
+  String get monthJune => 'juni';
+
+  @override
+  String get monthJuly => 'juli';
+
+  @override
+  String get monthAugust => 'augustus';
+
+  @override
+  String get monthSeptember => 'september';
+
+  @override
+  String get monthOctober => 'oktober';
+
+  @override
+  String get monthNovember => 'november';
+
+  @override
+  String get monthDecember => 'december';
 
   @override
   String get categoryHousehold => 'Huishouden';
@@ -1377,6 +1552,76 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get categoryNewAction => 'Nieuwe categorie…';
+
+  @override
+  String get categoryRename => 'Categorie hernoemen';
+
+  @override
+  String get categoryRenameHint => 'Categorienaam';
+
+  @override
+  String get suggestionsTitle => 'Suggesties';
+
+  @override
+  String get suggestionsSubtitle => 'Handige taken om vandaag te overwegen';
+
+  @override
+  String get suggestionsProposedByPartner => 'Voorgesteld door je partner';
+
+  @override
+  String get tasksDecline => 'Weigeren';
+
+  @override
+  String get kidsSectionTitle => 'Kids';
+
+  @override
+  String get kidsAllFilter => 'Alle kids';
+
+  @override
+  String kidsOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open taken',
+      one: '1 open taak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsDeleteTaskTitle => 'Kindertaak verwijderen?';
+
+  @override
+  String kidsDeleteTaskBody(String title) {
+    return '\"$title\" verdwijnt uit de kids-app.';
+  }
+
+  @override
+  String get snoozeTitle => 'Herinnering uitstellen';
+
+  @override
+  String get snooze10min => '10 minuten';
+
+  @override
+  String get snooze1hour => '1 uur';
+
+  @override
+  String get snooze3hours => '3 uur';
+
+  @override
+  String get snoozeTomorrowMorning => 'Morgen 09:00';
+
+  @override
+  String get snoozeCustom => 'Kies een tijd…';
+
+  @override
+  String get snoozeDone => 'Herinnering uitgesteld';
+
+  @override
+  String get reminderDone => 'Taak afgerond';
+
+  @override
+  String get noteReminderCleared => 'Herinnering gewist';
 
   @override
   String get quickAddHint => 'Nieuwe taak…';

@@ -13,6 +13,7 @@ class PersonalNote {
   final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
 
   const PersonalNote({
     required this.id,
@@ -24,6 +25,7 @@ class PersonalNote {
     this.sortOrder = 0,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
 
   static PersonalNote create({
@@ -59,6 +61,7 @@ class PersonalNote {
       sortOrder: row.sortOrder,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      deletedAt: row.deletedAt,
     );
   }
 
@@ -71,6 +74,8 @@ class PersonalNote {
     String? category,
     bool clearCategory = false,
     int? sortOrder,
+    DateTime? deletedAt,
+    bool clearDeletedAt = false,
   }) {
     return PersonalNote(
       id: id,
@@ -82,7 +87,22 @@ class PersonalNote {
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt,
       updatedAt: DateTime.now().toUtc(),
+      deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
+  }
+
+  String get bodyPreview {
+    final plain = body
+        .replaceAll(RegExp(r'```[\s\S]*?```'), ' ')
+        .replaceAll(RegExp(r'`+'), '')
+        .replaceAll(RegExp(r'!\[.*?\]\(.*?\)'), ' ')
+        .replaceAllMapped(RegExp(r'\[(.*?)\]\(.*?\)'), (m) => m.group(1) ?? '')
+        .replaceAll(RegExp(r'[#*_>~|-]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (plain.isEmpty) return '';
+    if (plain.length <= 160) return plain;
+    return '${plain.substring(0, 160).trimRight()}…';
   }
 
   @override

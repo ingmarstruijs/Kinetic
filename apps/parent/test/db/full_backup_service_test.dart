@@ -19,7 +19,7 @@ void main() {
       db,
       key,
       usernameHint: 'alice',
-      currentThemeName: 'sand',
+      currentThemeName: 'calm',
     );
     final text = utf8.decode(bytes);
     expect(text, contains('"format":"kvault"'));

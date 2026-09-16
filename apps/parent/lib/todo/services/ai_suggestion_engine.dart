@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../db/app_database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../partner/services/partner_proposal_repository.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
@@ -9,6 +11,7 @@ import '../models/ai_suggestion.dart';
 import '../reminder_time.dart';
 import 'ai_suggestion_repository.dart';
 import 'reminder_proposal_engine.dart';
+import 'suggestion_actions.dart';
 import 'suggestion_heuristics.dart';
 
 /// Heuristic-based suggestion engine.
@@ -57,6 +60,10 @@ class AiSuggestionEngine {
 
     if (!selfDue && !partnerDue) return;
 
+    final l10n = lookupAppLocalizations(
+      Locale(settings?.localeCode == 'nl' ? 'nl' : 'en'),
+    );
+
     final completedTasks = await _todoRepo.watchCompletedTasks().first;
     final openTasks = await _todoRepo.watchOpenTasks().first;
     final openTitlesNorm = openTasks
@@ -65,10 +72,10 @@ class AiSuggestionEngine {
 
     if (selfDue) {
       final before = await _suggestionRepo.countPendingSelf();
-      await _runHabitDetector(completedTasks, openTitlesNorm);
-      await _runSeasonalDetector(completedTasks, openTitlesNorm);
+      await _runHabitDetector(completedTasks, openTitlesNorm, l10n);
+      await _runSeasonalDetector(completedTasks, openTitlesNorm, l10n);
       await _runCalendarDetector(openTitlesNorm);
-      await _runStaleDetector(openTasks, completedTasks);
+      await _runStaleDetector(openTasks, completedTasks, l10n);
       await _runCategorizeDetector(openTasks);
       final after = await _suggestionRepo.countPendingSelf();
       if (after > before) await _updateLastRun(selfPath: true);
@@ -90,6 +97,7 @@ class AiSuggestionEngine {
   Future<void> _runHabitDetector(
     List<PersonalTask> completed,
     Set<String> openTitlesNorm,
+    AppLocalizations l10n,
   ) async {
     if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) return;
 
@@ -134,10 +142,12 @@ class AiSuggestionEngine {
           title: original.title,
         ),
         explanation: times.length >= 2
-            ? 'You did "${original.title}" about every $median days. '
-                  'Last time: $daysSince days ago.'
-            : 'You did "${original.title}" $daysSince days ago. '
-                  'Schedule again?',
+            ? l10n.suggestHabitRepeatExplanation(
+                original.title,
+                median,
+                daysSince,
+              )
+            : l10n.suggestHabitOnceExplanation(original.title, daysSince),
       );
       await _suggestionRepo.upsertSuggestion(suggested);
     }
@@ -189,6 +199,7 @@ class AiSuggestionEngine {
   Future<void> _runSeasonalDetector(
     List<PersonalTask> completed,
     Set<String> openTitlesNorm,
+    AppLocalizations l10n,
   ) async {
     if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) return;
 
@@ -214,7 +225,7 @@ class AiSuggestionEngine {
       final original = completed.firstWhere(
         (t) => normalizeSuggestionText(t.title) == entry.key,
       );
-      final monthName = _monthName(currentMonth);
+      final monthName = localizedMonthName(l10n, currentMonth);
       final lastDone = original.completedAt!;
       final thisYear = DateTime(
         currentYear,
@@ -241,8 +252,7 @@ class AiSuggestionEngine {
           reason: SuggestionReason.seasonal,
           title: original.title,
         ),
-        explanation:
-            'You completed "${original.title}" in $monthName last year.',
+        explanation: l10n.suggestSeasonalExplanation(original.title, monthName),
       );
       await _suggestionRepo.upsertSuggestion(suggested);
     }
@@ -283,6 +293,7 @@ class AiSuggestionEngine {
   Future<void> _runStaleDetector(
     List<PersonalTask> openTasks,
     List<PersonalTask> completed,
+    AppLocalizations l10n,
   ) async {
     if (await _suggestionRepo.countPendingSelf() >= _maxPendingSelf) return;
 
@@ -311,9 +322,7 @@ class AiSuggestionEngine {
           reason: SuggestionReason.stale,
           dedupeKey: 'stale:${task.id}',
           relatedTaskIds: [task.id],
-          explanation: proposal == null
-              ? '"${task.title}" has been open for $ageDays days without a reminder.'
-              : '"${task.title}" has been open for $ageDays days without a reminder. Suggested: ${proposal.label}.',
+          explanation: l10n.suggestStaleExplanation(task.title, ageDays),
         ),
       );
     }
@@ -357,21 +366,21 @@ class AiSuggestionEngine {
       }
 
       final ids = entry.value.map((t) => t.id).toList();
-      final label = resolveCategoryLabel(entry.key.name, existing);
-      final preview = entry.value.take(3).map((t) => t.title).join(', ');
+      final reused = resolveCategoryLabel(entry.key.name, existing);
+      final hasCustom = existing.any(
+        (e) => e.trim().toLowerCase() == reused.trim().toLowerCase(),
+      );
 
       await _suggestionRepo.upsertSuggestion(
         AiSuggestion.create(
-          title: 'Add ${ids.length} tasks to $label',
-          notes: label,
+          title: 'Add ${ids.length} tasks to ${entry.key.name}',
+          notes: hasCustom ? reused : null,
           category: entry.key.name,
           reason: SuggestionReason.categorize,
           dedupeKey:
               'categorize:${entry.key.name}:${(ids.toList()..sort()).join(',')}',
           relatedTaskIds: ids,
-          explanation:
-              '${ids.length} open tasks have no category ($preview). '
-              'Suggested: $label.',
+          explanation: '${ids.length} open tasks have no category.',
         ),
       );
     }
@@ -411,6 +420,7 @@ class AiSuggestionEngine {
         category: entry.key,
         reason: SuggestionReason.loadBalance,
         dedupeKey: 'loadBalance:${entry.key}',
+        relatedTaskIds: entry.value.map((t) => t.id).toList(),
         explanation:
             'You have ${entry.value.length} open tasks in '
             '${categoryLabel(entry.key)}. The suggestion is intentionally generic.',
@@ -473,19 +483,4 @@ class AiSuggestionEngine {
     final mid = gaps.length ~/ 2;
     return gaps.length.isOdd ? gaps[mid] : ((gaps[mid - 1] + gaps[mid]) ~/ 2);
   }
-
-  String _monthName(int month) => const [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ][month - 1];
 }

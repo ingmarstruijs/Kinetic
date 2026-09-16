@@ -12,6 +12,7 @@ abstract class NotificationService {
     required String title,
     required String body,
     required DateTime at,
+    String? payload,
   });
 
   Future<void> cancelReminder(int id);

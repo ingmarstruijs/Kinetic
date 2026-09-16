@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kinetic_qr_scanner/kinetic_qr_scanner.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
@@ -24,10 +23,14 @@ class KidsEnrollmentScreen extends StatefulWidget {
   /// callback instead of popping the navigator.
   final VoidCallback? onEnrolled;
 
+  /// Debug-only: skip QR enrollment and load local demo chores.
+  final VoidCallback? onLoadDemo;
+
   const KidsEnrollmentScreen({
     super.key,
     required this.configRepo,
     this.onEnrolled,
+    this.onLoadDemo,
   });
 
   @override
@@ -114,10 +117,7 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
           Expanded(
             child: Stack(
               children: [
-                KineticQrScanView(
-                  enabled: !_processing,
-                  onDetect: _onDetect,
-                ),
+                KineticQrScanView(enabled: !_processing, onDetect: _onDetect),
                 if (_processing)
                   Container(
                     color: Colors.black54,
@@ -143,6 +143,18 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
                   style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
+                if (kDebugMode && widget.onLoadDemo != null) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: widget.onLoadDemo,
+                    icon: const Icon(Icons.movie_filter_outlined),
+                    label: Text(
+                      Localizations.localeOf(context).languageCode == 'nl'
+                          ? 'Laad demo-klusjes'
+                          : 'Load demo chores',
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -255,10 +267,7 @@ class _EnrollmentConfirmDialogState extends State<_EnrollmentConfirmDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),
         ),
-        FilledButton(
-          onPressed: _submit,
-          child: Text(l10n.link),
-        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.link)),
       ],
     );
   }

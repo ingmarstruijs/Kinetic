@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:drift/drift.dart' hide Column;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
@@ -15,9 +16,10 @@ import '../theme/app_header.dart';
 import '../theme/app_themes.dart';
 import '../main.dart';
 import '../vault/family_vault_sync.dart';
-import '../vault/screens/mnemonic_reveal_screen.dart';
 import '../vault/vault_repository.dart';
 import '../vault/widgets/mnemonic_phrase_field.dart';
+import '../debug/demo_scenarios.dart';
+import '../debug/demo_scenarios_screen.dart';
 import 'kids_settings_screen.dart';
 import 'partner_settings_screen.dart';
 import 'settings_repository.dart';
@@ -29,9 +31,9 @@ class SettingsScreen extends StatefulWidget {
   final SyncOrchestrator? syncOrchestrator;
   final VoidCallback? onConfigSaved;
 
-  /// Called after a backup is successfully restored so callers can reschedule
-  /// notifications and reinitialise sync.
   final VoidCallback? onRestoreComplete;
+  final VoidCallback? onOpenTasksTab;
+  final VoidCallback? onOpenNotesTab;
 
   const SettingsScreen({
     super.key,
@@ -41,6 +43,8 @@ class SettingsScreen extends StatefulWidget {
     this.syncOrchestrator,
     this.onConfigSaved,
     this.onRestoreComplete,
+    this.onOpenTasksTab,
+    this.onOpenNotesTab,
   });
 
   @override
@@ -187,13 +191,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => _verifyPhrase(),
               ),
-              ListTile(
-                leading: Icon(Icons.visibility_outlined, color: iconColor),
-                title: Text(l10n.settingsShowPhrase),
-                subtitle: Text(l10n.settingsShowPhraseSubtitle),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _revealPhrase(),
-              ),
+              if (kDebugMode) ...[
+                const _SectionHeader(label: 'Debug'),
+                ListTile(
+                  leading: Icon(Icons.movie_filter_outlined, color: iconColor),
+                  title: Text(
+                    localeNotifier.value.languageCode == 'nl'
+                        ? 'UI-scenario\'s'
+                        : 'UI scenarios',
+                  ),
+                  subtitle: Text(
+                    localeNotifier.value.languageCode == 'nl'
+                        ? 'Laad testdata voor screenshots'
+                        : 'Load test data for screenshots',
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => DemoScenariosScreen(
+                          db: widget.db,
+                          onApplied: (scenario) {
+                            if (scenario == DemoScenario.notes) {
+                              widget.onOpenNotesTab?.call();
+                            } else {
+                              widget.onOpenTasksTab?.call();
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
               _SectionHeader(label: l10n.settingsSectionBackup),
               ListTile(
                 leading: Icon(Icons.backup_outlined, color: iconColor),
@@ -288,9 +318,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final key = await widget.configRepo.loadPersonalKeyBytes();
     if (key == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.backupNoVault)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.backupNoVault)));
       return;
     }
 
@@ -332,7 +362,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       if (savedPath != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).backupSaved(savedPath))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).backupSaved(savedPath)),
+          ),
         );
       }
     } catch (e) {
@@ -351,7 +383,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Combined backup import
   // ---------------------------------------------------------------------------
 
-  Future<String?> _askPhrase({required String title, required String body}) async {
+  Future<String?> _askPhrase({
+    required String title,
+    required String body,
+  }) async {
     final ctrl = TextEditingController();
     final phrase = await showDialog<String>(
       context: context,
@@ -399,24 +434,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          ok ? l10n.backupVerifyOk : l10n.backupVerifyMismatch,
-        ),
+        content: Text(ok ? l10n.backupVerifyOk : l10n.backupVerifyMismatch),
       ),
-    );
-  }
-
-  Future<void> _revealPhrase() async {
-    final l10n = AppLocalizations.of(context);
-    final vaultRepo = VaultRepository(
-      FlutterSecureKeyValueStore(),
-      widget.configRepo,
-    );
-    await showMnemonicReveal(
-      context: context,
-      title: l10n.backupRevealTitle,
-      loadWords: vaultRepo.loadPersonalMnemonic,
-      missingMessage: l10n.backupRevealMissing,
     );
   }
 
@@ -438,9 +457,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final fileBytes = result.files.first.bytes;
     if (fileBytes == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.backupCouldNotReadFile)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.backupCouldNotReadFile)));
       return;
     }
 
@@ -670,7 +689,9 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(AppLocalizations.of(context).backupCouldNotReadFile),
+                content: Text(
+                  AppLocalizations.of(context).backupCouldNotReadFile,
+                ),
               ),
             );
           }
@@ -792,9 +813,9 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              AppLocalizations.of(context).webdavFilesDeleted(
-                taskFiles.length + noteFiles.length,
-              ),
+              AppLocalizations.of(
+                context,
+              ).webdavFilesDeleted(taskFiles.length + noteFiles.length),
             ),
           ),
         );
@@ -815,9 +836,9 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
     if (_testResult != 'ok') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.webdavTestFirst)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.webdavTestFirst)));
       return;
     }
 
@@ -837,9 +858,9 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       final existingKey = await widget.configRepo.loadPersonalKeyBytes();
       if (existingKey == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.webdavCreateVaultFirst)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.webdavCreateVaultFirst)));
         }
         setState(() => _saving = false);
         return;

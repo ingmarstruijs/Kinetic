@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../notifications/notification_service.dart';
+import '../../notifications/reminder_action.dart';
 
 import '../../db/app_database.dart';
 import '../../partner/models/partner_proposal.dart';
@@ -497,6 +498,33 @@ class TodoRepository {
     onWrite?.call();
   }
 
+  Future<void> renameCustomCategory({
+    required String from,
+    required String to,
+  }) async {
+    final label = to.trim();
+    if (from == label) return;
+    final open = await watchOpenTasks().first;
+    for (final task in open) {
+      if (task.customCategory == from) {
+        await updateTaskCustomCategory(task.id, label.isEmpty ? null : label);
+      }
+    }
+  }
+
+  Future<PersonalTask?> getTask(String id) async {
+    final row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _taskFromRow(row);
+  }
+
+  Future<void> snoozeReminder(String taskId, DateTime until) async {
+    final task = await getTask(taskId);
+    if (task == null || task.isCompleted) return;
+    await updateTask(task.copyWith(remindAt: until.toUtc()));
+  }
+
   /// Mark a task as delegated to the kids app. Sets [kidsTaskId] to a new UUID
   /// and marks the task dirty so it gets pushed to the shared tasks folder.
   /// Optional [targetKidId] limits the task to a specific enrolled kid.
@@ -519,6 +547,24 @@ class TodoRepository {
       ),
     );
     onWrite?.call();
+  }
+
+  /// Tombstone the parent task linked to a kids assignment so sync does not
+  /// re-push it after the shared file is deleted.
+  Future<void> removeKidsAssignment({
+    required String kidsTaskId,
+    String? parentTaskId,
+  }) async {
+    var row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
+    if (row == null && parentTaskId != null && parentTaskId.isNotEmpty) {
+      row = await (_db.select(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(parentTaskId))).getSingleOrNull();
+    }
+    if (row == null || row.syncState == 'deleted') return;
+    await deleteTask(row.id);
   }
 
   /// Batch-update the customCategory and sortOrder for a list of tasks in one
@@ -722,6 +768,7 @@ class TodoRepository {
         title: 'Reminder',
         body: task.title,
         at: at,
+        payload: ReminderPayload.task(task.id).encode(),
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail task operations.

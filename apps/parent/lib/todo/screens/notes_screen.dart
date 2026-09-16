@@ -5,7 +5,6 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import '../../settings/settings_repository.dart';
 import '../../theme/app_header.dart';
-import '../../theme/app_theme.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
 import '../widgets/category_sheet.dart';
@@ -33,29 +32,31 @@ class NotesScreen extends StatefulWidget {
 }
 
 class _NotesScreenState extends State<NotesScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   TabController? _tabController;
-
-  int get _tabCount => widget.partnerPaired ? 2 : 1;
 
   bool get _onSharedTab => widget.partnerPaired && (_tabController?.index == 1);
 
   @override
   void initState() {
     super.initState();
-    if (widget.partnerPaired) {
-      _tabController = TabController(length: 2, vsync: this);
-    }
+    _syncTabController();
   }
 
   @override
   void didUpdateWidget(NotesScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.partnerPaired != widget.partnerPaired) {
-      _tabController?.dispose();
-      _tabController = widget.partnerPaired
-          ? TabController(length: 2, vsync: this)
-          : null;
+      _syncTabController();
+    }
+  }
+
+  void _syncTabController() {
+    if (widget.partnerPaired) {
+      _tabController ??= TabController(length: 2, vsync: this);
+    } else if (_tabController != null) {
+      _tabController!.dispose();
+      _tabController = null;
     }
   }
 
@@ -88,11 +89,23 @@ class _NotesScreenState extends State<NotesScreen>
     }
   }
 
+  void _showTrashSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => _NotesTrashSheet(repo: widget.repo),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: AppHeader(title: AppLocalizations.of(context).notesTitle, centerTitle: false),
+        title: AppHeader(
+          title: AppLocalizations.of(context).notesTitle,
+          centerTitle: false,
+        ),
         centerTitle: false,
         actions: [
           if (widget.syncStatus != null)
@@ -123,8 +136,9 @@ class _NotesScreenState extends State<NotesScreen>
               },
             ),
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _openEditor(initialIsShared: _onSharedTab),
+            icon: const Icon(Icons.delete_outlined),
+            tooltip: AppLocalizations.of(context).notesTrashTooltip,
+            onPressed: () => _showTrashSheet(context),
           ),
         ],
         bottom: widget.partnerPaired && _tabController != null
@@ -231,31 +245,32 @@ class _NotesTabBody extends StatelessWidget {
         if (notes.isEmpty) {
           final scheme = Theme.of(context).colorScheme;
           return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isShared ? Icons.people_outline : Icons.note_outlined,
-                  size: 56,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  isShared ? AppLocalizations.of(context).notesEmptyShared : AppLocalizations.of(context).notesEmptyPrivate,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.headlineSmall?.copyWith(color: scheme.onSurface),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isShared
-                      ? AppLocalizations.of(context).notesEmptySharedHint
-                      : AppLocalizations.of(context).notesEmptyPrivateHint,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isShared
+                        ? AppLocalizations.of(context).notesEmptyShared
+                        : AppLocalizations.of(context).notesEmptyPrivate,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: scheme.onSurface,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    isShared
+                        ? AppLocalizations.of(context).notesEmptySharedHint
+                        : AppLocalizations.of(context).notesEmptyPrivateHint,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -367,7 +382,7 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
 
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
-      padding: const EdgeInsets.fromLTRB(0, 4, 0, 80),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
       itemCount: flatItems.length,
       itemBuilder: (context, index) {
         final item = flatItems[index];
@@ -375,39 +390,23 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
         if (item is _NoteHeaderItem) {
           return _NoteCategoryHeader(
             key: ValueKey('header_${item.category}'),
-            label: item.category ?? AppLocalizations.of(context).commonNoCategory,
+            label:
+                item.category ?? AppLocalizations.of(context).commonNoCategory,
             index: index,
           );
         }
 
         final noteItem = item as _NoteDataItem;
-        return Row(
+        return Padding(
           key: ValueKey(noteItem.note.id),
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: _NoteTile(
-                note: noteItem.note,
-                repo: widget.repo,
-                showSharedBadge: widget.showSharedBadge,
-                onTap: () => widget.onEditNote(noteItem.note),
-              ),
-            ),
-            ReorderableDragStartListener(
-              index: index,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
-                ),
-                child: Icon(
-                  Icons.drag_handle,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-            ),
-          ],
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _NoteCard(
+            note: noteItem.note,
+            repo: widget.repo,
+            dragIndex: index,
+            showSharedBadge: widget.showSharedBadge,
+            onTap: () => widget.onEditNote(noteItem.note),
+          ),
         );
       },
       onReorder: (oldIndex, newIndex) {
@@ -472,46 +471,44 @@ class _NoteCategoryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 0, 4),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 16, 0, 8),
+      child: Row(
+        children: [
+          Expanded(
             child: Text(
-              label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
-                letterSpacing: 1.2,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-        ),
-        ReorderableDragStartListener(
-          index: index,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 12, 12, 0),
+          ReorderableDragStartListener(
+            index: index,
             child: Icon(
               Icons.drag_indicator,
               size: 18,
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _NoteTile extends StatelessWidget {
+class _NoteCard extends StatelessWidget {
   final PersonalNote note;
   final NoteRepository repo;
+  final int dragIndex;
   final bool showSharedBadge;
   final VoidCallback onTap;
 
-  const _NoteTile({
+  const _NoteCard({
     required this.note,
     required this.repo,
+    required this.dragIndex,
     required this.onTap,
     this.showSharedBadge = false,
   });
@@ -520,67 +517,91 @@ class _NoteTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final preview = note.bodyPreview;
     final reminderPassed = note.remindAt != null && isOverdue(note.remindAt!);
-    final reminderColor = reminderPassed ? Colors.redAccent : null;
-    final metaColor = scheme.onSurfaceVariant;
-    final showMeta =
-        note.remindAt != null || (note.isShared && showSharedBadge);
+    final showShared = note.isShared && showSharedBadge;
+    final showMeta = note.remindAt != null || showShared;
 
-    return InkWell(
-      onTap: onTap,
-      onLongPress: () => _pickCategory(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              margin: const EdgeInsets.only(top: 1, right: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: scheme.outlineVariant, width: 2),
-                color: scheme.surfaceContainerHighest.withAlpha(80),
-              ),
-              child: Icon(
-                Icons.sticky_note_2_outlined,
-                size: 14,
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            Expanded(
-              child: Column(
+    return Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: () => _pickCategory(context),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(note.title, style: tt.bodyLarge),
-                  if (showMeta) ...[
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        if (note.remindAt != null)
-                          Text(
-                            formatDueDate(note.remindAt!, AppLocalizations.of(context), allDay: false),
-                            style: tt.labelSmall?.copyWith(
-                              color: reminderColor ?? metaColor,
-                            ),
-                          ),
-                        if (note.remindAt != null &&
-                            note.isShared &&
-                            showSharedBadge)
-                          Text(' · ', style: TextStyle(color: metaColor)),
-                        if (note.isShared && showSharedBadge)
-                          Text(
-                            AppLocalizations.of(context).notesSharedBadge,
-                            style: tt.labelSmall?.copyWith(color: kColorTeal),
-                          ),
-                      ],
+                  Expanded(
+                    child: Text(
+                      note.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                      ),
                     ),
-                  ],
+                  ),
+                  ReorderableDragStartListener(
+                    index: dragIndex,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 4, top: 2),
+                      child: Icon(
+                        Icons.drag_indicator,
+                        size: 18,
+                        color: scheme.outlineVariant,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
+              if (preview.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  preview,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              if (showMeta) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    if (note.remindAt != null)
+                      _NoteMetaChip(
+                        icon: Icons.schedule,
+                        label: formatDueDate(
+                          note.remindAt!,
+                          AppLocalizations.of(context),
+                          allDay: false,
+                        ),
+                        color: reminderPassed
+                            ? scheme.error
+                            : scheme.onSurfaceVariant,
+                      ),
+                    if (showShared)
+                      _NoteMetaChip(
+                        icon: Icons.people_outline,
+                        label: AppLocalizations.of(context).notesSharedBadge,
+                        color: kColorTeal,
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -597,5 +618,172 @@ class _NoteTile extends StatelessWidget {
     if (result != null) {
       await repo.updateNoteCategory(note.id, result.isEmpty ? null : result);
     }
+  }
+}
+
+class _NoteMetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _NoteMetaChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+}
+
+class _NotesTrashSheet extends StatelessWidget {
+  final NoteRepository repo;
+
+  const _NotesTrashSheet({required this.repo});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      maxChildSize: 0.95,
+      minChildSize: 0.3,
+      builder: (context, scrollController) => StreamBuilder<List<PersonalNote>>(
+        stream: repo.watchDeleted(),
+        builder: (ctx, snap) {
+          final deleted = snap.data ?? [];
+          final l10n = AppLocalizations.of(context);
+          final scheme = Theme.of(context).colorScheme;
+
+          return Column(
+            children: [
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: scheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+                child: Row(
+                  children: [
+                    Expanded(child: AppHeader(title: l10n.notesTrashTitle)),
+                    if (deleted.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: () => _confirmEmpty(ctx),
+                        icon: const Icon(Icons.delete_sweep_outlined, size: 16),
+                        label: Text(l10n.tasksDeleteAll),
+                        style: TextButton.styleFrom(
+                          foregroundColor: scheme.onSurfaceVariant,
+                          textStyle: const TextStyle(fontSize: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              if (deleted.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.inbox_outlined,
+                          size: 56,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.notesNoTrash,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: scheme.onSurface),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.notesNoTrashHint,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: deleted.length,
+                    itemBuilder: (_, i) {
+                      final note = deleted[i];
+                      return ListTile(
+                        title: Text(
+                          note.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: note.bodyPreview.isEmpty
+                            ? null
+                            : Text(
+                                note.bodyPreview,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                        trailing: TextButton(
+                          onPressed: () => repo.restore(note.id),
+                          child: Text(l10n.notesRestore),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _confirmEmpty(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.notesEmptyTrashTitle),
+        content: Text(l10n.notesEmptyTrashBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () {
+              Navigator.pop(ctx);
+              repo.emptyTrash();
+            },
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
   }
 }

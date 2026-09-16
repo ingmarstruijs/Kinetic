@@ -54,25 +54,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonUnknown => '(unknown)';
 
   @override
-  String get themeLight => 'Light';
+  String get themeLight => 'Default';
 
   @override
-  String get themeSand => 'Sand';
-
-  @override
-  String get themeDusk => 'Dusk';
+  String get themeCalm => 'Calm';
 
   @override
   String get themeNight => 'Night';
 
   @override
-  String get themeLightDesc => 'Bright blue';
+  String get themeLightDesc => 'Light blue';
 
   @override
-  String get themeSandDesc => 'Warm paper';
-
-  @override
-  String get themeDuskDesc => 'Blue-grey dark';
+  String get themeCalmDesc => 'Soft and easy on the eyes';
 
   @override
   String get themeNightDesc => 'OLED black';
@@ -140,13 +134,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsVerifyPhraseSubtitle =>
       'Check that you still know the 12 words. We will not show them.';
-
-  @override
-  String get settingsShowPhrase => 'Show recovery phrase';
-
-  @override
-  String get settingsShowPhraseSubtitle =>
-      'Show the 12 words on this device (screen lock).';
 
   @override
   String get settingsSectionBackup => 'Backup & Restore';
@@ -267,7 +254,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vaultWelcomeBody =>
-      'Kinetic Link stores tasks and notes with a 12-word recovery phrase. Write that phrase on paper. On this device you can show it again later (with screen lock).';
+      'Kinetic Link stores tasks and notes with a 12-word recovery phrase. Write that phrase on paper and keep it safe. We do not store the words on this device.';
 
   @override
   String get vaultNewVault => 'New vault';
@@ -737,6 +724,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String dateInHours(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'In $count hours',
+      one: 'In 1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dateTonightTime(String time) {
+    return 'Tonight $time';
+  }
+
+  @override
+  String dateTodayTime(String time) {
+    return 'Today $time';
+  }
+
+  @override
+  String dateTomorrowTime(String time) {
+    return 'Tomorrow $time';
+  }
+
+  @override
   String get dateWeekdayMonday => 'Monday';
 
   @override
@@ -756,6 +769,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dateWeekdaySunday => 'Sunday';
+
+  @override
+  String get dateWeekdayShortMonday => 'Mon';
+
+  @override
+  String get dateWeekdayShortTuesday => 'Tue';
+
+  @override
+  String get dateWeekdayShortWednesday => 'Wed';
+
+  @override
+  String get dateWeekdayShortThursday => 'Thu';
+
+  @override
+  String get dateWeekdayShortFriday => 'Fri';
+
+  @override
+  String get dateWeekdayShortSaturday => 'Sat';
+
+  @override
+  String get dateWeekdayShortSunday => 'Sun';
+
+  @override
+  String reminderWhyHabitTime(int count, String weekday) {
+    return 'You did this task $count× on $weekday';
+  }
+
+  @override
+  String reminderWhyHabitInterval(int median, int daysSince) {
+    return 'About every $median days, last $daysSince days ago';
+  }
+
+  @override
+  String reminderWhyKeyword(String keyword) {
+    return 'Matches \"$keyword\" in the title';
+  }
+
+  @override
+  String get reminderWhyCategorySchool =>
+      'School tasks are usually planned in the morning';
+
+  @override
+  String get reminderWhyCategoryHousehold =>
+      'Household tasks are often planned on weekends';
+
+  @override
+  String get reminderWhyCategoryHealth =>
+      'Health tasks are often reminded in the morning';
+
+  @override
+  String get reminderWhyCategoryAdmin =>
+      'Admin tasks are often planned during the day';
+
+  @override
+  String get reminderWhyDefaultMorning => 'Default morning reminder';
+
+  @override
+  String get reminderWhyEvening => 'Quick evening reminder';
+
+  @override
+  String get reminderWhyTomorrowEvening => 'Reminder tomorrow evening';
+
+  @override
+  String get reminderWhyQuick => 'Quick reminder';
 
   @override
   String get dateMonthJan => 'Jan';
@@ -1003,15 +1080,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksCompletedTooltip => 'Completed tasks';
 
   @override
-  String get tasksTabPrivate => 'Private';
-
-  @override
-  String get tasksTabSuggestions => 'Suggestions';
-
-  @override
-  String get tasksTabKids => 'Kids';
-
-  @override
   String get tasksSyncFailed => 'Sync failed, tap to retry.';
 
   @override
@@ -1027,41 +1095,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksFromPartner => 'From partner';
 
   @override
-  String get tasksRefreshSuggestions => 'Refresh suggestions';
-
-  @override
-  String get tasksAddReminder => 'Reminder';
-
-  @override
-  String get tasksAddTask => 'Add';
-
-  @override
-  String get tasksToPartner => 'To partner';
-
-  @override
-  String get tasksNoPartnerSuggestions => 'No partner suggestions';
-
-  @override
-  String get tasksNoPartnerSuggestionsHint =>
-      'Your partner has not suggested any tasks yet';
-
-  @override
-  String get tasksViaSuggestion => 'Via suggestion';
-
-  @override
-  String get tasksReject => 'Reject';
-
-  @override
   String get tasksAccept => 'Accept';
-
-  @override
-  String get tasksProposalAccepted => 'Suggestion accepted';
-
-  @override
-  String get tasksProposalRejected => 'Suggestion rejected';
-
-  @override
-  String get tasksLoadProposalsError => 'Error loading suggestions';
 
   @override
   String tasksXpResetTitle(String name) {
@@ -1092,10 +1126,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksNoKidsAssignments => 'No kids assignments';
 
   @override
-  String get tasksNoKidsAssignmentsHint =>
-      'Send a task to the kids app to see it here.';
-
-  @override
   String get tasksResetXp => 'Reset XP';
 
   @override
@@ -1115,17 +1145,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tasksDeleteCompletedBody =>
       'Are you sure you want to delete all completed tasks? This cannot be undone.';
-
-  @override
-  String get tasksEmptySuggestionsPartner =>
-      'Suggestions from the smart planner and proposals from your partner appear here';
-
-  @override
-  String get tasksEmptySuggestionsSolo =>
-      'Suggestions from the smart planner based on your habits appear here';
-
-  @override
-  String get tasksNoSuggestions => 'No suggestions';
 
   @override
   String get tasksAllDone => 'All done!';
@@ -1274,7 +1293,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesDeleteTitle => 'Delete note?';
 
   @override
-  String get notesDeleteBody => 'You cannot undo this.';
+  String get notesDeleteBody =>
+      'The note moves to the trash. You can restore it from there.';
+
+  @override
+  String get notesTrashTooltip => 'Deleted notes';
+
+  @override
+  String get notesTrashTitle => 'Deleted notes';
+
+  @override
+  String get notesNoTrash => 'No deleted notes';
+
+  @override
+  String get notesNoTrashHint => 'Deleted notes appear here';
+
+  @override
+  String get notesRestore => 'Restore';
+
+  @override
+  String get notesEmptyTrashTitle => 'Empty trash?';
+
+  @override
+  String get notesEmptyTrashBody =>
+      'Deleted notes will be permanently removed. This cannot be undone.';
 
   @override
   String get notesSharedWithPartner => 'Shared with partner';
@@ -1300,18 +1342,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestSent => 'Suggestion sent to partner';
 
   @override
-  String get suggestSnoozeTitle => 'Snooze';
-
-  @override
-  String get suggestSnoozeBody => 'Snooze this suggestion for 7 days?';
-
-  @override
-  String get suggestSnoozeAction => 'Snooze';
-
-  @override
-  String get suggestAdd => 'Add';
-
-  @override
   String get suggestReasonHabit => 'Habit';
 
   @override
@@ -1333,12 +1363,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestReasonCategorize => 'Category';
 
   @override
-  String get suggestAddWithReminder => 'With reminder';
-
-  @override
-  String get suggestAddCategory => 'Add category';
-
-  @override
   String suggestCategorizeTitle(int count, String category) {
     return 'Add $count tasks to $category?';
   }
@@ -1347,6 +1371,158 @@ class AppLocalizationsEn extends AppLocalizations {
   String suggestCategorizeExplanation(int count) {
     return '$count open tasks have no category.';
   }
+
+  @override
+  String get suggestLoadBalanceTitleHousehold =>
+      'Can you pick up something around the house this week?';
+
+  @override
+  String get suggestLoadBalanceTitleHealth =>
+      'Can you pick up something around care or health this week?';
+
+  @override
+  String get suggestLoadBalanceTitleAdmin =>
+      'Can you pick up something in admin this week?';
+
+  @override
+  String get suggestLoadBalanceTitleSchool =>
+      'Can you pick up something around school this week?';
+
+  @override
+  String get suggestLoadBalanceTitleFinance =>
+      'Can you pick up something in finances this week?';
+
+  @override
+  String get suggestLoadBalanceTitleOther =>
+      'Can you pick something up this week?';
+
+  @override
+  String suggestLoadBalanceExplanation(int count, String category) {
+    return 'You have $count open tasks in $category. The suggestion is intentionally generic.';
+  }
+
+  @override
+  String suggestLoadBalanceExplanationGeneric(String category) {
+    return 'You have several open tasks in $category. The suggestion is intentionally generic.';
+  }
+
+  @override
+  String get suggestPartnerTitleSchool => 'School run or childcare this week?';
+
+  @override
+  String get suggestPartnerExplanationSchool =>
+      'Based on your tasks (without private details), school looks like a theme this week. Your partner sees this.';
+
+  @override
+  String get suggestPartnerTitleHousehold =>
+      'Can you pick up something around the house this week?';
+
+  @override
+  String get suggestPartnerExplanationHousehold =>
+      'You have several household tasks open. The suggestion is intentionally generic.';
+
+  @override
+  String get suggestPartnerTitleHealth =>
+      'Something around care or health to pick up?';
+
+  @override
+  String get suggestPartnerExplanationHealth =>
+      'Something around care is going on. Your partner only sees this generic question.';
+
+  @override
+  String get suggestPartnerTitleSport => 'Sports bag or training this week?';
+
+  @override
+  String get suggestPartnerExplanationSport =>
+      'Based on your tasks, sport looks like a theme. No private details.';
+
+  @override
+  String get suggestPartnerTitleAdmin => 'An admin chore this week?';
+
+  @override
+  String get suggestPartnerExplanationAdmin =>
+      'There is admin work open. The suggestion does not name a concrete task.';
+
+  @override
+  String get suggestCalendarTaxTitle => 'Check tax return';
+
+  @override
+  String get suggestCalendarTaxExplanation =>
+      'March — time to check the tax return.';
+
+  @override
+  String get suggestCalendarSchoolTitle => 'Prepare school supplies';
+
+  @override
+  String get suggestCalendarSchoolExplanation =>
+      'August — prepare school supplies for the new year.';
+
+  @override
+  String get suggestCalendarChristmasTitle => 'Prepare for Christmas';
+
+  @override
+  String get suggestCalendarChristmasExplanation =>
+      'December — prepare for Christmas.';
+
+  @override
+  String suggestHabitRepeatExplanation(
+    String title,
+    int median,
+    int daysSince,
+  ) {
+    return 'You did \"$title\" about every $median days. Last time: $daysSince days ago.';
+  }
+
+  @override
+  String suggestHabitOnceExplanation(String title, int daysSince) {
+    return 'You did \"$title\" $daysSince days ago. Schedule again?';
+  }
+
+  @override
+  String suggestSeasonalExplanation(String title, String month) {
+    return 'You completed \"$title\" in $month last year.';
+  }
+
+  @override
+  String suggestStaleExplanation(String title, int days) {
+    return '\"$title\" has been open for $days days without a reminder.';
+  }
+
+  @override
+  String get monthJanuary => 'January';
+
+  @override
+  String get monthFebruary => 'February';
+
+  @override
+  String get monthMarch => 'March';
+
+  @override
+  String get monthApril => 'April';
+
+  @override
+  String get monthMay => 'May';
+
+  @override
+  String get monthJune => 'June';
+
+  @override
+  String get monthJuly => 'July';
+
+  @override
+  String get monthAugust => 'August';
+
+  @override
+  String get monthSeptember => 'September';
+
+  @override
+  String get monthOctober => 'October';
+
+  @override
+  String get monthNovember => 'November';
+
+  @override
+  String get monthDecember => 'December';
 
   @override
   String get categoryHousehold => 'Household';
@@ -1374,6 +1550,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryNewAction => 'New category…';
+
+  @override
+  String get categoryRename => 'Rename category';
+
+  @override
+  String get categoryRenameHint => 'Category name';
+
+  @override
+  String get suggestionsTitle => 'Suggestions';
+
+  @override
+  String get suggestionsSubtitle => 'Handy tasks to consider today';
+
+  @override
+  String get suggestionsProposedByPartner => 'Suggested by your partner';
+
+  @override
+  String get tasksDecline => 'Decline';
+
+  @override
+  String get kidsSectionTitle => 'Kids';
+
+  @override
+  String get kidsAllFilter => 'All kids';
+
+  @override
+  String kidsOpenTasks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open tasks',
+      one: '1 open task',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsDeleteTaskTitle => 'Remove kids task?';
+
+  @override
+  String kidsDeleteTaskBody(String title) {
+    return '\"$title\" will be removed from the kids app.';
+  }
+
+  @override
+  String get snoozeTitle => 'Snooze reminder';
+
+  @override
+  String get snooze10min => '10 minutes';
+
+  @override
+  String get snooze1hour => '1 hour';
+
+  @override
+  String get snooze3hours => '3 hours';
+
+  @override
+  String get snoozeTomorrowMorning => 'Tomorrow 09:00';
+
+  @override
+  String get snoozeCustom => 'Pick a time…';
+
+  @override
+  String get snoozeDone => 'Reminder snoozed';
+
+  @override
+  String get reminderDone => 'Task completed';
+
+  @override
+  String get noteReminderCleared => 'Reminder cleared';
 
   @override
   String get quickAddHint => 'New task…';

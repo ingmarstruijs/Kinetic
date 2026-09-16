@@ -8,8 +8,9 @@ const kVaultReadyKey = 'kinetic_vault_ready';
 
 /// Session for the personal vault: derived AES key in secure storage.
 ///
-/// 16-byte BIP-39 entropy is stored so the words can be shown again on this
-/// device. The phrase itself is never written as text.
+/// The 12-word phrase is not stored. Paper (or another copy the user made
+/// during onboarding) is the only way to recover the vault. Settings can
+/// still *verify* a typed phrase against the derived key.
 class VaultRepository {
   VaultRepository(this._store, this._configRepo);
 
@@ -18,7 +19,10 @@ class VaultRepository {
 
   Future<bool> isReady() async {
     final flag = await _store.read(key: kVaultReadyKey);
-    return flag == '1';
+    if (flag != '1') return false;
+    // Drop leftover entropy from older builds that could re-show the phrase.
+    await _configRepo.clearPersonalEntropy();
+    return true;
   }
 
   /// True when a 0.2.x (or `.kbak2`) personal key exists but no vault phrase.
@@ -31,11 +35,9 @@ class VaultRepository {
     await _store.write(key: kVaultReadyKey, value: '1');
   }
 
-  Future<Uint8List> unlockWithKey(Uint8List key, {Uint8List? entropy}) async {
+  Future<Uint8List> unlockWithKey(Uint8List key) async {
     await _configRepo.savePersonalKey(key);
-    if (entropy != null) {
-      await _configRepo.savePersonalEntropy(entropy);
-    }
+    await _configRepo.clearPersonalEntropy();
     await markReady();
     return key;
   }
@@ -44,8 +46,7 @@ class VaultRepository {
     final words = KineticVault.parseMnemonic(phrase);
     final joined = words.join(' ');
     final key = await KineticVault.deriveAesKey(joined);
-    final entropy = await KineticVault.entropyFromMnemonic(words);
-    return unlockWithKey(key, entropy: entropy);
+    return unlockWithKey(key);
   }
 
   Future<Uint8List?> loadKey() => _configRepo.loadPersonalKeyBytes();
@@ -58,8 +59,8 @@ class VaultRepository {
     return key;
   }
 
-  /// Reconstructs the 12 words from stored entropy, or null if this device
-  /// only has a raw key (pre-0.3 or `.kbak2`).
+  /// Always null after unlock: personal entropy is not persisted.
+  /// Leftover entropy from older builds is cleared in [isReady].
   Future<List<String>?> loadPersonalMnemonic() async {
     final entropy = await _configRepo.loadPersonalEntropy();
     if (entropy == null) return null;

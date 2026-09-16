@@ -12,6 +12,7 @@ import '../../helpers/test_database.dart';
 class _FakeNotificationService implements NotificationService {
   final List<int> scheduled = [];
   final List<int> cancelled = [];
+  final List<String?> payloads = [];
   bool shouldThrow = false;
 
   @override
@@ -23,9 +24,11 @@ class _FakeNotificationService implements NotificationService {
     required String title,
     required String body,
     required DateTime at,
+    String? payload,
   }) async {
     if (shouldThrow) throw Exception('notification permission denied');
     scheduled.add(id);
+    payloads.add(payload);
   }
 
   @override
@@ -39,14 +42,6 @@ class _FakeNotificationService implements NotificationService {
     required String body,
     String? payload,
   }) async {}
-
-  @override
-  Future<DateTime> rescheduleReminder({
-    required int id,
-    required String actionId,
-    required String title,
-    required String body,
-  }) async => DateTime.now().add(const Duration(minutes: 5));
 
   @override
   Future<bool> areNotificationsEnabled() async => true;
@@ -184,6 +179,66 @@ void main() {
       // Task should exist in DB.
       final raw = await repo.debugGetRawTask(task.id);
       expect(raw?.title, equals('Taak met slechte notificatie'));
+    });
+
+    test('schedules reminder with task payload', () async {
+      final future = DateTime.now().add(const Duration(hours: 2));
+      final task = await repo.createTask(
+        title: 'With payload',
+        remindAt: future.toUtc(),
+      );
+      expect(notif.payloads, ['task:${task.id}']);
+    });
+
+    test('snoozeReminder updates remindAt and reschedules', () async {
+      final future = DateTime.now().add(const Duration(hours: 2));
+      final task = await repo.createTask(
+        title: 'Snooze me',
+        remindAt: future.toUtc(),
+      );
+      notif.scheduled.clear();
+      final until = DateTime.now().add(const Duration(minutes: 10));
+      await repo.snoozeReminder(task.id, until);
+      expect(notif.cancelled, isNotEmpty);
+      expect(notif.scheduled, hasLength(1));
+      final updated = await repo.getTask(task.id);
+      expect(updated!.remindAt, isNotNull);
+      expect(
+        updated.remindAt!.difference(until.toUtc()).inSeconds.abs(),
+        lessThan(2),
+      );
+    });
+
+    test('renameCustomCategory updates matching open tasks', () async {
+      await repo.createTask(title: 'A', customCategory: 'Keuken');
+      await repo.createTask(title: 'B', customCategory: 'Keuken');
+      await repo.createTask(title: 'C', customCategory: 'Tuin');
+      await repo.renameCustomCategory(from: 'Keuken', to: 'Kitchen');
+      final open = await repo.watchOpenTasks().first;
+      expect(
+        open.where((t) => t.customCategory == 'Kitchen').map((t) => t.title),
+        unorderedEquals(['A', 'B']),
+      );
+      expect(
+        open.where((t) => t.customCategory == 'Tuin').map((t) => t.title),
+        ['C'],
+      );
+    });
+
+    test('removeKidsAssignment tombstones the linked parent task', () async {
+      final created = await repo.createTask(title: 'Shirts');
+      await repo.sendToKids(created.id, targetKidId: 'mees');
+      final linked = await repo.getTask(created.id);
+      expect(linked?.kidsTaskId, isNotNull);
+
+      await repo.removeKidsAssignment(kidsTaskId: linked!.kidsTaskId!);
+      expect(await repo.watchAllTasks().first, isEmpty);
+    });
+
+    test('removeKidsAssignment is a no-op without a matching task', () async {
+      await repo.createTask(title: 'Stay');
+      await repo.removeKidsAssignment(kidsTaskId: 'missing');
+      expect((await repo.watchAllTasks().first).single.title, 'Stay');
     });
   });
 

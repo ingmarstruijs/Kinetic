@@ -1923,6 +1923,17 @@ class $PersonalNotesTable extends PersonalNotes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1936,6 +1947,7 @@ class $PersonalNotesTable extends PersonalNotes
     syncState,
     createdAt,
     updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2020,6 +2032,12 @@ class $PersonalNotesTable extends PersonalNotes
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2073,6 +2091,10 @@ class $PersonalNotesTable extends PersonalNotes
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -2096,6 +2118,9 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
   final String syncState;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Set when the note is moved to trash; null = active.
+  final DateTime? deletedAt;
   const PersonalNoteRow({
     required this.id,
     required this.title,
@@ -2108,6 +2133,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     required this.syncState,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2129,6 +2155,9 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     map['sync_state'] = Variable<String>(syncState);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -2151,6 +2180,9 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       syncState: Value(syncState),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -2171,6 +2203,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       syncState: serializer.fromJson<String>(json['syncState']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -2188,6 +2221,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       'syncState': serializer.toJson<String>(syncState),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -2203,6 +2237,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     String? syncState,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => PersonalNoteRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -2215,6 +2250,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     syncState: syncState ?? this.syncState,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   PersonalNoteRow copyWithCompanion(PersonalNotesCompanion data) {
     return PersonalNoteRow(
@@ -2231,6 +2267,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -2247,7 +2284,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           ..write('webdavEtag: $webdavEtag, ')
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -2265,6 +2303,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     syncState,
     createdAt,
     updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2280,7 +2319,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           other.webdavEtag == this.webdavEtag &&
           other.syncState == this.syncState &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
@@ -2295,6 +2335,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
   final Value<String> syncState;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const PersonalNotesCompanion({
     this.id = const Value.absent(),
@@ -2308,6 +2349,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.syncState = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PersonalNotesCompanion.insert({
@@ -2322,6 +2364,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.syncState = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2339,6 +2382,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Expression<String>? syncState,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2353,6 +2397,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       if (syncState != null) 'sync_state': syncState,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2369,6 +2414,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Value<String>? syncState,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return PersonalNotesCompanion(
@@ -2383,6 +2429,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       syncState: syncState ?? this.syncState,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2423,6 +2470,9 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2443,6 +2493,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6432,6 +6483,7 @@ typedef $$PersonalNotesTableCreateCompanionBuilder =
       Value<String> syncState,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$PersonalNotesTableUpdateCompanionBuilder =
@@ -6447,6 +6499,7 @@ typedef $$PersonalNotesTableUpdateCompanionBuilder =
       Value<String> syncState,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -6511,6 +6564,11 @@ class $$PersonalNotesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6578,6 +6636,11 @@ class $$PersonalNotesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PersonalNotesTableAnnotationComposer
@@ -6623,6 +6686,9 @@ class $$PersonalNotesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$PersonalNotesTableTableManager
@@ -6667,6 +6733,7 @@ class $$PersonalNotesTableTableManager
                 Value<String> syncState = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PersonalNotesCompanion(
                 id: id,
@@ -6680,6 +6747,7 @@ class $$PersonalNotesTableTableManager
                 syncState: syncState,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6695,6 +6763,7 @@ class $$PersonalNotesTableTableManager
                 Value<String> syncState = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PersonalNotesCompanion.insert(
                 id: id,
@@ -6708,6 +6777,7 @@ class $$PersonalNotesTableTableManager
                 syncState: syncState,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

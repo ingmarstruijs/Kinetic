@@ -7,6 +7,7 @@ import '../../helpers/test_database.dart';
 class _FakeNotifService implements NotificationService {
   final List<int> scheduled = [];
   final List<int> cancelled = [];
+  final List<String?> payloads = [];
   bool shouldThrow = false;
 
   @override
@@ -18,9 +19,11 @@ class _FakeNotifService implements NotificationService {
     required String title,
     required String body,
     required DateTime at,
+    String? payload,
   }) async {
     if (shouldThrow) throw Exception('notification failed');
     scheduled.add(id);
+    payloads.add(payload);
   }
 
   @override
@@ -32,14 +35,6 @@ class _FakeNotifService implements NotificationService {
     required String body,
     String? payload,
   }) async {}
-
-  @override
-  Future<DateTime> rescheduleReminder({
-    required int id,
-    required String actionId,
-    required String title,
-    required String body,
-  }) async => DateTime.now().add(const Duration(minutes: 5));
 
   @override
   Future<bool> areNotificationsEnabled() async => true;

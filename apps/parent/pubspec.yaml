@@ -65,6 +65,7 @@ dependencies:
 
   # Markdown rendering for note previews
   flutter_markdown: ^0.7.0
+  markdown: ^7.3.0
 
   # QR code display and scanning for partner key sharing
   qr_flutter: ^4.1.0

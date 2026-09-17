@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../theme/app_theme.dart';
+import '../../theme/app_themes.dart';
 import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../reminder_time.dart';
@@ -615,6 +616,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                               data: _bodyCtrl.text,
                               padding: EdgeInsets.zero,
                               selectable: true,
+                              extensionSet: md.ExtensionSet.gitHubFlavored,
                             ))
                     : TextField(
                         controller: _bodyCtrl,

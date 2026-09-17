@@ -25,6 +25,10 @@ class KidsTask {
 
   final DateTime? completedAt;
   final int xpReward;
+
+  /// Local-only: hidden from the completed list after cleanup (XP still counts).
+  final bool clearedFromHome;
+
   final String syncState;
   final String? webdavEtag;
   final DateTime createdAt;
@@ -42,6 +46,7 @@ class KidsTask {
     this.awaitingVerification = false,
     this.completedAt,
     this.xpReward = 10,
+    this.clearedFromHome = false,
     required this.syncState,
     this.webdavEtag,
     required this.createdAt,
@@ -55,6 +60,7 @@ class KidsTask {
         isCompleted: false,
         awaitingVerification: true,
         completedAt: null,
+        clearedFromHome: false,
         syncState: 'dirty',
         updatedAt: DateTime.now().toUtc(),
       );
@@ -64,6 +70,7 @@ class KidsTask {
         isCompleted: true,
         awaitingVerification: false,
         completedAt: DateTime.now().toUtc(),
+        clearedFromHome: false,
         syncState: 'clean',
         updatedAt: DateTime.now().toUtc(),
       );
@@ -73,6 +80,7 @@ class KidsTask {
         isCompleted: false,
         awaitingVerification: false,
         completedAt: null,
+        clearedFromHome: false,
         syncState: 'dirty',
         updatedAt: DateTime.now().toUtc(),
       );
@@ -89,6 +97,7 @@ class KidsTask {
     bool? awaitingVerification,
     DateTime? completedAt,
     int? xpReward,
+    bool? clearedFromHome,
     String? syncState,
     String? webdavEtag,
     DateTime? createdAt,
@@ -107,6 +116,7 @@ class KidsTask {
           awaitingVerification ?? this.awaitingVerification,
       completedAt: completedAt ?? this.completedAt,
       xpReward: xpReward ?? this.xpReward,
+      clearedFromHome: clearedFromHome ?? this.clearedFromHome,
       syncState: syncState ?? this.syncState,
       webdavEtag: webdavEtag ?? this.webdavEtag,
       createdAt: createdAt ?? this.createdAt,

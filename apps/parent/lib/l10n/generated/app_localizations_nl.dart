@@ -1219,6 +1219,14 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get taskSendToEveryoneSubtitle =>
+      'Zichtbaar voor alle gekoppelde kinderen';
+
+  @override
+  String get taskSendToEveryoneBody =>
+      'Elk gekoppeld kind ziet deze opdracht. Hij verdwijnt uit jouw lijst zodra een kind hem afrondt.';
+
+  @override
   String get taskXpReward => 'XP beloning:';
 
   @override

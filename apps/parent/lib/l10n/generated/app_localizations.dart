@@ -2114,6 +2114,18 @@ abstract class AppLocalizations {
   /// **'\"{title}\" will be sent as an assignment to {name}.'**
   String taskSendToKidLead(String title, String name);
 
+  /// No description provided for @taskSendToEveryoneSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible to all enrolled kids'**
+  String get taskSendToEveryoneSubtitle;
+
+  /// No description provided for @taskSendToEveryoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every enrolled child will see this assignment. It leaves your list once any child completes it.'**
+  String get taskSendToEveryoneBody;
+
   /// No description provided for @taskXpReward.
   ///
   /// In en, this message translates to:

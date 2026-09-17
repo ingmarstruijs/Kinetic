@@ -34,6 +34,10 @@ class KidsTasks extends Table {
   /// XP reward for completion (counts only after parent acceptance)
   IntColumn get xpReward => integer().withDefault(const Constant(10))();
 
+  /// Local-only: kid hid this completed task from the home list (XP still counts).
+  BoolColumn get clearedFromHome =>
+      boolean().withDefault(const Constant(false))();
+
   /// Sync state: 'clean' (synced), 'dirty' (modified locally), 'deleted' (soft-delete)
   TextColumn get syncState => text().withDefault(const Constant('clean'))();
 

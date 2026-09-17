@@ -15,8 +15,8 @@ Shared sync, crypto, and serialization logic for Kinetic Link.
 Tasks and notes store metadata in escaped iCal DESCRIPTION field:
 - `xKineticParentId` — ID of the parent who created/modified the task
 - `xKineticCategory` — Task category (for compatibility)
+- `xKineticTargetKidId` — UUID of the child this task is assigned to. **Omitted / empty** means Everyone (all enrolled kids see it)
 - `xKineticXpReward` — XP reward value
-- `xKineticTargetKidId` — UUID of the child this task is assigned to (only set for kid-targeted tasks)
 
 ## QR Payload Formats
 
@@ -60,6 +60,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `PersonalTask` / `PersonalNote`: Domain models
 - `PartnerProposal`: Domain model for parent proposals
 - `KidsTask`: Domain model for child-assigned tasks
+- `KidGoal`: Per-kid XP goal document under `/kinetic/shared/goals/{kidId}.json`
 
 ### Key Methods
 

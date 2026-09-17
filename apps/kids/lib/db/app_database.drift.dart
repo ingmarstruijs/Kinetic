@@ -133,6 +133,21 @@ class $KidsTasksTable extends KidsTasks
     requiredDuringInsert: false,
     defaultValue: const Constant(10),
   );
+  static const VerificationMeta _clearedFromHomeMeta = const VerificationMeta(
+    'clearedFromHome',
+  );
+  @override
+  late final GeneratedColumn<bool> clearedFromHome = GeneratedColumn<bool>(
+    'cleared_from_home',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("cleared_from_home" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _syncStateMeta = const VerificationMeta(
     'syncState',
   );
@@ -191,6 +206,7 @@ class $KidsTasksTable extends KidsTasks
     completedAt,
     awaitingVerification,
     xpReward,
+    clearedFromHome,
     syncState,
     webdavEtag,
     createdAt,
@@ -286,6 +302,15 @@ class $KidsTasksTable extends KidsTasks
         xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta),
       );
     }
+    if (data.containsKey('cleared_from_home')) {
+      context.handle(
+        _clearedFromHomeMeta,
+        clearedFromHome.isAcceptableOrUnknown(
+          data['cleared_from_home']!,
+          _clearedFromHomeMeta,
+        ),
+      );
+    }
     if (data.containsKey('sync_state')) {
       context.handle(
         _syncStateMeta,
@@ -367,6 +392,10 @@ class $KidsTasksTable extends KidsTasks
         DriftSqlType.int,
         data['${effectivePrefix}xp_reward'],
       )!,
+      clearedFromHome: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}cleared_from_home'],
+      )!,
       syncState: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sync_state'],
@@ -420,6 +449,9 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   /// XP reward for completion (counts only after parent acceptance)
   final int xpReward;
 
+  /// Local-only: kid hid this completed task from the home list (XP still counts).
+  final bool clearedFromHome;
+
   /// Sync state: 'clean' (synced), 'dirty' (modified locally), 'deleted' (soft-delete)
   final String syncState;
 
@@ -441,6 +473,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     this.completedAt,
     required this.awaitingVerification,
     required this.xpReward,
+    required this.clearedFromHome,
     required this.syncState,
     this.webdavEtag,
     required this.createdAt,
@@ -466,6 +499,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     }
     map['awaiting_verification'] = Variable<bool>(awaitingVerification);
     map['xp_reward'] = Variable<int>(xpReward);
+    map['cleared_from_home'] = Variable<bool>(clearedFromHome);
     map['sync_state'] = Variable<String>(syncState);
     if (!nullToAbsent || webdavEtag != null) {
       map['webdav_etag'] = Variable<String>(webdavEtag);
@@ -494,6 +528,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           : Value(completedAt),
       awaitingVerification: Value(awaitingVerification),
       xpReward: Value(xpReward),
+      clearedFromHome: Value(clearedFromHome),
       syncState: Value(syncState),
       webdavEtag: webdavEtag == null && nullToAbsent
           ? const Value.absent()
@@ -522,6 +557,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
         json['awaitingVerification'],
       ),
       xpReward: serializer.fromJson<int>(json['xpReward']),
+      clearedFromHome: serializer.fromJson<bool>(json['clearedFromHome']),
       syncState: serializer.fromJson<String>(json['syncState']),
       webdavEtag: serializer.fromJson<String?>(json['webdavEtag']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -543,6 +579,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       'completedAt': serializer.toJson<DateTime?>(completedAt),
       'awaitingVerification': serializer.toJson<bool>(awaitingVerification),
       'xpReward': serializer.toJson<int>(xpReward),
+      'clearedFromHome': serializer.toJson<bool>(clearedFromHome),
       'syncState': serializer.toJson<String>(syncState),
       'webdavEtag': serializer.toJson<String?>(webdavEtag),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -562,6 +599,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     Value<DateTime?> completedAt = const Value.absent(),
     bool? awaitingVerification,
     int? xpReward,
+    bool? clearedFromHome,
     String? syncState,
     Value<String?> webdavEtag = const Value.absent(),
     DateTime? createdAt,
@@ -578,6 +616,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
     awaitingVerification: awaitingVerification ?? this.awaitingVerification,
     xpReward: xpReward ?? this.xpReward,
+    clearedFromHome: clearedFromHome ?? this.clearedFromHome,
     syncState: syncState ?? this.syncState,
     webdavEtag: webdavEtag.present ? webdavEtag.value : this.webdavEtag,
     createdAt: createdAt ?? this.createdAt,
@@ -602,6 +641,9 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           ? data.awaitingVerification.value
           : this.awaitingVerification,
       xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      clearedFromHome: data.clearedFromHome.present
+          ? data.clearedFromHome.value
+          : this.clearedFromHome,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       webdavEtag: data.webdavEtag.present
           ? data.webdavEtag.value
@@ -625,6 +667,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           ..write('completedAt: $completedAt, ')
           ..write('awaitingVerification: $awaitingVerification, ')
           ..write('xpReward: $xpReward, ')
+          ..write('clearedFromHome: $clearedFromHome, ')
           ..write('syncState: $syncState, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('createdAt: $createdAt, ')
@@ -646,6 +689,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     completedAt,
     awaitingVerification,
     xpReward,
+    clearedFromHome,
     syncState,
     webdavEtag,
     createdAt,
@@ -666,6 +710,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           other.completedAt == this.completedAt &&
           other.awaitingVerification == this.awaitingVerification &&
           other.xpReward == this.xpReward &&
+          other.clearedFromHome == this.clearedFromHome &&
           other.syncState == this.syncState &&
           other.webdavEtag == this.webdavEtag &&
           other.createdAt == this.createdAt &&
@@ -684,6 +729,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   final Value<DateTime?> completedAt;
   final Value<bool> awaitingVerification;
   final Value<int> xpReward;
+  final Value<bool> clearedFromHome;
   final Value<String> syncState;
   final Value<String?> webdavEtag;
   final Value<DateTime> createdAt;
@@ -701,6 +747,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     this.completedAt = const Value.absent(),
     this.awaitingVerification = const Value.absent(),
     this.xpReward = const Value.absent(),
+    this.clearedFromHome = const Value.absent(),
     this.syncState = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -719,6 +766,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     this.completedAt = const Value.absent(),
     this.awaitingVerification = const Value.absent(),
     this.xpReward = const Value.absent(),
+    this.clearedFromHome = const Value.absent(),
     this.syncState = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     required DateTime createdAt,
@@ -741,6 +789,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     Expression<DateTime>? completedAt,
     Expression<bool>? awaitingVerification,
     Expression<int>? xpReward,
+    Expression<bool>? clearedFromHome,
     Expression<String>? syncState,
     Expression<String>? webdavEtag,
     Expression<DateTime>? createdAt,
@@ -760,6 +809,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
       if (awaitingVerification != null)
         'awaiting_verification': awaitingVerification,
       if (xpReward != null) 'xp_reward': xpReward,
+      if (clearedFromHome != null) 'cleared_from_home': clearedFromHome,
       if (syncState != null) 'sync_state': syncState,
       if (webdavEtag != null) 'webdav_etag': webdavEtag,
       if (createdAt != null) 'created_at': createdAt,
@@ -780,6 +830,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     Value<DateTime?>? completedAt,
     Value<bool>? awaitingVerification,
     Value<int>? xpReward,
+    Value<bool>? clearedFromHome,
     Value<String>? syncState,
     Value<String?>? webdavEtag,
     Value<DateTime>? createdAt,
@@ -798,6 +849,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
       completedAt: completedAt ?? this.completedAt,
       awaitingVerification: awaitingVerification ?? this.awaitingVerification,
       xpReward: xpReward ?? this.xpReward,
+      clearedFromHome: clearedFromHome ?? this.clearedFromHome,
       syncState: syncState ?? this.syncState,
       webdavEtag: webdavEtag ?? this.webdavEtag,
       createdAt: createdAt ?? this.createdAt,
@@ -842,6 +894,9 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     if (xpReward.present) {
       map['xp_reward'] = Variable<int>(xpReward.value);
     }
+    if (clearedFromHome.present) {
+      map['cleared_from_home'] = Variable<bool>(clearedFromHome.value);
+    }
     if (syncState.present) {
       map['sync_state'] = Variable<String>(syncState.value);
     }
@@ -874,6 +929,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
           ..write('completedAt: $completedAt, ')
           ..write('awaitingVerification: $awaitingVerification, ')
           ..write('xpReward: $xpReward, ')
+          ..write('clearedFromHome: $clearedFromHome, ')
           ..write('syncState: $syncState, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('createdAt: $createdAt, ')
@@ -908,6 +964,7 @@ typedef $$KidsTasksTableCreateCompanionBuilder =
       Value<DateTime?> completedAt,
       Value<bool> awaitingVerification,
       Value<int> xpReward,
+      Value<bool> clearedFromHome,
       Value<String> syncState,
       Value<String?> webdavEtag,
       required DateTime createdAt,
@@ -927,6 +984,7 @@ typedef $$KidsTasksTableUpdateCompanionBuilder =
       Value<DateTime?> completedAt,
       Value<bool> awaitingVerification,
       Value<int> xpReward,
+      Value<bool> clearedFromHome,
       Value<String> syncState,
       Value<String?> webdavEtag,
       Value<DateTime> createdAt,
@@ -995,6 +1053,11 @@ class $$KidsTasksTableFilterComposer
 
   ColumnFilters<int> get xpReward => $composableBuilder(
     column: $table.xpReward,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get clearedFromHome => $composableBuilder(
+    column: $table.clearedFromHome,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1083,6 +1146,11 @@ class $$KidsTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get clearedFromHome => $composableBuilder(
+    column: $table.clearedFromHome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get syncState => $composableBuilder(
     column: $table.syncState,
     builder: (column) => ColumnOrderings(column),
@@ -1152,6 +1220,11 @@ class $$KidsTasksTableAnnotationComposer
   GeneratedColumn<int> get xpReward =>
       $composableBuilder(column: $table.xpReward, builder: (column) => column);
 
+  GeneratedColumn<bool> get clearedFromHome => $composableBuilder(
+    column: $table.clearedFromHome,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get syncState =>
       $composableBuilder(column: $table.syncState, builder: (column) => column);
 
@@ -1209,6 +1282,7 @@ class $$KidsTasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<bool> awaitingVerification = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
+                Value<bool> clearedFromHome = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -1226,6 +1300,7 @@ class $$KidsTasksTableTableManager
                 completedAt: completedAt,
                 awaitingVerification: awaitingVerification,
                 xpReward: xpReward,
+                clearedFromHome: clearedFromHome,
                 syncState: syncState,
                 webdavEtag: webdavEtag,
                 createdAt: createdAt,
@@ -1245,6 +1320,7 @@ class $$KidsTasksTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<bool> awaitingVerification = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
+                Value<bool> clearedFromHome = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 required DateTime createdAt,
@@ -1262,6 +1338,7 @@ class $$KidsTasksTableTableManager
                 completedAt: completedAt,
                 awaitingVerification: awaitingVerification,
                 xpReward: xpReward,
+                clearedFromHome: clearedFromHome,
                 syncState: syncState,
                 webdavEtag: webdavEtag,
                 createdAt: createdAt,

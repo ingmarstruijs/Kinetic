@@ -98,5 +98,6 @@
   "confirmCompleteTitle": "Are you done?",
   "confirmCompleteBody": "Are you sure you are finished? We will send a confirmation request to your parent.",
   "confirmCompleteAction": "Yes, I'm done",
-  "awaitingParentConfirm": "Waiting for your parent to confirm"
+  "awaitingParentConfirm": "Waiting for your parent to confirm",
+  "cleanUpCompleted": "Clean up"
 }

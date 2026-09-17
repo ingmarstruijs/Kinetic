@@ -257,25 +257,7 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
                 ],
-
-                // Delete button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      widget.repository.delete(task.id);
-                      Navigator.pop(context);
-                    },
-                    icon: const Icon(Icons.delete),
-                    label: Text(l10n.delete),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

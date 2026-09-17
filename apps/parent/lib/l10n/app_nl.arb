@@ -664,6 +664,8 @@
       "name": {"type": "String"}
     }
   },
+  "taskSendToEveryoneSubtitle": "Zichtbaar voor alle gekoppelde kinderen",
+  "taskSendToEveryoneBody": "Elk gekoppeld kind ziet deze opdracht. Hij verdwijnt uit jouw lijst zodra een kind hem afrondt.",
   "taskXpReward": "XP beloning:",
   "taskNameHint": "Taaknaam",
   "taskAddTime": "Tijd toevoegen",

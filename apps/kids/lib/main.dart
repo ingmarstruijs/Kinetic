@@ -6,7 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import 'db/app_database.dart';
-import 'debug/demo_tasks.dart';
+import 'debug/demo_scenarios.dart';
+import 'debug/demo_scenarios_screen.dart';
+import 'debug/demo_session.dart';
 import 'enrollment/kids_enrollment_screen.dart';
 import 'enrollment/kids_language_picker.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -272,15 +274,28 @@ class _KidsAppShellState extends State<_KidsAppShell>
     }
   }
 
-  Future<void> _loadDemo() async {
-    final dutch = widget.locale.languageCode == 'nl';
-    await loadKidsDemoTasks(widget.appDb, dutch: dutch);
-    if (!mounted) return;
+  Future<void> _openDemoScenarios() async {
+    KidsDemoScenarioResult? applied;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => KidsDemoScenariosScreen(
+          db: widget.appDb,
+          onApplied: (result) => applied = result,
+        ),
+      ),
+    );
+    if (!mounted || applied == null) return;
     setState(() {
       _enrolled = true;
       _initDone = true;
       _orchestrator = null;
+      _goal = applied!.goal ?? KidsDemoSession.instance.goal;
+      _xpResetAt = null;
     });
+    // Close settings if scenarios were opened from there.
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _leaveFamily() async {
@@ -307,6 +322,19 @@ class _KidsAppShellState extends State<_KidsAppShell>
     );
     if (confirmed != true || !mounted) return;
 
+    if (KidsDemoSession.instance.active) {
+      KidsDemoSession.instance.clear();
+      await widget.appDb.delete(widget.appDb.kidsTasks).go();
+      if (mounted) {
+        setState(() {
+          _enrolled = false;
+          _orchestrator = null;
+          _goal = null;
+        });
+      }
+      return;
+    }
+
     final store = FlutterSecureKeyValueStore();
     final configRepo = WebDavConfigRepository(store);
     await configRepo.clearEnrollment();
@@ -327,6 +355,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
           themeMode: widget.themeMode,
           onLocaleChanged: widget.onLocaleChanged,
           onThemeModeChanged: widget.onThemeModeChanged,
+          onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
         ),
       ),
     );
@@ -342,7 +371,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
       return KidsEnrollmentScreen(
         configRepo: WebDavConfigRepository(FlutterSecureKeyValueStore()),
         onEnrolled: _initSync,
-        onLoadDemo: kDebugMode ? _loadDemo : null,
+        onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
       );
     }
 
@@ -352,8 +381,8 @@ class _KidsAppShellState extends State<_KidsAppShell>
       orchestrator: _orchestrator,
       xpResetAt: _xpResetAt,
       goal: _goal,
-      onLeaveFamily: _enrolled && _orchestrator != null ? _leaveFamily : null,
-      onLoadDemo: kDebugMode ? _loadDemo : null,
+      onLeaveFamily: _enrolled ? _leaveFamily : null,
+      onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
       onOpenSettings: _openSettings,
     );
   }

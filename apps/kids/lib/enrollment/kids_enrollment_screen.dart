@@ -23,14 +23,14 @@ class KidsEnrollmentScreen extends StatefulWidget {
   /// callback instead of popping the navigator.
   final VoidCallback? onEnrolled;
 
-  /// Debug-only: skip QR enrollment and load local demo chores.
-  final VoidCallback? onLoadDemo;
+  /// Debug-only: open UI scenarios (enrolled look without WebDAV).
+  final VoidCallback? onOpenDemoScenarios;
 
   const KidsEnrollmentScreen({
     super.key,
     required this.configRepo,
     this.onEnrolled,
-    this.onLoadDemo,
+    this.onOpenDemoScenarios,
   });
 
   @override
@@ -143,15 +143,15 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
                   style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
-                if (kDebugMode && widget.onLoadDemo != null) ...[
+                if (kDebugMode && widget.onOpenDemoScenarios != null) ...[
                   const SizedBox(height: 16),
                   OutlinedButton.icon(
-                    onPressed: widget.onLoadDemo,
+                    onPressed: widget.onOpenDemoScenarios,
                     icon: const Icon(Icons.movie_filter_outlined),
                     label: Text(
                       Localizations.localeOf(context).languageCode == 'nl'
-                          ? 'Laad demo-klusjes'
-                          : 'Load demo chores',
+                          ? 'UI-scenario\'s'
+                          : 'UI scenarios',
                     ),
                   ),
                 ],

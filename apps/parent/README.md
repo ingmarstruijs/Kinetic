@@ -6,9 +6,9 @@ Parent-facing Flutter app. Manage personal tasks and notes locally, coordinate w
 
 | Screen | Description |
 |---|---|
-| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **Forward** sends tasks to partner or individual kids with connection-aware gating. A collapsible **suggestions** card sits above the list (self, partner-targeted, and incoming proposals). When kids are enrolled, a collapsible **kids** section shows assignments grouped by child. Reminder notifications offer **Done** and **Snooze**. |
-| **Notes** | Markdown notes, personal or shared. The list uses paper-style cards with title and a short body preview. Editor uses the same bottom-sheet layout as tasks. |
-| **Settings** | WebDAV config, connection test, **theme selector** (Light, Sand, Dusk, Night). **Vault**: verify the 12-word recovery phrase (the words are not stored on device). **Family** section: Partner pairing (share/scan QR), Kids enrollment (QR without WebDAV password) with status. **Backup & Restore**: encrypted `.kvault` export/import (passphrase required; no key in the file). Restoring a backup automatically reschedules all notifications. Debug builds also have **UI scenarios** to load local mock states for screenshots and manual QA. |
+| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **Forward** sends tasks to partner, one kid, or **Everyone** (all enrolled kids) with connection-aware gating. A collapsible **suggestions** card sits above the list (self, partner-targeted, and incoming proposals). When kids are enrolled, a collapsible **kids** section shows assignments grouped by child (plus an Everyone bucket for untargeted shared chores), XP, and goals. Reminder notifications offer **Done** and **Snooze**. Task row icons: lock = private; person+ = accepted partner proposal. |
+| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). Personal or shared with partner. Optional **hide content**: list shows title + locked badge only; opening requires device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION). |
+| **Settings** | WebDAV config, connection test, **theme selector** (Default, Calm, Night). **Vault**: verify the 12-word recovery phrase (the words are not stored on device). **Family** section: Partner pairing (share/scan QR), Kids enrollment (QR without WebDAV password) with status. **Backup & Restore**: encrypted `.kvault` export/import (passphrase required; no key in the file). Restoring a backup automatically reschedules all notifications. Debug builds also have **UI scenarios** to load local mock states for screenshots and manual QA. |
 
 ## Family Setup
 
@@ -23,7 +23,7 @@ Each child device enrolls independently:
 1. Settings → Family → Kids → "Link kids app"
 2. Generate QR with family key + unique kid UUID (no WebDAV password)
 3. Child device scans QR and types the WebDAV password once
-4. Child receives tasks targeted to their UUID
+4. Child receives tasks targeted to their UUID (or Everyone tasks with no target id)
 5. Enrollment count shown in Settings
 
 ## Themes
@@ -32,8 +32,8 @@ Three Material 3 themes, chosen in **Settings**:
 
 | Id | Label | Description |
 |---|---|---|
-| `light` | Default | Light blue |
-| `calm` | Calm | Soft and easy on the eyes |
+| `light` | Default | Brand blue (original app icon in the header) |
+| `calm` | Calm | Warm sand surfaces with terracotta accents (header logo tints to match) |
 | `night` | Night | OLED black |
 
 Legacy ids `sand` → `calm`, and `dusk` / `dark` → `night`.
@@ -50,7 +50,8 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 
 ### Tasks
 - `xpReward` (integer, default 10): XP the child earns when completing a task sent via "Send to kids". Configurable per task before sending.
-- `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. Kids sync orchestrator filters: only displays tasks where `xKineticTargetKidId == myKidId` or `xKineticTargetKidId` is null.
+- `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. When **null**, the assignment is for **Everyone** — each kids device shows it (`xKineticTargetKidId` missing or empty). When set, only that child's UUID matches.
+- `isContentHidden` (notes, local): When true, the notes list hides the body and opening the note requires device unlock. Not synced to WebDAV; the body still syncs as usual.
 
 ### Security
 - **Personal vault**: 12 BIP-39 words → derived AES key stored on-device. The words and BIP-39 entropy are **not** stored; paper from onboarding is the only recovery. Settings can verify a typed phrase against the derived key.
@@ -81,8 +82,8 @@ lib/
 ├── secure/        — secure storage wrappers
 ├── settings/      — WebDAV config, theme, family key share/scan screens
 ├── sync/          — SyncOrchestrator (WebDAV pull/push, LWW merge, xKineticTargetKidId embedding)
-├── theme/         — Material 3 themes (Light, Sand, Dusk, Night)
-├── todo/          — task & note models, repositories, screens, reminder time helper, suggestion engine
+├── theme/         — Material 3 themes (Default, Calm, Night) + KineticLogo tinting
+├── todo/          — task & note models, repositories, screens (fullscreen note editor), reminder time helper, suggestion engine
 ├── vault/         — BIP-39 onboarding gate, restore (file / WebDAV), verify
 └── main.dart      — root shell (Tasks, Notes, Settings)
 ```
@@ -127,7 +128,7 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 
 ## Connection-Aware Send
 
-`FamilyConnectionService` evaluates partner/kid connectivity from WebDAV presence (7-day connected / 14-day offline thresholds). The send sheet lists each family member individually with status. The send button is disabled when nobody is connected.
+`FamilyConnectionService` evaluates partner/kid connectivity from WebDAV presence (7-day connected / 14-day offline thresholds). The send sheet lists each family member individually with status, plus **Everyone** when more than one kid is enrolled. The send button is disabled when nobody is connected.
 
 ### WebDAV layout
 
@@ -140,7 +141,8 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 ├── notes/{uid}.ics        — shared notes (family key)
 ├── proposals/{id}.json    — partner proposals (family key)
 ├── load/{parentId}.json   — workload metrics (family key)
-├── tasks/{uid}.ics        — tasks assigned to children (family key, with xKineticTargetKidId)
+├── tasks/{uid}.ics        — tasks assigned to children (family key, with optional xKineticTargetKidId)
+├── goals/{kidId}.json     — per-kid XP goals (family key)
 ├── presence/{deviceId}.json — heartbeat presence (family key, written every sync)
 └── disconnect/{deviceId}.json — disconnect tombstone (family key, written on leave/remove)
 ```

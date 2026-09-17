@@ -41,6 +41,7 @@ class KidsTaskRepository {
         isCompleted: const Value(false),
         awaitingVerification: const Value(true),
         completedAt: const Value(null),
+        clearedFromHome: const Value(false),
         syncState: const Value('dirty'),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -54,6 +55,7 @@ class KidsTaskRepository {
         isCompleted: const Value(true),
         awaitingVerification: const Value(false),
         completedAt: Value(completedAt),
+        clearedFromHome: const Value(false),
         syncState: const Value('clean'),
         updatedAt: Value(completedAt),
       ),
@@ -67,6 +69,7 @@ class KidsTaskRepository {
         isCompleted: const Value(false),
         awaitingVerification: const Value(false),
         completedAt: const Value(null),
+        clearedFromHome: const Value(false),
         syncState: Value(dirty ? 'dirty' : 'clean'),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -123,6 +126,13 @@ class KidsTaskRepository {
         .go();
   }
 
+  /// Hide completed tasks from the home list; XP still counts.
+  Future<void> clearCompletedFromHome() async {
+    await (_db.update(_db.kidsTasks)
+          ..where((t) => t.isCompleted.equals(true)))
+        .write(const KidsTasksCompanion(clearedFromHome: Value(true)));
+  }
+
   /// Total XP from accepted completions only.
   Stream<int> watchTotalXp({DateTime? resetAt}) {
     return (_db.select(_db.kidsTasks)
@@ -158,6 +168,7 @@ class KidsTaskRepository {
       awaitingVerification: row.awaitingVerification,
       completedAt: row.completedAt,
       xpReward: row.xpReward,
+      clearedFromHome: row.clearedFromHome,
       syncState: row.syncState,
       webdavEtag: row.webdavEtag,
       createdAt: row.createdAt,
@@ -178,6 +189,9 @@ class KidsTaskRepository {
       awaitingVerification: Value(task.awaitingVerification),
       completedAt: Value(task.completedAt),
       xpReward: Value(task.xpReward),
+      // Keep cleanup flag for completed rows; reset when the task is open again.
+      clearedFromHome:
+          task.isCompleted ? const Value.absent() : const Value(false),
       syncState: Value(task.syncState),
       webdavEtag: Value(task.webdavEtag),
       createdAt: Value(task.createdAt),

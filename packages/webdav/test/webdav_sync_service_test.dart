@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:kinetic_webdav/kinetic_webdav.dart';
+
+import 'fake_http_client.dart';
 
 /// Minimal HTTP client that returns a fixed sequence of status codes.
 class _SequenceHttpClient extends http.BaseClient {
@@ -84,6 +87,102 @@ void main() {
       expect(
         () => noKeyService.pushXpReset('kid-123', DateTime.utc(2026, 6, 11)),
         throwsA(isA<StateError>()),
+      );
+    });
+  });
+
+  group('WebDavSyncService.pullNotes stale shared blobs', () {
+    late SharedStorage storage;
+    late Uint8List familyKey;
+    late Uint8List otherFamilyKey;
+    late WebDavSyncService service;
+
+    ICalNote sharedNote(String uid) => ICalNote(
+          uid: uid,
+          summary: 'Note $uid',
+          isShared: true,
+          createdAt: DateTime.utc(2026, 1, 1),
+          updatedAt: DateTime.utc(2026, 1, 1),
+        );
+
+    Future<void> putShared(String uid, Uint8List key) async {
+      final ical = ICalSerializer.noteToVjournal(sharedNote(uid));
+      final blob = await KineticEncryption.encrypt(
+        Uint8List.fromList(utf8.encode(ical)),
+        key,
+      );
+      storage.put('/kinetic/shared/notes/$uid.ics', blob);
+    }
+
+    setUp(() {
+      storage = SharedStorage();
+      familyKey = KineticEncryption.generateFamilyKey();
+      otherFamilyKey = KineticEncryption.generateFamilyKey();
+      service = WebDavSyncService(
+        client: WebDavClient(
+          baseUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          httpClient: FakeHttpClient(storage),
+        ),
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          parentId: 'parent-1',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: familyKey,
+        ),
+      );
+    });
+
+    test('deletes leftover shared notes when current family key opens others',
+        () async {
+      await putShared('38ac6f82-d227-490f-af6b-b041951597d4', familyKey);
+      await putShared('07674cb3-8910-415e-bad4-6babaae126f0', otherFamilyKey);
+      await putShared('c6f8dd97-a47c-4bb1-88db-dcedab5f1e3e', otherFamilyKey);
+
+      final notes = await service.pullNotes();
+
+      expect(notes.map((n) => n.uid), ['38ac6f82-d227-490f-af6b-b041951597d4']);
+      expect(
+        storage.contains(
+          '/kinetic/shared/notes/38ac6f82-d227-490f-af6b-b041951597d4.ics',
+        ),
+        isTrue,
+      );
+      expect(
+        storage.contains(
+          '/kinetic/shared/notes/07674cb3-8910-415e-bad4-6babaae126f0.ics',
+        ),
+        isFalse,
+      );
+      expect(
+        storage.contains(
+          '/kinetic/shared/notes/c6f8dd97-a47c-4bb1-88db-dcedab5f1e3e.ics',
+        ),
+        isFalse,
+      );
+    });
+
+    test('does not delete shared notes when nothing decrypts', () async {
+      await putShared('07674cb3-8910-415e-bad4-6babaae126f0', otherFamilyKey);
+      await putShared('c6f8dd97-a47c-4bb1-88db-dcedab5f1e3e', otherFamilyKey);
+
+      final notes = await service.pullNotes();
+
+      expect(notes, isEmpty);
+      expect(
+        storage.contains(
+          '/kinetic/shared/notes/07674cb3-8910-415e-bad4-6babaae126f0.ics',
+        ),
+        isTrue,
+      );
+      expect(
+        storage.contains(
+          '/kinetic/shared/notes/c6f8dd97-a47c-4bb1-88db-dcedab5f1e3e.ics',
+        ),
+        isTrue,
       );
     });
   });

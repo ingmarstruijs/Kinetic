@@ -2240,6 +2240,12 @@ abstract class AppLocalizations {
   /// **'No private notes'**
   String get notesEmptyPrivate;
 
+  /// No description provided for @notesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes'**
+  String get notesEmpty;
+
   /// No description provided for @notesEmptySharedHint.
   ///
   /// In en, this message translates to:
@@ -2251,6 +2257,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your private notes appear here'**
   String get notesEmptyPrivateHint;
+
+  /// No description provided for @notesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Private and shared notes appear here'**
+  String get notesEmptyHint;
 
   /// No description provided for @notesSaved.
   ///

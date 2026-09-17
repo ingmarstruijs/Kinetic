@@ -18,7 +18,7 @@ class NoteRepository {
   }) : _db = db,
        _notifications = notifications;
 
-  /// All notes, grouped by category (nulls first) then creation date (newest first).
+  /// All notes, private first then shared, by sortOrder then newest.
   /// Excludes trashed notes and sync tombstones.
   Stream<List<PersonalNote>> watchAll() {
     return (_db.select(_db.personalNotes)
@@ -26,11 +26,7 @@ class NoteRepository {
             (t) => t.deletedAt.isNull() & t.syncState.equals('deleted').not(),
           )
           ..orderBy([
-            (t) => OrderingTerm(
-              expression: t.category.isNull(),
-              mode: OrderingMode.desc,
-            ),
-            (t) => OrderingTerm.asc(t.category),
+            (t) => OrderingTerm.asc(t.isShared),
             (t) => OrderingTerm.asc(t.sortOrder),
             (t) => OrderingTerm.desc(t.createdAt),
           ]))

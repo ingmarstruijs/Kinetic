@@ -1284,11 +1284,17 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notesEmptyPrivate => 'Geen privé notities';
 
   @override
+  String get notesEmpty => 'Geen notities';
+
+  @override
   String get notesEmptySharedHint =>
       'Notities gedeeld met je partner verschijnen hier';
 
   @override
   String get notesEmptyPrivateHint => 'Je privé notities verschijnen hier';
+
+  @override
+  String get notesEmptyHint => 'Privé- en gedeelde notities verschijnen hier';
 
   @override
   String get notesSaved => 'Notitie opgeslagen';

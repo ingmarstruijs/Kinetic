@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: stable
+          cache: true
+
+      - name: Bootstrap monorepo
+        run: |
+          flutter pub get
+          dart run melos bootstrap
+
+      - name: Analyze
+        # Pre-existing infos/warnings should not block PRs; tests are the hard gate.
+        run: dart run melos exec -- flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Test
+        # One Flutter process at a time — parallel melos exec hits the startup lock.
+        run: dart run melos exec --concurrency=1 --dir-exists=test -- flutter test

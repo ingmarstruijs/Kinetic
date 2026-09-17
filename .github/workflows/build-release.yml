@@ -1,25 +1,23 @@
 name: Build & Sign Flutter Apps
 
+# APK build + optional signing + GitHub Releases.
+# PR validation lives in ci.yml (analyze + test) so feature/fix PRs do not
+# run four heavy Build & Sign jobs (push + pull_request × kids + parent).
 on:
   push:
     branches:
       - main
       - develop
-      - 'feature/**'
-      - 'fix/**'
     tags:
       # Builds on any v* tag. GitHub Releases require the tagged commit to
       # already be on main (see the release job gate below).
       - 'v*'
-  pull_request:
-    branches:
-      - main
-      - develop
   workflow_dispatch:
     inputs:
       version:
         description: 'Version override (e.g. 1.2.3) — defaults to git tag or "dev"'
         required: false
+
 
 # Least privilege; release job elevates contents for creating GitHub Releases.
 permissions:

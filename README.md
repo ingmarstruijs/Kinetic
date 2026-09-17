@@ -73,7 +73,7 @@ cd apps/parent   # or apps/kids
 flutter build apk --release
 ```
 
-CI builds and signs both APKs on every push to `main`, `develop`, or `feature/**`, and on any `v*` tag (see [`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)). GitHub Releases are published only when that tag’s commit is already on `main`.
+PRs and pushes to `main`/`develop` run analyze + tests ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)). CI builds and signs both APKs on push to `main`/`develop`, on any `v*` tag, or via workflow dispatch ([`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)). GitHub Releases are published only when that tag’s commit is already on `main`.
 
 ## Localization
 

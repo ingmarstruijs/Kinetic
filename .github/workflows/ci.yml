@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+          channel: stable
+          cache: true
+
+      - name: Bootstrap monorepo
+        run: |
+          flutter pub global activate melos
+          "$HOME/.pub-cache/bin/melos" bootstrap
+
+      - name: Analyze
+        run: "$HOME/.pub-cache/bin/melos" run analyze
+
+      - name: Test
+        run: "$HOME/.pub-cache/bin/melos" run test

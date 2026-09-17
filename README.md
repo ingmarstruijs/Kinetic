@@ -29,10 +29,10 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
 - **Partner coordination** — QR pairing, encrypted task proposals, accept/decline flow; partner-targeted suggestions require an explicit **Send to partner** action after a **What your partner sees** preview (nothing is auto-sent)
-- **Kids tasks** — assign tasks per child with configurable XP; the kids app syncs assignments and awards XP on completion
-- **Notes** — markdown notes, personal or shared with partner; list rows show title, reminder, and shared badge only (body is hidden). Same bottom-sheet editor layout as tasks
+- **Kids tasks** — assign to one child or **Everyone** (all enrolled kids); configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
+- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); personal or shared with partner; optional **hide content** (list shows title only; open requires device biometrics/PIN)
 - **AI suggestions** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history, privacy-preserving partner hints) with human-readable explanations
-- **Themes** — Light, Sand, Dusk, Night (OLED)
+- **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
 - **Connection-aware send** — partner and kids listed individually with WebDAV presence status before forwarding
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
 - **WebDAV sync** — optional; bring your own server, no vendor backend
@@ -93,9 +93,9 @@ Tasks/notes suggestion copy in the parent app is still being migrated; nav, sett
 
 1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
 2. Child device scans the QR and types the WebDAV password once
-3. Parent sends tasks targeted to that child's UUID
+3. Parent forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
 
-Ship parent **and** kids 0.3.0 together: an old kids app would save an empty password from a new QR.
+Ship parent **and** kids at the same minor version when enrollment/QR formats change.
 
 The **Family** screen shows **Proposals** and **Kids** tabs only when a partner is paired or kids are enrolled. Shared notes require partner pairing.
 
@@ -124,7 +124,7 @@ Suggestions appear in a banner on the **Private** tab and in structured sections
 |---|---|
 | **Personal vault** | 12 English BIP-39 words → PBKDF2 seed → 32-byte AES-256-GCM key. Encrypts personal tasks, notes, `.kvault` backups, and `vault.meta`. 16-byte entropy may be stored on-device so Settings can show the words again behind the device lock. Paper remains the only off-device backup. |
 | **Family key** | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault). |
-| **Kid UUID** | Per enrolled child device for task targeting |
+| **Kid UUID** | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone** |
 
 On first launch the parent app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
 

@@ -1217,6 +1217,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get taskSendToEveryoneSubtitle => 'Visible to all enrolled kids';
+
+  @override
+  String get taskSendToEveryoneBody =>
+      'Every enrolled child will see this assignment. It leaves your list once any child completes it.';
+
+  @override
   String get taskXpReward => 'XP reward:';
 
   @override

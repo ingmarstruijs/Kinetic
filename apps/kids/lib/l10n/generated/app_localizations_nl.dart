@@ -224,4 +224,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get awaitingParentConfirm => 'Wacht tot je ouder bevestigt';
+
+  @override
+  String get cleanUpCompleted => 'Opschonen';
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -7,6 +8,7 @@ class KidsSettingsScreen extends StatelessWidget {
   final ThemeMode themeMode;
   final ValueChanged<Locale> onLocaleChanged;
   final ValueChanged<ThemeMode> onThemeModeChanged;
+  final VoidCallback? onOpenDemoScenarios;
 
   const KidsSettingsScreen({
     super.key,
@@ -14,6 +16,7 @@ class KidsSettingsScreen extends StatelessWidget {
     required this.themeMode,
     required this.onLocaleChanged,
     required this.onThemeModeChanged,
+    this.onOpenDemoScenarios,
   });
 
   @override
@@ -70,6 +73,24 @@ class KidsSettingsScreen extends StatelessWidget {
               onSelectionChanged: (s) => onThemeModeChanged(s.first),
             ),
           ),
+          if (kDebugMode && onOpenDemoScenarios != null) ...[
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.movie_filter_outlined),
+              title: Text(
+                locale.languageCode == 'nl'
+                    ? 'UI-scenario\'s'
+                    : 'UI scenarios',
+              ),
+              subtitle: Text(
+                locale.languageCode == 'nl'
+                    ? 'Laad testdata alsof je gekoppeld bent'
+                    : 'Load test data as if enrolled',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: onOpenDemoScenarios,
+            ),
+          ],
         ],
       ),
     );

@@ -306,12 +306,15 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                       child: Icon(Icons.flag, size: 16, color: kColorGold),
                     ),
                   if (widget.task.isPrivate)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.lock_outline,
-                        size: 14,
-                        color: kColorWarmGrey,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Tooltip(
+                        message: AppLocalizations.of(context).commonPrivate,
+                        child: const Icon(
+                          Icons.lock_outline,
+                          size: 14,
+                          color: kColorWarmGrey,
+                        ),
                       ),
                     ),
                   if (widget.task.recurrenceRule != null)
@@ -331,12 +334,17 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                       ),
                       builder: (context, snapshot) {
                         if (snapshot.data == true) {
-                          return const Padding(
-                            padding: EdgeInsets.only(left: 6),
-                            child: Icon(
-                              Icons.person_add_outlined,
-                              size: 14,
-                              color: kColorTeal,
+                          return Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Tooltip(
+                              message: AppLocalizations.of(
+                                context,
+                              ).tasksFromPartner,
+                              child: const Icon(
+                                Icons.person_add_outlined,
+                                size: 14,
+                                color: kColorTeal,
+                              ),
                             ),
                           );
                         }

@@ -560,16 +560,6 @@ class _NoteCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (note.isContentHidden) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2, right: 8),
-                      child: Icon(
-                        Icons.lock_outline,
-                        size: 18,
-                        color: scheme.outline,
-                      ),
-                    ),
-                  ],
                   Expanded(
                     child: Text(
                       note.title,

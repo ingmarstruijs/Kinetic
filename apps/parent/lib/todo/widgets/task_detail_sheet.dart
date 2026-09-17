@@ -305,6 +305,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
     FamilyMemberStatus? selectedPartner;
     FamilyMemberStatus? selectedKid;
+    var selectedEveryone = false;
 
     showModalBottomSheet<void>(
       context: context,
@@ -359,6 +360,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                           ? () => setSheetState(() {
                               selectedPartner = _partnerStatus;
                               selectedKid = null;
+                              selectedEveryone = false;
                             })
                           : null,
                     ),
@@ -389,6 +391,33 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                             ? () => setSheetState(() {
                                 selectedKid = kid;
                                 selectedPartner = null;
+                                selectedEveryone = false;
+                              })
+                            : null,
+                      ),
+                    if (_kidStatuses.length > 1)
+                      ListTile(
+                        leading: Icon(
+                          Icons.groups_outlined,
+                          color: _kidStatuses.any((k) => k.isConnected)
+                              ? null
+                              : Theme.of(context).disabledColor,
+                        ),
+                        title: Text(
+                          AppLocalizations.of(context).commonEveryone,
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(
+                            context,
+                          ).taskSendToEveryoneSubtitle,
+                        ),
+                        enabled: _kidStatuses.any((k) => k.isConnected),
+                        selected: selectedEveryone,
+                        onTap: _kidStatuses.any((k) => k.isConnected)
+                            ? () => setSheetState(() {
+                                selectedEveryone = true;
+                                selectedKid = null;
+                                selectedPartner = null;
                               })
                             : null,
                       ),
@@ -407,13 +436,17 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                         const SizedBox(width: 8),
                         FilledButton(
                           onPressed:
-                              (selectedPartner != null || selectedKid != null)
+                              (selectedPartner != null ||
+                                  selectedKid != null ||
+                                  selectedEveryone)
                               ? () {
                                   Navigator.pop(ctx);
                                   if (selectedPartner != null) {
                                     _sendToPartner(context);
+                                  } else if (selectedEveryone) {
+                                    _sendToKids(context, null);
                                   } else if (selectedKid != null) {
-                                    _sendToKids(context, selectedKid!);
+                                    _sendToKids(context, selectedKid);
                                   }
                                 }
                               : null,
@@ -496,35 +529,36 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  /// Sends to one kid, or to all kids when [selectedKid] is null (Everyone).
   Future<void> _sendToKids(
     BuildContext context,
-    FamilyMemberStatus selectedKid,
+    FamilyMemberStatus? selectedKid,
   ) async {
     final task = widget.task;
     if (task == null) return;
-    if (!selectedKid.isConnected) return;
+    final l10n = AppLocalizations.of(context);
+    final everyone = selectedKid == null;
+    if (!everyone && !selectedKid.isConnected) return;
 
-    if (selectedKid.isStale && mounted) {
+    if (!everyone && selectedKid.isStale && mounted) {
       final proceed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(AppLocalizations.of(context).taskStaleConnectionTitle),
+          title: Text(l10n.taskStaleConnectionTitle),
           content: Text(
-            AppLocalizations.of(context).taskStaleKidBody(
+            l10n.taskStaleKidBody(
               selectedKid.name,
-              selectedKid
-                  .statusLabel(AppLocalizations.of(context))
-                  .toLowerCase(),
+              selectedKid.statusLabel(l10n).toLowerCase(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text(AppLocalizations.of(context).commonCancel),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: Text(AppLocalizations.of(context).taskSendAnyway),
+              child: Text(l10n.taskSendAnyway),
             ),
           ],
         ),
@@ -532,35 +566,37 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       if (proceed != true || !mounted) return;
     }
 
-    final enrolledKid = _enrolledKids.firstWhere(
-      (k) => k.id == selectedKid.id,
-      orElse: () => EnrolledKid(
-        id: selectedKid.id,
-        name: selectedKid.name,
-        enrolledAt: DateTime.now(),
-      ),
-    );
+    final targetName = everyone
+        ? l10n.commonEveryone
+        : _enrolledKids
+              .firstWhere(
+                (k) => k.id == selectedKid.id,
+                orElse: () => EnrolledKid(
+                  id: selectedKid.id,
+                  name: selectedKid.name,
+                  enrolledAt: DateTime.now(),
+                ),
+              )
+              .name;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          AppLocalizations.of(context).taskSendToKidTitle(enrolledKid.name),
-        ),
+        title: Text(l10n.taskSendToKidTitle(targetName)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${AppLocalizations.of(context).taskSendToKidLead(task.title, enrolledKid.name)} '
-              '${AppLocalizations.of(context).taskSendToKidBody}',
+              '${l10n.taskSendToKidLead(task.title, targetName)} '
+              '${everyone ? l10n.taskSendToEveryoneBody : l10n.taskSendToKidBody}',
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 const Icon(Icons.star_outline, size: 18),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(context).taskXpReward),
+                Text(l10n.taskXpReward),
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 72,
@@ -585,11 +621,11 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context).commonCancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context).commonSend),
+            child: Text(l10n.commonSend),
           ),
         ],
       ),
@@ -597,7 +633,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     if (confirmed != true || !mounted) return;
     await widget.repo.sendToKids(
       task.id,
-      targetKidId: enrolledKid.id,
+      targetKidId: everyone ? null : selectedKid.id,
       xpReward: int.tryParse(_xpCtrl.text.trim()) ?? 10,
     );
     if (mounted) Navigator.pop(context);

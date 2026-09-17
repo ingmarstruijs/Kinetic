@@ -66,5 +66,6 @@
   "confirmCompleteTitle": "Klaar?",
   "confirmCompleteBody": "Weet je zeker dat je klaar bent? We sturen nu een bevestigingsvraag naar je ouder.",
   "confirmCompleteAction": "Ja, ik ben klaar",
-  "awaitingParentConfirm": "Wacht tot je ouder bevestigt"
+  "awaitingParentConfirm": "Wacht tot je ouder bevestigt",
+  "cleanUpCompleted": "Opschonen"
 }

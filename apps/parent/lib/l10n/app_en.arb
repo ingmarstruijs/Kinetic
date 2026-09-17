@@ -664,6 +664,8 @@
       "name": {"type": "String"}
     }
   },
+  "taskSendToEveryoneSubtitle": "Visible to all enrolled kids",
+  "taskSendToEveryoneBody": "Every enrolled child will see this assignment. It leaves your list once any child completes it.",
   "taskXpReward": "XP reward:",
   "taskNameHint": "Task name",
   "taskAddTime": "Add time",

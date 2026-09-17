@@ -499,6 +499,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for your parent to confirm'**
   String get awaitingParentConfirm;
+
+  /// No description provided for @cleanUpCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up'**
+  String get cleanUpCompleted;
 }
 
 class _AppLocalizationsDelegate

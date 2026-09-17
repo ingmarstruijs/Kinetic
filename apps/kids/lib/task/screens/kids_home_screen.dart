@@ -17,7 +17,7 @@ class KidsHomeScreen extends StatefulWidget {
   final VoidCallback? onLeaveFamily;
   final DateTime? xpResetAt;
   final KidGoal? goal;
-  final VoidCallback? onLoadDemo;
+  final VoidCallback? onOpenDemoScenarios;
   final VoidCallback? onOpenSettings;
 
   const KidsHomeScreen({
@@ -28,7 +28,7 @@ class KidsHomeScreen extends StatefulWidget {
     this.onLeaveFamily,
     this.xpResetAt,
     this.goal,
-    this.onLoadDemo,
+    this.onOpenDemoScenarios,
     this.onOpenSettings,
   });
 
@@ -82,6 +82,10 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     }
   }
 
+  Future<void> _clearCompleted() async {
+    await _taskRepository.clearCompletedFromHome();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -112,7 +116,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
             onSelected: (value) {
               if (value == 'settings') widget.onOpenSettings?.call();
               if (value == 'leave') widget.onLeaveFamily?.call();
-              if (value == 'demo') widget.onLoadDemo?.call();
+              if (value == 'demo') widget.onOpenDemoScenarios?.call();
             },
             itemBuilder: (_) => [
               if (widget.onOpenSettings != null)
@@ -126,7 +130,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                     ],
                   ),
                 ),
-              if (widget.onLoadDemo != null)
+              if (widget.onOpenDemoScenarios != null)
                 PopupMenuItem(
                   value: 'demo',
                   child: Row(
@@ -135,8 +139,8 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                       const SizedBox(width: 8),
                       Text(
                         Localizations.localeOf(context).languageCode == 'nl'
-                            ? 'Laad demo-klusjes'
-                            : 'Load demo chores',
+                            ? 'UI-scenario\'s'
+                            : 'UI scenarios',
                       ),
                     ],
                   ),
@@ -171,183 +175,213 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
           final openTasks = tasks.where((t) => t.isOpen).toList();
           final pendingTasks =
               tasks.where((t) => t.awaitingVerification).toList();
-          final completedTasks = tasks.where((t) => t.isCompleted).toList();
+          final completedTasks = tasks
+              .where((t) => t.isCompleted && !t.clearedFromHome)
+              .toList();
+          final hasVisibleTasks = openTasks.isNotEmpty ||
+              pendingTasks.isNotEmpty ||
+              completedTasks.isNotEmpty;
 
-          final xpHeader = StreamBuilder<int>(
-            stream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
-            builder: (context, xpSnap) {
-              final totalXp = xpSnap.data ?? 0;
-              final goal = widget.goal;
-              final capped = goal != null && goal.targetXp > 0
-                  ? (totalXp > goal.targetXp ? goal.targetXp : totalXp)
-                  : totalXp;
-              final progress = goal != null && goal.targetXp > 0
-                  ? (capped / goal.targetXp).clamp(0.0, 1.0)
-                  : null;
-
-              return Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(20),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Material(
+                color: scheme.surface,
+                elevation: 1,
+                shadowColor: scheme.shadow.withValues(alpha: 0.12),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  child: _buildXpHero(context, scheme, l10n),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.star_rounded, color: scheme.primary),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            goal != null
-                                ? goal.title
-                                : l10n.totalXp(capped),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            goal != null
-                                ? l10n.goalProgress(capped, goal.targetXp)
-                                : l10n.keepGoing,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                          if (progress != null) ...[
-                            const SizedBox(height: 10),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 8,
-                                backgroundColor:
-                                    scheme.outline.withValues(alpha: 0.2),
-                              ),
+              ),
+              Expanded(
+                child: !hasVisibleTasks
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.celebration,
+                              size: 64,
+                              color: scheme.primary,
                             ),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.allDone,
+                              style:
+                                  Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.noTasksRightNow,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        children: [
+                          if (openTasks.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                Text(
+                                  l10n.stillToDo,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text('${openTasks.length}'),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...openTasks
+                                .map((task) => _buildTaskCard(context, task)),
+                            const SizedBox(height: 20),
+                          ],
+                          if (pendingTasks.isNotEmpty) ...[
+                            Text(
+                              l10n.waitingForParent,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            ...pendingTasks
+                                .map((task) => _buildTaskCard(context, task)),
+                            const SizedBox(height: 20),
+                          ],
+                          if (completedTasks.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    l10n.completed,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: _clearCompleted,
+                                  child: Text(l10n.cleanUpCompleted),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...completedTasks
+                                .map((task) => _buildTaskCard(context, task)),
                           ],
                         ],
                       ),
-                    ),
-                    Icon(
-                      Icons.military_tech_rounded,
-                      size: 40,
-                      color: scheme.primary.withValues(alpha: 0.7),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-
-          if (tasks.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  xpHeader,
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.celebration,
-                            size: 64,
-                            color: scheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.allDone,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.noTasksRightNow,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ),
-            );
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              xpHeader,
-              if (openTasks.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Text(
-                      l10n.stillToDo,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text('${openTasks.length}'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ...openTasks.map((task) => _buildTaskCard(context, task)),
-                const SizedBox(height: 20),
-              ],
-              if (pendingTasks.isNotEmpty) ...[
-                Text(
-                  l10n.waitingForParent,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                ...pendingTasks.map((task) => _buildTaskCard(context, task)),
-                const SizedBox(height: 20),
-              ],
-              if (completedTasks.isNotEmpty) ...[
-                Text(
-                  l10n.completed,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                ...completedTasks.map((task) => _buildTaskCard(context, task)),
-              ],
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildXpHero(
+    BuildContext context,
+    ColorScheme scheme,
+    AppLocalizations l10n,
+  ) {
+    return StreamBuilder<int>(
+      stream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
+      builder: (context, xpSnap) {
+        final totalXp = xpSnap.data ?? 0;
+        final goal = widget.goal;
+        final capped = goal != null && goal.targetXp > 0
+            ? (totalXp > goal.targetXp ? goal.targetXp : totalXp)
+            : totalXp;
+        final progress = goal != null && goal.targetXp > 0
+            ? (capped / goal.targetXp).clamp(0.0, 1.0)
+            : null;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.star_rounded, color: scheme.primary),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      goal != null ? goal.title : l10n.totalXp(capped),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      goal != null
+                          ? l10n.goalProgress(capped, goal.targetXp)
+                          : l10n.keepGoing,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                    if (progress != null) ...[
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor:
+                              scheme.outline.withValues(alpha: 0.2),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.military_tech_rounded,
+                size: 40,
+                color: scheme.primary.withValues(alpha: 0.7),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

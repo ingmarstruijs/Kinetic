@@ -224,6 +224,12 @@ abstract class AppLocalizations {
   /// **'To do'**
   String get stillToDo;
 
+  /// No description provided for @waitingForParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for parent'**
+  String get waitingForParent;
+
   /// No description provided for @completed.
   ///
   /// In en, this message translates to:
@@ -397,6 +403,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New task'**
   String get newTaskNotificationTitle;
+
+  /// No description provided for @chooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose language'**
+  String get chooseLanguage;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @languageDutch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nederlands'**
+  String get languageDutch;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @keepGoing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep going!'**
+  String get keepGoing;
+
+  /// No description provided for @goalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{earned} / {target} XP'**
+  String goalProgress(int earned, int target);
+
+  /// No description provided for @totalXp.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP'**
+  String totalXp(int xp);
+
+  /// No description provided for @confirmCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you done?'**
+  String get confirmCompleteTitle;
+
+  /// No description provided for @confirmCompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you are finished? We will send a confirmation request to your parent.'**
+  String get confirmCompleteBody;
+
+  /// No description provided for @confirmCompleteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I\'m done'**
+  String get confirmCompleteAction;
+
+  /// No description provided for @awaitingParentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for your parent to confirm'**
+  String get awaitingParentConfirm;
 }
 
 class _AppLocalizationsDelegate

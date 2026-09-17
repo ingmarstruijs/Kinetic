@@ -89,6 +89,85 @@ void main() {
         throwsA(isA<StateError>()),
       );
     });
+
+    test('pushGoal creates collection on 409', () async {
+      httpClient = _SequenceHttpClient([409, 201, 201]);
+      final davClient = WebDavClient(
+        baseUrl: 'https://dav.example.com',
+        username: 'alice',
+        password: 'secret',
+        httpClient: httpClient,
+      );
+      service = WebDavSyncService(
+        client: davClient,
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          parentId: 'parent-1',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: KineticEncryption.generateFamilyKey(),
+        ),
+      );
+
+      await service.pushGoal(
+        KidGoal(
+          kidId: 'kid-1',
+          title: 'Bike',
+          targetXp: 100,
+          updatedAt: DateTime.utc(2026, 6, 11),
+        ),
+      );
+
+      expect(httpClient.methods, ['PUT', 'MKCOL', 'PUT']);
+      expect(httpClient.paths.first, '/kinetic/shared/goals/kid-1.json');
+    });
+  });
+
+  group('WebDavSyncService goals round-trip', () {
+    late SharedStorage storage;
+    late Uint8List familyKey;
+    late WebDavSyncService service;
+
+    setUp(() {
+      storage = SharedStorage();
+      familyKey = KineticEncryption.generateFamilyKey();
+      service = WebDavSyncService(
+        client: WebDavClient(
+          baseUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          httpClient: FakeHttpClient(storage),
+        ),
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          parentId: 'parent-1',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: familyKey,
+        ),
+      );
+    });
+
+    test('pushGoal / pullGoal / deleteGoal', () async {
+      final goal = KidGoal(
+        kidId: 'kid-1',
+        title: 'Bike',
+        targetXp: 100,
+        updatedAt: DateTime.utc(2026, 6, 11),
+      );
+
+      await service.pushGoal(goal);
+      final pulled = await service.pullGoal('kid-1');
+      expect(pulled, isNotNull);
+      expect(pulled!.title, 'Bike');
+      expect(pulled.targetXp, 100);
+      expect(pulled.kidId, 'kid-1');
+
+      await service.deleteGoal('kid-1');
+      expect(await service.pullGoal('kid-1'), isNull);
+    });
   });
 
   group('WebDavSyncService.pullNotes stale shared blobs', () {

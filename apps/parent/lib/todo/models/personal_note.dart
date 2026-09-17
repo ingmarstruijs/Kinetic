@@ -8,6 +8,7 @@ class PersonalNote {
   final String title;
   final String body;
   final bool isShared;
+  final bool isContentHidden;
   final DateTime? remindAt;
   final String? category;
   final int sortOrder;
@@ -20,6 +21,7 @@ class PersonalNote {
     required this.title,
     required this.body,
     required this.isShared,
+    this.isContentHidden = false,
     this.remindAt,
     this.category,
     this.sortOrder = 0,
@@ -32,6 +34,7 @@ class PersonalNote {
     required String title,
     String body = '',
     bool isShared = false,
+    bool isContentHidden = false,
     DateTime? remindAt,
     String? category,
     int sortOrder = 0,
@@ -42,6 +45,7 @@ class PersonalNote {
       title: title,
       body: body,
       isShared: isShared,
+      isContentHidden: isContentHidden,
       remindAt: remindAt,
       category: category,
       sortOrder: sortOrder,
@@ -56,6 +60,7 @@ class PersonalNote {
       title: row.title,
       body: row.body,
       isShared: row.isShared,
+      isContentHidden: row.isContentHidden,
       remindAt: row.remindAt,
       category: row.category,
       sortOrder: row.sortOrder,
@@ -69,6 +74,7 @@ class PersonalNote {
     String? title,
     String? body,
     bool? isShared,
+    bool? isContentHidden,
     DateTime? remindAt,
     bool clearRemindAt = false,
     String? category,
@@ -82,6 +88,7 @@ class PersonalNote {
       title: title ?? this.title,
       body: body ?? this.body,
       isShared: isShared ?? this.isShared,
+      isContentHidden: isContentHidden ?? this.isContentHidden,
       remindAt: clearRemindAt ? null : (remindAt ?? this.remindAt),
       category: clearCategory ? null : (category ?? this.category),
       sortOrder: sortOrder ?? this.sortOrder,
@@ -91,7 +98,9 @@ class PersonalNote {
     );
   }
 
+  /// Preview for the notes list. Empty when content is hidden.
   String get bodyPreview {
+    if (isContentHidden) return '';
     final plain = body
         .replaceAll(RegExp(r'```[\s\S]*?```'), ' ')
         .replaceAll(RegExp(r'`+'), '')
@@ -107,5 +116,6 @@ class PersonalNote {
 
   @override
   String toString() =>
-      'PersonalNote(id: $id, title: $title, isShared: $isShared)';
+      'PersonalNote(id: $id, title: $title, isShared: $isShared, '
+      'isContentHidden: $isContentHidden)';
 }

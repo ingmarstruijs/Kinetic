@@ -282,9 +282,12 @@ class SyncOrchestrator {
     }
   }
 
-  /// Pushes tasks with a kidsTaskId to the shared tasks folder and detects
-  /// completion from the kids side (auto-completes the parent's task).
+  /// Pushes tasks with a kidsTaskId to the shared tasks folder and preserves
+  /// kid-side IN-PROCESS (awaiting parent verification) on the wire.
   Future<void> _syncKidsTasks(WebDavSyncService service) async {
+    final sharedTasks = await service.pullSharedTasks();
+    final sharedByUid = {for (final t in sharedTasks) t.uid: t};
+
     // Push any dirty tasks that have a kidsTaskId.
     final rows =
         await (_db.select(_db.personalTasks)..where(
@@ -292,20 +295,23 @@ class SyncOrchestrator {
             ))
             .get();
     for (final row in rows) {
-      // Build description with custom X-properties that the kids app parses.
       final baseNotes = row.notes ?? '';
       final targetKidPart = row.targetKidId != null
           ? ';xKineticTargetKidId:${row.targetKidId}'
           : '';
       final description =
           '$baseNotes;xKineticParentId:${row.id};xKineticCategory:${row.category};xKineticXpReward:${row.xpReward}$targetKidPart';
+      final remote = sharedByUid[row.kidsTaskId!];
+      final status = row.isCompleted
+          ? ICalTaskStatus.completed
+          : (remote?.status == ICalTaskStatus.inProcess
+              ? ICalTaskStatus.inProcess
+              : ICalTaskStatus.needsAction);
       final kidsTask = ICalTask(
         uid: row.kidsTaskId!,
         summary: row.title,
         description: description,
-        status: row.isCompleted
-            ? ICalTaskStatus.completed
-            : ICalTaskStatus.needsAction,
+        status: status,
         priority: _driftPriorityToICal(row.priority),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -313,25 +319,33 @@ class SyncOrchestrator {
       );
       try {
         await service.pushSharedTask(kidsTask);
-        // Mark the task clean so the personal-path push (step 1b) skips it
-        // and won't conflict with the shared-path version.
         await (_db.update(_db.personalTasks)..where((t) => t.id.equals(row.id)))
             .write(const PersonalTasksCompanion(syncState: Value('clean')));
       } catch (_) {
         // Leave dirty for retry next cycle.
       }
     }
+  }
 
-    // Pull shared tasks to detect kids completing an assigned task.
-    final sharedTasks = await service.pullSharedTasks();
-    for (final sharedTask in sharedTasks) {
-      if (sharedTask.status != ICalTaskStatus.completed) continue;
-      // Find a parent task linked to this kids task that is still incomplete.
+  /// Parent accepts a kid's completion request — awards XP on the wire.
+  Future<void> acceptKidsTaskCompletion(ICalTask sharedTask) async {
+    final client = WebDavClient(
+      baseUrl: _config.baseUrl,
+      username: _config.username,
+      password: _config.password,
+    );
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      final now = DateTime.now().toUtc();
+      await service.pushSharedTask(
+        sharedTask.copyWith(
+          status: ICalTaskStatus.completed,
+          updatedAt: now,
+        ),
+      );
       final linked =
           await (_db.select(_db.personalTasks)..where(
-                (t) =>
-                    t.kidsTaskId.equals(sharedTask.uid) &
-                    t.isCompleted.equals(false),
+                (t) => t.kidsTaskId.equals(sharedTask.uid),
               ))
               .getSingleOrNull();
       if (linked != null) {
@@ -340,12 +354,34 @@ class SyncOrchestrator {
         )..where((t) => t.id.equals(linked.id))).write(
           PersonalTasksCompanion(
             isCompleted: const Value(true),
-            completedAt: Value(sharedTask.updatedAt),
-            updatedAt: Value(sharedTask.updatedAt),
+            completedAt: Value(now),
+            updatedAt: Value(now),
             syncState: const Value('dirty'),
           ),
         );
       }
+    } finally {
+      client.dispose();
+    }
+  }
+
+  /// Parent rejects a completion request — task returns to open for the kid.
+  Future<void> rejectKidsTaskCompletion(ICalTask sharedTask) async {
+    final client = WebDavClient(
+      baseUrl: _config.baseUrl,
+      username: _config.username,
+      password: _config.password,
+    );
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      await service.pushSharedTask(
+        sharedTask.copyWith(
+          status: ICalTaskStatus.needsAction,
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    } finally {
+      client.dispose();
     }
   }
 

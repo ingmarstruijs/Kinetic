@@ -5,6 +5,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import '../../settings/settings_repository.dart';
 import '../../theme/app_header.dart';
+import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
 import '../widgets/category_sheet.dart';
@@ -71,15 +72,36 @@ class _NotesScreenState extends State<NotesScreen>
     bool initialIsShared = false,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
-    final result = await showModalBottomSheet<PersonalNote?>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => NoteEditorScreen(
-        repo: widget.repo,
-        note: note,
-        hasFamilyKey: widget.partnerPaired,
-        initialIsShared: note?.isShared ?? initialIsShared,
+    final l10n = AppLocalizations.of(context);
+
+    if (note != null && note.isContentHidden) {
+      final unlocked = await VaultBiometrics.authenticate(
+        reason: l10n.notesUnlockReason,
+      );
+      if (!mounted) return;
+      if (unlocked != true) {
+        if (unlocked == null) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.notesHideNeedsDeviceLock)),
+          );
+        } else {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.notesUnlockFailed)),
+          );
+        }
+        return;
+      }
+    }
+
+    final result = await Navigator.of(context).push<PersonalNote?>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => NoteEditorScreen(
+          repo: widget.repo,
+          note: note,
+          hasFamilyKey: widget.partnerPaired,
+          initialIsShared: note?.isShared ?? initialIsShared,
+        ),
       ),
     );
     if (context.mounted && result != null) {
@@ -520,7 +542,8 @@ class _NoteCard extends StatelessWidget {
     final preview = note.bodyPreview;
     final reminderPassed = note.remindAt != null && isOverdue(note.remindAt!);
     final showShared = note.isShared && showSharedBadge;
-    final showMeta = note.remindAt != null || showShared;
+    final showMeta =
+        note.remindAt != null || showShared || note.isContentHidden;
 
     return Material(
       color: scheme.surfaceContainerLow,
@@ -537,6 +560,16 @@ class _NoteCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (note.isContentHidden) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2, right: 8),
+                      child: Icon(
+                        Icons.lock_outline,
+                        size: 18,
+                        color: scheme.outline,
+                      ),
+                    ),
+                  ],
                   Expanded(
                     child: Text(
                       note.title,
@@ -579,6 +612,12 @@ class _NoteCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 6,
                   children: [
+                    if (note.isContentHidden)
+                      _NoteMetaChip(
+                        icon: Icons.lock_outline,
+                        label: AppLocalizations.of(context).notesLockedBadge,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     if (note.remindAt != null)
                       _NoteMetaChip(
                         icon: Icons.schedule,

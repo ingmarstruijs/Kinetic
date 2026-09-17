@@ -80,6 +80,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stillToDo => 'To do';
 
   @override
+  String get waitingForParent => 'Waiting for parent';
+
+  @override
   String get completed => 'Completed';
 
   @override
@@ -168,4 +171,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newTaskNotificationTitle => 'New task';
+
+  @override
+  String get chooseLanguage => 'Choose language';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageDutch => 'Nederlands';
+
+  @override
+  String get continueLabel => 'Continue';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsTheme => 'Theme';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get keepGoing => 'Keep going!';
+
+  @override
+  String goalProgress(int earned, int target) {
+    return '$earned / $target XP';
+  }
+
+  @override
+  String totalXp(int xp) {
+    return '$xp XP';
+  }
+
+  @override
+  String get confirmCompleteTitle => 'Are you done?';
+
+  @override
+  String get confirmCompleteBody =>
+      'Are you sure you are finished? We will send a confirmation request to your parent.';
+
+  @override
+  String get confirmCompleteAction => 'Yes, I\'m done';
+
+  @override
+  String get awaitingParentConfirm => 'Waiting for your parent to confirm';
 }

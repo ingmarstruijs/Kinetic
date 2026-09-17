@@ -86,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ValueListenableBuilder<AppTheme>(
         valueListenable: themeNotifier,
         builder: (context, currentTheme, _) {
-          final iconColor = kColorTeal;
+          final iconColor = Theme.of(context).colorScheme.primary;
           return ListView(
             children: [
               _SectionHeader(label: l10n.settingsSectionAppearance),

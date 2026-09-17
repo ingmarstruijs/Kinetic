@@ -5,7 +5,6 @@ import '../db/app_database.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
-import '../theme/app_themes.dart';
 import '../vault/family_vault_sync.dart';
 import '../vault/screens/family_create_screen.dart';
 import '../vault/screens/mnemonic_reveal_screen.dart';
@@ -262,14 +261,20 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
             const SizedBox(height: 8),
             if (!paired) ...[
               ListTile(
-                leading: const Icon(Icons.people_outline, color: kColorTeal),
+                leading: Icon(
+                  Icons.people_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(l10n.partnerShareViaQr),
                 subtitle: Text(l10n.partnerShareViaQrSubtitle),
                 trailing: const Icon(Icons.qr_code),
                 onTap: _exportFamilyKey,
               ),
               ListTile(
-                leading: const Icon(Icons.qr_code_scanner, color: kColorTeal),
+                leading: Icon(
+                  Icons.qr_code_scanner,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(l10n.partnerScanKey),
                 subtitle: Text(l10n.partnerScanKeySubtitle),
                 onTap: _importFamilyKey,
@@ -277,25 +282,28 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
             ],
             if (paired) ...[
               ListTile(
-                leading: const Icon(Icons.qr_code, color: kColorTeal),
+                leading: Icon(
+                  Icons.qr_code,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(l10n.partnerReshareKey),
                 subtitle: Text(l10n.partnerReshareKeySubtitle),
                 trailing: const Icon(Icons.qr_code),
                 onTap: _exportFamilyKey,
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.verified_user_outlined,
-                  color: kColorTeal,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: Text(l10n.partnerVerifyPhrase),
                 subtitle: Text(l10n.partnerVerifyPhraseSubtitle),
                 onTap: _verifyFamilyPhrase,
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.visibility_outlined,
-                  color: kColorTeal,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 title: Text(l10n.partnerShowKey),
                 subtitle: Text(l10n.partnerShowKeySubtitle),
@@ -351,7 +359,7 @@ class _PartnerStatusBanner extends StatelessWidget {
     final statusColor = isStale
         ? scheme.error
         : paired
-        ? kColorTeal
+        ? scheme.primary
         : scheme.onSurfaceVariant;
 
     return Padding(
@@ -362,14 +370,14 @@ class _PartnerStatusBanner extends StatelessWidget {
           color: isStale
               ? scheme.error.withAlpha(15)
               : paired
-              ? kColorTeal.withAlpha(20)
+              ? scheme.primary.withAlpha(20)
               : scheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isStale
                 ? scheme.error.withAlpha(80)
                 : paired
-                ? kColorTeal.withAlpha(80)
+                ? scheme.primary.withAlpha(80)
                 : scheme.outlineVariant,
           ),
         ),

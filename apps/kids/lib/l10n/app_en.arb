@@ -35,6 +35,7 @@
   "allDone": "All done!",
   "noTasksRightNow": "No tasks right now.",
   "stillToDo": "To do",
+  "waitingForParent": "Waiting for parent",
   "completed": "Completed",
   "priorityUrgent": "Urgent",
   "priorityHigh": "High",
@@ -70,5 +71,32 @@
   "categoryOther": "Other",
   "notificationChannelName": "Tasks",
   "notificationChannelDescription": "Notifications for new tasks from your parent.",
-  "newTaskNotificationTitle": "New task"
+  "newTaskNotificationTitle": "New task",
+  "chooseLanguage": "Choose language",
+  "languageEnglish": "English",
+  "languageDutch": "Nederlands",
+  "continueLabel": "Continue",
+  "settings": "Settings",
+  "settingsLanguage": "Language",
+  "settingsTheme": "Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "keepGoing": "Keep going!",
+  "goalProgress": "{earned} / {target} XP",
+  "@goalProgress": {
+    "placeholders": {
+      "earned": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "totalXp": "{xp} XP",
+  "@totalXp": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "confirmCompleteTitle": "Are you done?",
+  "confirmCompleteBody": "Are you sure you are finished? We will send a confirmation request to your parent.",
+  "confirmCompleteAction": "Yes, I'm done",
+  "awaitingParentConfirm": "Waiting for your parent to confirm"
 }

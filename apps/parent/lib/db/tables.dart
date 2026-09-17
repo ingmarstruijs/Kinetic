@@ -113,6 +113,11 @@ class PersonalNotes extends Table {
   // Manual sort order within category; 0 = unsorted (falls back to createdAt)
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
+  /// When true, body is hidden in the notes list and opening requires
+  /// device biometrics / PIN (local privacy flag, not synced).
+  BoolColumn get isContentHidden =>
+      boolean().withDefault(const Constant(false))();
+
   // WebDAV sync metadata
   TextColumn get webdavEtag => text().nullable()();
   TextColumn get syncState => text().withDefault(const Constant('dirty'))();

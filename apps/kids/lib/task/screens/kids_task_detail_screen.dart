@@ -8,11 +8,13 @@ import '../services/kids_task_repository.dart';
 class KidsTaskDetailScreen extends StatefulWidget {
   final KidsTaskRepository repository;
   final String taskId;
+  final Future<void> Function()? onRequestComplete;
 
   const KidsTaskDetailScreen({
     super.key,
     required this.repository,
     required this.taskId,
+    this.onRequestComplete,
   });
 
   @override
@@ -45,6 +47,8 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
 
         final task = snapshot.data!;
         final scheme = Theme.of(context).colorScheme;
+        final pending = task.awaitingVerification;
+        final done = task.isCompleted;
 
         return Scaffold(
           appBar: AppBar(title: Text(l10n.taskDetails)),
@@ -53,22 +57,21 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Status section
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        Checkbox(
-                          value: task.isCompleted,
-                          onChanged: (value) {
-                            if (value ?? false) {
-                              widget.repository.markComplete(task.id);
-                            } else {
-                              widget.repository.markIncomplete(task.id);
-                            }
-                          },
-                        ),
+                        if (pending)
+                          Icon(Icons.hourglass_top_rounded,
+                              color: scheme.tertiary, size: 32)
+                        else
+                          Checkbox(
+                            value: done,
+                            onChanged: done || widget.onRequestComplete == null
+                                ? null
+                                : (_) => widget.onRequestComplete!(),
+                          ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -76,15 +79,26 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
                             children: [
                               Text(
                                 task.title,
-                                style: Theme.of(context).textTheme.headlineSmall
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
                                     ?.copyWith(
-                                      decoration: task.isCompleted
+                                      decoration: done
                                           ? TextDecoration.lineThrough
                                           : null,
                                       color: scheme.onSurface,
                                     ),
                               ),
-                              if (task.isCompleted)
+                              if (pending)
+                                Text(
+                                  l10n.awaitingParentConfirm,
+                                  style: TextStyle(
+                                    color: scheme.tertiary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                              else if (done)
                                 Text(
                                   l10n.completed,
                                   style: TextStyle(

@@ -23,11 +23,15 @@ class KidsTasks extends Table {
   /// Scheduling
   DateTimeColumn get dueDate => dateTime().nullable()();
 
-  /// Completion tracking
+  /// Completion tracking — [isCompleted] is true only after parent acceptance.
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get completedAt => dateTime().nullable()();
 
-  /// XP reward for completion (foundation for Phase 13.3)
+  /// True while waiting for the parent to accept/reject a completion request.
+  BoolColumn get awaitingVerification =>
+      boolean().withDefault(const Constant(false))();
+
+  /// XP reward for completion (counts only after parent acceptance)
   IntColumn get xpReward => integer().withDefault(const Constant(10))();
 
   /// Sync state: 'clean' (synced), 'dirty' (modified locally), 'deleted' (soft-delete)

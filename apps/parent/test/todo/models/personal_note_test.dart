@@ -14,4 +14,14 @@ void main() {
     final note = PersonalNote.create(title: 'Empty', body: '   \n#  ');
     expect(note.bodyPreview, isEmpty);
   });
+
+  test('bodyPreview is empty when content is hidden', () {
+    final note = PersonalNote.create(
+      title: 'Secret',
+      body: 'Do not show this in the list',
+      isContentHidden: true,
+    );
+    expect(note.bodyPreview, isEmpty);
+    expect(note.isContentHidden, isTrue);
+  });
 }

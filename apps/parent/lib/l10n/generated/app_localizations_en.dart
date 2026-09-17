@@ -66,7 +66,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeLightDesc => 'Light blue';
 
   @override
-  String get themeCalmDesc => 'Soft and easy on the eyes';
+  String get themeCalmDesc => 'Warm sand with terracotta accents';
 
   @override
   String get themeNightDesc => 'OLED black';
@@ -1123,7 +1123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksLoadKidsError => 'Error loading kids assignments';
 
   @override
-  String get tasksNoKidsAssignments => 'No kids assignments';
+  String get tasksNoKidsAssignments => 'No assignments';
 
   @override
   String get tasksResetXp => 'Reset XP';
@@ -1320,6 +1320,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesSharedWithPartner => 'Shared with partner';
+
+  @override
+  String get notesHideContent => 'Hide content & require unlock';
+
+  @override
+  String get notesHideContentHint =>
+      'Body stays off the list; open with biometrics or device PIN';
+
+  @override
+  String get notesUnlockReason => 'Unlock this note';
+
+  @override
+  String get notesUnlockFailed => 'Could not unlock the note';
+
+  @override
+  String get notesHideNeedsDeviceLock =>
+      'Turn on a screen lock on this device to hide note content';
+
+  @override
+  String get notesEditMarkdown => 'Edit';
+
+  @override
+  String get notesPreviewMarkdown => 'Preview';
+
+  @override
+  String get notesMarkdownHint => 'Write markdown…';
+
+  @override
+  String get notesMarkdownHelpTooltip => 'Markdown help';
+
+  @override
+  String get notesMarkdownHelpTitle => 'Markdown shortcuts';
+
+  @override
+  String get notesMarkdownHelpBody =>
+      '# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`';
+
+  @override
+  String get notesMdBold => 'Bold';
+
+  @override
+  String get notesMdItalic => 'Italic';
+
+  @override
+  String get notesMdHeading => 'Heading';
+
+  @override
+  String get notesMdBullet => 'Bullet list';
+
+  @override
+  String get notesMdCheckbox => 'Checkbox';
+
+  @override
+  String get notesMdLink => 'Link';
+
+  @override
+  String get notesUnsavedTitle => 'Unsaved changes';
+
+  @override
+  String get notesUnsavedBody => 'Do you want to save your changes?';
+
+  @override
+  String get notesDiscard => 'Discard';
+
+  @override
+  String get notesLockedBadge => 'Locked';
 
   @override
   String get suggestWebDavRequired => 'Link WebDAV first to send a suggestion.';
@@ -1592,6 +1658,83 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String kidsDeleteTaskBody(String title) {
     return '\"$title\" will be removed from the kids app.';
+  }
+
+  @override
+  String get kidsPendingVerification => 'Waiting for confirmation';
+
+  @override
+  String kidsPendingExpandHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waiting — open to confirm',
+      one: '1 waiting — open to confirm',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsAcceptCompletion => 'Accept';
+
+  @override
+  String get kidsRejectCompletion => 'Send back';
+
+  @override
+  String kidsXpProgress(int earned, int target) {
+    return '$earned / $target XP';
+  }
+
+  @override
+  String kidsXpTotal(int xp) {
+    return '$xp XP';
+  }
+
+  @override
+  String get kidsGoalSet => 'Set goal';
+
+  @override
+  String get kidsGoalEdit => 'Edit goal';
+
+  @override
+  String get kidsGoalRename => 'Rename goal';
+
+  @override
+  String get kidsGoalRemove => 'Remove goal';
+
+  @override
+  String get kidsGoalReset => 'Reset XP';
+
+  @override
+  String get kidsGoalTitleLabel => 'Goal';
+
+  @override
+  String get kidsGoalTitleHint => 'e.g. New bike';
+
+  @override
+  String get kidsGoalTargetLabel => 'XP needed';
+
+  @override
+  String get kidsGoalSave => 'Save goal';
+
+  @override
+  String get kidsGoalRemoved => 'Goal removed';
+
+  @override
+  String get kidsGoalSaved => 'Goal saved';
+
+  @override
+  String kidsGoalResetTitle(String name) {
+    return 'Reset XP for $name?';
+  }
+
+  @override
+  String get kidsGoalResetBody =>
+      'XP goes back to 0 and completed kids tasks are removed. The goal title and target stay.';
+
+  @override
+  String kidsGoalResetDone(String name) {
+    return 'XP reset for $name';
   }
 
   @override

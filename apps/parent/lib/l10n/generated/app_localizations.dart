@@ -215,7 +215,7 @@ abstract class AppLocalizations {
   /// No description provided for @themeCalmDesc.
   ///
   /// In en, this message translates to:
-  /// **'Soft and easy on the eyes'**
+  /// **'Warm sand with terracotta accents'**
   String get themeCalmDesc;
 
   /// No description provided for @themeNightDesc.
@@ -1961,7 +1961,7 @@ abstract class AppLocalizations {
   /// No description provided for @tasksNoKidsAssignments.
   ///
   /// In en, this message translates to:
-  /// **'No kids assignments'**
+  /// **'No assignments'**
   String get tasksNoKidsAssignments;
 
   /// No description provided for @tasksResetXp.
@@ -2317,6 +2317,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Shared with partner'**
   String get notesSharedWithPartner;
+
+  /// No description provided for @notesHideContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide content & require unlock'**
+  String get notesHideContent;
+
+  /// No description provided for @notesHideContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Body stays off the list; open with biometrics or device PIN'**
+  String get notesHideContentHint;
+
+  /// No description provided for @notesUnlockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock this note'**
+  String get notesUnlockReason;
+
+  /// No description provided for @notesUnlockFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not unlock the note'**
+  String get notesUnlockFailed;
+
+  /// No description provided for @notesHideNeedsDeviceLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on a screen lock on this device to hide note content'**
+  String get notesHideNeedsDeviceLock;
+
+  /// No description provided for @notesEditMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get notesEditMarkdown;
+
+  /// No description provided for @notesPreviewMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get notesPreviewMarkdown;
+
+  /// No description provided for @notesMarkdownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write markdown…'**
+  String get notesMarkdownHint;
+
+  /// No description provided for @notesMarkdownHelpTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown help'**
+  String get notesMarkdownHelpTooltip;
+
+  /// No description provided for @notesMarkdownHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown shortcuts'**
+  String get notesMarkdownHelpTitle;
+
+  /// No description provided for @notesMarkdownHelpBody.
+  ///
+  /// In en, this message translates to:
+  /// **'# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`'**
+  String get notesMarkdownHelpBody;
+
+  /// No description provided for @notesMdBold.
+  ///
+  /// In en, this message translates to:
+  /// **'Bold'**
+  String get notesMdBold;
+
+  /// No description provided for @notesMdItalic.
+  ///
+  /// In en, this message translates to:
+  /// **'Italic'**
+  String get notesMdItalic;
+
+  /// No description provided for @notesMdHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get notesMdHeading;
+
+  /// No description provided for @notesMdBullet.
+  ///
+  /// In en, this message translates to:
+  /// **'Bullet list'**
+  String get notesMdBullet;
+
+  /// No description provided for @notesMdCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkbox'**
+  String get notesMdCheckbox;
+
+  /// No description provided for @notesMdLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get notesMdLink;
+
+  /// No description provided for @notesUnsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get notesUnsavedTitle;
+
+  /// No description provided for @notesUnsavedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to save your changes?'**
+  String get notesUnsavedBody;
+
+  /// No description provided for @notesDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get notesDiscard;
+
+  /// No description provided for @notesLockedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get notesLockedBadge;
 
   /// No description provided for @suggestWebDavRequired.
   ///
@@ -2767,6 +2893,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{title}\" will be removed from the kids app.'**
   String kidsDeleteTaskBody(String title);
+
+  /// No description provided for @kidsPendingVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmation'**
+  String get kidsPendingVerification;
+
+  /// No description provided for @kidsPendingExpandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 waiting — open to confirm} other{{count} waiting — open to confirm}}'**
+  String kidsPendingExpandHint(int count);
+
+  /// No description provided for @kidsAcceptCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get kidsAcceptCompletion;
+
+  /// No description provided for @kidsRejectCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Send back'**
+  String get kidsRejectCompletion;
+
+  /// No description provided for @kidsXpProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{earned} / {target} XP'**
+  String kidsXpProgress(int earned, int target);
+
+  /// No description provided for @kidsXpTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP'**
+  String kidsXpTotal(int xp);
+
+  /// No description provided for @kidsGoalSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set goal'**
+  String get kidsGoalSet;
+
+  /// No description provided for @kidsGoalEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goal'**
+  String get kidsGoalEdit;
+
+  /// No description provided for @kidsGoalRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename goal'**
+  String get kidsGoalRename;
+
+  /// No description provided for @kidsGoalRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove goal'**
+  String get kidsGoalRemove;
+
+  /// No description provided for @kidsGoalReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset XP'**
+  String get kidsGoalReset;
+
+  /// No description provided for @kidsGoalTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get kidsGoalTitleLabel;
+
+  /// No description provided for @kidsGoalTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. New bike'**
+  String get kidsGoalTitleHint;
+
+  /// No description provided for @kidsGoalTargetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'XP needed'**
+  String get kidsGoalTargetLabel;
+
+  /// No description provided for @kidsGoalSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save goal'**
+  String get kidsGoalSave;
+
+  /// No description provided for @kidsGoalRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal removed'**
+  String get kidsGoalRemoved;
+
+  /// No description provided for @kidsGoalSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal saved'**
+  String get kidsGoalSaved;
+
+  /// No description provided for @kidsGoalResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset XP for {name}?'**
+  String kidsGoalResetTitle(String name);
+
+  /// No description provided for @kidsGoalResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'XP goes back to 0 and completed kids tasks are removed. The goal title and target stay.'**
+  String get kidsGoalResetBody;
+
+  /// No description provided for @kidsGoalResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'XP reset for {name}'**
+  String kidsGoalResetDone(String name);
 
   /// No description provided for @snoozeTitle.
   ///

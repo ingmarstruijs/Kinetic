@@ -31,6 +31,7 @@ void main() {
         db: db,
         repo: repository,
         config: syncConfig,
+        myKidId: 'kid-jim',
       );
     });
 
@@ -87,6 +88,27 @@ void main() {
         final task = orchestrator.iCalToKidsTask(ical);
         expect(task.isCompleted, true);
         expect(task.completedAt, isNotNull);
+      });
+
+      test('maps in-process status to awaitingVerification', () {
+        final now = DateTime.now().toUtc();
+        final ical = ICalTask(
+          uid: 'task-pending',
+          summary: 'Pending Task',
+          description:
+              ';xKineticParentId:p1;xKineticCategory:other;xKineticXpReward:10',
+          status: ICalTaskStatus.inProcess,
+          priority: 5,
+          createdAt: now,
+          updatedAt: now,
+          dueAt: null,
+          remindAt: null,
+          rrule: null,
+        );
+
+        final task = orchestrator.iCalToKidsTask(ical);
+        expect(task.isCompleted, false);
+        expect(task.awaitingVerification, true);
       });
 
       test('falls back to TaskCategory.other for unknown category', () {
@@ -234,6 +256,7 @@ void main() {
         expect(ical.description, contains('xKineticParentId:parent-42'));
         expect(ical.description, contains('xKineticCategory:health'));
         expect(ical.description, contains('xKineticXpReward:10'));
+        expect(ical.description, contains('xKineticTargetKidId:kid-jim'));
       });
 
       test('completed task -> ICalTaskStatus.completed', () async {
@@ -260,6 +283,33 @@ void main() {
 
         final ical = orchestrator.taskRowToICal(rows.first);
         expect(ical.status, ICalTaskStatus.completed);
+      });
+
+      test('pending task -> ICalTaskStatus.inProcess', () async {
+        final now = DateTime.now().toUtc();
+        await repository.upsertTask(
+          KidsTask(
+            id: 'row-pending',
+            parentId: 'p',
+            title: 'Pending',
+            notes: null,
+            category: TaskCategory.other,
+            priority: TaskPriority.normal,
+            dueDate: null,
+            isCompleted: false,
+            awaitingVerification: true,
+            completedAt: null,
+            xpReward: 10,
+            syncState: 'dirty',
+            webdavEtag: null,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+        final rows = await repository.getAllRows();
+
+        final ical = orchestrator.taskRowToICal(rows.first);
+        expect(ical.status, ICalTaskStatus.inProcess);
       });
     });
 
@@ -480,7 +530,7 @@ void main() {
     // ── Dirty rows for push ──────────────────────────────────────────────────
 
     group('Dirty rows for sync push', () {
-      test('markComplete() sets syncState=dirty', () async {
+      test('requestComplete() sets syncState=dirty and pending', () async {
         final now = DateTime.now().toUtc();
         await repository.upsertTask(
           KidsTask(
@@ -501,12 +551,13 @@ void main() {
           ),
         );
 
-        await repository.markComplete('task-dirty');
+        await repository.requestComplete('task-dirty');
 
         final dirty = await repository.getDirtyRows();
         expect(dirty.length, 1);
         expect(dirty.first.id, 'task-dirty');
-        expect(dirty.first.isCompleted, true);
+        expect(dirty.first.isCompleted, false);
+        expect(dirty.first.awaitingVerification, true);
       });
 
       test('markSynced() clears dirty state and updates etag', () async {

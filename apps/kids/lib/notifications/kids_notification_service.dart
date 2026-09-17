@@ -34,12 +34,11 @@ class KidsNotificationService {
         channelDescription: l10n.notificationChannelDescription,
         importance: Importance.high,
         priority: Priority.high,
-        icon: '@mipmap/ic_launcher',
+        icon: 'ic_notification',
       ),
     );
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
 

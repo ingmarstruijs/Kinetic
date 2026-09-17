@@ -66,7 +66,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get themeLightDesc => 'Helder blauw';
 
   @override
-  String get themeCalmDesc => 'Zacht voor de ogen';
+  String get themeCalmDesc => 'Warm zand met terracotta accenten';
 
   @override
   String get themeNightDesc => 'OLED zwart';
@@ -1125,7 +1125,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksLoadKidsError => 'Fout bij laden van kinderopdrachten';
 
   @override
-  String get tasksNoKidsAssignments => 'Geen kinderopdrachten';
+  String get tasksNoKidsAssignments => 'Geen opdrachten';
 
   @override
   String get tasksResetXp => 'Reset XP';
@@ -1322,6 +1322,72 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesSharedWithPartner => 'Gedeeld met partner';
+
+  @override
+  String get notesHideContent => 'Inhoud verbergen & ontgrendelen vereisen';
+
+  @override
+  String get notesHideContentHint =>
+      'Tekst blijft uit de lijst; openen met biometrie of apparaat-pincode';
+
+  @override
+  String get notesUnlockReason => 'Ontgrendel deze notitie';
+
+  @override
+  String get notesUnlockFailed => 'Notitie kon niet worden ontgrendeld';
+
+  @override
+  String get notesHideNeedsDeviceLock =>
+      'Zet een schermvergrendeling aan om notitie-inhoud te verbergen';
+
+  @override
+  String get notesEditMarkdown => 'Bewerken';
+
+  @override
+  String get notesPreviewMarkdown => 'Voorbeeld';
+
+  @override
+  String get notesMarkdownHint => 'Schrijf markdown…';
+
+  @override
+  String get notesMarkdownHelpTooltip => 'Markdown-hulp';
+
+  @override
+  String get notesMarkdownHelpTitle => 'Markdown-snelkoppelingen';
+
+  @override
+  String get notesMarkdownHelpBody =>
+      '# Kop\n## Subkop\n\n**vet** en *cursief*\n\n- Opsomming\n1. Genummerde lijst\n\n- [ ] Checkbox\n- [x] Klaar\n\n[Linktekst](https://voorbeeld.nl)\n\n> Citaat\n\n`inline code`';
+
+  @override
+  String get notesMdBold => 'Vet';
+
+  @override
+  String get notesMdItalic => 'Cursief';
+
+  @override
+  String get notesMdHeading => 'Kop';
+
+  @override
+  String get notesMdBullet => 'Opsomming';
+
+  @override
+  String get notesMdCheckbox => 'Checkbox';
+
+  @override
+  String get notesMdLink => 'Link';
+
+  @override
+  String get notesUnsavedTitle => 'Niet-opgeslagen wijzigingen';
+
+  @override
+  String get notesUnsavedBody => 'Wil je je wijzigingen opslaan?';
+
+  @override
+  String get notesDiscard => 'Verwerpen';
+
+  @override
+  String get notesLockedBadge => 'Vergrendeld';
 
   @override
   String get suggestWebDavRequired =>
@@ -1572,10 +1638,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksDecline => 'Weigeren';
 
   @override
-  String get kidsSectionTitle => 'Kids';
+  String get kidsSectionTitle => 'Kinderen';
 
   @override
-  String get kidsAllFilter => 'Alle kids';
+  String get kidsAllFilter => 'Alle kinderen';
 
   @override
   String kidsOpenTasks(int count) {
@@ -1593,7 +1659,84 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String kidsDeleteTaskBody(String title) {
-    return '\"$title\" verdwijnt uit de kids-app.';
+    return '\"$title\" verdwijnt uit de kinderenapp.';
+  }
+
+  @override
+  String get kidsPendingVerification => 'Wacht op bevestiging';
+
+  @override
+  String kidsPendingExpandHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wachten — klap open om te bevestigen',
+      one: '1 wacht — klap open om te bevestigen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kidsAcceptCompletion => 'Accepteren';
+
+  @override
+  String get kidsRejectCompletion => 'Terugsturen';
+
+  @override
+  String kidsXpProgress(int earned, int target) {
+    return '$earned / $target XP';
+  }
+
+  @override
+  String kidsXpTotal(int xp) {
+    return '$xp XP';
+  }
+
+  @override
+  String get kidsGoalSet => 'Goal instellen';
+
+  @override
+  String get kidsGoalEdit => 'Goal bewerken';
+
+  @override
+  String get kidsGoalRename => 'Goal hernoemen';
+
+  @override
+  String get kidsGoalRemove => 'Goal verwijderen';
+
+  @override
+  String get kidsGoalReset => 'XP resetten';
+
+  @override
+  String get kidsGoalTitleLabel => 'Goal';
+
+  @override
+  String get kidsGoalTitleHint => 'bijv. Nieuwe fiets';
+
+  @override
+  String get kidsGoalTargetLabel => 'XP nodig';
+
+  @override
+  String get kidsGoalSave => 'Goal opslaan';
+
+  @override
+  String get kidsGoalRemoved => 'Goal verwijderd';
+
+  @override
+  String get kidsGoalSaved => 'Goal opgeslagen';
+
+  @override
+  String kidsGoalResetTitle(String name) {
+    return 'XP resetten voor $name?';
+  }
+
+  @override
+  String get kidsGoalResetBody =>
+      'XP gaat terug naar 0 en voltooide kindertaken verdwijnen. De goal-tekst en target blijven.';
+
+  @override
+  String kidsGoalResetDone(String name) {
+    return 'XP gereset voor $name';
   }
 
   @override

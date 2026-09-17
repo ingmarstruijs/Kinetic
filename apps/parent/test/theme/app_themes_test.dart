@@ -53,7 +53,7 @@ void main() {
       );
       expect(
         buildTheme(AppTheme.calm).scaffoldBackgroundColor,
-        equals(const Color(0xFFEFF3F2)),
+        equals(const Color(0xFFF7EDE3)),
       );
     });
 

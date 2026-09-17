@@ -28,6 +28,11 @@ Widget _wrapHome(Widget home) {
   );
 }
 
+Future<MaterialApp> _waitForReadyApp(WidgetTester tester) async {
+  await tester.pump();
+  return find.byType(MaterialApp).evaluate().first.widget as MaterialApp;
+}
+
 void main() {
   group('KineticKidsApp', () {
     testWidgets('app builds without error', (WidgetTester tester) async {
@@ -57,9 +62,9 @@ void main() {
           ),
         );
 
-        final materialApp =
-            find.byType(MaterialApp).evaluate().first.widget as MaterialApp;
+        final materialApp = await _waitForReadyApp(tester);
         expect(materialApp.theme?.useMaterial3, isTrue);
+        expect(materialApp.darkTheme?.useMaterial3, isTrue);
       } finally {
         await appDb.close();
       }
@@ -85,11 +90,11 @@ void main() {
       }
     });
 
-    testWidgets('home screen displays title', (WidgetTester tester) async {
+    testWidgets('home screen displays Kinetic brand', (WidgetTester tester) async {
       final appDb = createTestDatabase();
       try {
         await tester.pumpWidget(_wrapHome(KidsHomeScreen(appDb: appDb)));
-        expect(find.text('My Tasks'), findsOneWidget);
+        expect(find.text('Kinetic'), findsOneWidget);
       } finally {
         await appDb.close();
       }

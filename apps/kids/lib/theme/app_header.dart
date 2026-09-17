@@ -22,17 +22,13 @@ class KineticLogoKids extends StatelessWidget {
   }
 }
 
-/// App header widget with logo and title (kids version)
+/// App header: logo + Kinetic brand (no subtitle).
 class AppHeaderKids extends StatelessWidget {
-  final String title;
-  final bool centerTitle;
   final List<Widget>? actions;
   final Widget? leading;
 
   const AppHeaderKids({
     super.key,
-    required this.title,
-    this.centerTitle = false,
     this.actions,
     this.leading,
   });
@@ -44,8 +40,11 @@ class AppHeaderKids extends StatelessWidget {
         const SizedBox(width: 4),
         const KineticLogoKids(size: 28),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Kinetic',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );

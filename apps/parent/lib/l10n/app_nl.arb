@@ -22,7 +22,7 @@
   "themeCalm": "Kalm",
   "themeNight": "Nacht",
   "themeLightDesc": "Helder blauw",
-  "themeCalmDesc": "Zacht voor de ogen",
+  "themeCalmDesc": "Warm zand met terracotta accenten",
   "themeNightDesc": "OLED zwart",
   "themeChoose": "Thema kiezen",
 
@@ -599,7 +599,7 @@
     }
   },
   "tasksLoadKidsError": "Fout bij laden van kinderopdrachten",
-  "tasksNoKidsAssignments": "Geen kinderopdrachten",
+  "tasksNoKidsAssignments": "Geen opdrachten",
   "tasksResetXp": "Reset XP",
   "tasksDoneOn": "Gedaan op {day}/{month}",
   "@tasksDoneOn": {
@@ -699,6 +699,27 @@
   "notesEmptyTrashTitle": "Prullenbak legen?",
   "notesEmptyTrashBody": "Verwijderde notities worden definitief gewist. Dit kan niet ongedaan worden gemaakt.",
   "notesSharedWithPartner": "Gedeeld met partner",
+  "notesHideContent": "Inhoud verbergen & ontgrendelen vereisen",
+  "notesHideContentHint": "Tekst blijft uit de lijst; openen met biometrie of apparaat-pincode",
+  "notesUnlockReason": "Ontgrendel deze notitie",
+  "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
+  "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om notitie-inhoud te verbergen",
+  "notesEditMarkdown": "Bewerken",
+  "notesPreviewMarkdown": "Voorbeeld",
+  "notesMarkdownHint": "Schrijf markdown…",
+  "notesMarkdownHelpTooltip": "Markdown-hulp",
+  "notesMarkdownHelpTitle": "Markdown-snelkoppelingen",
+  "notesMarkdownHelpBody": "# Kop\n## Subkop\n\n**vet** en *cursief*\n\n- Opsomming\n1. Genummerde lijst\n\n- [ ] Checkbox\n- [x] Klaar\n\n[Linktekst](https://voorbeeld.nl)\n\n> Citaat\n\n`inline code`",
+  "notesMdBold": "Vet",
+  "notesMdItalic": "Cursief",
+  "notesMdHeading": "Kop",
+  "notesMdBullet": "Opsomming",
+  "notesMdCheckbox": "Checkbox",
+  "notesMdLink": "Link",
+  "notesUnsavedTitle": "Niet-opgeslagen wijzigingen",
+  "notesUnsavedBody": "Wil je je wijzigingen opslaan?",
+  "notesDiscard": "Verwerpen",
+  "notesLockedBadge": "Vergrendeld",
 
   "suggestWebDavRequired": "Koppel eerst WebDAV om een voorstel te sturen.",
   "suggestPartnerSeesTitle": "Dit ziet je partner",
@@ -819,8 +840,8 @@
   "suggestionsSubtitle": "Handige taken om vandaag te overwegen",
   "suggestionsProposedByPartner": "Voorgesteld door je partner",
   "tasksDecline": "Weigeren",
-  "kidsSectionTitle": "Kids",
-  "kidsAllFilter": "Alle kids",
+  "kidsSectionTitle": "Kinderen",
+  "kidsAllFilter": "Alle kinderen",
   "kidsOpenTasks": "{count, plural, =1{1 open taak} other{{count} open taken}}",
   "@kidsOpenTasks": {
     "placeholders": {
@@ -828,10 +849,56 @@
     }
   },
   "kidsDeleteTaskTitle": "Kindertaak verwijderen?",
-  "kidsDeleteTaskBody": "\"{title}\" verdwijnt uit de kids-app.",
+  "kidsDeleteTaskBody": "\"{title}\" verdwijnt uit de kinderenapp.",
   "@kidsDeleteTaskBody": {
     "placeholders": {
       "title": {"type": "String"}
+    }
+  },
+  "kidsPendingVerification": "Wacht op bevestiging",
+  "kidsPendingExpandHint": "{count, plural, =1{1 wacht — klap open om te bevestigen} other{{count} wachten — klap open om te bevestigen}}",
+  "@kidsPendingExpandHint": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kidsAcceptCompletion": "Accepteren",
+  "kidsRejectCompletion": "Terugsturen",
+  "kidsXpProgress": "{earned} / {target} XP",
+  "@kidsXpProgress": {
+    "placeholders": {
+      "earned": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "kidsXpTotal": "{xp} XP",
+  "@kidsXpTotal": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "kidsGoalSet": "Goal instellen",
+  "kidsGoalEdit": "Goal bewerken",
+  "kidsGoalRename": "Goal hernoemen",
+  "kidsGoalRemove": "Goal verwijderen",
+  "kidsGoalReset": "XP resetten",
+  "kidsGoalTitleLabel": "Goal",
+  "kidsGoalTitleHint": "bijv. Nieuwe fiets",
+  "kidsGoalTargetLabel": "XP nodig",
+  "kidsGoalSave": "Goal opslaan",
+  "kidsGoalRemoved": "Goal verwijderd",
+  "kidsGoalSaved": "Goal opgeslagen",
+  "kidsGoalResetTitle": "XP resetten voor {name}?",
+  "@kidsGoalResetTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsGoalResetBody": "XP gaat terug naar 0 en voltooide kindertaken verdwijnen. De goal-tekst en target blijven.",
+  "kidsGoalResetDone": "XP gereset voor {name}",
+  "@kidsGoalResetDone": {
+    "placeholders": {
+      "name": {"type": "String"}
     }
   },
 

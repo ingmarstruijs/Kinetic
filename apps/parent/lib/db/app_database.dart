@@ -25,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +88,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 15) {
         await m.addColumn(personalNotes, personalNotes.deletedAt);
+      }
+      if (from < 16) {
+        await m.addColumn(personalNotes, personalNotes.isContentHidden);
       }
     },
   );

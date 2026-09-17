@@ -22,7 +22,7 @@
   "themeCalm": "Calm",
   "themeNight": "Night",
   "themeLightDesc": "Light blue",
-  "themeCalmDesc": "Soft and easy on the eyes",
+  "themeCalmDesc": "Warm sand with terracotta accents",
   "themeNightDesc": "OLED black",
   "themeChoose": "Choose theme",
 
@@ -599,7 +599,7 @@
     }
   },
   "tasksLoadKidsError": "Error loading kids assignments",
-  "tasksNoKidsAssignments": "No kids assignments",
+  "tasksNoKidsAssignments": "No assignments",
   "tasksResetXp": "Reset XP",
   "tasksDoneOn": "Done on {day}/{month}",
   "@tasksDoneOn": {
@@ -699,6 +699,27 @@
   "notesEmptyTrashTitle": "Empty trash?",
   "notesEmptyTrashBody": "Deleted notes will be permanently removed. This cannot be undone.",
   "notesSharedWithPartner": "Shared with partner",
+  "notesHideContent": "Hide content & require unlock",
+  "notesHideContentHint": "Body stays off the list; open with biometrics or device PIN",
+  "notesUnlockReason": "Unlock this note",
+  "notesUnlockFailed": "Could not unlock the note",
+  "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to hide note content",
+  "notesEditMarkdown": "Edit",
+  "notesPreviewMarkdown": "Preview",
+  "notesMarkdownHint": "Write markdown…",
+  "notesMarkdownHelpTooltip": "Markdown help",
+  "notesMarkdownHelpTitle": "Markdown shortcuts",
+  "notesMarkdownHelpBody": "# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`",
+  "notesMdBold": "Bold",
+  "notesMdItalic": "Italic",
+  "notesMdHeading": "Heading",
+  "notesMdBullet": "Bullet list",
+  "notesMdCheckbox": "Checkbox",
+  "notesMdLink": "Link",
+  "notesUnsavedTitle": "Unsaved changes",
+  "notesUnsavedBody": "Do you want to save your changes?",
+  "notesDiscard": "Discard",
+  "notesLockedBadge": "Locked",
 
   "suggestWebDavRequired": "Link WebDAV first to send a suggestion.",
   "suggestPartnerSeesTitle": "What your partner sees",
@@ -832,6 +853,52 @@
   "@kidsDeleteTaskBody": {
     "placeholders": {
       "title": {"type": "String"}
+    }
+  },
+  "kidsPendingVerification": "Waiting for confirmation",
+  "kidsPendingExpandHint": "{count, plural, =1{1 waiting — open to confirm} other{{count} waiting — open to confirm}}",
+  "@kidsPendingExpandHint": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kidsAcceptCompletion": "Accept",
+  "kidsRejectCompletion": "Send back",
+  "kidsXpProgress": "{earned} / {target} XP",
+  "@kidsXpProgress": {
+    "placeholders": {
+      "earned": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "kidsXpTotal": "{xp} XP",
+  "@kidsXpTotal": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "kidsGoalSet": "Set goal",
+  "kidsGoalEdit": "Edit goal",
+  "kidsGoalRename": "Rename goal",
+  "kidsGoalRemove": "Remove goal",
+  "kidsGoalReset": "Reset XP",
+  "kidsGoalTitleLabel": "Goal",
+  "kidsGoalTitleHint": "e.g. New bike",
+  "kidsGoalTargetLabel": "XP needed",
+  "kidsGoalSave": "Save goal",
+  "kidsGoalRemoved": "Goal removed",
+  "kidsGoalSaved": "Goal saved",
+  "kidsGoalResetTitle": "Reset XP for {name}?",
+  "@kidsGoalResetTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsGoalResetBody": "XP goes back to 0 and completed kids tasks are removed. The goal title and target stay.",
+  "kidsGoalResetDone": "XP reset for {name}",
+  "@kidsGoalResetDone": {
+    "placeholders": {
+      "name": {"type": "String"}
     }
   },
 

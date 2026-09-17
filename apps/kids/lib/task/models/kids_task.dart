@@ -7,7 +7,7 @@ enum TaskPriority { low, normal, high, urgent }
 /// KidsTask — a task assigned by a parent to this child
 ///
 /// Mirrors PersonalTask from parent app but: read-only for most fields
-/// (assigned by parent), editable only for completion status.
+/// (assigned by parent), editable only for completion / verification status.
 class KidsTask {
   final String id;
   final String parentId;
@@ -16,7 +16,13 @@ class KidsTask {
   final TaskCategory category;
   final TaskPriority priority;
   final DateTime? dueDate;
+
+  /// True only after the parent accepted completion (XP counts).
   final bool isCompleted;
+
+  /// True while waiting for parent accept/reject.
+  final bool awaitingVerification;
+
   final DateTime? completedAt;
   final int xpReward;
   final String syncState;
@@ -33,6 +39,7 @@ class KidsTask {
     required this.priority,
     this.dueDate,
     this.isCompleted = false,
+    this.awaitingVerification = false,
     this.completedAt,
     this.xpReward = 10,
     required this.syncState,
@@ -41,61 +48,35 @@ class KidsTask {
     required this.updatedAt,
   });
 
-  /// Factory: from Drift row
-  factory KidsTask.fromRow(
-    String id,
-    String parentId,
-    String title,
-    String? notes,
-    String categoryStr,
-    int priorityInt,
-    DateTime? dueDate,
-    bool isCompleted,
-    DateTime? completedAt,
-    int xpReward,
-    String syncState,
-    String? webdavEtag,
-    DateTime createdAt,
-    DateTime updatedAt,
-  ) {
-    return KidsTask(
-      id: id,
-      parentId: parentId,
-      title: title,
-      notes: notes,
-      category: TaskCategory.values.firstWhere(
-        (e) => e.name == categoryStr,
-        orElse: () => TaskCategory.other,
-      ),
-      priority: TaskPriority.values[priorityInt],
-      dueDate: dueDate,
-      isCompleted: isCompleted,
-      completedAt: completedAt,
-      xpReward: xpReward,
-      syncState: syncState,
-      webdavEtag: webdavEtag,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }
+  bool get isOpen => !isCompleted && !awaitingVerification;
 
-  /// Mark task as complete
-  KidsTask markComplete() => copyWith(
-    isCompleted: true,
-    completedAt: DateTime.now().toUtc(),
-    syncState: 'dirty',
-    updatedAt: DateTime.now().toUtc(),
-  );
+  /// Request completion — pending parent verification (does not award XP yet).
+  KidsTask requestComplete() => copyWith(
+        isCompleted: false,
+        awaitingVerification: true,
+        completedAt: null,
+        syncState: 'dirty',
+        updatedAt: DateTime.now().toUtc(),
+      );
 
-  /// Undo completion
-  KidsTask markIncomplete() => copyWith(
-    isCompleted: false,
-    completedAt: null,
-    syncState: 'dirty',
-    updatedAt: DateTime.now().toUtc(),
-  );
+  /// Parent accepted — XP-eligible.
+  KidsTask markAccepted() => copyWith(
+        isCompleted: true,
+        awaitingVerification: false,
+        completedAt: DateTime.now().toUtc(),
+        syncState: 'clean',
+        updatedAt: DateTime.now().toUtc(),
+      );
 
-  /// Immutable copy with optional field overrides
+  /// Parent rejected or reset to open.
+  KidsTask markOpen() => copyWith(
+        isCompleted: false,
+        awaitingVerification: false,
+        completedAt: null,
+        syncState: 'dirty',
+        updatedAt: DateTime.now().toUtc(),
+      );
+
   KidsTask copyWith({
     String? id,
     String? parentId,
@@ -105,6 +86,7 @@ class KidsTask {
     TaskPriority? priority,
     DateTime? dueDate,
     bool? isCompleted,
+    bool? awaitingVerification,
     DateTime? completedAt,
     int? xpReward,
     String? syncState,
@@ -121,6 +103,8 @@ class KidsTask {
       priority: priority ?? this.priority,
       dueDate: dueDate ?? this.dueDate,
       isCompleted: isCompleted ?? this.isCompleted,
+      awaitingVerification:
+          awaitingVerification ?? this.awaitingVerification,
       completedAt: completedAt ?? this.completedAt,
       xpReward: xpReward ?? this.xpReward,
       syncState: syncState ?? this.syncState,
@@ -130,21 +114,19 @@ class KidsTask {
     );
   }
 
-  /// Check if task is due today (or overdue) and not completed
   bool get isDueToday {
-    if (dueDate == null || isCompleted) return false;
+    if (dueDate == null || isCompleted || awaitingVerification) return false;
     final today = DateTime.now();
     final d = dueDate!.toLocal();
     return d.year <= today.year && d.month <= today.month && d.day <= today.day;
   }
 
-  /// Check if task is overdue
   bool get isOverdue {
-    if (dueDate == null || isCompleted) return false;
+    if (dueDate == null || isCompleted || awaitingVerification) return false;
     return dueDate!.isBefore(DateTime.now());
   }
 
   @override
   String toString() =>
-      'KidsTask(id: $id, title: $title, category: $category, priority: $priority, completed: $isCompleted)';
+      'KidsTask(id: $id, title: $title, completed: $isCompleted, pending: $awaitingVerification)';
 }

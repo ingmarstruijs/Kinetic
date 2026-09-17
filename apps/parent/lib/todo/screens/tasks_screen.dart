@@ -35,6 +35,8 @@ class TasksScreen extends StatefulWidget {
   final Future<List<ICalTask>> Function()? pullSharedTasks;
   final List<EnrolledKid>? enrolledKidsOverride;
   final Future<void> Function(ICalTask task)? onDeleteKidTask;
+  final Future<void> Function(ICalTask task)? onAcceptKidTask;
+  final Future<void> Function(ICalTask task)? onRejectKidTask;
 
   const TasksScreen({
     super.key,
@@ -55,6 +57,8 @@ class TasksScreen extends StatefulWidget {
     this.pullSharedTasks,
     this.enrolledKidsOverride,
     this.onDeleteKidTask,
+    this.onAcceptKidTask,
+    this.onRejectKidTask,
   });
 
   @override
@@ -186,6 +190,8 @@ class _TasksScreenState extends State<TasksScreen> {
                   enrolledKidsOverride: widget.enrolledKidsOverride,
                   todoRepo: widget.repo,
                   onDeleteKidTask: widget.onDeleteKidTask,
+                  onAcceptKidTask: widget.onAcceptKidTask,
+                  onRejectKidTask: widget.onRejectKidTask,
                 ),
             ],
           ),
@@ -491,8 +497,11 @@ class _CategoryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+    // Keep trailing chrome the same width for named + "No category" headers
+    // so section margins / task alignment stay consistent.
+    const trailingSlot = 40.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 4),
+      padding: const EdgeInsets.fromLTRB(16, 14, 4, 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -530,25 +539,38 @@ class _CategoryHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (canRename)
-            PopupMenuButton<String>(
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-              icon: Icon(Icons.more_horiz, size: 18, color: scheme.outline),
-              onSelected: (value) {
-                if (value == 'rename') onRename();
-              },
-              itemBuilder: (ctx) => [
-                PopupMenuItem(
-                  value: 'rename',
-                  child: Text(l10n.categoryRename),
-                ),
-              ],
-            ),
+          SizedBox(
+            width: trailingSlot,
+            height: trailingSlot,
+            child: canRename
+                ? PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: trailingSlot,
+                      minHeight: trailingSlot,
+                    ),
+                    icon: Icon(
+                      Icons.more_horiz,
+                      size: 18,
+                      color: scheme.outline,
+                    ),
+                    onSelected: (value) {
+                      if (value == 'rename') onRename();
+                    },
+                    itemBuilder: (ctx) => [
+                      PopupMenuItem(
+                        value: 'rename',
+                        child: Text(l10n.categoryRename),
+                      ),
+                    ],
+                  )
+                : null,
+          ),
           ReorderableDragStartListener(
             index: index,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 4),
+            child: SizedBox(
+              width: trailingSlot,
+              height: trailingSlot,
               child: Icon(
                 Icons.drag_indicator,
                 size: 18,

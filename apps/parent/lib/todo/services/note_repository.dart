@@ -62,6 +62,7 @@ class NoteRepository {
     required String title,
     String body = '',
     bool isShared = false,
+    bool isContentHidden = false,
     DateTime? remindAt,
     String? category,
     int sortOrder = 0,
@@ -71,6 +72,7 @@ class NoteRepository {
         title: title,
         body: body,
         isShared: isShared,
+        isContentHidden: isContentHidden,
         remindAt: remindAt,
         category: category,
         sortOrder: sortOrder,
@@ -215,6 +217,7 @@ class NoteRepository {
       title: Value(note.title),
       body: Value(note.body),
       isShared: Value(note.isShared),
+      isContentHidden: Value(note.isContentHidden),
       remindAt: Value(note.remindAt),
       category: Value(note.category),
       sortOrder: Value(note.sortOrder),
@@ -230,9 +233,11 @@ class NoteRepository {
     if (note.remindAt == null) return;
     if (note.remindAt!.isBefore(DateTime.now())) return;
     try {
-      final body = note.body.length > 100
-          ? '${note.body.substring(0, 100)}…'
-          : note.body;
+      final body = note.isContentHidden
+          ? ''
+          : (note.body.length > 100
+                ? '${note.body.substring(0, 100)}…'
+                : note.body);
       await _notifications?.scheduleReminder(
         id: _notifId(note.id),
         title: note.title,

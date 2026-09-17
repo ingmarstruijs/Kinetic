@@ -408,6 +408,18 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                                 DemoSession.instance.removeKidTask(task.uid);
                               }
                             : null,
+                        onAcceptKidTask: demo.active
+                            ? null
+                            : (task) async {
+                                await _syncOrchestrator
+                                    ?.acceptKidsTaskCompletion(task);
+                              },
+                        onRejectKidTask: demo.active
+                            ? null
+                            : (task) async {
+                                await _syncOrchestrator
+                                    ?.rejectKidsTaskCompletion(task);
+                              },
                       ),
                       NotesScreen(
                         repo: _noteRepository,

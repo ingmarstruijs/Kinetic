@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -36,31 +37,52 @@ class KidTaskGroup {
   final String name;
   final List<ICalTask> tasks;
   final int xp;
+  final KidGoal? goal;
 
   const KidTaskGroup({
     required this.key,
     required this.name,
     required this.tasks,
     required this.xp,
+    this.goal,
   });
 
   int get openCount =>
-      tasks.where((t) => t.status != ICalTaskStatus.completed).length;
+      tasks.where((t) => t.status == ICalTaskStatus.needsAction).length;
+
+  int get pendingCount =>
+      tasks.where((t) => t.status == ICalTaskStatus.inProcess).length;
+
+  int get displayXp {
+    if (goal == null || goal!.targetXp <= 0) return xp;
+    return xp > goal!.targetXp ? goal!.targetXp : xp;
+  }
 }
 
 List<KidTaskGroup> groupKidsTasks({
   required List<ICalTask> tasks,
   required List<EnrolledKid> enrolledKids,
   required String everyoneLabel,
+  Map<String, KidGoal> goals = const {},
 }) {
   final xpPerKid = <String, int>{};
   final grouped = <String, List<ICalTask>>{};
+  final enrolledIds = enrolledKids.map((k) => k.id).toSet();
+  final soleKidId = enrolledKids.length == 1 ? enrolledKids.first.id : null;
 
   for (final task in tasks) {
     final targetId = icalProp(task.description, 'xKineticTargetKidId');
-    final key = (targetId == null || targetId.isEmpty)
-        ? '__everyone__'
-        : targetId;
+    String key;
+    if (targetId != null &&
+        targetId.isNotEmpty &&
+        enrolledIds.contains(targetId)) {
+      key = targetId;
+    } else if (soleKidId != null) {
+      // One enrolled kid: show shared/"everyone" tasks on that kid's card.
+      key = soleKidId;
+    } else {
+      key = '__everyone__';
+    }
     grouped.putIfAbsent(key, () => []).add(task);
     if (task.status == ICalTaskStatus.completed) {
       final xp =
@@ -78,6 +100,7 @@ List<KidTaskGroup> groupKidsTasks({
         name: kid.name,
         tasks: grouped[kid.id] ?? const [],
         xp: xpPerKid[kid.id] ?? 0,
+        goal: goals[kid.id],
       ),
     );
   }
@@ -101,6 +124,8 @@ class KidsPanel extends StatefulWidget {
   final List<EnrolledKid>? enrolledKidsOverride;
   final TodoRepository? todoRepo;
   final Future<void> Function(ICalTask task)? onDeleteKidTask;
+  final Future<void> Function(ICalTask task)? onAcceptKidTask;
+  final Future<void> Function(ICalTask task)? onRejectKidTask;
 
   const KidsPanel({
     super.key,
@@ -110,6 +135,8 @@ class KidsPanel extends StatefulWidget {
     this.enrolledKidsOverride,
     this.todoRepo,
     this.onDeleteKidTask,
+    this.onAcceptKidTask,
+    this.onRejectKidTask,
   });
 
   @override
@@ -138,7 +165,12 @@ class KidsPanelState extends State<KidsPanel> {
     }
   }
 
-  void reload() => setState(() => _future = _load());
+  void reload() {
+    final next = _load();
+    setState(() {
+      _future = next;
+    });
+  }
 
   Future<_KidsPanelData> _load() async {
     final enrolledKids =
@@ -146,11 +178,19 @@ class KidsPanelState extends State<KidsPanel> {
         await widget.configRepo.loadEnrolledKids();
     if (widget.pullSharedTasks != null) {
       final tasks = await widget.pullSharedTasks!();
-      return _KidsPanelData(tasks: tasks, enrolledKids: enrolledKids);
+      return _KidsPanelData(
+        tasks: tasks,
+        enrolledKids: enrolledKids,
+        goals: const {},
+      );
     }
     final config = widget.syncConfig;
     if (config == null) {
-      return _KidsPanelData(tasks: const [], enrolledKids: enrolledKids);
+      return _KidsPanelData(
+        tasks: const [],
+        enrolledKids: enrolledKids,
+        goals: const {},
+      );
     }
     final client = WebDavClient(
       baseUrl: config.baseUrl,
@@ -160,40 +200,22 @@ class KidsPanelState extends State<KidsPanel> {
     final service = WebDavSyncService(client: client, config: config);
     try {
       final tasks = await service.pullSharedTasks();
-      return _KidsPanelData(tasks: tasks, enrolledKids: enrolledKids);
+      final goals = await service.pullGoals(enrolledKids.map((k) => k.id));
+      return _KidsPanelData(
+        tasks: tasks,
+        enrolledKids: enrolledKids,
+        goals: goals,
+      );
     } finally {
       client.dispose();
     }
   }
 
-  Future<void> _resetXp(String kidLabel, List<EnrolledKid> enrolledKids) async {
-    final kid = enrolledKids.cast<EnrolledKid?>().firstWhere(
-      (k) => k?.name == kidLabel,
-      orElse: () => null,
-    );
-    if (kid == null || !mounted) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).tasksXpResetTitle(kid.name)),
-        content: Text(AppLocalizations.of(context).tasksXpResetBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context).commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context).tasksXpResetAction),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
+  Future<T?> _withService<T>(
+    Future<T> Function(WebDavSyncService service) action,
+  ) async {
     final config = widget.syncConfig;
-    if (config == null) return;
+    if (config == null) return null;
     final client = WebDavClient(
       baseUrl: config.baseUrl,
       username: config.username,
@@ -201,27 +223,163 @@ class KidsPanelState extends State<KidsPanel> {
     );
     final service = WebDavSyncService(client: client, config: config);
     try {
-      await service.pushXpReset(kid.id, DateTime.now().toUtc());
+      return await action(service);
+    } finally {
+      client.dispose();
+    }
+  }
+
+  Future<void> _resetXpAndGoal(KidTaskGroup group) async {
+    if (group.key == '__everyone__' || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.kidsGoalResetTitle(group.name)),
+        content: Text(l10n.kidsGoalResetBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.tasksXpResetAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _withService((service) async {
+        await service.pushXpReset(group.key, DateTime.now().toUtc());
+        for (final task in group.tasks) {
+          if (task.status == ICalTaskStatus.completed) {
+            await service.deleteSharedTask(task.uid);
+            await widget.todoRepo?.removeKidsAssignment(
+              kidsTaskId: task.uid,
+              parentTaskId: icalProp(task.description, 'xKineticParentId'),
+            );
+          }
+        }
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).tasksXpResetDone(kid.name),
-            ),
-          ),
+          SnackBar(content: Text(l10n.kidsGoalResetDone(group.name))),
         );
         reload();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).tasksXpResetError('$e')),
-          ),
+          SnackBar(content: Text(l10n.tasksXpResetError('$e'))),
         );
       }
-    } finally {
-      client.dispose();
+    }
+  }
+
+  Future<void> _editGoal(KidTaskGroup group, {bool renameOnly = false}) async {
+    if (group.key == '__everyone__' || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final titleCtrl = TextEditingController(text: group.goal?.title ?? '');
+    final xpCtrl = TextEditingController(
+      text: group.goal != null ? '${group.goal!.targetXp}' : '100',
+    );
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          group.goal == null
+              ? l10n.kidsGoalSet
+              : (renameOnly ? l10n.kidsGoalRename : l10n.kidsGoalEdit),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleCtrl,
+              decoration: InputDecoration(
+                labelText: l10n.kidsGoalTitleLabel,
+                hintText: l10n.kidsGoalTitleHint,
+              ),
+              textCapitalization: TextCapitalization.sentences,
+            ),
+            if (!renameOnly) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: xpCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.kidsGoalTargetLabel,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.kidsGoalSave),
+          ),
+        ],
+      ),
+    );
+    if (saved != true || !mounted) return;
+    final title = titleCtrl.text.trim();
+    final target = renameOnly
+        ? (group.goal?.targetXp ?? 100)
+        : (int.tryParse(xpCtrl.text.trim()) ?? 0);
+    if (title.isEmpty || target <= 0) return;
+
+    try {
+      await _withService(
+        (service) => service.pushGoal(
+          KidGoal(
+            kidId: group.key,
+            title: title,
+            targetXp: target,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        ),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.kidsGoalSaved)));
+        reload();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _removeGoal(KidTaskGroup group) async {
+    if (group.key == '__everyone__' || group.goal == null) return;
+    final l10n = AppLocalizations.of(context);
+    try {
+      await _withService((service) => service.deleteGoal(group.key));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.kidsGoalRemoved)));
+        reload();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -253,19 +411,7 @@ class KidsPanelState extends State<KidsPanel> {
       if (widget.onDeleteKidTask != null) {
         await widget.onDeleteKidTask!(task);
       } else {
-        final config = widget.syncConfig;
-        if (config == null) return;
-        final client = WebDavClient(
-          baseUrl: config.baseUrl,
-          username: config.username,
-          password: config.password,
-        );
-        final service = WebDavSyncService(client: client, config: config);
-        try {
-          await service.deleteSharedTask(task.uid);
-        } finally {
-          client.dispose();
-        }
+        await _withService((service) => service.deleteSharedTask(task.uid));
       }
       await widget.todoRepo?.removeKidsAssignment(
         kidsTaskId: task.uid,
@@ -277,6 +423,55 @@ class KidsPanelState extends State<KidsPanel> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.commonDeleteError('$e'))));
+      }
+    }
+  }
+
+  Future<void> _accept(ICalTask task) async {
+    try {
+      if (widget.onAcceptKidTask != null) {
+        await widget.onAcceptKidTask!(task);
+      } else {
+        await _withService((service) async {
+          await service.pushSharedTask(
+            task.copyWith(
+              status: ICalTaskStatus.completed,
+              updatedAt: DateTime.now().toUtc(),
+            ),
+          );
+        });
+        await widget.todoRepo?.completeByKidsTaskId(task.uid);
+      }
+      if (mounted) reload();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _reject(ICalTask task) async {
+    try {
+      if (widget.onRejectKidTask != null) {
+        await widget.onRejectKidTask!(task);
+      } else {
+        await _withService((service) async {
+          await service.pushSharedTask(
+            task.copyWith(
+              status: ICalTaskStatus.needsAction,
+              updatedAt: DateTime.now().toUtc(),
+            ),
+          );
+        });
+      }
+      if (mounted) reload();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -321,6 +516,7 @@ class KidsPanelState extends State<KidsPanel> {
           tasks: data.tasks,
           enrolledKids: data.enrolledKids,
           everyoneLabel: l10n.commonEveryone,
+          goals: data.goals,
         );
         final visible = _filterKey == null
             ? groups
@@ -412,10 +608,20 @@ class KidsPanelState extends State<KidsPanel> {
                             ? null
                             : group.key;
                       }),
-                      onResetXp: group.key == '__everyone__'
+                      onSetGoal: group.key == '__everyone__'
                           ? null
-                          : () => _resetXp(group.name, data.enrolledKids),
+                          : () => _editGoal(group),
+                      onRenameGoal: group.goal == null
+                          ? null
+                          : () => _editGoal(group, renameOnly: true),
+                      onRemoveGoal:
+                          group.goal == null ? null : () => _removeGoal(group),
+                      onResetGoal: group.key == '__everyone__'
+                          ? null
+                          : () => _resetXpAndGoal(group),
                       onDeleteTask: _canDeleteKidTask ? _deleteKidTask : null,
+                      onAccept: _accept,
+                      onReject: _reject,
                     ),
               ],
             ],
@@ -429,7 +635,12 @@ class KidsPanelState extends State<KidsPanel> {
 class _KidsPanelData {
   final List<ICalTask> tasks;
   final List<EnrolledKid> enrolledKids;
-  const _KidsPanelData({required this.tasks, required this.enrolledKids});
+  final Map<String, KidGoal> goals;
+  const _KidsPanelData({
+    required this.tasks,
+    required this.enrolledKids,
+    required this.goals,
+  });
 }
 
 class _KidChip extends StatelessWidget {
@@ -479,15 +690,25 @@ class _KidGroupCard extends StatelessWidget {
   final KidTaskGroup group;
   final bool expanded;
   final VoidCallback onToggle;
-  final VoidCallback? onResetXp;
+  final VoidCallback? onSetGoal;
+  final VoidCallback? onRenameGoal;
+  final VoidCallback? onRemoveGoal;
+  final VoidCallback? onResetGoal;
   final Future<void> Function(ICalTask task)? onDeleteTask;
+  final Future<void> Function(ICalTask task)? onAccept;
+  final Future<void> Function(ICalTask task)? onReject;
 
   const _KidGroupCard({
     required this.group,
     required this.expanded,
     required this.onToggle,
-    this.onResetXp,
+    this.onSetGoal,
+    this.onRenameGoal,
+    this.onRemoveGoal,
+    this.onResetGoal,
     this.onDeleteTask,
+    this.onAccept,
+    this.onReject,
   });
 
   @override
@@ -496,6 +717,10 @@ class _KidGroupCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final open = group.tasks.where((t) => t.status != ICalTaskStatus.completed);
+    final goal = group.goal;
+    final progress = goal != null && goal.targetXp > 0
+        ? (group.displayXp / goal.targetXp).clamp(0.0, 1.0)
+        : null;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -508,7 +733,6 @@ class _KidGroupCard extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: onToggle,
-              onLongPress: onResetXp,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -543,10 +767,56 @@ class _KidGroupCard extends StatelessWidget {
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
+                          if (goal != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              goal.title,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 6,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              l10n.kidsXpProgress(
+                                group.displayXp,
+                                goal.targetXp,
+                              ),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ] else
+                            Text(
+                              l10n.kidsXpTotal(group.displayXp),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          if (group.pendingCount > 0)
+                            Text(
+                              expanded
+                                  ? l10n.kidsPendingVerification
+                                  : l10n.kidsPendingExpandHint(
+                                      group.pendingCount,
+                                    ),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.tertiary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                    if (onResetXp != null)
+                    if (onSetGoal != null || onResetGoal != null)
                       PopupMenuButton<String>(
                         icon: Icon(
                           Icons.more_horiz,
@@ -554,13 +824,42 @@ class _KidGroupCard extends StatelessWidget {
                           size: 20,
                         ),
                         onSelected: (value) {
-                          if (value == 'xp') onResetXp?.call();
+                          switch (value) {
+                            case 'set':
+                              onSetGoal?.call();
+                            case 'rename':
+                              onRenameGoal?.call();
+                            case 'remove':
+                              onRemoveGoal?.call();
+                            case 'reset':
+                              onResetGoal?.call();
+                          }
                         },
                         itemBuilder: (ctx) => [
-                          PopupMenuItem(
-                            value: 'xp',
-                            child: Text(l10n.tasksResetXp),
-                          ),
+                          if (onSetGoal != null)
+                            PopupMenuItem(
+                              value: 'set',
+                              child: Text(
+                                goal == null
+                                    ? l10n.kidsGoalSet
+                                    : l10n.kidsGoalEdit,
+                              ),
+                            ),
+                          if (onRenameGoal != null)
+                            PopupMenuItem(
+                              value: 'rename',
+                              child: Text(l10n.kidsGoalRename),
+                            ),
+                          if (onRemoveGoal != null)
+                            PopupMenuItem(
+                              value: 'remove',
+                              child: Text(l10n.kidsGoalRemove),
+                            ),
+                          if (onResetGoal != null)
+                            PopupMenuItem(
+                              value: 'reset',
+                              child: Text(l10n.kidsGoalReset),
+                            ),
                         ],
                       ),
                     Icon(
@@ -589,7 +888,12 @@ class _KidGroupCard extends StatelessWidget {
                       )
                     else
                       for (final task in open)
-                        _KidsTaskTile(task: task, onDelete: onDeleteTask),
+                        _KidsTaskTile(
+                          task: task,
+                          onDelete: onDeleteTask,
+                          onAccept: onAccept,
+                          onReject: onReject,
+                        ),
                   ],
                 ),
               ),
@@ -603,32 +907,72 @@ class _KidGroupCard extends StatelessWidget {
 class _KidsTaskTile extends StatelessWidget {
   final ICalTask task;
   final Future<void> Function(ICalTask task)? onDelete;
+  final Future<void> Function(ICalTask task)? onAccept;
+  final Future<void> Function(ICalTask task)? onReject;
 
-  const _KidsTaskTile({required this.task, this.onDelete});
+  const _KidsTaskTile({
+    required this.task,
+    this.onDelete,
+    this.onAccept,
+    this.onReject,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final due = task.dueAt;
+    final pending = task.status == ICalTaskStatus.inProcess;
+    final subtitleParts = [
+      if (pending) l10n.kidsPendingVerification,
+      if (due != null) '${due.toLocal().day}/${due.toLocal().month}',
+    ];
 
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.hourglass_empty_rounded, color: scheme.outline),
-      title: Text(task.summary),
-      subtitle: due == null
-          ? null
-          : Text(
-              '${due.toLocal().day}/${due.toLocal().month}',
-              style: Theme.of(context).textTheme.bodySmall,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            pending
+                ? Icons.hourglass_top_rounded
+                : Icons.hourglass_empty_rounded,
+            color: pending ? scheme.tertiary : scheme.outline,
+          ),
+          title: Text(task.summary),
+          subtitle: subtitleParts.isEmpty
+              ? null
+              : Text(
+                  subtitleParts.join(' · '),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+          trailing: onDelete == null
+              ? null
+              : IconButton(
+                  tooltip: l10n.commonDelete,
+                  icon: Icon(Icons.delete_outline, color: scheme.outline),
+                  onPressed: () => onDelete!(task),
+                ),
+        ),
+        if (pending)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                TextButton(
+                  onPressed: onReject == null ? null : () => onReject!(task),
+                  child: Text(l10n.kidsRejectCompletion),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: onAccept == null ? null : () => onAccept!(task),
+                  child: Text(l10n.kidsAcceptCompletion),
+                ),
+              ],
             ),
-      trailing: onDelete == null
-          ? null
-          : IconButton(
-              tooltip: AppLocalizations.of(context).commonDelete,
-              icon: Icon(Icons.delete_outline, color: scheme.outline),
-              onPressed: () => onDelete!(task),
-            ),
+          ),
+      ],
     );
   }
 }

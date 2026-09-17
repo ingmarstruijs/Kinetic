@@ -30,6 +30,7 @@ class KidsSyncOrchestrator {
     String myKidId = '',
     this.onDisconnected,
     this.onXpResetReceived,
+    this.onGoalReceived,
     this.onNewTaskReceived,
   }) : _db = db,
        _repo = repo,
@@ -43,6 +44,9 @@ class KidsSyncOrchestrator {
   /// Optional callback invoked when a new XP-reset timestamp is received.
   /// The caller should store it and pass it to [KidsTaskRepository.watchTotalXp].
   final void Function(DateTime resetAt)? onXpResetReceived;
+
+  /// Optional callback when the kid's goal document is pulled (or null if removed).
+  final void Function(KidGoal? goal)? onGoalReceived;
 
   /// Optional callback invoked for each new task received from the parent.
   /// The caller can use this to show a local notification.
@@ -68,6 +72,8 @@ class KidsSyncOrchestrator {
       await _checkDisconnect(service);
       // Pull XP reset timestamp set by the parent
       await _pullXpReset(service);
+      // Pull goal for this kid (hero UI)
+      await _pullGoal(service);
     } finally {
       client.dispose();
     }
@@ -118,6 +124,16 @@ class KidsSyncOrchestrator {
     }
   }
 
+  Future<void> _pullGoal(WebDavSyncService service) async {
+    if (_myKidId.isEmpty || onGoalReceived == null) return;
+    try {
+      final goal = await service.pullGoal(_myKidId);
+      onGoalReceived!(goal);
+    } catch (_) {
+      // Non-critical.
+    }
+  }
+
   /// Pull tasks from parent (from /kinetic/shared/tasks/)
   Future<void> _pullRemoteTasks(WebDavSyncService service) async {
     final iCalTasks = await service.pullSharedTasks();
@@ -159,11 +175,15 @@ class KidsSyncOrchestrator {
         // New from parent → insert and notify
         await _repo.upsertTask(remoteTask);
         onNewTaskReceived?.call(remoteTask.title);
-      } else if (remoteTask.updatedAt.isAfter(existing.updatedAt)) {
-        // Remote newer → update (LWW merge)
+      } else if (existing.syncState == 'dirty') {
+        // Local pending request not pushed yet — keep local.
+        continue;
+      } else if (remoteTask.updatedAt.isAfter(existing.updatedAt) ||
+          remoteTask.isCompleted != existing.isCompleted ||
+          remoteTask.awaitingVerification != existing.awaitingVerification) {
+        // Remote newer or status changed → update
         await _repo.upsertTask(remoteTask);
       }
-      // else: local newer or equal → keep local (will push next cycle)
     }
   }
 
@@ -208,6 +228,8 @@ class KidsSyncOrchestrator {
   ICalTask taskRowToICal(KidsTaskRow row) => _taskRowToICal(row);
 
   KidsTask _iCalToKidsTask(ICalTask ical) {
+    final awaiting = ical.status == ICalTaskStatus.inProcess;
+    final done = ical.status == ICalTaskStatus.completed;
     return KidsTask(
       id: ical.uid,
       parentId:
@@ -219,10 +241,9 @@ class KidsSyncOrchestrator {
       ),
       priority: _parsePriority(ical.priority),
       dueDate: ical.dueAt,
-      isCompleted: ical.status == ICalTaskStatus.completed,
-      completedAt: ical.status == ICalTaskStatus.completed
-          ? ical.updatedAt
-          : null,
+      isCompleted: done,
+      awaitingVerification: awaiting,
+      completedAt: done ? ical.updatedAt : null,
       xpReward:
           int.tryParse(
             _extractCustomProperty(ical.description, 'xKineticXpReward') ?? '',
@@ -237,6 +258,11 @@ class KidsSyncOrchestrator {
 
   /// Convert Drift row to iCal task
   ICalTask _taskRowToICal(KidsTaskRow row) {
+    final status = row.isCompleted
+        ? ICalTaskStatus.completed
+        : row.awaitingVerification
+            ? ICalTaskStatus.inProcess
+            : ICalTaskStatus.needsAction;
     return ICalTask(
       uid: row.id,
       summary: row.title,
@@ -246,9 +272,7 @@ class KidsSyncOrchestrator {
         category: row.category,
         xpReward: row.xpReward,
       ),
-      status: row.isCompleted
-          ? ICalTaskStatus.completed
-          : ICalTaskStatus.needsAction,
+      status: status,
       priority: _priorityToInt(row.priority),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -281,7 +305,10 @@ class KidsSyncOrchestrator {
     required int xpReward,
   }) {
     final baseNotes = notes ?? '';
-    return '$baseNotes;xKineticParentId:$parentId;xKineticCategory:$category;xKineticXpReward:$xpReward';
+    final targetPart = _myKidId.isNotEmpty
+        ? ';xKineticTargetKidId:$_myKidId'
+        : '';
+    return '$baseNotes;xKineticParentId:$parentId;xKineticCategory:$category;xKineticXpReward:$xpReward$targetPart';
   }
 
   /// Parse category from string

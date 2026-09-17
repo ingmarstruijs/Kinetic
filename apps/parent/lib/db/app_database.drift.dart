@@ -1878,6 +1878,21 @@ class $PersonalNotesTable extends PersonalNotes
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _isContentHiddenMeta = const VerificationMeta(
+    'isContentHidden',
+  );
+  @override
+  late final GeneratedColumn<bool> isContentHidden = GeneratedColumn<bool>(
+    'is_content_hidden',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_content_hidden" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _webdavEtagMeta = const VerificationMeta(
     'webdavEtag',
   );
@@ -1943,6 +1958,7 @@ class $PersonalNotesTable extends PersonalNotes
     remindAt,
     category,
     sortOrder,
+    isContentHidden,
     webdavEtag,
     syncState,
     createdAt,
@@ -2002,6 +2018,15 @@ class $PersonalNotesTable extends PersonalNotes
       context.handle(
         _sortOrderMeta,
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('is_content_hidden')) {
+      context.handle(
+        _isContentHiddenMeta,
+        isContentHidden.isAcceptableOrUnknown(
+          data['is_content_hidden']!,
+          _isContentHiddenMeta,
+        ),
       );
     }
     if (data.containsKey('webdav_etag')) {
@@ -2075,6 +2100,10 @@ class $PersonalNotesTable extends PersonalNotes
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      isContentHidden: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_content_hidden'],
+      )!,
       webdavEtag: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}webdav_etag'],
@@ -2114,6 +2143,10 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
   final DateTime? remindAt;
   final String? category;
   final int sortOrder;
+
+  /// When true, body is hidden in the notes list and opening requires
+  /// device biometrics / PIN (local privacy flag, not synced).
+  final bool isContentHidden;
   final String? webdavEtag;
   final String syncState;
   final DateTime createdAt;
@@ -2129,6 +2162,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     this.remindAt,
     this.category,
     required this.sortOrder,
+    required this.isContentHidden,
     this.webdavEtag,
     required this.syncState,
     required this.createdAt,
@@ -2149,6 +2183,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       map['category'] = Variable<String>(category);
     }
     map['sort_order'] = Variable<int>(sortOrder);
+    map['is_content_hidden'] = Variable<bool>(isContentHidden);
     if (!nullToAbsent || webdavEtag != null) {
       map['webdav_etag'] = Variable<String>(webdavEtag);
     }
@@ -2174,6 +2209,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           ? const Value.absent()
           : Value(category),
       sortOrder: Value(sortOrder),
+      isContentHidden: Value(isContentHidden),
       webdavEtag: webdavEtag == null && nullToAbsent
           ? const Value.absent()
           : Value(webdavEtag),
@@ -2199,6 +2235,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       remindAt: serializer.fromJson<DateTime?>(json['remindAt']),
       category: serializer.fromJson<String?>(json['category']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      isContentHidden: serializer.fromJson<bool>(json['isContentHidden']),
       webdavEtag: serializer.fromJson<String?>(json['webdavEtag']),
       syncState: serializer.fromJson<String>(json['syncState']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2217,6 +2254,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       'remindAt': serializer.toJson<DateTime?>(remindAt),
       'category': serializer.toJson<String?>(category),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'isContentHidden': serializer.toJson<bool>(isContentHidden),
       'webdavEtag': serializer.toJson<String?>(webdavEtag),
       'syncState': serializer.toJson<String>(syncState),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2233,6 +2271,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     Value<DateTime?> remindAt = const Value.absent(),
     Value<String?> category = const Value.absent(),
     int? sortOrder,
+    bool? isContentHidden,
     Value<String?> webdavEtag = const Value.absent(),
     String? syncState,
     DateTime? createdAt,
@@ -2246,6 +2285,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     remindAt: remindAt.present ? remindAt.value : this.remindAt,
     category: category.present ? category.value : this.category,
     sortOrder: sortOrder ?? this.sortOrder,
+    isContentHidden: isContentHidden ?? this.isContentHidden,
     webdavEtag: webdavEtag.present ? webdavEtag.value : this.webdavEtag,
     syncState: syncState ?? this.syncState,
     createdAt: createdAt ?? this.createdAt,
@@ -2261,6 +2301,9 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       remindAt: data.remindAt.present ? data.remindAt.value : this.remindAt,
       category: data.category.present ? data.category.value : this.category,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      isContentHidden: data.isContentHidden.present
+          ? data.isContentHidden.value
+          : this.isContentHidden,
       webdavEtag: data.webdavEtag.present
           ? data.webdavEtag.value
           : this.webdavEtag,
@@ -2281,6 +2324,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           ..write('remindAt: $remindAt, ')
           ..write('category: $category, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('isContentHidden: $isContentHidden, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
@@ -2299,6 +2343,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     remindAt,
     category,
     sortOrder,
+    isContentHidden,
     webdavEtag,
     syncState,
     createdAt,
@@ -2316,6 +2361,7 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           other.remindAt == this.remindAt &&
           other.category == this.category &&
           other.sortOrder == this.sortOrder &&
+          other.isContentHidden == this.isContentHidden &&
           other.webdavEtag == this.webdavEtag &&
           other.syncState == this.syncState &&
           other.createdAt == this.createdAt &&
@@ -2331,6 +2377,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
   final Value<DateTime?> remindAt;
   final Value<String?> category;
   final Value<int> sortOrder;
+  final Value<bool> isContentHidden;
   final Value<String?> webdavEtag;
   final Value<String> syncState;
   final Value<DateTime> createdAt;
@@ -2345,6 +2392,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.remindAt = const Value.absent(),
     this.category = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.isContentHidden = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     this.syncState = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2360,6 +2408,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.remindAt = const Value.absent(),
     this.category = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.isContentHidden = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     this.syncState = const Value.absent(),
     required DateTime createdAt,
@@ -2378,6 +2427,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Expression<DateTime>? remindAt,
     Expression<String>? category,
     Expression<int>? sortOrder,
+    Expression<bool>? isContentHidden,
     Expression<String>? webdavEtag,
     Expression<String>? syncState,
     Expression<DateTime>? createdAt,
@@ -2393,6 +2443,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       if (remindAt != null) 'remind_at': remindAt,
       if (category != null) 'category': category,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (isContentHidden != null) 'is_content_hidden': isContentHidden,
       if (webdavEtag != null) 'webdav_etag': webdavEtag,
       if (syncState != null) 'sync_state': syncState,
       if (createdAt != null) 'created_at': createdAt,
@@ -2410,6 +2461,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Value<DateTime?>? remindAt,
     Value<String?>? category,
     Value<int>? sortOrder,
+    Value<bool>? isContentHidden,
     Value<String?>? webdavEtag,
     Value<String>? syncState,
     Value<DateTime>? createdAt,
@@ -2425,6 +2477,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       remindAt: remindAt ?? this.remindAt,
       category: category ?? this.category,
       sortOrder: sortOrder ?? this.sortOrder,
+      isContentHidden: isContentHidden ?? this.isContentHidden,
       webdavEtag: webdavEtag ?? this.webdavEtag,
       syncState: syncState ?? this.syncState,
       createdAt: createdAt ?? this.createdAt,
@@ -2458,6 +2511,9 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (isContentHidden.present) {
+      map['is_content_hidden'] = Variable<bool>(isContentHidden.value);
+    }
     if (webdavEtag.present) {
       map['webdav_etag'] = Variable<String>(webdavEtag.value);
     }
@@ -2489,6 +2545,7 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
           ..write('remindAt: $remindAt, ')
           ..write('category: $category, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('isContentHidden: $isContentHidden, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
@@ -6479,6 +6536,7 @@ typedef $$PersonalNotesTableCreateCompanionBuilder =
       Value<DateTime?> remindAt,
       Value<String?> category,
       Value<int> sortOrder,
+      Value<bool> isContentHidden,
       Value<String?> webdavEtag,
       Value<String> syncState,
       required DateTime createdAt,
@@ -6495,6 +6553,7 @@ typedef $$PersonalNotesTableUpdateCompanionBuilder =
       Value<DateTime?> remindAt,
       Value<String?> category,
       Value<int> sortOrder,
+      Value<bool> isContentHidden,
       Value<String?> webdavEtag,
       Value<String> syncState,
       Value<DateTime> createdAt,
@@ -6544,6 +6603,11 @@ class $$PersonalNotesTableFilterComposer
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isContentHidden => $composableBuilder(
+    column: $table.isContentHidden,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6617,6 +6681,11 @@ class $$PersonalNotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isContentHidden => $composableBuilder(
+    column: $table.isContentHidden,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get webdavEtag => $composableBuilder(
     column: $table.webdavEtag,
     builder: (column) => ColumnOrderings(column),
@@ -6672,6 +6741,11 @@ class $$PersonalNotesTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<bool> get isContentHidden => $composableBuilder(
+    column: $table.isContentHidden,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get webdavEtag => $composableBuilder(
     column: $table.webdavEtag,
@@ -6729,6 +6803,7 @@ class $$PersonalNotesTableTableManager
                 Value<DateTime?> remindAt = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<bool> isContentHidden = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -6743,6 +6818,7 @@ class $$PersonalNotesTableTableManager
                 remindAt: remindAt,
                 category: category,
                 sortOrder: sortOrder,
+                isContentHidden: isContentHidden,
                 webdavEtag: webdavEtag,
                 syncState: syncState,
                 createdAt: createdAt,
@@ -6759,6 +6835,7 @@ class $$PersonalNotesTableTableManager
                 Value<DateTime?> remindAt = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<bool> isContentHidden = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 required DateTime createdAt,
@@ -6773,6 +6850,7 @@ class $$PersonalNotesTableTableManager
                 remindAt: remindAt,
                 category: category,
                 sortOrder: sortOrder,
+                isContentHidden: isContentHidden,
                 webdavEtag: webdavEtag,
                 syncState: syncState,
                 createdAt: createdAt,

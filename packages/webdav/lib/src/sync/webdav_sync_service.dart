@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +8,7 @@ import '../ical/ical_note.dart';
 import '../ical/ical_serializer.dart';
 import '../ical/ical_task.dart';
 import '../presence_info.dart';
+import '../kid_goal.dart';
 import '../sync_config.dart';
 import '../webdav_client.dart';
 
@@ -190,8 +190,9 @@ class WebDavSyncService {
 
     if (note.isShared) {
       final familyKey = config.familyKeyBytes;
-      if (familyKey == null)
+      if (familyKey == null) {
         throw StateError('Family key required to push shared note');
+      }
       final blob = await KineticEncryption.encrypt(plain, familyKey);
       await client.put('$_sharedNotesPath/${note.uid}.ics', blob);
     } else {
@@ -312,8 +313,9 @@ class WebDavSyncService {
   /// Encrypts [task] with the family key and PUTs it to `/kinetic/shared/tasks/{uid}.ics`.
   Future<void> pushSharedTask(ICalTask task) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push shared tasks');
+    }
     final ical = ICalSerializer.taskToVtodo(task);
     final plain = Uint8List.fromList(utf8.encode(ical));
     final blob = await KineticEncryption.encrypt(plain, familyKey);
@@ -358,8 +360,9 @@ class WebDavSyncService {
   /// with accounts set up before this feature was added).
   Future<void> pushProposal(Map<String, dynamic> proposalJson) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push proposals');
+    }
 
     final id = proposalJson['id'] as String;
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(proposalJson)));
@@ -406,8 +409,9 @@ class WebDavSyncService {
   /// with accounts set up before this feature was added).
   Future<void> pushLoadMetrics(Map<String, dynamic> metricsJson) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push load metrics');
+    }
 
     final parentId = metricsJson['parentId'] as String;
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(metricsJson)));
@@ -584,4 +588,47 @@ class WebDavSyncService {
       return null;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Kid goals
+  // ---------------------------------------------------------------------------
+
+  String get _goalsPath => '/kinetic/shared/goals';
+
+  /// Writes or replaces the XP goal for [goal.kidId].
+  Future<void> pushGoal(KidGoal goal) async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) throw StateError('Family key required to push goal');
+    final plain = Uint8List.fromList(utf8.encode(jsonEncode(goal.toJson())));
+    final blob = await KineticEncryption.encrypt(plain, familyKey);
+    await _putWithCollectionFallback('$_goalsPath/${goal.kidId}.json', blob);
+  }
+
+  /// Reads the goal for [kidId], or null if missing / undecryptable.
+  Future<KidGoal?> pullGoal(String kidId) async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) return null;
+    try {
+      final blob = await client.get('$_goalsPath/$kidId.json');
+      final plain = await KineticEncryption.decrypt(blob, familyKey);
+      final data = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+      return KidGoal.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Pulls goals for every enrolled kid id that has a file.
+  Future<Map<String, KidGoal>> pullGoals(Iterable<String> kidIds) async {
+    final result = <String, KidGoal>{};
+    for (final id in kidIds) {
+      final goal = await pullGoal(id);
+      if (goal != null) result[id] = goal;
+    }
+    return result;
+  }
+
+  /// Deletes the goal file for [kidId].
+  Future<void> deleteGoal(String kidId) =>
+      client.delete('$_goalsPath/$kidId.json');
 }

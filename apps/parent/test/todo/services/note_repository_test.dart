@@ -39,4 +39,24 @@ void main() {
     expect(row.syncState, 'deleted');
     expect(row.deletedAt, isNotNull);
   });
+
+  test('insert and update persist isContentHidden', () async {
+    final db = createTestDatabase();
+    addTearDown(db.close);
+    final repo = NoteRepository(db: db);
+
+    final note = await repo.insert(
+      title: 'Vault',
+      body: 'secret',
+      isContentHidden: true,
+    );
+    expect(note.isContentHidden, isTrue);
+    expect((await repo.getNote(note.id))!.isContentHidden, isTrue);
+    expect(note.bodyPreview, isEmpty);
+
+    await repo.update(note.copyWith(isContentHidden: false));
+    final open = await repo.getNote(note.id);
+    expect(open!.isContentHidden, isFalse);
+    expect(open.bodyPreview, 'secret');
+  });
 }

@@ -8,12 +8,18 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'db/app_database.dart';
 import 'debug/demo_tasks.dart';
 import 'enrollment/kids_enrollment_screen.dart';
+import 'enrollment/kids_language_picker.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'notifications/kids_notification_service.dart';
+import 'settings/kids_settings_screen.dart';
 import 'sync/sync_orchestrator.dart';
 import 'sync/webdav_config_repository.dart';
 import 'task/screens/kids_home_screen.dart';
 import 'task/services/kids_task_repository.dart';
+
+const _kLocaleKey = 'kinetic_locale';
+const _kThemeKey = 'kinetic_theme';
+const _kLocaleChosenKey = 'kinetic_locale_chosen';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +31,38 @@ Future<void> main() async {
   );
 }
 
-class KineticKidsApp extends StatelessWidget {
+ThemeData _kidsTheme(Brightness brightness) {
+  const seed = Color(0xFFF97316);
+  final scheme = ColorScheme.fromSeed(
+    seedColor: seed,
+    brightness: brightness,
+    surface: brightness == Brightness.dark
+        ? const Color(0xFF1A1410)
+        : const Color(0xFFFFF8F3),
+    surfaceContainerLow: brightness == Brightness.dark
+        ? const Color(0xFF2A211C)
+        : const Color(0xFFF5E8DC),
+  );
+  return ThemeData(
+    useMaterial3: true,
+    colorScheme: scheme,
+    brightness: brightness,
+    scaffoldBackgroundColor: scheme.surface,
+    appBarTheme: AppBarTheme(
+      backgroundColor: scheme.surface,
+      foregroundColor: scheme.onSurface,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      color: scheme.surfaceContainerLow,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+  );
+}
+
+class KineticKidsApp extends StatefulWidget {
   final AppDatabase appDb;
   final KidsNotificationService notificationService;
 
@@ -36,18 +73,71 @@ class KineticKidsApp extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    const seedColor = Color(0xFFF97316); // Orange color from app icon
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: seedColor,
-      brightness: Brightness.dark,
+  State<KineticKidsApp> createState() => _KineticKidsAppState();
+}
+
+class _KineticKidsAppState extends State<KineticKidsApp> {
+  Locale? _locale;
+  ThemeMode _themeMode = ThemeMode.dark;
+  bool _prefsLoaded = false;
+  bool _localeChosen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final store = FlutterSecureKeyValueStore();
+    final localeCode = await store.read(key: _kLocaleKey);
+    final theme = await store.read(key: _kThemeKey);
+    final chosen = await store.read(key: _kLocaleChosenKey);
+    if (!mounted) return;
+    setState(() {
+      _locale = localeCode == 'nl' ? const Locale('nl') : const Locale('en');
+      _themeMode = theme == 'light' ? ThemeMode.light : ThemeMode.dark;
+      _localeChosen = chosen == '1';
+      _prefsLoaded = true;
+    });
+  }
+
+  Future<void> _setLocale(Locale locale) async {
+    final store = FlutterSecureKeyValueStore();
+    await store.write(key: _kLocaleKey, value: locale.languageCode);
+    await store.write(key: _kLocaleChosenKey, value: '1');
+    if (mounted) {
+      setState(() {
+        _locale = locale;
+        _localeChosen = true;
+      });
+    }
+  }
+
+  Future<void> _setThemeMode(ThemeMode mode) async {
+    final store = FlutterSecureKeyValueStore();
+    await store.write(
+      key: _kThemeKey,
+      value: mode == ThemeMode.light ? 'light' : 'dark',
     );
+    if (mounted) setState(() => _themeMode = mode);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_prefsLoaded) {
+      return MaterialApp(
+        theme: _kidsTheme(Brightness.light),
+        darkTheme: _kidsTheme(Brightness.dark),
+        themeMode: ThemeMode.dark,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
 
     return MaterialApp(
       title: 'Kinetic Kids',
       debugShowCheckedModeBanner: false,
-      // Default to English; device Dutch no longer overrides.
-      locale: const Locale('en'),
+      locale: _locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -55,51 +145,47 @@ class KineticKidsApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: colorScheme.surface,
-        appBarTheme: AppBarTheme(
-          backgroundColor: colorScheme.surface,
-          foregroundColor: colorScheme.onSurface,
-          elevation: 0,
-          centerTitle: true,
-        ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: colorScheme.surfaceContainerLow,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          backgroundColor: colorScheme.surface,
-        ),
-      ),
-      home: _KidsAppShell(
-        appDb: appDb,
-        notificationService: notificationService,
-      ),
+      theme: _kidsTheme(Brightness.light),
+      darkTheme: _kidsTheme(Brightness.dark),
+      themeMode: _themeMode,
+      home: !_localeChosen
+          ? Scaffold(
+              body: SafeArea(
+                child: KidsLanguagePicker(
+                  selected: _locale ?? const Locale('en'),
+                  onSelected: _setLocale,
+                  onContinue: () => _setLocale(_locale ?? const Locale('en')),
+                ),
+              ),
+            )
+          : _KidsAppShell(
+              appDb: widget.appDb,
+              notificationService: widget.notificationService,
+              locale: _locale ?? const Locale('en'),
+              themeMode: _themeMode,
+              onLocaleChanged: _setLocale,
+              onThemeModeChanged: _setThemeMode,
+            ),
     );
   }
 }
 
-/// Shell widget that loads WebDAV config and wires up sync.
 class _KidsAppShell extends StatefulWidget {
   final AppDatabase appDb;
   final KidsNotificationService notificationService;
+  final Locale locale;
+  final ThemeMode themeMode;
+  final ValueChanged<Locale> onLocaleChanged;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
 
-  const _KidsAppShell({required this.appDb, required this.notificationService});
+  const _KidsAppShell({
+    required this.appDb,
+    required this.notificationService,
+    required this.locale,
+    required this.themeMode,
+    required this.onLocaleChanged,
+    required this.onThemeModeChanged,
+  });
 
   @override
   State<_KidsAppShell> createState() => _KidsAppShellState();
@@ -112,6 +198,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
   bool _enrolled = false;
   bool _initDone = false;
   DateTime? _xpResetAt;
+  KidGoal? _goal;
 
   @override
   void initState() {
@@ -139,7 +226,6 @@ class _KidsAppShellState extends State<_KidsAppShell>
     final configRepo = WebDavConfigRepository(store);
     final config = await configRepo.load();
     final kidId = await configRepo.loadKidId() ?? '';
-    // Restore any previously-received XP reset timestamp.
     final resetAtStr = await store.read(key: 'kinetic_xp_reset_at');
     final xpResetAt = resetAtStr != null ? DateTime.tryParse(resetAtStr) : null;
     if (!mounted) return;
@@ -156,12 +242,16 @@ class _KidsAppShellState extends State<_KidsAppShell>
           onDisconnected: () {
             if (mounted) _leaveFamily();
           },
-          onXpResetReceived: (resetAt) {
-            FlutterSecureKeyValueStore().write(
+          onXpResetReceived: (resetAt) async {
+            await FlutterSecureKeyValueStore().write(
               key: 'kinetic_xp_reset_at',
               value: resetAt.toUtc().toIso8601String(),
             );
+            await _repository.hardDeleteCompleted();
             if (mounted) setState(() => _xpResetAt = resetAt);
+          },
+          onGoalReceived: (goal) {
+            if (mounted) setState(() => _goal = goal);
           },
           onNewTaskReceived: (taskTitle) {
             final l10n = AppLocalizations.of(context);
@@ -183,7 +273,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
   }
 
   Future<void> _loadDemo() async {
-    final dutch = Localizations.localeOf(context).languageCode == 'nl';
+    final dutch = widget.locale.languageCode == 'nl';
     await loadKidsDemoTasks(widget.appDb, dutch: dutch);
     if (!mounted) return;
     setState(() {
@@ -224,8 +314,22 @@ class _KidsAppShellState extends State<_KidsAppShell>
       setState(() {
         _enrolled = false;
         _orchestrator = null;
+        _goal = null;
       });
     }
+  }
+
+  void _openSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => KidsSettingsScreen(
+          locale: widget.locale,
+          themeMode: widget.themeMode,
+          onLocaleChanged: widget.onLocaleChanged,
+          onThemeModeChanged: widget.onThemeModeChanged,
+        ),
+      ),
+    );
   }
 
   @override
@@ -247,8 +351,10 @@ class _KidsAppShellState extends State<_KidsAppShell>
       repository: _repository,
       orchestrator: _orchestrator,
       xpResetAt: _xpResetAt,
+      goal: _goal,
       onLeaveFamily: _enrolled && _orchestrator != null ? _leaveFamily : null,
       onLoadDemo: kDebugMode ? _loadDemo : null,
+      onOpenSettings: _openSettings,
     );
   }
 }

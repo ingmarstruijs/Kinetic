@@ -163,16 +163,18 @@ ThemeData buildTheme(AppTheme theme) {
         brightness: Brightness.light,
       ),
     ),
-    // Soft cool sage surfaces — lower contrast, easy on the eyes.
+    // Warm sand surfaces with terracotta accents.
     AppTheme.calm => _themeFromScheme(
       ColorScheme.fromSeed(
-        seedColor: const Color(0xFF4F7A72),
+        seedColor: const Color(0xFFC45C26),
         brightness: Brightness.light,
-        surface: const Color(0xFFEFF3F2),
-        surfaceContainerLow: const Color(0xFFE6ECEA),
-        surfaceContainerHigh: const Color(0xFFD9E2DF),
+        primary: const Color(0xFFC45C26),
+        surface: const Color(0xFFF3E6D8),
+        surfaceContainerLow: const Color(0xFFEAD9C8),
+        surfaceContainerHigh: const Color(0xFFE0CDB8),
+        onSurface: const Color(0xFF3D2C22),
       ),
-      scaffold: const Color(0xFFEFF3F2),
+      scaffold: const Color(0xFFF7EDE3),
     ),
     // True black scaffold for OLED panels.
     AppTheme.night => _themeFromScheme(

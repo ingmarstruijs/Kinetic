@@ -3,17 +3,12 @@ import 'package:drift/drift.dart';
 import '../../db/app_database.dart';
 import '../models/kids_task.dart';
 
-/// KidsTaskRepository — CRUD for assigned tasks with streaming
-///
-/// Provides watch streams for UI updates and mutation methods for completion tracking.
-/// Tasks are read-only for most fields (assigned by parent); only completion status
-/// can be modified locally.
+/// KidsTaskRepository — CRUD for assigned tasks with streaming.
 class KidsTaskRepository {
   final AppDatabase _db;
 
   KidsTaskRepository({required AppDatabase db}) : _db = db;
 
-  /// All assigned tasks, ordered by due date (earliest first)
   Stream<List<KidsTask>> watchAll() {
     return (_db.select(_db.kidsTasks)
           ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
@@ -21,39 +16,30 @@ class KidsTaskRepository {
         .map((rows) => rows.map(_taskFromRow).toList());
   }
 
-  /// Only incomplete tasks, ordered by due date
   Stream<List<KidsTask>> watchPending() {
     return (_db.select(_db.kidsTasks)
-          ..where((t) => t.isCompleted.equals(false))
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.awaitingVerification.equals(false),
+          )
           ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
         .watch()
         .map((rows) => rows.map(_taskFromRow).toList());
   }
 
-  /// Single task by ID
   Stream<KidsTask?> watchOne(String id) {
     return (_db.select(_db.kidsTasks)..where((t) => t.id.equals(id)))
         .watchSingleOrNull()
         .map((row) => row != null ? _taskFromRow(row) : null);
   }
 
-  /// Mark a task as complete (sets isCompleted=true, completedAt=now, syncState=dirty)
-  Future<void> markComplete(String taskId) async {
-    await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
-      KidsTasksCompanion(
-        isCompleted: const Value(true),
-        completedAt: Value(DateTime.now().toUtc()),
-        syncState: const Value('dirty'),
-        updatedAt: Value(DateTime.now().toUtc()),
-      ),
-    );
-  }
-
-  /// Undo completion (sets isCompleted=false, completedAt=null, syncState=dirty)
-  Future<void> markIncomplete(String taskId) async {
+  /// Kid requests completion — status becomes pending verification (no XP yet).
+  Future<void> requestComplete(String taskId) async {
     await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
       KidsTasksCompanion(
         isCompleted: const Value(false),
+        awaitingVerification: const Value(true),
         completedAt: const Value(null),
         syncState: const Value('dirty'),
         updatedAt: Value(DateTime.now().toUtc()),
@@ -61,7 +47,32 @@ class KidsTaskRepository {
     );
   }
 
-  /// Soft-delete a task (marks syncState=deleted for sync to push tombstone)
+  /// Apply parent accept from sync (local is already COMPLETED on wire).
+  Future<void> applyAccepted(String taskId, DateTime completedAt) async {
+    await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
+      KidsTasksCompanion(
+        isCompleted: const Value(true),
+        awaitingVerification: const Value(false),
+        completedAt: Value(completedAt),
+        syncState: const Value('clean'),
+        updatedAt: Value(completedAt),
+      ),
+    );
+  }
+
+  /// Apply parent reject / reopen from sync.
+  Future<void> applyOpen(String taskId, {required bool dirty}) async {
+    await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
+      KidsTasksCompanion(
+        isCompleted: const Value(false),
+        awaitingVerification: const Value(false),
+        completedAt: const Value(null),
+        syncState: Value(dirty ? 'dirty' : 'clean'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
   Future<void> delete(String taskId) async {
     await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
       KidsTasksCompanion(
@@ -71,36 +82,27 @@ class KidsTaskRepository {
     );
   }
 
-  /// Get all tasks (non-streaming, for sync)
-  Future<List<KidsTaskRow>> getAllRows() {
-    return _db.select(_db.kidsTasks).get();
-  }
+  Future<List<KidsTaskRow>> getAllRows() => _db.select(_db.kidsTasks).get();
 
-  /// Get dirty tasks (local changes to push)
   Future<List<KidsTaskRow>> getDirtyRows() {
     return (_db.select(
       _db.kidsTasks,
     )..where((t) => t.syncState.equals('dirty'))).get();
   }
 
-  /// Get deleted tasks (tombstones to push)
   Future<List<KidsTaskRow>> getDeletedRows() {
     return (_db.select(
       _db.kidsTasks,
     )..where((t) => t.syncState.equals('deleted'))).get();
   }
 
-  /// Insert or update a task (from sync)
   Future<void> upsertTask(KidsTask task) async {
-    await _db
-        .into(_db.kidsTasks)
-        .insert(
+    await _db.into(_db.kidsTasks).insert(
           _taskToCompanion(task),
           onConflict: DoUpdate((_) => _taskToCompanion(task)),
         );
   }
 
-  /// Mark a task as synced (sets syncState=clean and updates etag)
   Future<void> markSynced(String taskId, String? etag) async {
     await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
       KidsTasksCompanion(
@@ -110,13 +112,18 @@ class KidsTaskRepository {
     );
   }
 
-  /// Hard-delete after successful sync (for tombstones)
   Future<void> hardDelete(String taskId) async {
     await (_db.delete(_db.kidsTasks)..where((t) => t.id.equals(taskId))).go();
   }
 
-  /// Stream the total earned XP: sum of xpReward for completed tasks.
-  /// If [resetAt] is provided, only counts tasks completed after that time.
+  /// Delete all completed (accepted) tasks locally — used after XP/goal reset.
+  Future<void> hardDeleteCompleted() async {
+    await (_db.delete(_db.kidsTasks)
+          ..where((t) => t.isCompleted.equals(true)))
+        .go();
+  }
+
+  /// Total XP from accepted completions only.
   Stream<int> watchTotalXp({DateTime? resetAt}) {
     return (_db.select(_db.kidsTasks)
           ..where((t) => t.isCompleted.equals(true)))
@@ -124,18 +131,17 @@ class KidsTaskRepository {
         .map((rows) {
           final filtered = resetAt == null
               ? rows
-              : rows.where(
-                  (r) =>
-                      r.completedAt != null &&
-                      r.completedAt!.isAfter(resetAt),
-                ).toList();
+              : rows
+                  .where(
+                    (r) =>
+                        r.completedAt != null &&
+                        r.completedAt!.isAfter(resetAt),
+                  )
+                  .toList();
           return filtered.fold(0, (sum, r) => sum + r.xpReward);
         });
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  /// Convert Drift row to domain model
   KidsTask _taskFromRow(KidsTaskRow row) {
     return KidsTask(
       id: row.id,
@@ -149,6 +155,7 @@ class KidsTaskRepository {
       priority: TaskPriority.values[row.priority],
       dueDate: row.dueDate,
       isCompleted: row.isCompleted,
+      awaitingVerification: row.awaitingVerification,
       completedAt: row.completedAt,
       xpReward: row.xpReward,
       syncState: row.syncState,
@@ -158,7 +165,6 @@ class KidsTaskRepository {
     );
   }
 
-  /// Convert domain model to Drift companion (for insert/update)
   KidsTasksCompanion _taskToCompanion(KidsTask task) {
     return KidsTasksCompanion(
       id: Value(task.id),
@@ -169,6 +175,7 @@ class KidsTaskRepository {
       priority: Value(task.priority.index),
       dueDate: Value(task.dueDate),
       isCompleted: Value(task.isCompleted),
+      awaitingVerification: Value(task.awaitingVerification),
       completedAt: Value(task.completedAt),
       xpReward: Value(task.xpReward),
       syncState: Value(task.syncState),

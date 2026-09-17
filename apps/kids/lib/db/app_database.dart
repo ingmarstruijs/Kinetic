@@ -17,7 +17,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(kidsTasks, kidsTasks.awaitingVerification);
+          }
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return openEncryptedDatabase(name: 'kids_app');

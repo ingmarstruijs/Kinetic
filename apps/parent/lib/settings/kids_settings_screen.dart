@@ -4,7 +4,6 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
-import '../theme/app_themes.dart';
 import '../vault/family_vault_sync.dart';
 import '../vault/screens/family_create_screen.dart';
 import 'kids_enrollment_qr_screen.dart';
@@ -185,7 +184,10 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
         children: [
           const SizedBox(height: 8),
           ListTile(
-            leading: const Icon(Icons.child_care, color: kColorTeal),
+            leading: Icon(
+              Icons.child_care,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: Text(l10n.kidsLinkApp),
             subtitle: Text(l10n.kidsLinkAppSubtitle),
             trailing: const Icon(Icons.qr_code),
@@ -205,7 +207,10 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
             ),
             for (final kid in _enrolledKids)
               ListTile(
-                leading: const Icon(Icons.face, color: kColorTeal),
+                leading: Icon(
+                  Icons.face,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 title: Text(kid.name),
                 subtitle: _buildKidSubtitle(context, kid),
                 trailing: IconButton(

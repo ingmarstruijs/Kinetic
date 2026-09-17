@@ -240,6 +240,21 @@ void main() {
       await repo.removeKidsAssignment(kidsTaskId: 'missing');
       expect((await repo.watchAllTasks().first).single.title, 'Stay');
     });
+
+    test('completeByKidsTaskId marks linked parent task completed', () async {
+      final created = await repo.createTask(title: 'Shirts');
+      await repo.sendToKids(created.id, targetKidId: 'mees');
+      final linked = await repo.getTask(created.id);
+      expect(linked?.kidsTaskId, isNotNull);
+      expect(linked?.isCompleted, isFalse);
+
+      await repo.completeByKidsTaskId(linked!.kidsTaskId!);
+      final done = await repo.getTask(created.id);
+      expect(done?.isCompleted, isTrue);
+      expect(done?.completedAt, isNotNull);
+      final raw = await repo.debugGetRawTask(created.id);
+      expect(raw?.syncState, equals('dirty'));
+    });
   });
 
   // --------------------------------------------------------------------------

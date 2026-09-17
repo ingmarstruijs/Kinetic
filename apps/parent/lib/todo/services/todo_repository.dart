@@ -549,6 +549,26 @@ class TodoRepository {
     onWrite?.call();
   }
 
+  /// Mark the parent task linked to [kidsTaskId] as completed after acceptance.
+  Future<void> completeByKidsTaskId(String kidsTaskId) async {
+    final row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
+    if (row == null || row.isCompleted) return;
+    final now = DateTime.now().toUtc();
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(row.id))).write(
+      PersonalTasksCompanion(
+        isCompleted: const Value(true),
+        completedAt: Value(now),
+        updatedAt: Value(now),
+        syncState: const Value('dirty'),
+      ),
+    );
+    onWrite?.call();
+  }
+
   /// Tombstone the parent task linked to a kids assignment so sync does not
   /// re-push it after the shared file is deleted.
   Future<void> removeKidsAssignment({

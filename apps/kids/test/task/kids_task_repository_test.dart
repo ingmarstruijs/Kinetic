@@ -141,7 +141,7 @@ void main() {
       expect(fetched!.title, 'Test Task');
     });
 
-    test('markComplete sets isCompleted=true and syncState=dirty', () async {
+    test('requestComplete sets awaitingVerification and syncState=dirty', () async {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
@@ -161,15 +161,16 @@ void main() {
       );
 
       await repository.upsertTask(task);
-      await repository.markComplete('task1');
+      await repository.requestComplete('task1');
 
       final updated = await repository.watchOne('task1').first;
-      expect(updated!.isCompleted, true);
-      expect(updated.completedAt, isNotNull);
+      expect(updated!.isCompleted, false);
+      expect(updated.awaitingVerification, true);
+      expect(updated.completedAt, isNull);
       expect(updated.syncState, 'dirty');
     });
 
-    test('markIncomplete reverses completion', () async {
+    test('applyAccepted marks completed and clears pending', () async {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
@@ -179,8 +180,39 @@ void main() {
         category: TaskCategory.household,
         priority: TaskPriority.normal,
         dueDate: now,
-        isCompleted: true,
-        completedAt: now,
+        isCompleted: false,
+        awaitingVerification: true,
+        completedAt: null,
+        xpReward: 10,
+        syncState: 'dirty',
+        webdavEtag: 'etag',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      await repository.upsertTask(task);
+      await repository.applyAccepted('task1', now);
+
+      final updated = await repository.watchOne('task1').first;
+      expect(updated!.isCompleted, true);
+      expect(updated.awaitingVerification, false);
+      expect(updated.completedAt, isNotNull);
+      expect(updated.syncState, 'clean');
+    });
+
+    test('applyOpen clears pending and completion', () async {
+      final now = DateTime.now().toUtc();
+      final task = KidsTask(
+        id: 'task1',
+        parentId: 'parent1',
+        title: 'Task',
+        notes: '',
+        category: TaskCategory.household,
+        priority: TaskPriority.normal,
+        dueDate: now,
+        isCompleted: false,
+        awaitingVerification: true,
+        completedAt: null,
         xpReward: 10,
         syncState: 'clean',
         webdavEtag: 'etag',
@@ -189,12 +221,68 @@ void main() {
       );
 
       await repository.upsertTask(task);
-      await repository.markIncomplete('task1');
+      await repository.applyOpen('task1', dirty: false);
 
       final updated = await repository.watchOne('task1').first;
       expect(updated!.isCompleted, false);
+      expect(updated.awaitingVerification, false);
       expect(updated.completedAt, isNull);
-      expect(updated.syncState, 'dirty');
+    });
+
+    test('watchTotalXp counts only accepted completions', () async {
+      final now = DateTime.now().toUtc();
+      await repository.upsertTask(
+        KidsTask(
+          id: 'open',
+          parentId: 'p',
+          title: 'Open',
+          notes: '',
+          category: TaskCategory.household,
+          priority: TaskPriority.normal,
+          dueDate: now,
+          isCompleted: false,
+          xpReward: 10,
+          syncState: 'clean',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.upsertTask(
+        KidsTask(
+          id: 'pending',
+          parentId: 'p',
+          title: 'Pending',
+          notes: '',
+          category: TaskCategory.household,
+          priority: TaskPriority.normal,
+          dueDate: now,
+          isCompleted: false,
+          awaitingVerification: true,
+          xpReward: 25,
+          syncState: 'dirty',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      await repository.upsertTask(
+        KidsTask(
+          id: 'done',
+          parentId: 'p',
+          title: 'Done',
+          notes: '',
+          category: TaskCategory.household,
+          priority: TaskPriority.normal,
+          dueDate: now,
+          isCompleted: true,
+          completedAt: now,
+          xpReward: 15,
+          syncState: 'clean',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      expect(await repository.watchTotalXp().first, 15);
     });
 
     test('delete soft-deletes task (syncState=deleted)', () async {

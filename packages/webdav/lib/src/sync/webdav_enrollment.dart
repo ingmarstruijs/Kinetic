@@ -86,6 +86,7 @@ class WebDavEnrollment {
       '/kinetic/shared/presence',
       '/kinetic/shared/disconnect',
       '/kinetic/shared/xp-reset',
+      '/kinetic/shared/goals',
     ];
     for (final dir in dirs) {
       await client.mkcol(dir);

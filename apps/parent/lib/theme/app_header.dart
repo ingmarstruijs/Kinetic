@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// Kinetic Link logo for headers — same art as the Android launcher.
+///
+/// When [color] is null, uses [ColorScheme.primary] so Calm/Night accents apply
+/// while the white "K" stays light ([BlendMode.color]).
 class KineticLogo extends StatelessWidget {
   final double size;
   final Color? color;
@@ -9,14 +12,18 @@ class KineticLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tint = color ?? Theme.of(context).colorScheme.primary;
     return ClipRRect(
       borderRadius: BorderRadius.circular(size * 0.22),
-      child: Image.asset(
-        'assets/icons/app_icon.png',
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        filterQuality: FilterQuality.high,
+      child: ColorFiltered(
+        colorFilter: ColorFilter.mode(tint, BlendMode.color),
+        child: Image.asset(
+          'assets/icons/app_icon.png',
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
+        ),
       ),
     );
   }

@@ -66,12 +66,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final config = await widget.configRepo.load();
     final paired = await widget.configRepo.isPartnerPaired();
     final kids = await widget.configRepo.loadEnrolledKids();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _config = config;
         _partnerPaired = paired;
         _enrolledKidsCount = kids.length;
       });
+    }
   }
 
   @override
@@ -86,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ValueListenableBuilder<AppTheme>(
         valueListenable: themeNotifier,
         builder: (context, currentTheme, _) {
-          final iconColor = kColorTeal;
+          final iconColor = Theme.of(context).colorScheme.primary;
           return ListView(
             children: [
               _SectionHeader(label: l10n.settingsSectionAppearance),

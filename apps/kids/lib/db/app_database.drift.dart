@@ -107,6 +107,20 @@ class $KidsTasksTable extends KidsTasks
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _awaitingVerificationMeta =
+      const VerificationMeta('awaitingVerification');
+  @override
+  late final GeneratedColumn<bool> awaitingVerification = GeneratedColumn<bool>(
+    'awaiting_verification',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("awaiting_verification" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _xpRewardMeta = const VerificationMeta(
     'xpReward',
   );
@@ -175,6 +189,7 @@ class $KidsTasksTable extends KidsTasks
     dueDate,
     isCompleted,
     completedAt,
+    awaitingVerification,
     xpReward,
     syncState,
     webdavEtag,
@@ -253,6 +268,15 @@ class $KidsTasksTable extends KidsTasks
         completedAt.isAcceptableOrUnknown(
           data['completed_at']!,
           _completedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('awaiting_verification')) {
+      context.handle(
+        _awaitingVerificationMeta,
+        awaitingVerification.isAcceptableOrUnknown(
+          data['awaiting_verification']!,
+          _awaitingVerificationMeta,
         ),
       );
     }
@@ -335,6 +359,10 @@ class $KidsTasksTable extends KidsTasks
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
+      awaitingVerification: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}awaiting_verification'],
+      )!,
       xpReward: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}xp_reward'],
@@ -382,11 +410,14 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   /// Scheduling
   final DateTime? dueDate;
 
-  /// Completion tracking
+  /// Completion tracking — [isCompleted] is true only after parent acceptance.
   final bool isCompleted;
   final DateTime? completedAt;
 
-  /// XP reward for completion (foundation for Phase 13.3)
+  /// True while waiting for the parent to accept/reject a completion request.
+  final bool awaitingVerification;
+
+  /// XP reward for completion (counts only after parent acceptance)
   final int xpReward;
 
   /// Sync state: 'clean' (synced), 'dirty' (modified locally), 'deleted' (soft-delete)
@@ -408,6 +439,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     this.dueDate,
     required this.isCompleted,
     this.completedAt,
+    required this.awaitingVerification,
     required this.xpReward,
     required this.syncState,
     this.webdavEtag,
@@ -432,6 +464,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
+    map['awaiting_verification'] = Variable<bool>(awaitingVerification);
     map['xp_reward'] = Variable<int>(xpReward);
     map['sync_state'] = Variable<String>(syncState);
     if (!nullToAbsent || webdavEtag != null) {
@@ -459,6 +492,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
+      awaitingVerification: Value(awaitingVerification),
       xpReward: Value(xpReward),
       syncState: Value(syncState),
       webdavEtag: webdavEtag == null && nullToAbsent
@@ -484,6 +518,9 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       dueDate: serializer.fromJson<DateTime?>(json['dueDate']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      awaitingVerification: serializer.fromJson<bool>(
+        json['awaitingVerification'],
+      ),
       xpReward: serializer.fromJson<int>(json['xpReward']),
       syncState: serializer.fromJson<String>(json['syncState']),
       webdavEtag: serializer.fromJson<String?>(json['webdavEtag']),
@@ -504,6 +541,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       'dueDate': serializer.toJson<DateTime?>(dueDate),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'awaitingVerification': serializer.toJson<bool>(awaitingVerification),
       'xpReward': serializer.toJson<int>(xpReward),
       'syncState': serializer.toJson<String>(syncState),
       'webdavEtag': serializer.toJson<String?>(webdavEtag),
@@ -522,6 +560,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     Value<DateTime?> dueDate = const Value.absent(),
     bool? isCompleted,
     Value<DateTime?> completedAt = const Value.absent(),
+    bool? awaitingVerification,
     int? xpReward,
     String? syncState,
     Value<String?> webdavEtag = const Value.absent(),
@@ -537,6 +576,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     dueDate: dueDate.present ? dueDate.value : this.dueDate,
     isCompleted: isCompleted ?? this.isCompleted,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
+    awaitingVerification: awaitingVerification ?? this.awaitingVerification,
     xpReward: xpReward ?? this.xpReward,
     syncState: syncState ?? this.syncState,
     webdavEtag: webdavEtag.present ? webdavEtag.value : this.webdavEtag,
@@ -558,6 +598,9 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
+      awaitingVerification: data.awaitingVerification.present
+          ? data.awaitingVerification.value
+          : this.awaitingVerification,
       xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
       syncState: data.syncState.present ? data.syncState.value : this.syncState,
       webdavEtag: data.webdavEtag.present
@@ -580,6 +623,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           ..write('dueDate: $dueDate, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
+          ..write('awaitingVerification: $awaitingVerification, ')
           ..write('xpReward: $xpReward, ')
           ..write('syncState: $syncState, ')
           ..write('webdavEtag: $webdavEtag, ')
@@ -600,6 +644,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     dueDate,
     isCompleted,
     completedAt,
+    awaitingVerification,
     xpReward,
     syncState,
     webdavEtag,
@@ -619,6 +664,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
           other.dueDate == this.dueDate &&
           other.isCompleted == this.isCompleted &&
           other.completedAt == this.completedAt &&
+          other.awaitingVerification == this.awaitingVerification &&
           other.xpReward == this.xpReward &&
           other.syncState == this.syncState &&
           other.webdavEtag == this.webdavEtag &&
@@ -636,6 +682,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   final Value<DateTime?> dueDate;
   final Value<bool> isCompleted;
   final Value<DateTime?> completedAt;
+  final Value<bool> awaitingVerification;
   final Value<int> xpReward;
   final Value<String> syncState;
   final Value<String?> webdavEtag;
@@ -652,6 +699,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     this.dueDate = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.awaitingVerification = const Value.absent(),
     this.xpReward = const Value.absent(),
     this.syncState = const Value.absent(),
     this.webdavEtag = const Value.absent(),
@@ -669,6 +717,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     this.dueDate = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
+    this.awaitingVerification = const Value.absent(),
     this.xpReward = const Value.absent(),
     this.syncState = const Value.absent(),
     this.webdavEtag = const Value.absent(),
@@ -690,6 +739,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     Expression<DateTime>? dueDate,
     Expression<bool>? isCompleted,
     Expression<DateTime>? completedAt,
+    Expression<bool>? awaitingVerification,
     Expression<int>? xpReward,
     Expression<String>? syncState,
     Expression<String>? webdavEtag,
@@ -707,6 +757,8 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
       if (dueDate != null) 'due_date': dueDate,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (completedAt != null) 'completed_at': completedAt,
+      if (awaitingVerification != null)
+        'awaiting_verification': awaitingVerification,
       if (xpReward != null) 'xp_reward': xpReward,
       if (syncState != null) 'sync_state': syncState,
       if (webdavEtag != null) 'webdav_etag': webdavEtag,
@@ -726,6 +778,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     Value<DateTime?>? dueDate,
     Value<bool>? isCompleted,
     Value<DateTime?>? completedAt,
+    Value<bool>? awaitingVerification,
     Value<int>? xpReward,
     Value<String>? syncState,
     Value<String?>? webdavEtag,
@@ -743,6 +796,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
       dueDate: dueDate ?? this.dueDate,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
+      awaitingVerification: awaitingVerification ?? this.awaitingVerification,
       xpReward: xpReward ?? this.xpReward,
       syncState: syncState ?? this.syncState,
       webdavEtag: webdavEtag ?? this.webdavEtag,
@@ -782,6 +836,9 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
+    if (awaitingVerification.present) {
+      map['awaiting_verification'] = Variable<bool>(awaitingVerification.value);
+    }
     if (xpReward.present) {
       map['xp_reward'] = Variable<int>(xpReward.value);
     }
@@ -815,6 +872,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
           ..write('dueDate: $dueDate, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
+          ..write('awaitingVerification: $awaitingVerification, ')
           ..write('xpReward: $xpReward, ')
           ..write('syncState: $syncState, ')
           ..write('webdavEtag: $webdavEtag, ')
@@ -848,6 +906,7 @@ typedef $$KidsTasksTableCreateCompanionBuilder =
       Value<DateTime?> dueDate,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
+      Value<bool> awaitingVerification,
       Value<int> xpReward,
       Value<String> syncState,
       Value<String?> webdavEtag,
@@ -866,6 +925,7 @@ typedef $$KidsTasksTableUpdateCompanionBuilder =
       Value<DateTime?> dueDate,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
+      Value<bool> awaitingVerification,
       Value<int> xpReward,
       Value<String> syncState,
       Value<String?> webdavEtag,
@@ -925,6 +985,11 @@ class $$KidsTasksTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get awaitingVerification => $composableBuilder(
+    column: $table.awaitingVerification,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1008,6 +1073,11 @@ class $$KidsTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get awaitingVerification => $composableBuilder(
+    column: $table.awaitingVerification,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get xpReward => $composableBuilder(
     column: $table.xpReward,
     builder: (column) => ColumnOrderings(column),
@@ -1074,6 +1144,11 @@ class $$KidsTasksTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get awaitingVerification => $composableBuilder(
+    column: $table.awaitingVerification,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get xpReward =>
       $composableBuilder(column: $table.xpReward, builder: (column) => column);
 
@@ -1132,6 +1207,7 @@ class $$KidsTasksTableTableManager
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> awaitingVerification = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
@@ -1148,6 +1224,7 @@ class $$KidsTasksTableTableManager
                 dueDate: dueDate,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
+                awaitingVerification: awaitingVerification,
                 xpReward: xpReward,
                 syncState: syncState,
                 webdavEtag: webdavEtag,
@@ -1166,6 +1243,7 @@ class $$KidsTasksTableTableManager
                 Value<DateTime?> dueDate = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
+                Value<bool> awaitingVerification = const Value.absent(),
                 Value<int> xpReward = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
@@ -1182,6 +1260,7 @@ class $$KidsTasksTableTableManager
                 dueDate: dueDate,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
+                awaitingVerification: awaitingVerification,
                 xpReward: xpReward,
                 syncState: syncState,
                 webdavEtag: webdavEtag,

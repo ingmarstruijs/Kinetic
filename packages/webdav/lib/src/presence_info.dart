@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 /// Represents a family member's last-known sync presence.
 ///
 /// Stored on WebDAV as `/kinetic/shared/presence/{deviceId}.json`,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../db/app_database.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -15,7 +16,9 @@ class KidsHomeScreen extends StatefulWidget {
   final KidsSyncOrchestrator? orchestrator;
   final VoidCallback? onLeaveFamily;
   final DateTime? xpResetAt;
+  final KidGoal? goal;
   final VoidCallback? onLoadDemo;
+  final VoidCallback? onOpenSettings;
 
   const KidsHomeScreen({
     super.key,
@@ -24,7 +27,9 @@ class KidsHomeScreen extends StatefulWidget {
     this.orchestrator,
     this.onLeaveFamily,
     this.xpResetAt,
+    this.goal,
     this.onLoadDemo,
+    this.onOpenSettings,
   });
 
   @override
@@ -51,6 +56,32 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     }
   }
 
+  Future<void> _requestComplete(KidsTask task) async {
+    if (task.awaitingVerification || task.isCompleted) return;
+    final l10n = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.confirmCompleteTitle),
+        content: Text(l10n.confirmCompleteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.confirmCompleteAction),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await _taskRepository.requestComplete(task.id);
+      await widget.orchestrator?.sync();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -58,7 +89,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: AppHeaderKids(title: l10n.myTasks),
+        title: const AppHeaderKids(),
         actions: [
           if (widget.orchestrator != null) ...[
             if (_syncing)
@@ -77,41 +108,52 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                 tooltip: l10n.sync,
               ),
           ],
-          if (widget.onLeaveFamily != null || widget.onLoadDemo != null)
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'leave') widget.onLeaveFamily?.call();
-                if (value == 'demo') widget.onLoadDemo?.call();
-              },
-              itemBuilder: (_) => [
-                if (widget.onLoadDemo != null)
-                  PopupMenuItem(
-                    value: 'demo',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.movie_filter_outlined, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          Localizations.localeOf(context).languageCode == 'nl'
-                              ? 'Laad demo-klusjes'
-                              : 'Load demo chores',
-                        ),
-                      ],
-                    ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'settings') widget.onOpenSettings?.call();
+              if (value == 'leave') widget.onLeaveFamily?.call();
+              if (value == 'demo') widget.onLoadDemo?.call();
+            },
+            itemBuilder: (_) => [
+              if (widget.onOpenSettings != null)
+                PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.settings_outlined, size: 18),
+                      const SizedBox(width: 8),
+                      Text(l10n.settings),
+                    ],
                   ),
-                if (widget.onLeaveFamily != null)
-                  PopupMenuItem(
-                    value: 'leave',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.logout, size: 18),
-                        const SizedBox(width: 8),
-                        Text(l10n.leaveFamily),
-                      ],
-                    ),
+                ),
+              if (widget.onLoadDemo != null)
+                PopupMenuItem(
+                  value: 'demo',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.movie_filter_outlined, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        Localizations.localeOf(context).languageCode == 'nl'
+                            ? 'Laad demo-klusjes'
+                            : 'Load demo chores',
+                      ),
+                    ],
                   ),
-              ],
-            ),
+                ),
+              if (widget.onLeaveFamily != null)
+                PopupMenuItem(
+                  value: 'leave',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.logout, size: 18),
+                      const SizedBox(width: 8),
+                      Text(l10n.leaveFamily),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
       body: StreamBuilder<List<KidsTask>>(
@@ -126,39 +168,85 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
           }
 
           final tasks = snapshot.data ?? [];
+          final openTasks = tasks.where((t) => t.isOpen).toList();
+          final pendingTasks =
+              tasks.where((t) => t.awaitingVerification).toList();
+          final completedTasks = tasks.where((t) => t.isCompleted).toList();
 
-          // XP header
           final xpHeader = StreamBuilder<int>(
             stream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
             builder: (context, xpSnap) {
               final totalXp = xpSnap.data ?? 0;
+              final goal = widget.goal;
+              final capped = goal != null && goal.targetXp > 0
+                  ? (totalXp > goal.targetXp ? goal.targetXp : totalXp)
+                  : totalXp;
+              final progress = goal != null && goal.targetXp > 0
+                  ? (capped / goal.targetXp).clamp(0.0, 1.0)
+                  : null;
+
               return Container(
                 width: double.infinity,
-                margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(16),
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.stars_rounded,
-                      color: scheme.onPrimaryContainer,
-                      size: 28,
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.star_rounded, color: scheme.primary),
                     ),
-                    const SizedBox(width: 10),
-                    Text(
-                      '$totalXp XP',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: scheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            goal != null
+                                ? goal.title
+                                : l10n.totalXp(capped),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            goal != null
+                                ? l10n.goalProgress(capped, goal.targetXp)
+                                : l10n.keepGoing,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          if (progress != null) ...[
+                            const SizedBox(height: 10),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                minHeight: 8,
+                                backgroundColor:
+                                    scheme.outline.withValues(alpha: 0.2),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.military_tech_rounded,
+                      size: 40,
+                      color: scheme.primary.withValues(alpha: 0.7),
                     ),
                   ],
                 ),
@@ -185,13 +273,14 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                           const SizedBox(height: 16),
                           Text(
                             l10n.allDone,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(color: scheme.onSurface),
+                            style: Theme.of(context).textTheme.headlineSmall,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.noTasksRightNow,
-                            style: Theme.of(context).textTheme.bodyMedium
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                         ],
@@ -203,27 +292,54 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
             );
           }
 
-          // Group task by due date (today, tomorrow, later)
-          final pendingTasks = tasks.where((t) => !t.isCompleted).toList();
-          final completedTasks = tasks.where((t) => t.isCompleted).toList();
-
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               xpHeader,
+              if (openTasks.isNotEmpty) ...[
+                Row(
+                  children: [
+                    Text(
+                      l10n.stillToDo,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('${openTasks.length}'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ...openTasks.map((task) => _buildTaskCard(context, task)),
+                const SizedBox(height: 20),
+              ],
               if (pendingTasks.isNotEmpty) ...[
                 Text(
-                  l10n.stillToDo,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  l10n.waitingForParent,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 ...pendingTasks.map((task) => _buildTaskCard(context, task)),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
               ],
               if (completedTasks.isNotEmpty) ...[
                 Text(
                   l10n.completed,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 ...completedTasks.map((task) => _buildTaskCard(context, task)),
@@ -239,23 +355,22 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     final priorityColor = _getPriorityColor(scheme, task.priority);
+    final pending = task.awaitingVerification;
+    final done = task.isCompleted;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Checkbox(
-          value: task.isCompleted,
-          onChanged: (value) {
-            if (value ?? false) {
-              _taskRepository.markComplete(task.id);
-            } else {
-              _taskRepository.markIncomplete(task.id);
-            }
-          },
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: pending
+            ? Icon(Icons.hourglass_top_rounded, color: scheme.tertiary)
+            : Checkbox(
+                value: done,
+                onChanged: done ? null : (_) => _requestComplete(task),
+              ),
         title: Text(
           task.title,
-          style: task.isCompleted
+          style: done
               ? TextStyle(
                   decoration: TextDecoration.lineThrough,
                   color: scheme.onSurfaceVariant,
@@ -265,21 +380,22 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (task.notes != null && task.notes!.isNotEmpty)
+            if (pending)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  task.notes!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                  l10n.awaitingParentConfirm,
+                  style: TextStyle(
+                    color: scheme.tertiary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Row(
                 children: [
-                  // Priority badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -287,7 +403,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: priorityColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       _priorityLabel(l10n, task.priority),
@@ -298,9 +414,8 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Due date
-                  if (task.dueDate != null)
+                  if (task.dueDate != null) ...[
+                    const SizedBox(width: 8),
                     Text(
                       _formatDueDate(l10n, task.dueDate!),
                       style: TextStyle(
@@ -308,25 +423,39 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
           ],
         ),
-        trailing: Container(
-          decoration: BoxDecoration(
-            color: scheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Text(
-            '${task.xpReward} XP',
-            style: TextStyle(
-              color: scheme.onPrimaryContainer,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.star_rounded, size: 14, color: scheme.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${task.xpReward} XP',
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            Icon(Icons.chevron_right, color: scheme.outline),
+          ],
         ),
         onTap: () {
           Navigator.push(
@@ -335,6 +464,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
               builder: (context) => KidsTaskDetailScreen(
                 repository: _taskRepository,
                 taskId: task.id,
+                onRequestComplete: () => _requestComplete(task),
               ),
             ),
           );
@@ -347,7 +477,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     return switch (priority) {
       TaskPriority.urgent => Colors.red,
       TaskPriority.high => Colors.deepOrange,
-      TaskPriority.normal => Colors.orange,
+      TaskPriority.normal => scheme.primary,
       TaskPriority.low => Colors.green,
     };
   }

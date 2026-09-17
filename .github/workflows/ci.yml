@@ -28,12 +28,11 @@ jobs:
 
       - name: Bootstrap monorepo
         run: |
-          flutter pub global activate melos
-          echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
-          melos bootstrap
+          flutter pub get
+          dart run melos bootstrap
 
       - name: Analyze
-        run: melos run analyze
+        run: dart run melos exec -- flutter analyze
 
       - name: Test
-        run: melos run test
+        run: dart run melos exec --dir-exists=test -- flutter test

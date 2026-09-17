@@ -36,4 +36,5 @@ jobs:
         run: dart run melos exec -- flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Test
-        run: dart run melos exec --dir-exists=test -- flutter test
+        # One Flutter process at a time — parallel melos exec hits the startup lock.
+        run: dart run melos exec --concurrency=1 --dir-exists=test -- flutter test

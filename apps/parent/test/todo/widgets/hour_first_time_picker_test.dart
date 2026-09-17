@@ -1,12 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:parent/l10n/generated/app_localizations.dart';
 import 'package:parent/todo/widgets/hour_first_time_picker.dart';
+
+Widget _app(Widget home) {
+  return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    locale: const Locale('en'),
+    home: home,
+  );
+}
 
 void main() {
   testWidgets('hour field is focused when the dialog opens', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
+      _app(
+        Builder(
           builder: (context) => TextButton(
             onPressed: () => showHourFirstTimePicker(
               context: context,
@@ -30,8 +40,8 @@ void main() {
   testWidgets('OK returns the typed time', (tester) async {
     TimeOfDay? picked;
     await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
+      _app(
+        Builder(
           builder: (context) => TextButton(
             onPressed: () async {
               picked = await showHourFirstTimePicker(

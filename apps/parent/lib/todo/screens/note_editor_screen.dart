@@ -643,7 +643,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               onTap: _pickReminder,
               titleWidget: _remindAt != null
                   ? Text(
-                      '${_formatDateOnly(_remindAt!.toLocal())} · '
+                      '${_formatDateOnly(_remindAt!.toLocal())} Â· '
                       '${_formatTimeOnly(_remindAt!.toLocal())}',
                       style: tt.bodyMedium?.copyWith(color: kColorTeal),
                     )

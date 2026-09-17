@@ -66,12 +66,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final config = await widget.configRepo.load();
     final paired = await widget.configRepo.isPartnerPaired();
     final kids = await widget.configRepo.loadEnrolledKids();
-    if (mounted)
+    if (mounted) {
       setState(() {
         _config = config;
         _partnerPaired = paired;
         _enrolledKidsCount = kids.length;
       });
+    }
   }
 
   @override

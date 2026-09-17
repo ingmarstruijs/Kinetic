@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
@@ -191,8 +190,9 @@ class WebDavSyncService {
 
     if (note.isShared) {
       final familyKey = config.familyKeyBytes;
-      if (familyKey == null)
+      if (familyKey == null) {
         throw StateError('Family key required to push shared note');
+      }
       final blob = await KineticEncryption.encrypt(plain, familyKey);
       await client.put('$_sharedNotesPath/${note.uid}.ics', blob);
     } else {
@@ -313,8 +313,9 @@ class WebDavSyncService {
   /// Encrypts [task] with the family key and PUTs it to `/kinetic/shared/tasks/{uid}.ics`.
   Future<void> pushSharedTask(ICalTask task) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push shared tasks');
+    }
     final ical = ICalSerializer.taskToVtodo(task);
     final plain = Uint8List.fromList(utf8.encode(ical));
     final blob = await KineticEncryption.encrypt(plain, familyKey);
@@ -359,8 +360,9 @@ class WebDavSyncService {
   /// with accounts set up before this feature was added).
   Future<void> pushProposal(Map<String, dynamic> proposalJson) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push proposals');
+    }
 
     final id = proposalJson['id'] as String;
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(proposalJson)));
@@ -407,8 +409,9 @@ class WebDavSyncService {
   /// with accounts set up before this feature was added).
   Future<void> pushLoadMetrics(Map<String, dynamic> metricsJson) async {
     final familyKey = config.familyKeyBytes;
-    if (familyKey == null)
+    if (familyKey == null) {
       throw StateError('Family key required to push load metrics');
+    }
 
     final parentId = metricsJson['parentId'] as String;
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(metricsJson)));

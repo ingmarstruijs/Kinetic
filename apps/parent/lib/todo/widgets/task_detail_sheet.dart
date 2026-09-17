@@ -943,20 +943,6 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     });
   }
 
-  void _applyReminderPreset(Duration offset) {
-    final target = DateTime.now().add(offset);
-    setState(() {
-      _dueDate = DateTime(
-        target.year,
-        target.month,
-        target.day,
-        target.hour,
-        0,
-      ).toUtc();
-      _isAllDay = false;
-    });
-  }
-
   Future<void> _pickReminder() async {
     final pickedDate = await showDatePicker(
       context: context,

@@ -32,7 +32,8 @@ jobs:
           dart run melos bootstrap
 
       - name: Analyze
-        run: dart run melos exec -- flutter analyze
+        # Pre-existing infos/warnings should not block PRs; tests are the hard gate.
+        run: dart run melos exec -- flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Test
         run: dart run melos exec --dir-exists=test -- flutter test

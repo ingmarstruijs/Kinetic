@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 
 import '../encryption/kinetic_encryption.dart';
@@ -131,6 +132,8 @@ class WebDavSyncService {
       if (kDebugMode) {
         debugPrint('Found ${sharedEntries.length} shared note files');
       }
+      var decryptedShared = 0;
+      final staleSharedHrefs = <String>[];
       for (final entry in sharedEntries) {
         try {
           final href = _relativizeHref(entry.href);
@@ -138,6 +141,15 @@ class WebDavSyncService {
           final blob = await client.get(href);
           final plain = await KineticEncryption.decrypt(blob, familyKey);
           notes.add(ICalSerializer.vjournalToNote(utf8.decode(plain)));
+          decryptedShared++;
+        } on SecretBoxAuthenticationError {
+          final href = _relativizeHref(entry.href);
+          if (kDebugMode) {
+            debugPrint(
+              'Shared note MAC failed (wrong family key or leftover blob): $href',
+            );
+          }
+          staleSharedHrefs.add(href);
         } on WebDavException catch (e) {
           // Skip 404s — file may have been deleted or PROPFIND returned stale entry
           if (e.message.contains('404')) {
@@ -149,7 +161,7 @@ class WebDavSyncService {
             continue;
           }
           if (kDebugMode) {
-            debugPrint('Error decrypting shared note from ${entry.href}: $e');
+            debugPrint('Error reading shared note from ${entry.href}: $e');
           }
           continue;
         } catch (e) {
@@ -158,6 +170,12 @@ class WebDavSyncService {
           }
           continue;
         }
+      }
+      // Current family key opened at least one file, so MAC failures are
+      // leftovers from an old key — delete them. If *nothing* decrypted,
+      // the key itself may be wrong; leave the files alone.
+      if (decryptedShared > 0 && staleSharedHrefs.isNotEmpty) {
+        await _deleteStaleSharedNotes(staleSharedHrefs);
       }
     } else {
       if (kDebugMode) debugPrint('No family key available, skipping shared notes');
@@ -237,6 +255,21 @@ class WebDavSyncService {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
+
+  Future<void> _deleteStaleSharedNotes(List<String> hrefs) async {
+    for (final href in hrefs) {
+      try {
+        if (kDebugMode) {
+          debugPrint('Deleting undecryptable shared note: $href');
+        }
+        await client.delete(href);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Failed to delete undecryptable shared note $href: $e');
+        }
+      }
+    }
+  }
 
   /// Returns PROPFIND entries whose href ends with `.ics`.
   Future<List<WebDavEntry>> _listIcsFiles(String path) async {

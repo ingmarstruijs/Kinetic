@@ -16,34 +16,31 @@ Widget _app({required NoteRepository repo, required bool partnerPaired}) {
 }
 
 void main() {
-  testWidgets(
-    'NotesScreen can toggle partner pairing without creating multiple tickers',
-    (tester) async {
-      await tester.runAsync(() async {
-        final db = createTestDatabase();
-        final repo = NoteRepository(db: db);
+  testWidgets('NotesScreen lists private and shared in one view without tabs', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final db = createTestDatabase();
+      final repo = NoteRepository(db: db);
 
-        await tester.pumpWidget(_app(repo: repo, partnerPaired: false));
-        await tester.pump();
-        expect(find.byType(TabBar), findsNothing);
+      await tester.pumpWidget(_app(repo: repo, partnerPaired: true));
+      await tester.pump();
+      await tester.pumpAndSettle();
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text('No notes'), findsOneWidget);
 
-        await tester.pumpWidget(_app(repo: repo, partnerPaired: true));
-        await tester.pump();
-        expect(find.byType(TabBar), findsOneWidget);
-        expect(find.text('Private'), findsOneWidget);
-        expect(find.text('Shared'), findsOneWidget);
+      await repo.insert(title: 'Mine', isShared: false);
+      await repo.insert(title: 'Ours', isShared: true);
+      await tester.pumpAndSettle();
 
-        await tester.pumpWidget(_app(repo: repo, partnerPaired: false));
-        await tester.pump();
-        expect(find.byType(TabBar), findsNothing);
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text('Private'), findsOneWidget);
+      expect(find.text('Shared'), findsOneWidget);
+      expect(find.text('Mine'), findsOneWidget);
+      expect(find.text('Ours'), findsOneWidget);
 
-        await tester.pumpWidget(_app(repo: repo, partnerPaired: true));
-        await tester.pump();
-        expect(find.byType(TabBar), findsOneWidget);
-
-        await tester.pumpWidget(const SizedBox.shrink());
-        await db.close();
-      });
-    },
-  );
+      await tester.pumpWidget(const SizedBox.shrink());
+      await db.close();
+    });
+  });
 }

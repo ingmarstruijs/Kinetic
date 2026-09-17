@@ -32,41 +32,7 @@ class NotesScreen extends StatefulWidget {
   State<NotesScreen> createState() => _NotesScreenState();
 }
 
-class _NotesScreenState extends State<NotesScreen>
-    with TickerProviderStateMixin {
-  TabController? _tabController;
-
-  bool get _onSharedTab => widget.partnerPaired && (_tabController?.index == 1);
-
-  @override
-  void initState() {
-    super.initState();
-    _syncTabController();
-  }
-
-  @override
-  void didUpdateWidget(NotesScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.partnerPaired != widget.partnerPaired) {
-      _syncTabController();
-    }
-  }
-
-  void _syncTabController() {
-    if (widget.partnerPaired) {
-      _tabController ??= TabController(length: 2, vsync: this);
-    } else if (_tabController != null) {
-      _tabController!.dispose();
-      _tabController = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _tabController?.dispose();
-    super.dispose();
-  }
-
+class _NotesScreenState extends State<NotesScreen> {
   Future<void> _openEditor({
     PersonalNote? note,
     bool initialIsShared = false,
@@ -163,42 +129,14 @@ class _NotesScreenState extends State<NotesScreen>
             onPressed: () => _showTrashSheet(context),
           ),
         ],
-        bottom: widget.partnerPaired && _tabController != null
-            ? TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(text: AppLocalizations.of(context).notesTabPrivate),
-                  Tab(text: AppLocalizations.of(context).notesTabShared),
-                ],
-              )
-            : null,
       ),
-      body: widget.partnerPaired && _tabController != null
-          ? TabBarView(
-              controller: _tabController,
-              children: [
-                _NotesTabBody(
-                  repo: widget.repo,
-                  settingsRepo: widget.settingsRepo,
-                  isShared: false,
-                  onEditNote: (note) => _openEditor(note: note),
-                ),
-                _NotesTabBody(
-                  repo: widget.repo,
-                  settingsRepo: widget.settingsRepo,
-                  isShared: true,
-                  onEditNote: (note) => _openEditor(note: note),
-                ),
-              ],
-            )
-          : _NotesTabBody(
-              repo: widget.repo,
-              settingsRepo: widget.settingsRepo,
-              isShared: false,
-              onEditNote: (note) => _openEditor(note: note),
-            ),
+      body: _NotesListBody(
+        repo: widget.repo,
+        partnerPaired: widget.partnerPaired,
+        onEditNote: (note) => _openEditor(note: note),
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(initialIsShared: _onSharedTab),
+        onPressed: () => _openEditor(),
         tooltip: AppLocalizations.of(context).notesNewTooltip,
         child: const Icon(Icons.add),
       ),
@@ -207,19 +145,17 @@ class _NotesScreenState extends State<NotesScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Single-tab body: filtered note list or empty state
+// Notes list body: private + shared sections, or empty state
 // ---------------------------------------------------------------------------
 
-class _NotesTabBody extends StatelessWidget {
+class _NotesListBody extends StatelessWidget {
   final NoteRepository repo;
-  final SettingsRepository? settingsRepo;
-  final bool isShared;
+  final bool partnerPaired;
   final void Function(PersonalNote note) onEditNote;
 
-  const _NotesTabBody({
+  const _NotesListBody({
     required this.repo,
-    this.settingsRepo,
-    required this.isShared,
+    required this.partnerPaired,
     required this.onEditNote,
   });
 
@@ -260,12 +196,10 @@ class _NotesTabBody extends StatelessWidget {
           );
         }
 
-        final notes = (snapshot.data ?? [])
-            .where((n) => n.isShared == isShared)
-            .toList();
-
+        final notes = snapshot.data ?? [];
         if (notes.isEmpty) {
           final scheme = Theme.of(context).colorScheme;
+          final l10n = AppLocalizations.of(context);
           return Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -273,9 +207,7 @@ class _NotesTabBody extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    isShared
-                        ? AppLocalizations.of(context).notesEmptyShared
-                        : AppLocalizations.of(context).notesEmptyPrivate,
+                    l10n.notesEmpty,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: scheme.onSurface,
@@ -283,9 +215,7 @@ class _NotesTabBody extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isShared
-                        ? AppLocalizations.of(context).notesEmptySharedHint
-                        : AppLocalizations.of(context).notesEmptyPrivateHint,
+                    l10n.notesEmptyHint,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
@@ -300,23 +230,23 @@ class _NotesTabBody extends StatelessWidget {
         return _NoteGroupedList(
           notes: notes,
           repo: repo,
-          settingsRepo: settingsRepo,
-          showSharedBadge: false,
+          partnerPaired: partnerPaired,
           onEditNote: onEditNote,
         );
       },
     );
   }
 }
+
 // ---------------------------------------------------------------------------
-// Grouped + draggable notes list
+// Grouped + draggable notes list (Private / Shared sections)
 // ---------------------------------------------------------------------------
 
 sealed class _NoteListItem {}
 
 class _NoteHeaderItem extends _NoteListItem {
-  final String? category;
-  _NoteHeaderItem({required this.category});
+  final bool isShared;
+  _NoteHeaderItem({required this.isShared});
 }
 
 class _NoteDataItem extends _NoteListItem {
@@ -324,80 +254,43 @@ class _NoteDataItem extends _NoteListItem {
   _NoteDataItem({required this.note});
 }
 
-class _NoteGroupedList extends StatefulWidget {
+class _NoteGroupedList extends StatelessWidget {
   final List<PersonalNote> notes;
   final NoteRepository repo;
-  final SettingsRepository? settingsRepo;
-  final bool showSharedBadge;
+  final bool partnerPaired;
   final void Function(PersonalNote note) onEditNote;
 
   const _NoteGroupedList({
     required this.notes,
     required this.repo,
-    this.settingsRepo,
-    required this.showSharedBadge,
+    required this.partnerPaired,
     required this.onEditNote,
   });
 
   @override
-  State<_NoteGroupedList> createState() => _NoteGroupedListState();
-}
-
-class _NoteGroupedListState extends State<_NoteGroupedList> {
-  List<String?> _categoryOrder = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedOrder();
-  }
-
-  Future<void> _loadSavedOrder() async {
-    if (widget.settingsRepo == null) return;
-    final saved = await widget.settingsRepo!.loadNoteCategoryOrder();
-    if (mounted) setState(() => _categoryOrder = saved);
-  }
-
-  void _saveCategoryOrder(List<String?> order) {
-    widget.settingsRepo?.saveNoteCategoryOrder(order);
-  }
-
-  List<String?> _mergeOrder(Iterable<String?> streamKeys) {
-    final known = Set<String?>.from(streamKeys);
-    final merged = _categoryOrder.where(known.contains).toList();
-    for (final k in streamKeys) {
-      if (!merged.contains(k)) merged.add(k);
-    }
-    return merged;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Group notes by category
-    final groups = <String?, List<PersonalNote>>{};
-    for (final n in widget.notes) {
-      groups.putIfAbsent(n.category, () => []).add(n);
-    }
-
-    // Use saved order merged with current categories
-    final merged = _mergeOrder(groups.keys);
-    if (merged.length != _categoryOrder.length ||
-        !merged.every(_categoryOrder.contains)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _categoryOrder = _mergeOrder(groups.keys));
-      });
-    }
-
-    final groupKeys = merged.where(groups.containsKey).toList();
-
-    final showHeaders = groupKeys.length > 1 || groupKeys.first != null;
+    final l10n = AppLocalizations.of(context);
+    final privateNotes = notes.where((n) => !n.isShared).toList();
+    final sharedNotes = notes.where((n) => n.isShared).toList();
+    final showSharedSection = partnerPaired || sharedNotes.isNotEmpty;
+    final showHeaders = showSharedSection;
 
     final flatItems = <_NoteListItem>[];
-    for (final cat in groupKeys) {
-      if (showHeaders) {
-        flatItems.add(_NoteHeaderItem(category: cat));
+    if (showHeaders) {
+      if (privateNotes.isNotEmpty) {
+        flatItems.add(_NoteHeaderItem(isShared: false));
+        for (final n in privateNotes) {
+          flatItems.add(_NoteDataItem(note: n));
+        }
       }
-      for (final n in groups[cat]!) {
+      if (sharedNotes.isNotEmpty) {
+        flatItems.add(_NoteHeaderItem(isShared: true));
+        for (final n in sharedNotes) {
+          flatItems.add(_NoteDataItem(note: n));
+        }
+      }
+    } else {
+      for (final n in privateNotes) {
         flatItems.add(_NoteDataItem(note: n));
       }
     }
@@ -410,11 +303,9 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
         final item = flatItems[index];
 
         if (item is _NoteHeaderItem) {
-          return _NoteCategoryHeader(
-            key: ValueKey('header_${item.category}'),
-            label:
-                item.category ?? AppLocalizations.of(context).commonNoCategory,
-            index: index,
+          return _NoteSectionHeader(
+            key: ValueKey(item.isShared ? 'header_shared' : 'header_private'),
+            label: item.isShared ? l10n.notesTabShared : l10n.notesTabPrivate,
           );
         }
 
@@ -424,10 +315,9 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
           padding: const EdgeInsets.only(bottom: 10),
           child: _NoteCard(
             note: noteItem.note,
-            repo: widget.repo,
+            repo: repo,
             dragIndex: index,
-            showSharedBadge: widget.showSharedBadge,
-            onTap: () => widget.onEditNote(noteItem.note),
+            onTap: () => onEditNote(noteItem.note),
           ),
         );
       },
@@ -438,83 +328,67 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
   }
 
   void _onReorder(List<_NoteListItem> items, int oldIndex, int newIndex) {
+    if (items[oldIndex] is _NoteHeaderItem) return;
     if (oldIndex < newIndex) newIndex -= 1;
 
-    if (items[oldIndex] is _NoteHeaderItem) {
-      // Header drag → reorder category blocks
-      final reordered = [...items]
-        ..removeAt(oldIndex)
-        ..insert(newIndex, items[oldIndex]);
-      final newOrder = <String?>[];
-      for (final item in reordered) {
-        if (item is _NoteHeaderItem) newOrder.add(item.category);
-      }
-      setState(() => _categoryOrder = newOrder);
-      _saveCategoryOrder(newOrder);
-      return;
-    }
-
+    final moving = items[oldIndex] as _NoteDataItem;
     final reordered = [...items]
       ..removeAt(oldIndex)
-      ..insert(newIndex, items[oldIndex]);
+      ..insert(newIndex, moving);
+
+    // Keep notes inside their Private / Shared section.
+    bool? sectionShared;
+    for (final item in reordered) {
+      if (item is _NoteHeaderItem) {
+        sectionShared = item.isShared;
+      } else if (item is _NoteDataItem) {
+        if (sectionShared != null && item.note.isShared != sectionShared) {
+          return;
+        }
+      }
+    }
 
     final updates = <({String id, String? category, int sortOrder})>[];
-    String? currentCat;
-    int posInCat = 0;
+    bool? currentShared;
+    var posInSection = 0;
 
     for (final item in reordered) {
       if (item is _NoteHeaderItem) {
-        currentCat = item.category;
-        posInCat = 0;
+        currentShared = item.isShared;
+        posInSection = 0;
       } else {
         final noteItem = item as _NoteDataItem;
+        if (currentShared != null && noteItem.note.isShared != currentShared) {
+          return;
+        }
         updates.add((
           id: noteItem.note.id,
-          category: currentCat,
-          sortOrder: posInCat,
+          category: noteItem.note.category,
+          sortOrder: posInSection,
         ));
-        posInCat++;
+        posInSection++;
       }
     }
 
-    widget.repo.batchUpdateCategoryAndOrder(updates);
+    repo.batchUpdateCategoryAndOrder(updates);
   }
 }
 
-class _NoteCategoryHeader extends StatelessWidget {
+class _NoteSectionHeader extends StatelessWidget {
   final String label;
-  final int index;
 
-  const _NoteCategoryHeader({
-    super.key,
-    required this.label,
-    required this.index,
-  });
+  const _NoteSectionHeader({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 16, 0, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ReorderableDragStartListener(
-            index: index,
-            child: Icon(
-              Icons.drag_indicator,
-              size: 18,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -524,7 +398,6 @@ class _NoteCard extends StatelessWidget {
   final PersonalNote note;
   final NoteRepository repo;
   final int dragIndex;
-  final bool showSharedBadge;
   final VoidCallback onTap;
 
   const _NoteCard({
@@ -532,7 +405,6 @@ class _NoteCard extends StatelessWidget {
     required this.repo,
     required this.dragIndex,
     required this.onTap,
-    this.showSharedBadge = false,
   });
 
   @override
@@ -541,9 +413,7 @@ class _NoteCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final preview = note.bodyPreview;
     final reminderPassed = note.remindAt != null && isOverdue(note.remindAt!);
-    final showShared = note.isShared && showSharedBadge;
-    final showMeta =
-        note.remindAt != null || showShared || note.isContentHidden;
+    final showMeta = note.remindAt != null || note.isContentHidden;
 
     return Material(
       color: scheme.surfaceContainerLow,
@@ -619,12 +489,6 @@ class _NoteCard extends StatelessWidget {
                         color: reminderPassed
                             ? scheme.error
                             : scheme.onSurfaceVariant,
-                      ),
-                    if (showShared)
-                      _NoteMetaChip(
-                        icon: Icons.people_outline,
-                        label: AppLocalizations.of(context).notesSharedBadge,
-                        color: kColorTeal,
                       ),
                   ],
                 ),

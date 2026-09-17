@@ -1281,11 +1281,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesEmptyPrivate => 'No private notes';
 
   @override
+  String get notesEmpty => 'No notes';
+
+  @override
   String get notesEmptySharedHint =>
       'Notes shared with your partner appear here';
 
   @override
   String get notesEmptyPrivateHint => 'Your private notes appear here';
+
+  @override
+  String get notesEmptyHint => 'Private and shared notes appear here';
 
   @override
   String get notesSaved => 'Note saved';

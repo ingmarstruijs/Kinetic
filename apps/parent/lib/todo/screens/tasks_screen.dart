@@ -384,10 +384,11 @@ class _TasksBodyState extends State<_TasksBody> {
           slivers: [
             SliverToBoxAdapter(child: widget.header),
             if (flatItems.isEmpty)
-              const SliverToBoxAdapter(
+              const SliverFillRemaining(
+                hasScrollBody: false,
                 child: Padding(
                   padding: EdgeInsets.only(bottom: 88),
-                  child: SizedBox(height: 240, child: _EmptyOpen()),
+                  child: _EmptyOpen(),
                 ),
               )
             else

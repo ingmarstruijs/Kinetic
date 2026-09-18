@@ -59,8 +59,8 @@ const demoScenarioCatalog = <DemoScenarioInfo>[
     id: DemoScenario.suggestions,
     titleEn: 'Suggestions + partner',
     titleNl: 'Suggesties + partner',
-    subtitleEn: 'Inbox, for-you hints, and a second Link member',
-    subtitleNl: 'Inbox, voor-jou-hints, en een tweede Link-lid',
+    subtitleEn: 'Inbox, for-you hints, and multiple Link members',
+    subtitleNl: 'Inbox, voor-jou-hints, en meerdere Link-leden',
   ),
   DemoScenarioInfo(
     id: DemoScenario.kids,
@@ -73,22 +73,22 @@ const demoScenarioCatalog = <DemoScenarioInfo>[
     id: DemoScenario.notes,
     titleEn: 'Notes',
     titleNl: 'Notities',
-    subtitleEn: 'Private + shared note aimed at the partner',
-    subtitleNl: 'Privé + gedeelde notitie gericht op de partner',
+    subtitleEn: 'Private + shared note aimed at family members',
+    subtitleNl: 'Privé + gedeelde notitie voor familieleden',
   ),
   DemoScenarioInfo(
     id: DemoScenario.family,
     titleEn: 'Family household',
     titleNl: 'Gezin',
-    subtitleEn: 'Roster, kids, verifier gates, proposals, shared notes',
-    subtitleNl: 'Roster, kinderen, verifier, voorstellen, gedeelde notities',
+    subtitleEn: 'Alex + Sam, kids, verifier gates, proposals, shared notes',
+    subtitleNl: 'Alex + Sam, kinderen, verifier, voorstellen, gedeelde notities',
   ),
   DemoScenarioInfo(
     id: DemoScenario.fullHouse,
     titleEn: 'Full house',
     titleNl: 'Vol huis',
-    subtitleEn: 'Busy day + family household in one overlay',
-    subtitleNl: 'Drukke dag + gezin in één overlay',
+    subtitleEn: 'Busy day + multi-member family overlay',
+    subtitleNl: 'Drukke dag + gezin met meerdere Link-leden',
   ),
 ];
 
@@ -184,13 +184,14 @@ class DemoScenarioLoader {
     final linkMembers = <FamilyLinkMember>[
       self,
       if (partner)
-        FamilyLinkMember(
-          id: DemoSession.partnerId,
-          displayName: DemoSession.partnerDisplayName,
-          kidsParticipation: true,
-          joinedAt: joined.add(const Duration(days: 2)),
-          updatedAt: now,
-        ),
+        for (final (i, member) in DemoSession.otherDemoMembers.indexed)
+          FamilyLinkMember(
+            id: member.id,
+            displayName: member.name,
+            kidsParticipation: i == 0, // Alex verifies kids; Sam opted out.
+            joinedAt: joined.add(Duration(days: 2 + i)),
+            updatedAt: now,
+          ),
     ];
     return FamilyRoster(
       linkMembers: linkMembers,
@@ -210,19 +211,25 @@ class DemoScenarioLoader {
 
   List<PresenceInfo> _demoPresence(DateTime now) => [
     PresenceInfo(
-      deviceId: 'demo-device-self',
+      deviceId: DemoSession.linkId,
       deviceType: 'link',
       displayName: DemoSession.selfDisplayName,
       lastSeen: now,
     ),
     PresenceInfo(
-      deviceId: 'demo-device-partner',
+      deviceId: DemoSession.partnerId,
       deviceType: 'link',
       displayName: DemoSession.partnerDisplayName,
       lastSeen: now.subtract(const Duration(minutes: 12)),
     ),
     PresenceInfo(
-      deviceId: 'demo-device-kid-mees',
+      deviceId: DemoSession.secondPartnerId,
+      deviceType: 'link',
+      displayName: DemoSession.secondPartnerDisplayName,
+      lastSeen: now.subtract(const Duration(hours: 5)),
+    ),
+    PresenceInfo(
+      deviceId: 'demo-mees',
       deviceType: 'kid',
       displayName: 'Mees',
       lastSeen: now.subtract(const Duration(hours: 2)),
@@ -249,8 +256,8 @@ class DemoScenarioLoader {
     ];
   }
 
-  /// [secondLinkMember] adds a mission that the partner must verify, so the
-  /// verifier filter in the kids panel is visible in partner demos.
+  /// When [otherLinkMembers] is true, adds missions verified by Alex and by Sam
+  /// so the kids-panel verifier filter is visible with multiple Link members.
   List<ICalTask> _demoKidTasks(
     List<EnrolledKid> kids, {
     bool secondLinkMember = false,
@@ -296,13 +303,21 @@ class DemoScenarioLoader {
         status: ICalTaskStatus.inProcess,
         verifierLinkId: DemoSession.linkId,
       ),
-      // Partner is the designated verifier — this device only sees pending.
+      // Alex is the designated verifier — this device only sees pending.
       if (secondLinkMember)
         chore(
           summary: 'Water the plants',
           kidId: fien,
           status: ICalTaskStatus.inProcess,
           verifierLinkId: DemoSession.partnerId,
+        ),
+      // Sam is the designated verifier — also pending-only for this device.
+      if (secondLinkMember)
+        chore(
+          summary: 'Feed the cat',
+          kidId: mees,
+          status: ICalTaskStatus.inProcess,
+          verifierLinkId: DemoSession.secondPartnerId,
         ),
       // Unassigned verifier — any participating link member may accept.
       ICalTask(
@@ -429,6 +444,13 @@ class DemoScenarioLoader {
       taskPriority: TaskPriority.medium,
       taskDueDate: due.toUtc(),
     );
+    await _proposalRepo.createManualProposal(
+      myLinkId: DemoSession.secondPartnerId,
+      taskTitle: dutch ? 'Pakket ophalen' : 'Pick up the parcel',
+      taskNotes: dutch ? 'Bij de buurvrouw' : 'At the neighbour\'s',
+      taskPriority: TaskPriority.low,
+      taskDueDate: due.toUtc(),
+    );
   }
 
   Future<void> _seedNotes(bool dutch) async {
@@ -446,7 +468,9 @@ class DemoScenarioLoader {
           ? 'Ma: pasta\nDi: soep\nWo: rijst'
           : 'Mon: pasta\nTue: soup\nWed: rice',
       isShared: true,
-      sharedMemberIds: const [DemoSession.partnerId],
+      sharedMemberIds: [
+        for (final m in DemoSession.otherDemoMembers) m.id,
+      ],
     );
   }
 }

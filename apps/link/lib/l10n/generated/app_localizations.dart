@@ -560,12 +560,6 @@ abstract class AppLocalizations {
   /// **'Restore vault'**
   String get vaultRestoreVault;
 
-  /// No description provided for @vaultLegacyBackup.
-  ///
-  /// In en, this message translates to:
-  /// **'Legacy backup (.kbak2)'**
-  String get vaultLegacyBackup;
-
   /// No description provided for @vaultCreateVault.
   ///
   /// In en, this message translates to:
@@ -637,12 +631,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not read the file.'**
   String get vaultCouldNotReadFile;
-
-  /// No description provided for @vaultInvalidLegacyBackup.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid legacy backup: {error}'**
-  String vaultInvalidLegacyBackup(String error);
 
   /// No description provided for @vaultRestoreTitle.
   ///
@@ -1925,14 +1913,32 @@ abstract class AppLocalizations {
   /// No description provided for @tasksForPartner.
   ///
   /// In en, this message translates to:
-  /// **'For partner'**
-  String get tasksForPartner;
+  /// **'For {name}'**
+  String tasksForPartner(String name);
 
   /// No description provided for @tasksFromPartner.
   ///
   /// In en, this message translates to:
-  /// **'From partner'**
-  String get tasksFromPartner;
+  /// **'From {name}'**
+  String tasksFromPartner(String name);
+
+  /// No description provided for @tasksForFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'For family'**
+  String get tasksForFamily;
+
+  /// No description provided for @tasksFromFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'From family'**
+  String get tasksFromFamily;
+
+  /// No description provided for @partnerGenericName.
+  ///
+  /// In en, this message translates to:
+  /// **'partner'**
+  String get partnerGenericName;
 
   /// No description provided for @tasksAccept.
   ///
@@ -2030,6 +2036,12 @@ abstract class AppLocalizations {
   /// **'You have no open tasks'**
   String get tasksNoOpenTasks;
 
+  /// No description provided for @tasksNoPersonalOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal tasks open'**
+  String get tasksNoPersonalOpen;
+
   /// No description provided for @tasksNoCompleted.
   ///
   /// In en, this message translates to:
@@ -2111,14 +2123,14 @@ abstract class AppLocalizations {
   /// No description provided for @taskSendToPartnerTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send to partner?'**
-  String get taskSendToPartnerTitle;
+  /// **'Send to {name}?'**
+  String taskSendToPartnerTitle(String name);
 
   /// No description provided for @taskSendToPartnerBody.
   ///
   /// In en, this message translates to:
-  /// **'\"{title}\" will be sent as a proposal to your partner and removed from your list once they accept it.'**
-  String taskSendToPartnerBody(String title);
+  /// **'\"{title}\" will be sent as a proposal to {name} and removed from your list once they accept it.'**
+  String taskSendToPartnerBody(String title, String name);
 
   /// No description provided for @taskSendToKidTitle.
   ///
@@ -2519,8 +2531,8 @@ abstract class AppLocalizations {
   /// No description provided for @suggestPartnerSeesTitle.
   ///
   /// In en, this message translates to:
-  /// **'What your partner sees'**
-  String get suggestPartnerSeesTitle;
+  /// **'What {name} sees'**
+  String suggestPartnerSeesTitle(String name);
 
   /// No description provided for @suggestPartnerSeesGeneric.
   ///
@@ -2543,8 +2555,8 @@ abstract class AppLocalizations {
   /// No description provided for @suggestSent.
   ///
   /// In en, this message translates to:
-  /// **'Suggestion sent to partner'**
-  String get suggestSent;
+  /// **'Suggestion sent to {name}'**
+  String suggestSent(String name);
 
   /// No description provided for @suggestReasonHabit.
   ///
@@ -2921,8 +2933,8 @@ abstract class AppLocalizations {
   /// No description provided for @suggestionsProposedByPartner.
   ///
   /// In en, this message translates to:
-  /// **'Suggested by your partner'**
-  String get suggestionsProposedByPartner;
+  /// **'Suggested by {name}'**
+  String suggestionsProposedByPartner(String name);
 
   /// No description provided for @tasksDecline.
   ///

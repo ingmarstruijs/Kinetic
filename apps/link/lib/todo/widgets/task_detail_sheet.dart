@@ -432,22 +432,26 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context).taskSendToPartnerTitle),
-        content: Text(
-          AppLocalizations.of(context).taskSendToPartnerBody(task.title),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context).commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context).commonSend),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
+        final recipient = target.name.trim().isNotEmpty
+            ? target.name.trim()
+            : l10n.partnerGenericName;
+        return AlertDialog(
+          title: Text(l10n.taskSendToPartnerTitle(recipient)),
+          content: Text(l10n.taskSendToPartnerBody(task.title, recipient)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l10n.commonSend),
+            ),
+          ],
+        );
+      },
     );
     if (confirmed != true || !mounted) return;
     await widget.proposalRepo!.createManualProposal(

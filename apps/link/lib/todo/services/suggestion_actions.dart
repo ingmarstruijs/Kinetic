@@ -210,6 +210,7 @@ Future<bool> confirmAndSendSuggestionToPartner({
   required PartnerProposalRepository proposalRepo,
   required AiSuggestionRepository suggestionRepo,
   required String? myLinkId,
+  List<({String id, String name})> otherLinkMembers = const [],
 }) async {
   final l10n = AppLocalizations.of(context);
   if (myLinkId == null || myLinkId.isEmpty) {
@@ -221,6 +222,41 @@ Future<bool> confirmAndSendSuggestionToPartner({
     return false;
   }
 
+  String? toMemberId;
+  var recipientName = l10n.partnerGenericName;
+  if (otherLinkMembers.length > 1) {
+    final picked = await showDialog<({String id, String name})>(
+      context: context,
+      builder: (ctx) {
+        final dialogL10n = AppLocalizations.of(ctx);
+        return SimpleDialog(
+          title: Text(dialogL10n.familyMemberPickerTitle),
+          children: [
+            for (final member in otherLinkMembers)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, member),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(member.name),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+    if (picked == null) return false;
+    if (!context.mounted) return false;
+    toMemberId = picked.id;
+    final name = picked.name.trim();
+    if (name.isNotEmpty) recipientName = name;
+  } else if (otherLinkMembers.length == 1) {
+    toMemberId = otherLinkMembers.first.id;
+    final name = otherLinkMembers.first.name.trim();
+    if (name.isNotEmpty) recipientName = name;
+  }
+
+  if (!context.mounted) return false;
   final title = suggestionDisplayTitle(suggestion, l10n);
   final confirmed = await showDialog<bool>(
     context: context,
@@ -228,7 +264,7 @@ Future<bool> confirmAndSendSuggestionToPartner({
       final dialogL10n = AppLocalizations.of(ctx);
       final tt = Theme.of(ctx).textTheme;
       return AlertDialog(
-        title: Text(dialogL10n.suggestPartnerSeesTitle),
+        title: Text(dialogL10n.suggestPartnerSeesTitle(recipientName)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,6 +296,7 @@ Future<bool> confirmAndSendSuggestionToPartner({
 
   await proposalRepo.createManualProposal(
     myLinkId: myLinkId,
+    toMemberId: toMemberId,
     taskTitle: title,
     taskNotes: suggestion.isPartnerTargeted ? null : suggestion.notes,
     taskPriority: TaskPriority.values[suggestion.priority],
@@ -269,7 +306,11 @@ Future<bool> confirmAndSendSuggestionToPartner({
   await suggestionRepo.accept(suggestion.id);
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context).suggestSent)),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).suggestSent(recipientName),
+        ),
+      ),
     );
   }
   return true;

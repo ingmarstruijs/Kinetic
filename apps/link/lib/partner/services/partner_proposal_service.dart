@@ -111,7 +111,7 @@ class PartnerProposalService {
       category: TaskCategory.other,
       priority: proposal.taskPriority,
       dueDate: proposal.taskDueDate,
-      isPrivate: true, // Inherited proposals are private by default
+      isPrivate: false,
     );
 
     // Update proposal status

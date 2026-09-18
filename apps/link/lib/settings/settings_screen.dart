@@ -329,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Combined backup export (database + personal key in one .kbak2 package)
+  // Combined backup export (.kvault)
   // ---------------------------------------------------------------------------
 
   Future<void> _exportFullBackup() async {

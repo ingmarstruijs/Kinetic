@@ -11,8 +11,16 @@ class DemoSession extends ChangeNotifier {
 
   static const linkId = 'demo-link';
   static const partnerId = 'demo-partner';
+  static const secondPartnerId = 'demo-partner-2';
   static const selfDisplayName = 'You';
   static const partnerDisplayName = 'Alex';
+  static const secondPartnerDisplayName = 'Sam';
+
+  /// Other Kinetic Link members seeded when a family overlay is active.
+  static const otherDemoMembers = <({String id, String name})>[
+    (id: partnerId, name: partnerDisplayName),
+    (id: secondPartnerId, name: secondPartnerDisplayName),
+  ];
 
   bool active = false;
   bool partnerPaired = false;

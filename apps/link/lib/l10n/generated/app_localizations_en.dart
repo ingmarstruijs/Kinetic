@@ -273,9 +273,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vaultRestoreVault => 'Restore vault';
 
   @override
-  String get vaultLegacyBackup => 'Legacy backup (.kbak2)';
-
-  @override
   String get vaultCreateVault => 'Create vault';
 
   @override
@@ -316,11 +313,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vaultCouldNotReadFile => 'Could not read the file.';
-
-  @override
-  String vaultInvalidLegacyBackup(String error) {
-    return 'Invalid legacy backup: $error';
-  }
 
   @override
   String get vaultRestoreTitle => 'Restore vault';
@@ -1099,10 +1091,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksForYou => 'For you';
 
   @override
-  String get tasksForPartner => 'For partner';
+  String tasksForPartner(String name) {
+    return 'For $name';
+  }
 
   @override
-  String get tasksFromPartner => 'From partner';
+  String tasksFromPartner(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get tasksForFamily => 'For family';
+
+  @override
+  String get tasksFromFamily => 'From family';
+
+  @override
+  String get partnerGenericName => 'partner';
 
   @override
   String get tasksAccept => 'Accept';
@@ -1163,6 +1168,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksNoOpenTasks => 'You have no open tasks';
 
   @override
+  String get tasksNoPersonalOpen => 'No personal tasks open';
+
+  @override
   String get tasksNoCompleted => 'No completed tasks';
 
   @override
@@ -1208,11 +1216,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyMemberPickerTitle => 'Send to which family member?';
 
   @override
-  String get taskSendToPartnerTitle => 'Send to partner?';
+  String taskSendToPartnerTitle(String name) {
+    return 'Send to $name?';
+  }
 
   @override
-  String taskSendToPartnerBody(String title) {
-    return '\"$title\" will be sent as a proposal to your partner and removed from your list once they accept it.';
+  String taskSendToPartnerBody(String title, String name) {
+    return '\"$title\" will be sent as a proposal to $name and removed from your list once they accept it.';
   }
 
   @override
@@ -1426,7 +1436,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestWebDavRequired => 'Link WebDAV first to send a suggestion.';
 
   @override
-  String get suggestPartnerSeesTitle => 'What your partner sees';
+  String suggestPartnerSeesTitle(String name) {
+    return 'What $name sees';
+  }
 
   @override
   String get suggestPartnerSeesGeneric =>
@@ -1440,7 +1452,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestSend => 'Send';
 
   @override
-  String get suggestSent => 'Suggestion sent to partner';
+  String suggestSent(String name) {
+    return 'Suggestion sent to $name';
+  }
 
   @override
   String get suggestReasonHabit => 'Habit';
@@ -1665,7 +1679,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestionsSubtitle => 'Handy tasks to consider today';
 
   @override
-  String get suggestionsProposedByPartner => 'Suggested by your partner';
+  String suggestionsProposedByPartner(String name) {
+    return 'Suggested by $name';
+  }
 
   @override
   String get tasksDecline => 'Decline';

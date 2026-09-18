@@ -1,12 +1,9 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../db/app_database.dart';
-import '../../db/full_backup_service.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../main.dart';
 import '../../settings/settings_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../vault_repository.dart';
@@ -20,7 +17,6 @@ class VaultWelcomeScreen extends StatelessWidget {
     required this.configRepo,
     required this.vaultRepo,
     required this.onUnlocked,
-    required this.onNeedsMigration,
   });
 
   final AppDatabase db;
@@ -28,40 +24,6 @@ class VaultWelcomeScreen extends StatelessWidget {
   final WebDavConfigRepository configRepo;
   final VaultRepository vaultRepo;
   final VoidCallback onUnlocked;
-  final VoidCallback onNeedsMigration;
-
-  Future<void> _importLegacyBackup(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.any,
-      allowMultiple: false,
-      withData: true,
-    );
-    if (result == null || result.files.isEmpty) return;
-    final bytes = result.files.first.bytes;
-    if (bytes == null) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vaultCouldNotReadFile)),
-      );
-      return;
-    }
-    try {
-      await FullBackupService.importFromBytes(
-        db,
-        configRepo,
-        bytes,
-        settingsRepo: settingsRepo,
-        onThemeRestored: (theme) => themeNotifier.value = theme,
-      );
-      onNeedsMigration();
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.vaultInvalidLegacyBackup('$e'))),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,11 +83,6 @@ class VaultWelcomeScreen extends StatelessWidget {
                   );
                 },
                 child: Text(l10n.vaultRestoreVault),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => _importLegacyBackup(context),
-                child: Text(l10n.vaultLegacyBackup),
               ),
             ],
           ),

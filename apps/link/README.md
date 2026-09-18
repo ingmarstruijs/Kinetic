@@ -149,7 +149,7 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 
 ### Backup Format
 - **`.kvault` (current)**: JSON wrapper `{version, format: kvault, ciphertext}`. Ciphertext is AES-256-GCM with the derived vault key. Inner payload has the encrypted database blob and theme — **not** the mnemonic, raw key, or WebDAV password. Import requires the 12 words.
-- Legacy `.kbak2` (plaintext `personalKey` in JSON) is no longer written. First-run **Legacy backup (.kbak2)** still imports it, then asks for a new 12-word phrase (the old key cannot become a mnemonic).
+- Legacy `.kbak2` (plaintext `personalKey` in JSON) is **not** imported anymore. Use an in-app upgrade path on the old install, or restore from `.kvault` / WebDAV + phrase.
 
 ### Presence & Heartbeat Protocol
 Every sync cycle each device writes an encrypted **presence file** to `/kinetic/shared/presence/{deviceId}.json` (family key). The file contains `deviceId`, `deviceType` (`'link'` or `'kid'`), `displayName`, and `lastSeen` (UTC ISO-8601).

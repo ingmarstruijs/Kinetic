@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../db/app_database.dart';
+import '../debug/demo_session.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
@@ -41,6 +42,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
   SyncConfig? _config;
   bool _partnerPaired = false;
   List<PresenceInfo> _presenceList = [];
+  List<FamilyLinkMember> _otherLinkMembers = const [];
   String? _fingerprint;
 
   @override
@@ -53,6 +55,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
   Future<void> _loadConfig() async {
     final config = await widget.configRepo.load();
     final paired = await widget.configRepo.isPartnerPaired();
+    final roster = await widget.configRepo.loadCachedRoster();
     String? fingerprint;
     if (config?.familyKeyBytes != null) {
       fingerprint = await KineticVault.fingerprint(config!.familyKeyBytes!);
@@ -62,6 +65,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
         _config = config;
         _partnerPaired = paired;
         _fingerprint = fingerprint;
+        _otherLinkMembers =
+            roster?.otherLinkMembers(config?.linkId ?? '') ?? const [];
       });
     }
   }
@@ -239,6 +244,41 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final demo = DemoSession.instance;
+    if (demo.active) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.settingsPartner), centerTitle: false),
+        body: ListView(
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Icon(
+                Icons.check_circle_outline,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(l10n.partnerStatusPaired),
+              subtitle: Text(
+                demo.otherLinkMembers.isEmpty
+                    ? l10n.settingsPartnerLinkHint
+                    : demo.otherLinkMembers
+                        .map((m) => m.name)
+                        .join(', '),
+              ),
+            ),
+            for (final member in demo.otherLinkMembers)
+              ListTile(
+                leading: Icon(
+                  Icons.person_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(member.name),
+                subtitle: Text(_demoPresenceSubtitle(l10n, member.name)),
+              ),
+          ],
+        ),
+      );
+    }
+
     final config = _config;
     final paired = _partnerPaired;
 
@@ -259,6 +299,21 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
               fingerprint: _fingerprint,
             ),
             const SizedBox(height: 8),
+            if (paired) ...[
+              for (final member in _otherLinkMembers)
+                ListTile(
+                  leading: Icon(
+                    Icons.person_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(
+                    member.displayName.isEmpty
+                        ? l10n.partnerGenericName
+                        : member.displayName,
+                  ),
+                  subtitle: Text(_presenceSubtitleFor(l10n, member.id)),
+                ),
+            ],
             if (!paired) ...[
               ListTile(
                 leading: Icon(
@@ -324,6 +379,34 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
             ],
           ],
         ],
+      ),
+    );
+  }
+
+  String _demoPresenceSubtitle(AppLocalizations l10n, String name) {
+    final match = DemoSession.instance.presence
+        .where((p) => p.deviceType == 'link' && p.displayName == name)
+        .firstOrNull;
+    if (match == null) return l10n.settingsPartnerPaired;
+    return l10n.partnerLastSeen(
+      _PartnerStatusBanner._formatLastSeen(
+        l10n,
+        DateTime.now(),
+        match.lastSeen,
+      ),
+    );
+  }
+
+  String _presenceSubtitleFor(AppLocalizations l10n, String linkId) {
+    final match = _presenceList
+        .where((p) => p.deviceType == 'link' && p.deviceId == linkId)
+        .firstOrNull;
+    if (match == null) return l10n.settingsPartnerPaired;
+    return l10n.partnerLastSeen(
+      _PartnerStatusBanner._formatLastSeen(
+        l10n,
+        DateTime.now(),
+        match.lastSeen,
       ),
     );
   }

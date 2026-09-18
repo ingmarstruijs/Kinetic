@@ -45,10 +45,10 @@ void main() {
       expect(notes.any((n) => n.isShared), isTrue);
       expect(
         notes.firstWhere((n) => n.isShared).sharedMemberIds,
-        [DemoSession.partnerId],
+        [for (final m in DemoSession.otherDemoMembers) m.id],
       );
       expect(suggestions.length, greaterThanOrEqualTo(2));
-      expect(inbox, isNotEmpty);
+      expect(inbox, hasLength(2));
       expect(DemoSession.instance.active, isTrue);
       expect(DemoSession.instance.partnerPaired, isTrue);
       expect(DemoSession.instance.kids, hasLength(2));
@@ -56,9 +56,12 @@ void main() {
       expect(DemoSession.instance.roster, isNotNull);
       expect(
         DemoSession.instance.roster!.otherLinkMembers(DemoSession.linkId),
-        hasLength(1),
+        hasLength(2),
       );
-      expect(DemoSession.instance.otherLinkMembers.single.id, DemoSession.partnerId);
+      expect(
+        DemoSession.instance.otherLinkMembers.map((m) => m.id),
+        [DemoSession.partnerId, DemoSession.secondPartnerId],
+      );
       expect(DemoSession.instance.presence, isNotEmpty);
       expect(
         DemoSession.instance.kidTasks.any(
@@ -66,6 +69,16 @@ void main() {
               t.status == ICalTaskStatus.inProcess &&
               (t.description ?? '').contains(
                 'xKineticVerifierLinkId:${DemoSession.partnerId}',
+              ),
+        ),
+        isTrue,
+      );
+      expect(
+        DemoSession.instance.kidTasks.any(
+          (t) =>
+              t.status == ICalTaskStatus.inProcess &&
+              (t.description ?? '').contains(
+                'xKineticVerifierLinkId:${DemoSession.secondPartnerId}',
               ),
         ),
         isTrue,
@@ -97,7 +110,11 @@ void main() {
 
     expect(DemoSession.instance.partnerPaired, isTrue);
     expect(DemoSession.instance.kids, hasLength(2));
-    expect(DemoSession.instance.otherLinkMembers, isNotEmpty);
+    expect(DemoSession.instance.otherLinkMembers, hasLength(2));
+    expect(
+      DemoSession.instance.otherLinkMembers.map((m) => m.name),
+      ['Alex', 'Sam'],
+    );
     expect(await NoteRepository(db: db).watchAll().first, isNotEmpty);
     expect(
       await PartnerProposalRepository(

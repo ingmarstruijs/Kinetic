@@ -273,9 +273,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get vaultRestoreVault => 'Kluis herstellen';
 
   @override
-  String get vaultLegacyBackup => 'Oude back-up (.kbak2)';
-
-  @override
   String get vaultCreateVault => 'Kluis aanmaken';
 
   @override
@@ -316,11 +313,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get vaultCouldNotReadFile => 'Kon het bestand niet lezen.';
-
-  @override
-  String vaultInvalidLegacyBackup(String error) {
-    return 'Ongeldige oude back-up: $error';
-  }
 
   @override
   String get vaultRestoreTitle => 'Kluis herstellen';
@@ -1101,10 +1093,23 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksForYou => 'Voor jou';
 
   @override
-  String get tasksForPartner => 'Voor partner';
+  String tasksForPartner(String name) {
+    return 'Voor $name';
+  }
 
   @override
-  String get tasksFromPartner => 'Van partner';
+  String tasksFromPartner(String name) {
+    return 'Van $name';
+  }
+
+  @override
+  String get tasksForFamily => 'Voor familie';
+
+  @override
+  String get tasksFromFamily => 'Van familie';
+
+  @override
+  String get partnerGenericName => 'partner';
 
   @override
   String get tasksAccept => 'Accepteren';
@@ -1165,6 +1170,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksNoOpenTasks => 'Je hebt geen openstaande taken';
 
   @override
+  String get tasksNoPersonalOpen => 'Geen persoonlijke taken open';
+
+  @override
   String get tasksNoCompleted => 'Geen voltooide taken';
 
   @override
@@ -1210,11 +1218,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get familyMemberPickerTitle => 'Naar welk gezinslid sturen?';
 
   @override
-  String get taskSendToPartnerTitle => 'Stuur naar partner?';
+  String taskSendToPartnerTitle(String name) {
+    return 'Stuur naar $name?';
+  }
 
   @override
-  String taskSendToPartnerBody(String title) {
-    return '\"$title\" wordt als voorstel naar je partner gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.';
+  String taskSendToPartnerBody(String title, String name) {
+    return '\"$title\" wordt als voorstel naar $name gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.';
   }
 
   @override
@@ -1430,7 +1440,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'Koppel eerst WebDAV om een voorstel te sturen.';
 
   @override
-  String get suggestPartnerSeesTitle => 'Dit ziet je partner';
+  String suggestPartnerSeesTitle(String name) {
+    return 'Dit ziet $name';
+  }
 
   @override
   String get suggestPartnerSeesGeneric =>
@@ -1444,7 +1456,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestSend => 'Versturen';
 
   @override
-  String get suggestSent => 'Voorstel naar partner gestuurd';
+  String suggestSent(String name) {
+    return 'Voorstel naar $name gestuurd';
+  }
 
   @override
   String get suggestReasonHabit => 'Gewoonte';
@@ -1668,7 +1682,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestionsSubtitle => 'Handige taken om vandaag te overwegen';
 
   @override
-  String get suggestionsProposedByPartner => 'Voorgesteld door je partner';
+  String suggestionsProposedByPartner(String name) {
+    return 'Voorgesteld door $name';
+  }
 
   @override
   String get tasksDecline => 'Weigeren';

@@ -39,7 +39,7 @@ Future<void> _playCompletionFeedback() async {
 // Swipe right  → complete / uncomplete
 // Swipe left   → delete (with confirmation snackbar + undo)
 // Tap          → open TaskDetailSheet
-// Long-press   → context menu (flag, private, move list)
+// Long-press   → context menu (flag, move list)
 // ---------------------------------------------------------------------------
 
 class TaskTile extends StatelessWidget {
@@ -305,18 +305,6 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                       padding: EdgeInsets.only(left: 6),
                       child: Icon(Icons.flag, size: 16, color: kColorGold),
                     ),
-                  if (widget.task.isPrivate)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Tooltip(
-                        message: AppLocalizations.of(context).commonPrivate,
-                        child: const Icon(
-                          Icons.lock_outline,
-                          size: 14,
-                          color: kColorWarmGrey,
-                        ),
-                      ),
-                    ),
                   if (widget.task.recurrenceRule != null)
                     const Padding(
                       padding: EdgeInsets.only(left: 4),
@@ -339,7 +327,9 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                             child: Tooltip(
                               message: AppLocalizations.of(
                                 context,
-                              ).tasksFromPartner,
+                              ).tasksFromPartner(
+                                AppLocalizations.of(context).partnerGenericName,
+                              ),
                               child: Icon(
                                 Icons.person_add_outlined,
                                 size: 14,

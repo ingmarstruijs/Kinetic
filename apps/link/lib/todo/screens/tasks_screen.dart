@@ -27,6 +27,7 @@ class TasksScreen extends StatefulWidget {
   final ValueNotifier<SyncStatus>? syncStatus;
   final bool hasFamilyKey;
   final bool partnerPaired;
+  final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRetry;
   final WebDavConfigRepository? configRepo;
   final int enrolledKidsCount;
@@ -52,6 +53,7 @@ class TasksScreen extends StatefulWidget {
     this.syncStatus,
     this.hasFamilyKey = false,
     this.partnerPaired = false,
+    this.otherLinkMembers = const [],
     this.onSyncRetry,
     this.configRepo,
     this.enrolledKidsCount = 0,
@@ -221,6 +223,10 @@ class _TasksScreenState extends State<TasksScreen> {
           repo: widget.repo,
           hasFamilyKey: widget.hasFamilyKey,
           partnerPaired: widget.partnerPaired,
+          familyContext: widget.hasFamilyKey ||
+              widget.partnerPaired ||
+              widget.enrolledKidsCount > 0 ||
+              _showKids,
           settingsRepo: widget.settingsRepo,
           proposalRepo: widget.proposalRepo,
           myLinkId: widget.myLinkId,
@@ -236,6 +242,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   proposalRepo: widget.proposalRepo,
                   myLinkId: widget.myLinkId,
                   partnerPaired: widget.partnerPaired,
+                  otherLinkMembers: widget.otherLinkMembers,
                   onSyncRequested: widget.onSyncRetry,
                 ),
               if (_showKids)
@@ -320,6 +327,9 @@ class _TasksBody extends StatefulWidget {
   final TodoRepository repo;
   final bool hasFamilyKey;
   final bool partnerPaired;
+  /// When true, the personal-task list empty state stays compact and does not
+  /// claim "all done" while kids / partner panels may still need attention.
+  final bool familyContext;
   final SettingsRepository? settingsRepo;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
@@ -331,6 +341,7 @@ class _TasksBody extends StatefulWidget {
     required this.repo,
     this.hasFamilyKey = false,
     this.partnerPaired = false,
+    this.familyContext = false,
     this.settingsRepo,
     this.proposalRepo,
     this.myLinkId,
@@ -451,13 +462,21 @@ class _TasksBodyState extends State<_TasksBody> {
           slivers: [
             SliverToBoxAdapter(child: widget.header),
             if (flatItems.isEmpty)
-              const SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 88),
-                  child: _EmptyOpen(),
-                ),
-              )
+              if (widget.familyContext)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 88),
+                    child: _EmptyOpen(familyContext: true),
+                  ),
+                )
+              else
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                    child: Center(child: _EmptyOpen()),
+                  ),
+                )
             else
               SliverPadding(
                 padding: const EdgeInsets.only(top: 4, bottom: 88),
@@ -569,7 +588,7 @@ class _CategoryHeader extends StatelessWidget {
     // so section margins / task alignment stay consistent.
     const trailingSlot = 40.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 4, 2),
+      padding: const EdgeInsets.fromLTRB(16, 8, 4, 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -815,36 +834,49 @@ class _CompletedBottomSheet extends StatelessWidget {
 }
 
 class _EmptyOpen extends StatelessWidget {
-  const _EmptyOpen();
+  final bool familyContext;
+
+  const _EmptyOpen({this.familyContext = false});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 56,
+    if (familyContext) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text(
+          l10n.tasksNoPersonalOpen,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: scheme.onSurfaceVariant,
           ),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context).tasksAllDone,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(color: scheme.onSurface),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            AppLocalizations.of(context).tasksNoOpenTasks,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ],
-      ),
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.check_circle_outline,
+          size: 56,
+          color: scheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.tasksAllDone,
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(color: scheme.onSurface),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.tasksNoOpenTasks,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }

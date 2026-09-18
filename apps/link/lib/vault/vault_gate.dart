@@ -60,14 +60,6 @@ class _VaultGateState extends State<VaultGate> {
     });
   }
 
-  void _onNeedsMigration() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() {
-      _ready = false;
-      _migrate = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_ready == null) {
@@ -92,7 +84,6 @@ class _VaultGateState extends State<VaultGate> {
       configRepo: _configRepo,
       vaultRepo: _vaultRepo,
       onUnlocked: _onUnlocked,
-      onNeedsMigration: _onNeedsMigration,
     );
   }
 }

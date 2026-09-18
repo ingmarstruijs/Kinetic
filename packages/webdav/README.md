@@ -155,7 +155,7 @@ The ciphertext is the database snapshot (and theme) encrypted with the derived v
 ### `vault.meta`
 Small AES-GCM canary at `/kinetic/{username}/vault.meta`. Decrypt OK → right phrase. 404 → no vault on that server. MAC failure → wrong phrase.
 
-Legacy `.kbak2` is not written anymore. The Kinetic Link welcome screen can still import it once, then rotates to a new mnemonic (a random 0.2 key cannot become BIP-39 words). `exportRecoveryJson` remains on `KineticEncryption` for tests.
+Legacy `.kbak2` is neither written nor imported. `exportRecoveryJson` remains on `KineticEncryption` for tests only.
 
 ## iCal Format
 

@@ -116,7 +116,6 @@
   "vaultWelcomeBody": "Kinetic Link bewaart taken en notities met een herstelzin van 12 woorden. Schrijf die zin op papier en bewaar hem veilig. We slaan de woorden niet op dit apparaat op.",
   "vaultNewVault": "Nieuwe kluis",
   "vaultRestoreVault": "Kluis herstellen",
-  "vaultLegacyBackup": "Oude back-up (.kbak2)",
   "vaultCreateVault": "Kluis aanmaken",
   "vaultRecoveryPhrase": "Herstelzin",
   "vaultConfirm": "Bevestigen",
@@ -139,12 +138,6 @@
     }
   },
   "vaultCouldNotReadFile": "Kon het bestand niet lezen.",
-  "vaultInvalidLegacyBackup": "Ongeldige oude back-up: {error}",
-  "@vaultInvalidLegacyBackup": {
-    "placeholders": {
-      "error": {"type": "String"}
-    }
-  },
 
   "vaultRestoreTitle": "Kluis herstellen",
   "vaultRestoreIntro": "Kies hoe je de kluis terugzet. De herstelzin is in beide gevallen dezelfde.",
@@ -578,8 +571,21 @@
   "tasksSyncFailed": "Sync mislukt, tap om opnieuw te proberen.",
   "tasksSyncing": "Synchroniseren",
   "tasksForYou": "Voor jou",
-  "tasksForPartner": "Voor partner",
-  "tasksFromPartner": "Van partner",
+  "tasksForPartner": "Voor {name}",
+  "@tasksForPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksFromPartner": "Van {name}",
+  "@tasksFromPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksForFamily": "Voor familie",
+  "tasksFromFamily": "Van familie",
+  "partnerGenericName": "partner",
   "tasksAccept": "Accepteren",
   "tasksXpResetTitle": "XP resetten voor {name}?",
   "@tasksXpResetTitle": {
@@ -617,6 +623,7 @@
   "tasksDeleteCompletedBody": "Weet je zeker dat je alle voltooide taken wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
   "tasksAllDone": "Alles klaar!",
   "tasksNoOpenTasks": "Je hebt geen openstaande taken",
+  "tasksNoPersonalOpen": "Geen persoonlijke taken open",
   "tasksNoCompleted": "Geen voltooide taken",
   "tasksNoCompletedHint": "Voltooide taken verschijnen hier",
   "tasksAssignment": "Opdracht",
@@ -647,11 +654,17 @@
   },
   "taskSendAnyway": "Toch sturen",
   "familyMemberPickerTitle": "Naar welk gezinslid sturen?",
-  "taskSendToPartnerTitle": "Stuur naar partner?",
-  "taskSendToPartnerBody": "\"{title}\" wordt als voorstel naar je partner gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.",
+  "taskSendToPartnerTitle": "Stuur naar {name}?",
+  "@taskSendToPartnerTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToPartnerBody": "\"{title}\" wordt als voorstel naar {name} gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.",
   "@taskSendToPartnerBody": {
     "placeholders": {
-      "title": {"type": "String"}
+      "title": {"type": "String"},
+      "name": {"type": "String"}
     }
   },
   "taskSendToKidTitle": "Stuur naar {name}?",
@@ -733,11 +746,21 @@
   "notesLockedBadge": "Vergrendeld",
 
   "suggestWebDavRequired": "Koppel eerst WebDAV om een voorstel te sturen.",
-  "suggestPartnerSeesTitle": "Dit ziet je partner",
+  "suggestPartnerSeesTitle": "Dit ziet {name}",
+  "@suggestPartnerSeesTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "suggestPartnerSeesGeneric": "Bewust algemeen — geen privé-titels of notities.",
   "suggestPartnerSeesFull": "Titel en eventuele notities van deze suggestie gaan mee.",
   "suggestSend": "Versturen",
-  "suggestSent": "Voorstel naar partner gestuurd",
+  "suggestSent": "Voorstel naar {name} gestuurd",
+  "@suggestSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "suggestReasonHabit": "Gewoonte",
   "suggestReasonPartner": "Partner-aanvulling",
   "suggestReasonSeasonal": "Seizoensgebonden",
@@ -849,7 +872,12 @@
 
   "suggestionsTitle": "Suggesties",
   "suggestionsSubtitle": "Handige taken om vandaag te overwegen",
-  "suggestionsProposedByPartner": "Voorgesteld door je partner",
+  "suggestionsProposedByPartner": "Voorgesteld door {name}",
+  "@suggestionsProposedByPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "tasksDecline": "Weigeren",
   "kidsSectionTitle": "Kinderen",
   "kidsAllFilter": "Alle kinderen",

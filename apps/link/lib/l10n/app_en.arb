@@ -116,7 +116,6 @@
   "vaultWelcomeBody": "Kinetic Link stores tasks and notes with a 12-word recovery phrase. Write that phrase on paper and keep it safe. We do not store the words on this device.",
   "vaultNewVault": "New vault",
   "vaultRestoreVault": "Restore vault",
-  "vaultLegacyBackup": "Legacy backup (.kbak2)",
   "vaultCreateVault": "Create vault",
   "vaultRecoveryPhrase": "Recovery phrase",
   "vaultConfirm": "Confirm",
@@ -139,12 +138,6 @@
     }
   },
   "vaultCouldNotReadFile": "Could not read the file.",
-  "vaultInvalidLegacyBackup": "Invalid legacy backup: {error}",
-  "@vaultInvalidLegacyBackup": {
-    "placeholders": {
-      "error": {"type": "String"}
-    }
-  },
 
   "vaultRestoreTitle": "Restore vault",
   "vaultRestoreIntro": "Choose how to restore the vault. The recovery phrase is the same in both cases.",
@@ -578,8 +571,21 @@
   "tasksSyncFailed": "Sync failed, tap to retry.",
   "tasksSyncing": "Syncing",
   "tasksForYou": "For you",
-  "tasksForPartner": "For partner",
-  "tasksFromPartner": "From partner",
+  "tasksForPartner": "For {name}",
+  "@tasksForPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksFromPartner": "From {name}",
+  "@tasksFromPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksForFamily": "For family",
+  "tasksFromFamily": "From family",
+  "partnerGenericName": "partner",
   "tasksAccept": "Accept",
   "tasksXpResetTitle": "Reset XP for {name}?",
   "@tasksXpResetTitle": {
@@ -617,6 +623,7 @@
   "tasksDeleteCompletedBody": "Are you sure you want to delete all completed tasks? This cannot be undone.",
   "tasksAllDone": "All done!",
   "tasksNoOpenTasks": "You have no open tasks",
+  "tasksNoPersonalOpen": "No personal tasks open",
   "tasksNoCompleted": "No completed tasks",
   "tasksNoCompletedHint": "Completed tasks appear here",
   "tasksAssignment": "Assignment",
@@ -647,11 +654,17 @@
   },
   "taskSendAnyway": "Send anyway",
   "familyMemberPickerTitle": "Send to which family member?",
-  "taskSendToPartnerTitle": "Send to partner?",
-  "taskSendToPartnerBody": "\"{title}\" will be sent as a proposal to your partner and removed from your list once they accept it.",
+  "taskSendToPartnerTitle": "Send to {name}?",
+  "@taskSendToPartnerTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToPartnerBody": "\"{title}\" will be sent as a proposal to {name} and removed from your list once they accept it.",
   "@taskSendToPartnerBody": {
     "placeholders": {
-      "title": {"type": "String"}
+      "title": {"type": "String"},
+      "name": {"type": "String"}
     }
   },
   "taskSendToKidTitle": "Send to {name}?",
@@ -733,11 +746,21 @@
   "notesLockedBadge": "Locked",
 
   "suggestWebDavRequired": "Link WebDAV first to send a suggestion.",
-  "suggestPartnerSeesTitle": "What your partner sees",
+  "suggestPartnerSeesTitle": "What {name} sees",
+  "@suggestPartnerSeesTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "suggestPartnerSeesGeneric": "Intentionally generic — no private titles or notes.",
   "suggestPartnerSeesFull": "The title and any notes from this suggestion will be included.",
   "suggestSend": "Send",
-  "suggestSent": "Suggestion sent to partner",
+  "suggestSent": "Suggestion sent to {name}",
+  "@suggestSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "suggestReasonHabit": "Habit",
   "suggestReasonPartner": "Partner complement",
   "suggestReasonSeasonal": "Seasonal",
@@ -849,7 +872,12 @@
 
   "suggestionsTitle": "Suggestions",
   "suggestionsSubtitle": "Handy tasks to consider today",
-  "suggestionsProposedByPartner": "Suggested by your partner",
+  "suggestionsProposedByPartner": "Suggested by {name}",
+  "@suggestionsProposedByPartner": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
   "tasksDecline": "Decline",
   "kidsSectionTitle": "Kids",
   "kidsAllFilter": "All kids",

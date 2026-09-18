@@ -97,7 +97,7 @@ class PartnerProposalRepository {
           TaskCategory.other, // Use default category for accepted proposals
       priority: TaskPriority.values[proposalRow.taskPriority],
       dueDate: proposalRow.taskDueDate,
-      isPrivate: true, // Accepted proposals become personal tasks
+      isPrivate: false,
     );
 
     // Update proposal status to 'accepted'

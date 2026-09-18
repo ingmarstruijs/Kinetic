@@ -8,14 +8,16 @@ import '../models/ai_suggestion.dart';
 import '../services/ai_suggestion_repository.dart';
 import '../services/suggestion_actions.dart';
 import '../services/todo_repository.dart';
+import 'tasks_section_header.dart';
 
-/// Collapsible suggestions card shown above the Kinetic Link task list.
+/// Collapsible suggestions section shown above the Kinetic Link task list.
 class SuggestionsPanel extends StatefulWidget {
   final AiSuggestionRepository suggestionRepo;
   final TodoRepository todoRepo;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
   final bool partnerPaired;
+  final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRequested;
 
   const SuggestionsPanel({
@@ -25,6 +27,7 @@ class SuggestionsPanel extends StatefulWidget {
     this.proposalRepo,
     this.myLinkId,
     this.partnerPaired = false,
+    this.otherLinkMembers = const [],
     this.onSyncRequested,
   });
 
@@ -49,7 +52,8 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
     if (oldWidget.suggestionRepo != widget.suggestionRepo ||
         oldWidget.proposalRepo != widget.proposalRepo ||
         oldWidget.partnerPaired != widget.partnerPaired ||
-        oldWidget.myLinkId != widget.myLinkId) {
+        oldWidget.myLinkId != widget.myLinkId ||
+        oldWidget.otherLinkMembers != widget.otherLinkMembers) {
       setState(_bindStreams);
     }
   }
@@ -98,6 +102,7 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
               proposalRepo: widget.proposalRepo,
               myLinkId: widget.myLinkId,
               partnerPaired: widget.partnerPaired,
+              otherLinkMembers: widget.otherLinkMembers,
               onSyncRequested: widget.onSyncRequested,
               onChanged: _refresh,
             );
@@ -120,6 +125,7 @@ class _SuggestionsCard extends StatelessWidget {
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
   final bool partnerPaired;
+  final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRequested;
   final VoidCallback onChanged;
 
@@ -135,6 +141,7 @@ class _SuggestionsCard extends StatelessWidget {
     required this.proposalRepo,
     required this.myLinkId,
     required this.partnerPaired,
+    required this.otherLinkMembers,
     this.onSyncRequested,
     required this.onChanged,
   });
@@ -142,131 +149,100 @@ class _SuggestionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final forLabel = _forSectionLabel(l10n, otherLinkMembers);
+    final fromLabel = _fromSectionLabel(l10n, otherLinkMembers);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Material(
-        color: scheme.primaryContainer.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            InkWell(
-              onTap: onToggle,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TasksSectionHeader(
+            icon: Icons.auto_awesome,
+            title: l10n.suggestionsTitle,
+            count: count,
+            expanded: expanded,
+            onToggle: onToggle,
+            subtitle: l10n.suggestionsSubtitle,
+          ),
+          if (expanded) ...[
+            const SizedBox(height: 8),
+            if (self.isNotEmpty) _SectionLabel(label: l10n.tasksForYou),
+            for (final suggestion in self)
+              _SelfSuggestionRow(
+                suggestion: suggestion,
+                suggestionRepo: suggestionRepo,
+                todoRepo: todoRepo,
+                onChanged: onChanged,
               ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 8, 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 20, color: scheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                l10n.suggestionsTitle.toUpperCase(),
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  color: scheme.primary,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _CountBadge(count: count),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            l10n.suggestionsSubtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onPrimaryContainer.withValues(
-                                alpha: 0.75,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      expanded ? Icons.expand_less : Icons.expand_more,
-                      color: scheme.primary,
-                    ),
-                  ],
-                ),
+            if (forPartner.isNotEmpty) _SectionLabel(label: forLabel),
+            for (final suggestion in forPartner)
+              _PartnerTargetRow(
+                suggestion: suggestion,
+                suggestionRepo: suggestionRepo,
+                proposalRepo: proposalRepo,
+                myLinkId: myLinkId,
+                partnerPaired: partnerPaired,
+                otherLinkMembers: otherLinkMembers,
+                onChanged: onChanged,
               ),
-            ),
-            if (expanded) ...[
-              if (self.isNotEmpty) _SectionLabel(label: l10n.tasksForYou),
-              for (final suggestion in self)
-                _SelfSuggestionRow(
-                  suggestion: suggestion,
-                  suggestionRepo: suggestionRepo,
-                  todoRepo: todoRepo,
-                  onChanged: onChanged,
+            if (fromPartner.isNotEmpty) _SectionLabel(label: fromLabel),
+            for (final proposal in fromPartner)
+              _IncomingProposalRow(
+                proposal: proposal,
+                proposalRepo: proposalRepo!,
+                fromName: _memberName(
+                  otherLinkMembers,
+                  proposal.fromLinkId,
+                  l10n.partnerGenericName,
                 ),
-              if (forPartner.isNotEmpty)
-                _SectionLabel(label: l10n.tasksForPartner),
-              for (final suggestion in forPartner)
-                _PartnerTargetRow(
-                  suggestion: suggestion,
-                  suggestionRepo: suggestionRepo,
-                  proposalRepo: proposalRepo,
-                  myLinkId: myLinkId,
-                  partnerPaired: partnerPaired,
-                  onChanged: onChanged,
-                ),
-              if (fromPartner.isNotEmpty)
-                _SectionLabel(label: l10n.tasksFromPartner),
-              for (final proposal in fromPartner)
-                _IncomingProposalRow(
-                  proposal: proposal,
-                  proposalRepo: proposalRepo!,
-                  onSyncRequested: onSyncRequested,
-                  onChanged: onChanged,
-                ),
-              const SizedBox(height: 10),
-            ],
+                onSyncRequested: onSyncRequested,
+                onChanged: onChanged,
+              ),
+            const SizedBox(height: 4),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _CountBadge extends StatelessWidget {
-  final int count;
-  const _CountBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 18,
-      height: 18,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Color(0xFFE53935),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        count > 9 ? '9+' : '$count',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+String _forSectionLabel(
+  AppLocalizations l10n,
+  List<({String id, String name})> members,
+) {
+  if (members.length == 1) {
+    return l10n.tasksForPartner(members.first.name);
   }
+  if (members.isEmpty) {
+    return l10n.tasksForPartner(l10n.partnerGenericName);
+  }
+  return l10n.tasksForFamily;
+}
+
+String _fromSectionLabel(
+  AppLocalizations l10n,
+  List<({String id, String name})> members,
+) {
+  if (members.length == 1) {
+    return l10n.tasksFromPartner(members.first.name);
+  }
+  if (members.isEmpty) {
+    return l10n.tasksFromPartner(l10n.partnerGenericName);
+  }
+  return l10n.tasksFromFamily;
+}
+
+String _memberName(
+  List<({String id, String name})> members,
+  String id,
+  String fallback,
+) {
+  for (final m in members) {
+    if (m.id == id && m.name.trim().isNotEmpty) return m.name.trim();
+  }
+  return fallback;
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -276,7 +252,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 6),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -308,9 +284,9 @@ class _SelfSuggestionRow extends StatelessWidget {
     final date = suggestion.suggestedDueDate;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
       child: Material(
-        color: scheme.surface.withValues(alpha: 0.7),
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -387,6 +363,7 @@ class _PartnerTargetRow extends StatelessWidget {
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
   final bool partnerPaired;
+  final List<({String id, String name})> otherLinkMembers;
   final VoidCallback onChanged;
 
   const _PartnerTargetRow({
@@ -395,6 +372,7 @@ class _PartnerTargetRow extends StatelessWidget {
     required this.proposalRepo,
     required this.myLinkId,
     required this.partnerPaired,
+    required this.otherLinkMembers,
     required this.onChanged,
   });
 
@@ -405,9 +383,9 @@ class _PartnerTargetRow extends StatelessWidget {
     final explanation = suggestionDisplayExplanation(suggestion, l10n);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
       child: Material(
-        color: scheme.surface.withValues(alpha: 0.7),
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -469,6 +447,7 @@ class _PartnerTargetRow extends StatelessWidget {
                               proposalRepo: proposalRepo!,
                               suggestionRepo: suggestionRepo,
                               myLinkId: myLinkId,
+                              otherLinkMembers: otherLinkMembers,
                             );
                             onChanged();
                           },
@@ -487,12 +466,14 @@ class _PartnerTargetRow extends StatelessWidget {
 class _IncomingProposalRow extends StatelessWidget {
   final PartnerProposal proposal;
   final PartnerProposalRepository proposalRepo;
+  final String fromName;
   final VoidCallback? onSyncRequested;
   final VoidCallback onChanged;
 
   const _IncomingProposalRow({
     required this.proposal,
     required this.proposalRepo,
+    required this.fromName,
     this.onSyncRequested,
     required this.onChanged,
   });
@@ -503,9 +484,9 @@ class _IncomingProposalRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
       child: Material(
-        color: scheme.surface.withValues(alpha: 0.7),
+        color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -531,7 +512,7 @@ class _IncomingProposalRow extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          l10n.suggestionsProposedByPartner,
+                          l10n.suggestionsProposedByPartner(fromName),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),

@@ -25,7 +25,7 @@ class VaultRepository {
     return true;
   }
 
-  /// True when a 0.2.x (or `.kbak2`) personal key exists but no vault phrase.
+  /// True when a 0.2.x personal key exists but no vault phrase.
   Future<bool> needsMigration() async {
     if (await isReady()) return false;
     return await loadKey() != null;

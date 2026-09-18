@@ -8,6 +8,7 @@ import '../../main.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../services/todo_repository.dart';
+import 'tasks_section_header.dart';
 
 const _kidPalette = [
   Color(0xFF5B8DEF),
@@ -624,6 +625,8 @@ class KidsPanelState extends State<KidsPanel> {
         final visible = _filterKey == null
             ? groups
             : groups.where((g) => g.key == _filterKey).toList();
+        final pendingTotal =
+            groups.fold<int>(0, (sum, g) => sum + g.pendingCount);
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -631,48 +634,27 @@ class KidsPanelState extends State<KidsPanel> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              InkWell(
-                onTap: () => setState(() => _expanded = !_expanded),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 18,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.kidsSectionTitle.toUpperCase(),
-                        style: theme.textTheme.labelSmall?.copyWith(
+              TasksSectionHeader(
+                icon: Icons.people_outline,
+                title: l10n.kidsSectionTitle,
+                count: pendingTotal > 0 ? pendingTotal : null,
+                expanded: _expanded,
+                onToggle: () => setState(() => _expanded = !_expanded),
+                trailing: widget.onCreateTask == null
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.kidsCreateForEveryone,
+                        icon: Icon(
+                          Icons.group_add_outlined,
+                          size: 20,
                           color: scheme.primary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
                         ),
-                      ),
-                      const Spacer(),
-                      if (widget.onCreateTask != null)
-                        IconButton(
-                          tooltip: l10n.kidsCreateForEveryone,
-                          icon: Icon(
-                            Icons.group_add_outlined,
-                            size: 20,
-                            color: scheme.primary,
-                          ),
-                          onPressed: () => widget.onCreateTask!(
-                            kidId: null,
-                            everyone: true,
-                          ),
-                          visualDensity: VisualDensity.compact,
+                        onPressed: () => widget.onCreateTask!(
+                          kidId: null,
+                          everyone: true,
                         ),
-                      Icon(
-                        _expanded ? Icons.expand_less : Icons.expand_more,
-                        color: scheme.outline,
+                        visualDensity: VisualDensity.compact,
                       ),
-                    ],
-                  ),
-                ),
               ),
               if (data.offline ||
                   widget.syncStatus?.value == SyncStatus.error)

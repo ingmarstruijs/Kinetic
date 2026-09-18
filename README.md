@@ -136,7 +136,7 @@ A random 32-byte AES key cannot be turned into a BIP-39 mnemonic. On first 0.3 l
 
 The **family key is not rotated** (that would break partner and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
 
-A one-time **Legacy backup (.kbak2)** path on the welcome screen restores the 0.2 file (plaintext key in JSON) and then uses the same rotate-to-mnemonic flow. New backups are `.kvault` only.
+Backups are **`.kvault` only**. Legacy `.kbak2` files are no longer accepted.
 
 ## Releases
 

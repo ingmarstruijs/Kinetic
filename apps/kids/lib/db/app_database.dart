@@ -7,8 +7,8 @@ part 'app_database.drift.dart';
 
 /// AppDatabase — Drift database for kids app
 ///
-/// Stores assigned tasks synced from adult app via WebDAV.
-/// Uses same encryption and sync strategy as adult app.
+/// Stores assigned tasks synced from the Kinetic Link app via WebDAV.
+/// Uses same encryption and sync strategy as the link app.
 @DriftDatabase(tables: [KidsTasks])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -17,7 +17,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +28,14 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.addColumn(kidsTasks, kidsTasks.clearedFromHome);
+          }
+          if (from < 4) {
+            // Parent wording dropped in favour of the originating link task.
+            await m.renameColumn(
+              kidsTasks,
+              'parent_id',
+              kidsTasks.linkTaskId,
+            );
           }
         },
       );

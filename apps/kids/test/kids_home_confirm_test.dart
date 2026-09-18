@@ -17,7 +17,7 @@ void main() {
       await repo.upsertTask(
         KidsTask(
           id: 't1',
-          parentId: 'p',
+          linkTaskId: 'p',
           title: 'Brush teeth',
           notes: '',
           category: TaskCategory.household,

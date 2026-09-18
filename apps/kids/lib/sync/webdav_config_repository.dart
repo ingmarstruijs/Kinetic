@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
-// Secure storage keys — shared with adult app so kids device can use the
-// same credentials written by the parent enrollment flow.
+// Secure storage keys — shared with link app so kids device can use the
+// same credentials written by the link app enrollment flow.
 const _kServerUrl = 'kinetic_webdav_server_url';
 const _kUsername = 'kinetic_webdav_username';
 const _kPassword = 'kinetic_webdav_password';
@@ -53,7 +53,7 @@ class WebDavConfigRepository {
         serverUrl: WebDavUrl.coerceHttps(serverUrl),
         username: username,
         password: password,
-        parentId: '',
+        linkId: '',
         personalKeyBytes: personalKeyBytes,
         familyKeyBytes: familyKeyBytes,
       );
@@ -82,7 +82,7 @@ class WebDavConfigRepository {
     }
   }
 
-  /// Returns the kid's own ID as assigned by the parent during enrollment.
+  /// Returns the kid's own ID as assigned by the link app during enrollment.
   Future<String?> loadKidId() => _store.read(key: _kKidId);
 
   /// Removes all enrollment credentials, returning the app to unenrolled state.

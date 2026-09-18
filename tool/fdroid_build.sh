@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Mirrors the F-Droid metadata build recipe for local verification.
-# Usage: ./tool/fdroid_build.sh parent|kids
+# Usage: ./tool/fdroid_build.sh link|kids
 set -euo pipefail
 
 APP="${1:-}"
-if [[ "$APP" != "parent" && "$APP" != "kids" ]]; then
-  echo "Usage: $0 parent|kids" >&2
+if [[ "$APP" != "link" && "$APP" != "kids" ]]; then
+  echo "Usage: $0 link|kids" >&2
   exit 1
 fi
 

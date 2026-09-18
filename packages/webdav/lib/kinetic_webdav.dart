@@ -29,5 +29,8 @@ export 'src/sync/webdav_enrollment.dart';
 // Presence tracking
 export 'src/presence_info.dart';
 
+// Family roster (adults + kids)
+export 'src/family_roster.dart';
+
 // Kids XP goals
 export 'src/kid_goal.dart';

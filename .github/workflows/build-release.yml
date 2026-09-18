@@ -2,7 +2,7 @@ name: Build & Sign Flutter Apps
 
 # APK build + optional signing + GitHub Releases.
 # PR validation lives in ci.yml (analyze + test) so feature/fix PRs do not
-# run four heavy Build & Sign jobs (push + pull_request × kids + adult).
+# run four heavy Build & Sign jobs (push + pull_request × kids + link).
 on:
   push:
     branches:
@@ -27,7 +27,7 @@ permissions:
 jobs:
   build-kids-app:
     runs-on: ubuntu-latest
-    if: "!endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-adult')"
+    if: "!endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-link')"
 
     steps:
       - uses: actions/checkout@v7
@@ -128,9 +128,9 @@ jobs:
           name: kids-app-release
           path: apps/kids/build/app/outputs/flutter-apk/kinetic-kids-${{ steps.version.outputs.version }}.apk
 
-  build-adult-app:
+  build-link-app:
     runs-on: ubuntu-latest
-    if: "!endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-adult')"
+    if: "!endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-link')"
 
     steps:
       - uses: actions/checkout@v7
@@ -197,16 +197,16 @@ jobs:
             "storePassword=$ANDROID_KEYSTORE_PASSWORD" \
             "keyAlias=$ANDROID_KEY_ALIAS" \
             "keyPassword=$ANDROID_KEY_PASSWORD" \
-            > apps/adult/android/key.properties
+            > apps/link/android/key.properties
 
       - name: Get dependencies
         run: |
           flutter pub global activate melos
           "$HOME/.pub-cache/bin/melos" bootstrap
 
-      - name: Build adult app
+      - name: Build Kinetic Link app
         run: |
-          cd apps/adult
+          cd apps/link
           attempt=1
           max=3
           until flutter build apk --release --build-name=${{ steps.version.outputs.version }}; do
@@ -219,22 +219,22 @@ jobs:
             attempt=$((attempt + 1))
           done
 
-      - name: Rename adult APK to versioned filename
+      - name: Rename Kinetic Link APK to versioned filename
         run: |
-          cp apps/adult/build/app/outputs/flutter-apk/app-release.apk \
-             apps/adult/build/app/outputs/flutter-apk/kinetic-adult-${{ steps.version.outputs.version }}.apk
+          cp apps/link/build/app/outputs/flutter-apk/app-release.apk \
+             apps/link/build/app/outputs/flutter-apk/kinetic-link-${{ steps.version.outputs.version }}.apk
 
-      - name: Upload adult app artifact
+      - name: Upload Kinetic Link artifact
         uses: actions/upload-artifact@v7
         with:
-          name: adult-app-release
-          path: apps/adult/build/app/outputs/flutter-apk/kinetic-adult-${{ steps.version.outputs.version }}.apk
+          name: link-app-release
+          path: apps/link/build/app/outputs/flutter-apk/kinetic-link-${{ steps.version.outputs.version }}.apk
 
   release:
-    needs: [build-kids-app, build-adult-app]
+    needs: [build-kids-app, build-link-app]
     runs-on: ubuntu-latest
     # GitHub Releases only from a v* tag whose commit is already on main.
-    if: "startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-adult')"
+    if: "startsWith(github.ref, 'refs/tags/v') && !endsWith(github.ref_name, '-kids') && !endsWith(github.ref_name, '-link')"
     permissions:
       contents: write
       actions: read
@@ -270,18 +270,18 @@ jobs:
           name: kids-app-release
           path: ./artifacts/kids
 
-      - name: Download adult app
+      - name: Download Kinetic Link
         uses: actions/download-artifact@v8
         with:
-          name: adult-app-release
-          path: ./artifacts/adult
+          name: link-app-release
+          path: ./artifacts/link
 
       - name: Generate checksums
         run: |
           sha256sum ./artifacts/kids/kinetic-kids-*.apk | awk '{print $1}' > ./artifacts/kids/sha256.txt
-          sha256sum ./artifacts/adult/kinetic-adult-*.apk | awk '{print $1}' > ./artifacts/adult/sha256.txt
+          sha256sum ./artifacts/link/kinetic-link-*.apk | awk '{print $1}' > ./artifacts/link/sha256.txt
           echo "KIDS_SHA256=$(cat ./artifacts/kids/sha256.txt)" >> $GITHUB_ENV
-          echo "ADULT_SHA256=$(cat ./artifacts/adult/sha256.txt)" >> $GITHUB_ENV
+          echo "LINK_SHA256=$(cat ./artifacts/link/sha256.txt)" >> $GITHUB_ENV
 
       - name: Extract certificate fingerprints
         run: |
@@ -293,13 +293,13 @@ jobs:
             2>/dev/null | grep "SHA256:" | awk '{print $2}')
           rm -f /tmp/keystore.jks
           echo "KIDS_CERT_SHA256=$CERT_FP" >> $GITHUB_ENV
-          echo "ADULT_CERT_SHA256=$CERT_FP" >> $GITHUB_ENV
+          echo "LINK_CERT_SHA256=$CERT_FP" >> $GITHUB_ENV
 
-      - name: Create Kids App Release
+      - name: Create Kinetic Kids Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}-kids
-          name: Kids App ${{ github.ref_name }}
+          name: Kinetic Kids ${{ github.ref_name }}
           body: |
             ## SHA-256 Checksum
             Verify the integrity of the downloaded APK:
@@ -318,25 +318,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Adult App Release
+      - name: Create Kinetic Link Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}-adult
-          name: Adult App ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}-link
+          name: Kinetic Link ${{ github.ref_name }}
           body: |
             ## SHA-256 Checksum
             Verify the integrity of the downloaded APK:
             ```
-            ${{ env.ADULT_SHA256 }}  kinetic-adult-${{ steps.version.outputs.version }}.apk
+            ${{ env.LINK_SHA256 }}  kinetic-link-${{ steps.version.outputs.version }}.apk
             ```
 
             ## Certificate Fingerprint (AppVerifier)
             SHA-256 fingerprint of the signing certificate:
             ```
-            ${{ env.ADULT_CERT_SHA256 }}
+            ${{ env.LINK_CERT_SHA256 }}
             ```
           files: |
-            ./artifacts/adult/kinetic-adult-${{ steps.version.outputs.version }}.apk
-            ./artifacts/adult/sha256.txt
+            ./artifacts/link/kinetic-link-${{ steps.version.outputs.version }}.apk
+            ./artifacts/link/sha256.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,7 +7,7 @@ class KidsDemoSession {
   static final KidsDemoSession instance = KidsDemoSession._();
 
   static const kidId = 'demo-kid';
-  static const parentId = 'demo-parent';
+  static const linkTaskId = 'demo-link-task';
 
   bool active = false;
   KidGoal? goal;

@@ -405,6 +405,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                     final kidsCount = demo.active
                         ? demo.kids.length
                         : kidsCountReal;
+                    final otherLinks = demo.active
+                        ? demo.otherLinkMembers
+                        : _otherLinkMembers;
                     final screens = <Widget>[
                       TasksScreen(
                         repo: _todoRepository,
@@ -425,7 +428,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         syncConfig: demo.active && demo.kids.isNotEmpty
                             ? demo.dummyConfig()
                             : _syncOrchestrator?.config,
-                        pullPresence: _syncOrchestrator?.pullPresence,
+                        pullPresence: demo.active
+                            ? () async => demo.presence
+                            : _syncOrchestrator?.pullPresence,
                         pullSharedTasks: demo.active && demo.kids.isNotEmpty
                             ? () async => demo.kidTasks
                             : null,
@@ -439,13 +444,17 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                               }
                             : null,
                         onAcceptKidTask: demo.active
-                            ? null
+                            ? (task) async {
+                                DemoSession.instance.acceptKidTask(task.uid);
+                              }
                             : (task) async {
                                 await _syncOrchestrator
                                     ?.acceptKidsTaskCompletion(task);
                               },
                         onRejectKidTask: demo.active
-                            ? null
+                            ? (task) async {
+                                DemoSession.instance.rejectKidTask(task.uid);
+                              }
                             : (task) async {
                                 await _syncOrchestrator
                                     ?.rejectKidsTaskCompletion(task);
@@ -457,7 +466,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         onSyncRetry: _triggerSync,
                         syncStatus: hasWebDav ? syncStatus : null,
                         partnerPaired: paired,
-                        otherLinkMembers: _otherLinkMembers,
+                        otherLinkMembers: otherLinks,
                       ),
                       SettingsScreen(
                         db: widget.db,

@@ -5,6 +5,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../family/family_connection_service.dart';
+import '../../debug/demo_session.dart';
 import '../../partner/services/partner_proposal_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_theme.dart';
@@ -150,8 +151,31 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   }
 
   Future<void> _loadFamilyConnections() async {
-    if (widget.configRepo == null || !widget.partnerPaired) return;
+    if (!widget.partnerPaired) return;
     try {
+      final demo = DemoSession.instance;
+      if (demo.active && demo.roster != null) {
+        final otherLinkMembers = demo.roster!.otherLinkMembers(
+          widget.myLinkId ?? DemoSession.linkId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _linkStatuses = FamilyConnectionService.linkStatuses(
+            otherLinkMembers: otherLinkMembers,
+            presenceList: demo.presence,
+            allowWithoutPresence: true,
+          );
+          _partnerStatus = FamilyConnectionService.partnerStatus(
+            partnerPaired: true,
+            presenceList: demo.presence,
+            otherLinkMembers: otherLinkMembers,
+            allowWithoutPresence: true,
+          );
+        });
+        return;
+      }
+
+      if (widget.configRepo == null) return;
       final presence = widget.pullPresence != null
           ? await widget.pullPresence!()
           : <PresenceInfo>[];

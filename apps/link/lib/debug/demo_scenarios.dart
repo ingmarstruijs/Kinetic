@@ -11,7 +11,15 @@ import '../todo/services/note_repository.dart';
 import '../todo/services/todo_repository.dart';
 import 'demo_session.dart';
 
-enum DemoScenario { empty, busyDay, suggestions, kids, notes, fullHouse }
+enum DemoScenario {
+  empty,
+  busyDay,
+  suggestions,
+  kids,
+  notes,
+  family,
+  fullHouse,
+}
 
 class DemoScenarioInfo {
   final DemoScenario id;
@@ -51,29 +59,36 @@ const demoScenarioCatalog = <DemoScenarioInfo>[
     id: DemoScenario.suggestions,
     titleEn: 'Suggestions + partner',
     titleNl: 'Suggesties + partner',
-    subtitleEn: 'For you, for partner, and inbox',
-    subtitleNl: 'Voor jou, voor partner, en inbox',
+    subtitleEn: 'Inbox, for-you hints, and a second Link member',
+    subtitleNl: 'Inbox, voor-jou-hints, en een tweede Link-lid',
   ),
   DemoScenarioInfo(
     id: DemoScenario.kids,
     titleEn: 'Kids overview',
     titleNl: 'Kinderen',
-    subtitleEn: 'Two enrolled kids — one with XP, one without',
-    subtitleNl: 'Twee gekoppelde kinderen — één met XP, één zonder',
+    subtitleEn: 'Two kids — XP on/off, pending verification',
+    subtitleNl: 'Twee kinderen — XP aan/uit, wachtend op bevestiging',
   ),
   DemoScenarioInfo(
     id: DemoScenario.notes,
     titleEn: 'Notes',
     titleNl: 'Notities',
-    subtitleEn: 'Private and shared notes with a reminder',
-    subtitleNl: 'Privé- en gedeelde notities met herinnering',
+    subtitleEn: 'Private + shared note aimed at the partner',
+    subtitleNl: 'Privé + gedeelde notitie gericht op de partner',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.family,
+    titleEn: 'Family household',
+    titleNl: 'Gezin',
+    subtitleEn: 'Roster, kids, verifier gates, proposals, shared notes',
+    subtitleNl: 'Roster, kinderen, verifier, voorstellen, gedeelde notities',
   ),
   DemoScenarioInfo(
     id: DemoScenario.fullHouse,
     titleEn: 'Full house',
     titleNl: 'Vol huis',
-    subtitleEn: 'Tasks, suggestions, kids, and notes together',
-    subtitleNl: 'Taken, suggesties, kinderen en notities samen',
+    subtitleEn: 'Busy day + family household in one overlay',
+    subtitleNl: 'Drukke dag + gezin in één overlay',
   ),
 ];
 
@@ -115,6 +130,10 @@ class DemoScenarioLoader {
       case DemoScenario.notes:
         await _seedNotes(dutch);
         _setFamily(partner: true, kids: const []);
+      case DemoScenario.family:
+        await _seedSuggestions(dutch);
+        await _seedNotes(dutch);
+        _setFamily(partner: true, kids: _demoKids());
       case DemoScenario.fullHouse:
         await _seedBusyDay(dutch);
         await _seedSuggestions(dutch);
@@ -132,14 +151,83 @@ class DemoScenarioLoader {
   }
 
   void _setFamily({required bool partner, required List<EnrolledKid> kids}) {
+    final now = DateTime.now().toUtc();
+    final roster = _demoRoster(
+      partner: partner,
+      kids: kids,
+      now: now,
+    );
     DemoSession.instance.apply(
       partnerPaired: partner,
       kids: kids,
       kidTasks: kids.isEmpty
           ? const []
           : _demoKidTasks(kids, secondLinkMember: partner),
+      roster: roster,
+      presence: partner ? _demoPresence(now) : const [],
     );
   }
+
+  FamilyRoster _demoRoster({
+    required bool partner,
+    required List<EnrolledKid> kids,
+    required DateTime now,
+  }) {
+    final joined = now.subtract(const Duration(days: 90));
+    final self = FamilyLinkMember(
+      id: DemoSession.linkId,
+      displayName: DemoSession.selfDisplayName,
+      kidsParticipation: true,
+      joinedAt: joined,
+      updatedAt: now,
+    );
+    final linkMembers = <FamilyLinkMember>[
+      self,
+      if (partner)
+        FamilyLinkMember(
+          id: DemoSession.partnerId,
+          displayName: DemoSession.partnerDisplayName,
+          kidsParticipation: true,
+          joinedAt: joined.add(const Duration(days: 2)),
+          updatedAt: now,
+        ),
+    ];
+    return FamilyRoster(
+      linkMembers: linkMembers,
+      kids: [
+        for (final k in kids)
+          FamilyKidMember(
+            id: k.id,
+            name: k.name,
+            enrolledAt: k.enrolledAt,
+            xpEnabled: k.xpEnabled,
+            updatedAt: k.enrolledAt,
+          ),
+      ],
+      updatedAt: now,
+    );
+  }
+
+  List<PresenceInfo> _demoPresence(DateTime now) => [
+    PresenceInfo(
+      deviceId: 'demo-device-self',
+      deviceType: 'link',
+      displayName: DemoSession.selfDisplayName,
+      lastSeen: now,
+    ),
+    PresenceInfo(
+      deviceId: 'demo-device-partner',
+      deviceType: 'link',
+      displayName: DemoSession.partnerDisplayName,
+      lastSeen: now.subtract(const Duration(minutes: 12)),
+    ),
+    PresenceInfo(
+      deviceId: 'demo-device-kid-mees',
+      deviceType: 'kid',
+      displayName: 'Mees',
+      lastSeen: now.subtract(const Duration(hours: 2)),
+    ),
+  ];
 
   List<EnrolledKid> _demoKids() {
     final enrolledAt = DateTime.now().toUtc().subtract(
@@ -161,7 +249,7 @@ class DemoScenarioLoader {
     ];
   }
 
-  /// [secondLinkMember] adds a mission that another link member must verify, so the
+  /// [secondLinkMember] adds a mission that the partner must verify, so the
   /// verifier filter in the kids panel is visible in partner demos.
   List<ICalTask> _demoKidTasks(
     List<EnrolledKid> kids, {
@@ -208,20 +296,20 @@ class DemoScenarioLoader {
         status: ICalTaskStatus.inProcess,
         verifierLinkId: DemoSession.linkId,
       ),
-      // Assigned by the second link member in the roster, so this device only sees
-      // it as pending. The demo session fakes that member with an id; a real
-      // household gets the name from the shared roster.
+      // Partner is the designated verifier — this device only sees pending.
       if (secondLinkMember)
         chore(
           summary: 'Water the plants',
           kidId: fien,
           status: ICalTaskStatus.inProcess,
-          verifierLinkId: 'demo-second-link',
+          verifierLinkId: DemoSession.partnerId,
         ),
+      // Unassigned verifier — any participating link member may accept.
       ICalTask(
         uid: const Uuid().v4(),
         summary: 'Set the table',
-        description: 'xKineticXpReward:10',
+        description: 'xKineticXpReward:10;xKineticTargetKidId:$mees',
+        status: ICalTaskStatus.inProcess,
         createdAt: now,
         updatedAt: now,
       ),
@@ -358,6 +446,7 @@ class DemoScenarioLoader {
           ? 'Ma: pasta\nDi: soep\nWo: rijst'
           : 'Mon: pasta\nTue: soup\nWed: rice',
       isShared: true,
+      sharedMemberIds: const [DemoSession.partnerId],
     );
   }
 }

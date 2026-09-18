@@ -11,11 +11,25 @@ class DemoSession extends ChangeNotifier {
 
   static const linkId = 'demo-link';
   static const partnerId = 'demo-partner';
+  static const selfDisplayName = 'You';
+  static const partnerDisplayName = 'Alex';
 
   bool active = false;
   bool partnerPaired = false;
   List<EnrolledKid> kids = const [];
   List<ICalTask> kidTasks = const [];
+  FamilyRoster? roster;
+  List<PresenceInfo> presence = const [];
+
+  /// Other link members for notes / assign UI (excludes this device).
+  List<({String id, String name})> get otherLinkMembers {
+    final r = roster;
+    if (r == null) return const [];
+    return [
+      for (final m in r.otherLinkMembers(linkId))
+        (id: m.id, name: m.displayName),
+    ];
+  }
 
   SyncConfig dummyConfig() => SyncConfig(
     serverUrl: 'https://demo.invalid',
@@ -30,11 +44,15 @@ class DemoSession extends ChangeNotifier {
     required bool partnerPaired,
     required List<EnrolledKid> kids,
     required List<ICalTask> kidTasks,
+    FamilyRoster? roster,
+    List<PresenceInfo> presence = const [],
   }) {
     active = true;
     this.partnerPaired = partnerPaired;
     this.kids = kids;
     this.kidTasks = kidTasks;
+    this.roster = roster;
+    this.presence = presence;
     notifyListeners();
   }
 
@@ -42,6 +60,36 @@ class DemoSession extends ChangeNotifier {
     kidTasks = [
       for (final task in kidTasks)
         if (task.uid != uid) task,
+    ];
+    notifyListeners();
+  }
+
+  /// Demo accept: mark pending chore completed.
+  void acceptKidTask(String uid) {
+    kidTasks = [
+      for (final task in kidTasks)
+        if (task.uid == uid)
+          task.copyWith(
+            status: ICalTaskStatus.completed,
+            updatedAt: DateTime.now().toUtc(),
+          )
+        else
+          task,
+    ];
+    notifyListeners();
+  }
+
+  /// Demo reject: send pending chore back to open.
+  void rejectKidTask(String uid) {
+    kidTasks = [
+      for (final task in kidTasks)
+        if (task.uid == uid)
+          task.copyWith(
+            status: ICalTaskStatus.needsAction,
+            updatedAt: DateTime.now().toUtc(),
+          )
+        else
+          task,
     ];
     notifyListeners();
   }
@@ -59,6 +107,8 @@ class DemoSession extends ChangeNotifier {
     partnerPaired = false;
     kids = const [];
     kidTasks = const [];
+    roster = null;
+    presence = const [];
     notifyListeners();
   }
 }

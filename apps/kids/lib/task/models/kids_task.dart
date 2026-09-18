@@ -1,12 +1,12 @@
-/// Task category — matches parent app TaskCategory
+/// Task category — matches adult app TaskCategory
 enum TaskCategory { household, school, health, shopping, entertainment, other }
 
-/// Task priority — matches parent app TaskPriority
+/// Task priority — matches adult app TaskPriority
 enum TaskPriority { low, normal, high, urgent }
 
 /// KidsTask — a task assigned by a parent to this child
 ///
-/// Mirrors PersonalTask from parent app but: read-only for most fields
+/// Mirrors PersonalTask from adult app but: read-only for most fields
 /// (assigned by parent), editable only for completion / verification status.
 class KidsTask {
   final String id;

@@ -19,11 +19,11 @@ scripts:
     exec: flutter pub get
     description: Get pub dependencies for all packages
 
-  build_parent:
+  build_adult:
     exec: flutter build apk --release
-    description: Build release APK for parent app
+    description: Build release APK for adult app
     packageFilters:
-      scope: "parent"
+      scope: "adult"
 
   build_kids:
     exec: flutter build apk --release

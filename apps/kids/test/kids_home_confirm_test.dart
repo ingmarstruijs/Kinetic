@@ -55,7 +55,7 @@ void main() {
 
       expect(find.text('Are you done?'), findsOneWidget);
       expect(
-        find.textContaining('confirmation request to your parent'),
+        find.textContaining('confirmation request to your parent/caregiver'),
         findsOneWidget,
       );
 

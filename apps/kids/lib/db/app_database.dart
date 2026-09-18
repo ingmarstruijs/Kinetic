@@ -7,8 +7,8 @@ part 'app_database.drift.dart';
 
 /// AppDatabase — Drift database for kids app
 ///
-/// Stores assigned tasks synced from parent app via WebDAV.
-/// Uses same encryption and sync strategy as parent app.
+/// Stores assigned tasks synced from adult app via WebDAV.
+/// Uses same encryption and sync strategy as adult app.
 @DriftDatabase(tables: [KidsTasks])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());

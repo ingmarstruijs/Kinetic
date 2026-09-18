@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
-// Secure storage keys — shared with parent app so kids device can use the
+// Secure storage keys — shared with adult app so kids device can use the
 // same credentials written by the parent enrollment flow.
 const _kServerUrl = 'kinetic_webdav_server_url';
 const _kUsername = 'kinetic_webdav_username';

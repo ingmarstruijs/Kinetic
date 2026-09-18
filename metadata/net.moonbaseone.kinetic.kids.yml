@@ -17,7 +17,7 @@ Description: |-
     Children mark tasks complete and earn XP. There is no account and no
     telemetry. Local task data is stored in an encrypted SQLite database.
 
-    Enrollment uses a family QR from the parent app; the WebDAV password is
+    Enrollment uses a family QR from the adult app; the WebDAV password is
     typed on the kids device (it is not embedded in the QR). Assigned tasks
     sync from your own HTTPS WebDAV server and are encrypted with the family key.
 

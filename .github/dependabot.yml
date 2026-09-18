@@ -23,7 +23,7 @@ updates:
       - pub
 
   - package-ecosystem: pub
-    directory: /apps/parent
+    directory: /apps/adult
     schedule:
       interval: weekly
       day: monday

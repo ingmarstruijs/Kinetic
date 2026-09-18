@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-20
 
-Kinetic Link (parent app `net.moonbaseone.kinetic.parent` and kids app `net.moonbaseone.kinetic.kids`) is local-first software. There is no Kinetic cloud account and no telemetry.
+Kinetic Link (adult app `net.moonbaseone.kinetic.parent` and kids app `net.moonbaseone.kinetic.kids`) is local-first software. There is no Kinetic cloud account and no telemetry.
 
 ## Data we collect
 

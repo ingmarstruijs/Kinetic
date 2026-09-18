@@ -137,7 +137,7 @@ Remote files (`.ics`, proposal JSON, presence) are AES-256-GCM. Local SQLite is 
 
 ## Backup Format
 
-App-level combined backup lives in the parent app (`FullBackupService.exportVaultToBytes`).
+App-level combined backup lives in the adult app (`FullBackupService.exportVaultToBytes`).
 
 ### `.kvault`
 ```javascript

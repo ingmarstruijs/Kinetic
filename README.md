@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="brand/logo-parent.svg" alt="Kinetic Link" width="88" height="88" />
+  <img src="brand/logo-adult.svg" alt="Kinetic Link" width="88" height="88" />
   &nbsp;&nbsp;
   <img src="brand/logo-kids.svg" alt="Kinetic Kids" width="88" height="88" />
 </p>
@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <em>Kinetic Link</em> (parent) · <em>Kinetic Kids</em> (chores)
+  <em>Kinetic</em> (adult) · <em>Kinetic Kids</em> (chores)
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 ---
 
-Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Manage personal tasks and notes locally, coordinate with your co-parent via proposals, assign chores to kids with XP rewards, and optionally sync everything to your own WebDAV server.
+Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Manage personal tasks and notes locally, coordinate with your family member via proposals, assign chores to kids with XP rewards, and optionally sync everything to your own WebDAV server.
 
 Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, iCal, WebDAV client).
 
@@ -42,7 +42,7 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 
 | App | Platforms | Description |
 |---|---|---|
-| [`apps/parent`](apps/parent) | Android, iOS | Task manager, partner proposals, notes, kids overview, WebDAV config |
+| [`apps/adult`](apps/adult) | Android, iOS | Task manager, partner proposals, notes, kids overview, WebDAV config |
 | [`apps/kids`](apps/kids) | Android | Assigned tasks synced from parent; children mark complete and earn XP |
 
 ## Tech Stack
@@ -61,7 +61,7 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 dart pub global activate melos
 melos bootstrap
 melos run test        # run all tests
-cd apps/parent && flutter run
+cd apps/adult && flutter run
 ```
 
 No server required — the app works fully offline. Configure WebDAV in **Settings** to enable sync and family pairing.
@@ -69,7 +69,7 @@ No server required — the app works fully offline. Configure WebDAV in **Settin
 ### Build a release APK
 
 ```bash
-cd apps/parent   # or apps/kids
+cd apps/adult   # or apps/kids
 flutter build apk --release
 ```
 
@@ -79,7 +79,7 @@ PRs and pushes to `main`/`develop` run analyze + tests ([`.github/workflows/ci.y
 
 Both apps ship **English** and **Dutch** UI via Flutter `gen-l10n` (ARB files under `apps/*/lib/l10n`). English is the template locale; Dutch lives in `app_nl.arb`. After editing ARB files, run `flutter gen-l10n` (or `flutter pub get`) in the app directory.
 
-Tasks/notes suggestion copy in the parent app is still being migrated; nav, settings, vault, family pairing, and the kids app are localized.
+Tasks/notes suggestion copy in the adult app is still being migrated; nav, settings, vault, family pairing, and the kids app are localized.
 
 ## Family Setup
 
@@ -116,7 +116,7 @@ An empty run does **not** start the 24-hour throttle, so creating tasks can surf
 
 Partner hints are capped at one per keyword-family per 14 days. **Send to partner** always shows **What your partner sees** before anything is sent. Nothing is auto-sent.
 
-Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For partner** / **From partner**). See [`apps/parent/docs/SMART_FEATURES.md`](apps/parent/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
+Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For partner** / **From partner**). See [`apps/adult/docs/SMART_FEATURES.md`](apps/adult/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
 
 ## Encryption
 
@@ -126,7 +126,7 @@ Suggestions appear in a banner on the **Private** tab and in structured sections
 | **Family key** | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault). |
 | **Kid UUID** | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone** |
 
-On first launch the parent app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
+On first launch the adult app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
 
 Export never includes the mnemonic, the raw key, or the WebDAV password. Settings can **verify** the phrase without showing the words, or **show** them after Face ID / fingerprint / PIN.
 

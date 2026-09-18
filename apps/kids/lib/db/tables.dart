@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-/// KidsTasks — assigned tasks from parent app
+/// KidsTasks — assigned tasks from adult app
 ///
 /// Kids can see, mark complete, and track progress on tasks assigned by parents.
 /// All tasks are synced via WebDAV with the family key.

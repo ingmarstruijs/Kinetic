@@ -1,0 +1,96 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
+import 'package:adult/debug/demo_scenarios.dart';
+import 'package:adult/debug/demo_session.dart';
+import 'package:adult/partner/services/partner_proposal_repository.dart';
+import 'package:adult/settings/models/enrolled_kid.dart';
+import 'package:adult/todo/services/ai_suggestion_repository.dart';
+import 'package:adult/todo/services/note_repository.dart';
+import 'package:adult/todo/services/todo_repository.dart';
+
+import '../helpers/test_database.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  test(
+    'full house scenario seeds tasks, notes, suggestions and kids overlay',
+    () async {
+      final db = createTestDatabase();
+      addTearDown(db.close);
+      final todoRepo = TodoRepository(db: db);
+      final loader = DemoScenarioLoader(
+        db: db,
+        todoRepo: todoRepo,
+        noteRepo: NoteRepository(db: db),
+        suggestionRepo: AiSuggestionRepository(db),
+        proposalRepo: PartnerProposalRepository(
+          db: db,
+          todoRepository: todoRepo,
+        ),
+      );
+
+      await loader.apply(DemoScenario.fullHouse, dutch: true);
+
+      final tasks = await todoRepo.watchAllTasks().first;
+      final notes = await NoteRepository(db: db).watchAll().first;
+      final suggestions = await AiSuggestionRepository(db).watchPending().first;
+      final inbox = await PartnerProposalRepository(
+        db: db,
+        todoRepository: todoRepo,
+      ).watchPending(myParentId: DemoSession.parentId).first;
+
+      expect(tasks, isNotEmpty);
+      expect(notes, isNotEmpty);
+      expect(suggestions.length, greaterThanOrEqualTo(2));
+      expect(inbox, isNotEmpty);
+      expect(DemoSession.instance.active, isTrue);
+      expect(DemoSession.instance.partnerPaired, isTrue);
+      expect(DemoSession.instance.kids, hasLength(2));
+      expect(DemoSession.instance.kidTasks, isNotEmpty);
+
+      await loader.apply(DemoScenario.empty, dutch: true);
+      expect(await todoRepo.watchAllTasks().first, isEmpty);
+      expect(DemoSession.instance.active, isFalse);
+    },
+  );
+
+  test('notes scenario enables partner overlay for shared notes', () async {
+    final db = createTestDatabase();
+    addTearDown(() async {
+      DemoSession.instance.clear();
+      await db.close();
+    });
+    final todoRepo = TodoRepository(db: db);
+    final loader = DemoScenarioLoader(
+      db: db,
+      todoRepo: todoRepo,
+      noteRepo: NoteRepository(db: db),
+      suggestionRepo: AiSuggestionRepository(db),
+      proposalRepo: PartnerProposalRepository(db: db, todoRepository: todoRepo),
+    );
+
+    await loader.apply(DemoScenario.notes, dutch: true);
+
+    final notes = await NoteRepository(db: db).watchAll().first;
+    expect(notes, isNotEmpty);
+    expect(notes.any((n) => n.isShared), isTrue);
+    expect(DemoSession.instance.active, isTrue);
+    expect(DemoSession.instance.partnerPaired, isTrue);
+  });
+
+  test('removeKidTask drops an overlay assignment', () {
+    addTearDown(DemoSession.instance.clear);
+    final now = DateTime.utc(2026, 9, 16);
+    DemoSession.instance.apply(
+      partnerPaired: false,
+      kids: [EnrolledKid(id: 'mees', name: 'Mees', enrolledAt: now)],
+      kidTasks: [
+        ICalTask(uid: 'keep', summary: 'Keep', createdAt: now, updatedAt: now),
+        ICalTask(uid: 'drop', summary: 'Drop', createdAt: now, updatedAt: now),
+      ],
+    );
+    DemoSession.instance.removeKidTask('drop');
+    expect(DemoSession.instance.kidTasks.map((t) => t.uid), ['keep']);
+  });
+}

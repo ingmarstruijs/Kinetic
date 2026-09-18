@@ -35,7 +35,7 @@ Builds:
   - versionName: 0.3.7
     versionCode: 6
     commit: v0.3.7
-    subdir: apps/parent
+    subdir: apps/adult
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@3.44.1

@@ -6,7 +6,7 @@ environment:
 
 workspace:
   - apps/kids
-  - apps/parent
+  - apps/adult
   - packages/kinetic_qr_scanner
   - packages/webdav
 

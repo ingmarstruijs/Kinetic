@@ -11,7 +11,7 @@ import '../sync/webdav_config_repository.dart';
 //
 // Shown when the kids app has no stored WebDAV credentials.
 // The child scans (or a parent scans on their behalf) a QR code produced by
-// the parent app's "Kinderenapp koppelen" screen.
+// the adult app's "Kinderenapp koppelen" screen.
 //
 // Returns `true` via Navigator when enrollment succeeds.
 // ---------------------------------------------------------------------------

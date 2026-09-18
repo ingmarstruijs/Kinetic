@@ -15,7 +15,7 @@ Report privately via GitHub Security Advisories:
 
 1. Open [Security → Advisories](https://github.com/ingmarstruijs/Kinetic/security/advisories)
 2. Choose **Report a vulnerability**
-3. Include: affected app (parent / kids), version or commit, steps to reproduce, and impact
+3. Include: affected app (Kinetic Link / Kinetic Kids), version or commit, steps to reproduce, and impact
 
 We aim to acknowledge reports within **7 days** and share a remediation plan or mitigation when possible.
 

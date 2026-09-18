@@ -4,6 +4,7 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 
 import '../encryption/kinetic_encryption.dart';
+import '../family_roster.dart';
 import '../ical/ical_note.dart';
 import '../ical/ical_serializer.dart';
 import '../ical/ical_task.dart';
@@ -285,13 +286,13 @@ class WebDavSyncService {
   }
 
   // ---------------------------------------------------------------------------
-  // Shared Tasks (parent→kids assignments)
+  // Shared Tasks (link→kids assignments)
   // ---------------------------------------------------------------------------
 
   String get _sharedTasksPath => '/kinetic/shared/tasks';
 
   /// Pulls all shared tasks from `/kinetic/shared/tasks/` (family key encrypted).
-  /// Used by the kids app to receive parent-assigned tasks.
+  /// Used by the kids app to receive link-assigned tasks.
   Future<List<ICalTask>> pullSharedTasks() async {
     final familyKey = config.familyKeyBytes;
     if (familyKey == null) return [];
@@ -404,7 +405,7 @@ class WebDavSyncService {
     return metrics;
   }
 
-  /// Encrypts and PUTs load metrics to `/kinetic/shared/load/{parentId}.json`.
+  /// Encrypts and PUTs load metrics to `/kinetic/shared/load/{linkId}.json`.
   /// Creates the directory on-demand if it doesn't exist (for backward compatibility
   /// with accounts set up before this feature was added).
   Future<void> pushLoadMetrics(Map<String, dynamic> metricsJson) async {
@@ -413,11 +414,11 @@ class WebDavSyncService {
       throw StateError('Family key required to push load metrics');
     }
 
-    final parentId = metricsJson['parentId'] as String;
+    final linkId = metricsJson['linkId'] as String;
     final plain = Uint8List.fromList(utf8.encode(jsonEncode(metricsJson)));
     final blob = await KineticEncryption.encrypt(plain, familyKey);
 
-    await _putWithCollectionFallback('$_loadPath/$parentId.json', blob);
+    await _putWithCollectionFallback('$_loadPath/$linkId.json', blob);
   }
 
   // ---------------------------------------------------------------------------
@@ -552,6 +553,37 @@ class WebDavSyncService {
   /// Removes the presence entry for [deviceId] from the server.
   Future<void> deletePresence(String deviceId) =>
       client.delete('$_presencePath/$deviceId.json');
+
+  // ---------------------------------------------------------------------------
+  // Family roster
+  // ---------------------------------------------------------------------------
+
+  String get _rosterPath => '/kinetic/shared/roster.json';
+
+  /// Writes the canonical [roster] document (family-key encrypted).
+  Future<void> pushRoster(FamilyRoster roster) async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) return;
+
+    final plain =
+        Uint8List.fromList(utf8.encode(jsonEncode(roster.toJson())));
+    final blob = await KineticEncryption.encrypt(plain, familyKey);
+    await _putWithCollectionFallback(_rosterPath, blob);
+  }
+
+  /// Pulls the shared roster, or null when missing / no family key.
+  Future<FamilyRoster?> pullRoster() async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) return null;
+    try {
+      final blob = await client.get(_rosterPath);
+      final plain = await KineticEncryption.decrypt(blob, familyKey);
+      final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+      return FamilyRoster.fromJson(json);
+    } catch (_) {
+      return null;
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // XP Reset

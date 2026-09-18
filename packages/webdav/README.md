@@ -13,7 +13,7 @@ Shared sync, crypto, and serialization logic for Kinetic Link.
 ## Custom iCal Properties
 
 Tasks and notes store metadata in escaped iCal DESCRIPTION field:
-- `xKineticParentId` — ID of the parent who created/modified the task
+- `xKineticLinkTaskId` — ID of the Kinetic Link personal task this kids mission was created from
 - `xKineticCategory` — Task category (for compatibility)
 - `xKineticTargetKidId` — UUID of the child this task is assigned to. **Omitted / empty** means Everyone (all enrolled kids see it)
 - `xKineticXpReward` — XP reward value
@@ -26,12 +26,12 @@ Tasks and notes store metadata in escaped iCal DESCRIPTION field:
   "v": 2,
   "type": "family",
   "url": "https://nextcloud.example.com/remote.php/webdav/",
-  "user": "parent@example.com",
+  "user": "link@example.com",
   "ent": "<base64 16-byte BIP-39 entropy>"
 }
 ```
 
-The partner payload does **not** include the WebDAV password. Each parent keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Partners can also type the words instead of scanning.
+The partner payload does **not** include the WebDAV password. Each link device keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Partners can also type the words instead of scanning.
 
 ### Kids Enrollment (KidsEnrollmentQrScreen)
 ```javascript
@@ -39,7 +39,7 @@ The partner payload does **not** include the WebDAV password. Each parent keeps 
   "v": 2,
   "type": "kids",
   "url": "https://nextcloud.example.com/remote.php/webdav/",
-  "user": "parent@example.com",
+  "user": "link@example.com",
   "key": "<base64-family-key>",
   "kid": "<uuid-for-this-child-device>"
 }
@@ -58,7 +58,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `SyncConfig`: Holds WebDAV credentials and encryption keys (personal/family)
 - `SecureKeyValueStore`: Abstract base for secure storage implementations
 - `PersonalTask` / `PersonalNote`: Domain models
-- `PartnerProposal`: Domain model for parent proposals
+- `PartnerProposal`: Domain model for family-member proposals
 - `KidsTask`: Domain model for child-assigned tasks
 - `KidGoal`: Per-kid XP goal document under `/kinetic/shared/goals/{kidId}.json`
 
@@ -89,7 +89,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `delete(path)` → Delete file (404 treated as success)
 
 **SyncConfig**:
-- Stores `serverUrl`, `username`, `password`, `parentId`
+- Stores `serverUrl`, `username`, `password`, `linkId`
 - Stores `personalKeyBytes` and optional `familyKeyBytes`
 - Accessor: `baseUrl` (normalized WebDAV path)
 
@@ -106,9 +106,9 @@ kinetic_webdav_password           — WebDAV password
 kinetic_vault_ready              — '1' after personal vault create/restore
 kinetic_webdav_family_key         — Family AES key (base64, optional)
 kinetic_webdav_family_entropy     — 16-byte BIP-39 entropy for family QR (optional)
-kinetic_webdav_parent_id          — Parent ID (optional)
+kinetic_webdav_link_id          — Parent ID (optional)
 kinetic_partner_paired            — '1' if partner is paired, '0' otherwise
-kinetic_enrolled_kids             — JSON list of enrolled kids (parent only)
+kinetic_enrolled_kids             — JSON list of enrolled kids (Kinetic Link)
 kinetic_kid_id                    — This device's child UUID (kids only)
 ```
 
@@ -137,7 +137,7 @@ Remote files (`.ics`, proposal JSON, presence) are AES-256-GCM. Local SQLite is 
 
 ## Backup Format
 
-App-level combined backup lives in the parent app (`FullBackupService.exportVaultToBytes`).
+App-level combined backup lives in the link app (`FullBackupService.exportVaultToBytes`).
 
 ### `.kvault`
 ```javascript
@@ -145,7 +145,7 @@ App-level combined backup lives in the parent app (`FullBackupService.exportVaul
   "version": 1,
   "format": "kvault",
   "exportedAt": "2026-08-20T12:34:56Z",
-  "usernameHint": "parent@example.com",
+  "usernameHint": "link@example.com",
   "ciphertext": "<base64 AES-256-GCM>"
 }
 ```
@@ -155,7 +155,7 @@ The ciphertext is the database snapshot (and theme) encrypted with the derived v
 ### `vault.meta`
 Small AES-GCM canary at `/kinetic/{username}/vault.meta`. Decrypt OK → right phrase. 404 → no vault on that server. MAC failure → wrong phrase.
 
-Legacy `.kbak2` is not written anymore. The parent welcome screen can still import it once, then rotates to a new mnemonic (a random 0.2 key cannot become BIP-39 words). `exportRecoveryJson` remains on `KineticEncryption` for tests.
+Legacy `.kbak2` is neither written nor imported. `exportRecoveryJson` remains on `KineticEncryption` for tests only.
 
 ## iCal Format
 

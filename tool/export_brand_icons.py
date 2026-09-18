@@ -107,7 +107,7 @@ def write_svgs() -> None:
     body = f"""  <rect x="{x0:g}" y="{y0:g}" width="{x1 - x0:g}" height="{y1 - y0:g}" fill="#FFFFFF"/>
   <path fill="#FFFFFF" d="{arm_d(*UPPER)}"/>
   <path fill="#FFFFFF" d="{arm_d(*LOWER)}"/>"""
-    parent = f"""<!-- Kinetic Link — classic launcher k (stem + arms same stroke). -->
+    link = f"""<!-- Kinetic Link — classic launcher k (stem + arms same stroke). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Kinetic Link">
   <title>Kinetic Link</title>
   <defs>
@@ -120,32 +120,32 @@ def write_svgs() -> None:
 {body}
 </svg>
 """
-    kids = parent.replace("Kinetic Link", "Kinetic Kids").replace("#3B82F6", "#F97316").replace(
+    kids = link.replace("Kinetic Link", "Kinetic Kids").replace("#3B82F6", "#F97316").replace(
         "#2563EB", "#EC4899"
     )
-    (BRAND / "logo-parent.svg").write_text(parent, encoding="utf-8")
+    (BRAND / "logo-link.svg").write_text(link, encoding="utf-8")
     (BRAND / "logo-kids.svg").write_text(kids, encoding="utf-8")
 
 
 def main() -> None:
     BRAND.mkdir(parents=True, exist_ok=True)
     write_svgs()
-    parent_c = ((0x3B, 0x82, 0xF6), (0x25, 0x63, 0xEB))
+    link_c = ((0x3B, 0x82, 0xF6), (0x25, 0x63, 0xEB))
     kids_c = ((0xF9, 0x73, 0x16), (0xEC, 0x48, 0x99))
 
-    parent_sq = render("logo-parent-1024.png", *parent_c, rounded=False)
+    link_sq = render("logo-link-1024.png", *link_c, rounded=False)
     kids_sq = render("logo-kids-1024.png", *kids_c, rounded=False)
-    render("logo-parent-1024-rounded.png", *parent_c, rounded=True)
+    render("logo-link-1024-rounded.png", *link_c, rounded=True)
     render("logo-kids-1024-rounded.png", *kids_c, rounded=True)
 
     for src_name, dest_name in (
-        ("logo-parent-1024-rounded.png", "logo-parent-512.png"),
+        ("logo-link-1024-rounded.png", "logo-link-512.png"),
         ("logo-kids-1024-rounded.png", "logo-kids-512.png"),
     ):
         Image.open(BRAND / src_name).resize((512, 512), Image.Resampling.LANCZOS).save(
             BRAND / dest_name, "PNG"
         )
-    print("wrote", parent_sq.name, kids_sq.name)
+    print("wrote", link_sq.name, kids_sq.name)
 
 
 if __name__ == "__main__":

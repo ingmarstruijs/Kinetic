@@ -1,8 +1,8 @@
 # Kinetic Link — Kids App
 
-Child-facing Flutter app. Children see tasks assigned by a parent via the parent's unique QR enrollment code, mark them done, and earn XP toward optional goals.
+Child-facing Flutter app. Children see tasks assigned from Kinetic Link via a unique QR enrollment code, mark them done, and earn XP toward optional goals.
 
-Parent-app themes, reminder picker, notes list, and the suggestion engine do **not** apply here. Enrollment uses a family-key QR **without** the WebDAV password; the parent types that password once on the kids device.
+Kinetic Link themes, reminder picker, notes list, and the suggestion engine do **not** apply here. Enrollment uses a family-key QR **without** the WebDAV password; you type that password once on the kids device.
 
 ## Setup
 
@@ -19,7 +19,7 @@ Parent-app themes, reminder picker, notes list, and the suggestion engine do **n
 
 | Screen | Description |
 |---|---|
-| **Home** | Pending and completed task lists, XP progress / goal when the parent set one. Tap to open detail. Sync in the app bar. Confirm before completing. |
+| **Home** | Pending and completed task lists, XP progress / goal when Kinetic Link set one. Tap to open detail. Sync in the app bar. Confirm before completing. |
 | **Task detail** | Category, priority, due date, XP reward, notes. **Done!** completes the task and queues a sync push. |
 | **Settings** | Language, verify connection / presence, leave family. |
 
@@ -44,7 +44,7 @@ flutter test       # run all tests
 flutter build apk --release
 ```
 
-Debug builds: **UI scenarios** on the enrollment screen, home menu, or Settings load named states (empty / chores / awaiting parent / XP goal / full) so you can use the app as if enrolled without WebDAV.
+Debug builds: **UI scenarios** on the enrollment screen, home menu, or Settings load named states (empty / chores / awaiting verification / XP goal / full) so you can use the app as if enrolled without WebDAV.
 
 ## Architecture
 

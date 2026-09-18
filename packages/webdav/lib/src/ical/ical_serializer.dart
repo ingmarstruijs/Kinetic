@@ -82,6 +82,10 @@ class ICalSerializer {
     buf.writeln('CREATED:${_formatDateTime(note.createdAt)}');
     buf.writeln('LAST-MODIFIED:${_formatDateTime(note.updatedAt)}');
     buf.writeln('X-KINETIC-SHARED:${note.isShared ? '1' : '0'}');
+    final members = note.sharedMemberIds;
+    if (members != null && members.isNotEmpty) {
+      buf.writeln('X-KINETIC-SHARED-MEMBERS:${members.join(',')}');
+    }
     if (note.remindAt != null) {
       buf.writeln('BEGIN:VALARM');
       buf.writeln('ACTION:DISPLAY');
@@ -107,10 +111,21 @@ class ICalSerializer {
       createdAt: _parseDateTime(_req(props, 'CREATED')),
       updatedAt: _parseDateTime(_req(props, 'LAST-MODIFIED')),
       isShared: (props['X-KINETIC-SHARED'] ?? '0') == '1',
+      sharedMemberIds: _parseSharedMembers(props['X-KINETIC-SHARED-MEMBERS']),
       remindAt: alarmProps['TRIGGER'] != null
           ? _parseTrigger(alarmProps['TRIGGER']!)
           : null,
     );
+  }
+
+  static List<String>? _parseSharedMembers(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final ids = raw
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    return ids.isEmpty ? null : ids;
   }
 
   // ---------------------------------------------------------------------------

@@ -1,0 +1,318 @@
+import 'package:uuid/uuid.dart';
+
+import '../../db/app_database.dart';
+import 'enums.dart';
+
+// ---------------------------------------------------------------------------
+// PersonalList — equivalent to a Reminders list
+// ---------------------------------------------------------------------------
+
+class PersonalList {
+  final String id;
+  final String name;
+  final int colorValue;
+  final int iconCodePoint;
+  final bool isPrivateDefault;
+  final int position;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const PersonalList({
+    required this.id,
+    required this.name,
+    required this.colorValue,
+    required this.iconCodePoint,
+    required this.isPrivateDefault,
+    required this.position,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static PersonalList create({
+    required String name,
+    int colorValue = 0xFF44BBA4,
+    int iconCodePoint = 0xe156, // Icons.list
+    bool isPrivateDefault = false,
+    int position = 0,
+  }) {
+    final now = DateTime.now().toUtc();
+    return PersonalList(
+      id: const Uuid().v4(),
+      name: name,
+      colorValue: colorValue,
+      iconCodePoint: iconCodePoint,
+      isPrivateDefault: isPrivateDefault,
+      position: position,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  PersonalList copyWith({
+    String? name,
+    int? colorValue,
+    int? iconCodePoint,
+    bool? isPrivateDefault,
+    int? position,
+  }) {
+    return PersonalList(
+      id: id,
+      name: name ?? this.name,
+      colorValue: colorValue ?? this.colorValue,
+      iconCodePoint: iconCodePoint ?? this.iconCodePoint,
+      isPrivateDefault: isPrivateDefault ?? this.isPrivateDefault,
+      position: position ?? this.position,
+      createdAt: createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PersonalSubtask — checklist item inside a PersonalTask
+// ---------------------------------------------------------------------------
+
+class PersonalSubtask {
+  final String id;
+  final String taskId;
+  final String title;
+  final bool isCompleted;
+  final int sortOrder;
+
+  const PersonalSubtask({
+    required this.id,
+    required this.taskId,
+    required this.title,
+    required this.isCompleted,
+    required this.sortOrder,
+  });
+
+  static PersonalSubtask create({
+    required String taskId,
+    required String title,
+    int sortOrder = 0,
+  }) {
+    return PersonalSubtask(
+      id: const Uuid().v4(),
+      taskId: taskId,
+      title: title,
+      isCompleted: false,
+      sortOrder: sortOrder,
+    );
+  }
+
+  PersonalSubtask copyWith({String? title, bool? isCompleted, int? sortOrder}) {
+    return PersonalSubtask(
+      id: id,
+      taskId: taskId,
+      title: title ?? this.title,
+      isCompleted: isCompleted ?? this.isCompleted,
+      sortOrder: sortOrder ?? this.sortOrder,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PersonalTask — a parent's own todo item
+// ---------------------------------------------------------------------------
+
+class PersonalTask {
+  final String id;
+  final String? listId;
+  final String title;
+  final String? notes;
+  final TaskPriority priority;
+  final DateTime? dueDate;
+  final bool isAllDay;
+  final String? recurrenceRule;
+  final bool isCompleted;
+  final DateTime? completedAt;
+  final bool isFlagged;
+
+  /// When true, this task is never sent to partner as a proposal.
+  final bool isPrivate;
+
+  /// Set when this task has been converted to a kids mission.
+  final String? kidsTaskId;
+
+  /// ID of the specific enrolled kid this mission was targeted at; null = all.
+  final String? targetKidId;
+
+  /// Link member who must verify the kid's completion; null = any link member who
+  /// participates in kids panels may accept or reject it.
+  final String? verifierLinkId;
+
+  /// XP reward for the child when this task is sent via kids sync.
+  final int xpReward;
+
+  final TaskCategory category;
+
+  /// User-defined category label for grouping in the tasks list; null = uncategorized.
+  final String? customCategory;
+
+  /// When to fire a local reminder notification; null = no reminder.
+  final DateTime? remindAt;
+
+  final int sortOrder;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const PersonalTask({
+    required this.id,
+    this.listId,
+    required this.title,
+    this.notes,
+    required this.priority,
+    this.dueDate,
+    required this.isAllDay,
+    this.recurrenceRule,
+    required this.isCompleted,
+    this.completedAt,
+    required this.isFlagged,
+    required this.isPrivate,
+    this.kidsTaskId,
+    this.targetKidId,
+    this.verifierLinkId,
+    this.xpReward = 10,
+    required this.category,
+    this.customCategory,
+    this.remindAt,
+    required this.sortOrder,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  static PersonalTask create({
+    required String title,
+    String? listId,
+    String? notes,
+    TaskPriority priority = TaskPriority.none,
+    DateTime? dueDate,
+    bool isAllDay = true,
+    String? recurrenceRule,
+    bool isFlagged = false,
+    bool isPrivate = false,
+    TaskCategory? category,
+    String? customCategory,
+    DateTime? remindAt,
+    int sortOrder = 0,
+    int xpReward = 10,
+    String? verifierLinkId,
+  }) {
+    final now = DateTime.now().toUtc();
+    return PersonalTask(
+      id: const Uuid().v4(),
+      listId: listId,
+      title: title,
+      notes: notes,
+      priority: priority,
+      dueDate: dueDate,
+      isAllDay: isAllDay,
+      recurrenceRule: recurrenceRule,
+      isCompleted: false,
+      completedAt: null,
+      isFlagged: isFlagged,
+      isPrivate: isPrivate,
+      kidsTaskId: null,
+      verifierLinkId: verifierLinkId,
+      xpReward: xpReward,
+      category: category ?? TaskCategory.other,
+      customCategory: customCategory,
+      remindAt: remindAt,
+      sortOrder: sortOrder,
+      createdAt: now,
+      updatedAt: now,
+    );
+  }
+
+  static PersonalTask fromRow(PersonalTaskRow row) {
+    return PersonalTask(
+      id: row.id,
+      listId: row.listId,
+      title: row.title,
+      notes: row.notes,
+      priority: TaskPriority.values[row.priority],
+      dueDate: row.dueDate,
+      isAllDay: row.isAllDay,
+      recurrenceRule: row.recurrenceRule,
+      isCompleted: row.isCompleted,
+      completedAt: row.completedAt,
+      isFlagged: row.isFlagged,
+      isPrivate: row.isPrivate,
+      kidsTaskId: row.kidsTaskId,
+      targetKidId: row.targetKidId,
+      verifierLinkId: row.verifierLinkId,
+      xpReward: row.xpReward,
+      category: TaskCategory.values.byName(row.category),
+      customCategory: row.customCategory,
+      remindAt: row.remindAt,
+      sortOrder: row.sortOrder,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    );
+  }
+
+  PersonalTask copyWith({
+    String? listId,
+    String? title,
+    String? notes,
+    bool clearNotes = false,
+    TaskPriority? priority,
+    DateTime? dueDate,
+    bool clearDueDate = false,
+    bool? isAllDay,
+    String? recurrenceRule,
+    bool? isCompleted,
+    DateTime? completedAt,
+    bool? isFlagged,
+    bool? isPrivate,
+    String? kidsTaskId,
+    String? targetKidId,
+    String? verifierLinkId,
+    bool clearVerifierLinkId = false,
+    int? xpReward,
+    TaskCategory? category,
+    String? customCategory,
+    bool clearCustomCategory = false,
+    DateTime? remindAt,
+    bool clearRemindAt = false,
+    int? sortOrder,
+  }) {
+    return PersonalTask(
+      id: id,
+      listId: listId ?? this.listId,
+      title: title ?? this.title,
+      notes: clearNotes ? null : (notes ?? this.notes),
+      priority: priority ?? this.priority,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      isAllDay: isAllDay ?? this.isAllDay,
+      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      isFlagged: isFlagged ?? this.isFlagged,
+      isPrivate: isPrivate ?? this.isPrivate,
+      kidsTaskId: kidsTaskId ?? this.kidsTaskId,
+      targetKidId: targetKidId ?? this.targetKidId,
+      verifierLinkId: clearVerifierLinkId
+          ? null
+          : (verifierLinkId ?? this.verifierLinkId),
+      xpReward: xpReward ?? this.xpReward,
+      category: category ?? this.category,
+      customCategory: clearCustomCategory
+          ? null
+          : (customCategory ?? this.customCategory),
+      remindAt: clearRemindAt ? null : (remindAt ?? this.remindAt),
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt,
+      updatedAt: DateTime.now().toUtc(),
+    );
+  }
+
+  /// True if the task is due today (or overdue) and not completed.
+  bool get isDueToday {
+    if (dueDate == null || isCompleted) return false;
+    final today = DateTime.now();
+    final d = dueDate!.toLocal();
+    return d.year <= today.year && d.month <= today.month && d.day <= today.day;
+  }
+}

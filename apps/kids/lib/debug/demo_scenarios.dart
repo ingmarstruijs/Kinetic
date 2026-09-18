@@ -44,8 +44,8 @@ const kidsDemoScenarioCatalog = <KidsDemoScenarioInfo>[
   ),
   KidsDemoScenarioInfo(
     id: KidsDemoScenario.waiting,
-    titleEn: 'Awaiting parent',
-    titleNl: 'Wacht op ouder',
+    titleEn: 'Awaiting parent/caregiver',
+    titleNl: 'Wacht op ouder/verzorger',
     subtitleEn: 'Open chores plus pending verification',
     subtitleNl: 'Open klusjes plus wachtend op bevestiging',
   ),
@@ -135,7 +135,7 @@ class KidsDemoScenarioLoader {
       return repo.upsertTask(
         KidsTask(
           id: const Uuid().v4(),
-          parentId: KidsDemoSession.parentId,
+          linkTaskId: KidsDemoSession.linkTaskId,
           title: dutch ? nl : en,
           category: category,
           priority: priority,
@@ -178,7 +178,7 @@ class KidsDemoScenarioLoader {
     await repo.upsertTask(
       KidsTask(
         id: const Uuid().v4(),
-        parentId: KidsDemoSession.parentId,
+        linkTaskId: KidsDemoSession.linkTaskId,
         title: dutch ? 'Schoenen poetsen' : 'Polish shoes',
         category: TaskCategory.household,
         priority: TaskPriority.normal,

@@ -1,0 +1,476 @@
+import 'package:kinetic_webdav/kinetic_webdav.dart';
+import 'package:uuid/uuid.dart';
+
+import '../db/app_database.dart';
+import '../partner/services/partner_proposal_repository.dart';
+import '../settings/models/enrolled_kid.dart';
+import '../todo/models/ai_suggestion.dart';
+import '../todo/models/enums.dart';
+import '../todo/services/ai_suggestion_repository.dart';
+import '../todo/services/note_repository.dart';
+import '../todo/services/todo_repository.dart';
+import 'demo_session.dart';
+
+enum DemoScenario {
+  empty,
+  busyDay,
+  suggestions,
+  kids,
+  notes,
+  family,
+  fullHouse,
+}
+
+class DemoScenarioInfo {
+  final DemoScenario id;
+  final String titleEn;
+  final String titleNl;
+  final String subtitleEn;
+  final String subtitleNl;
+
+  const DemoScenarioInfo({
+    required this.id,
+    required this.titleEn,
+    required this.titleNl,
+    required this.subtitleEn,
+    required this.subtitleNl,
+  });
+
+  String title(bool nl) => nl ? titleNl : titleEn;
+  String subtitle(bool nl) => nl ? subtitleNl : subtitleEn;
+}
+
+const demoScenarioCatalog = <DemoScenarioInfo>[
+  DemoScenarioInfo(
+    id: DemoScenario.empty,
+    titleEn: 'Empty tasks',
+    titleNl: 'Lege takenlijst',
+    subtitleEn: 'All done — no suggestions, no kids',
+    subtitleNl: 'Alles klaar — geen suggesties, geen kinderen',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.busyDay,
+    titleEn: 'Busy day',
+    titleNl: 'Drukke dag',
+    subtitleEn: 'Overdue, today, reminders, categories',
+    subtitleNl: 'Te laat, vandaag, herinneringen, categorieën',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.suggestions,
+    titleEn: 'Suggestions + partner',
+    titleNl: 'Suggesties + partner',
+    subtitleEn: 'Inbox, for-you hints, and multiple Link members',
+    subtitleNl: 'Inbox, voor-jou-hints, en meerdere Link-leden',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.kids,
+    titleEn: 'Kids overview',
+    titleNl: 'Kinderen',
+    subtitleEn: 'Two kids — XP on/off, pending verification',
+    subtitleNl: 'Twee kinderen — XP aan/uit, wachtend op bevestiging',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.notes,
+    titleEn: 'Notes',
+    titleNl: 'Notities',
+    subtitleEn: 'Private + shared note aimed at family members',
+    subtitleNl: 'Privé + gedeelde notitie voor familieleden',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.family,
+    titleEn: 'Family household',
+    titleNl: 'Gezin',
+    subtitleEn: 'Alex + Sam, kids, verifier gates, proposals, shared notes',
+    subtitleNl: 'Alex + Sam, kinderen, verifier, voorstellen, gedeelde notities',
+  ),
+  DemoScenarioInfo(
+    id: DemoScenario.fullHouse,
+    titleEn: 'Full house',
+    titleNl: 'Vol huis',
+    subtitleEn: 'Busy day + multi-member family overlay',
+    subtitleNl: 'Drukke dag + gezin met meerdere Link-leden',
+  ),
+];
+
+class DemoScenarioLoader {
+  DemoScenarioLoader({
+    required AppDatabase db,
+    required TodoRepository todoRepo,
+    required NoteRepository noteRepo,
+    required AiSuggestionRepository suggestionRepo,
+    required PartnerProposalRepository proposalRepo,
+  }) : _db = db,
+       _todoRepo = todoRepo,
+       _noteRepo = noteRepo,
+       _suggestionRepo = suggestionRepo,
+       _proposalRepo = proposalRepo;
+
+  final AppDatabase _db;
+  final TodoRepository _todoRepo;
+  final NoteRepository _noteRepo;
+  final AiSuggestionRepository _suggestionRepo;
+  final PartnerProposalRepository _proposalRepo;
+
+  Future<void> apply(DemoScenario scenario, {required bool dutch}) async {
+    await _clearPersonalData();
+    DemoSession.instance.clear();
+
+    switch (scenario) {
+      case DemoScenario.empty:
+        break;
+      case DemoScenario.busyDay:
+        await _seedBusyDay(dutch);
+      case DemoScenario.suggestions:
+        await _seedBusyDay(dutch, compact: true);
+        await _seedSuggestions(dutch);
+        _setFamily(partner: true, kids: const []);
+      case DemoScenario.kids:
+        await _seedBusyDay(dutch, compact: true);
+        _setFamily(partner: false, kids: _demoKids());
+      case DemoScenario.notes:
+        await _seedNotes(dutch);
+        _setFamily(partner: true, kids: const []);
+      case DemoScenario.family:
+        await _seedSuggestions(dutch);
+        await _seedNotes(dutch);
+        _setFamily(partner: true, kids: _demoKids());
+      case DemoScenario.fullHouse:
+        await _seedBusyDay(dutch);
+        await _seedSuggestions(dutch);
+        await _seedNotes(dutch);
+        _setFamily(partner: true, kids: _demoKids());
+    }
+  }
+
+  Future<void> _clearPersonalData() async {
+    await _db.delete(_db.personalSubtasks).go();
+    await _db.delete(_db.personalTasks).go();
+    await _db.delete(_db.personalNotes).go();
+    await _db.delete(_db.partnerProposals).go();
+    await _db.delete(_db.aiSuggestions).go();
+  }
+
+  void _setFamily({required bool partner, required List<EnrolledKid> kids}) {
+    final now = DateTime.now().toUtc();
+    final roster = _demoRoster(
+      partner: partner,
+      kids: kids,
+      now: now,
+    );
+    DemoSession.instance.apply(
+      partnerPaired: partner,
+      kids: kids,
+      kidTasks: kids.isEmpty
+          ? const []
+          : _demoKidTasks(kids, secondLinkMember: partner),
+      roster: roster,
+      presence: partner ? _demoPresence(now) : const [],
+    );
+  }
+
+  FamilyRoster _demoRoster({
+    required bool partner,
+    required List<EnrolledKid> kids,
+    required DateTime now,
+  }) {
+    final joined = now.subtract(const Duration(days: 90));
+    final self = FamilyLinkMember(
+      id: DemoSession.linkId,
+      displayName: DemoSession.selfDisplayName,
+      kidsParticipation: true,
+      joinedAt: joined,
+      updatedAt: now,
+    );
+    final linkMembers = <FamilyLinkMember>[
+      self,
+      if (partner)
+        for (final (i, member) in DemoSession.otherDemoMembers.indexed)
+          FamilyLinkMember(
+            id: member.id,
+            displayName: member.name,
+            kidsParticipation: i == 0, // Alex verifies kids; Sam opted out.
+            joinedAt: joined.add(Duration(days: 2 + i)),
+            updatedAt: now,
+          ),
+    ];
+    return FamilyRoster(
+      linkMembers: linkMembers,
+      kids: [
+        for (final k in kids)
+          FamilyKidMember(
+            id: k.id,
+            name: k.name,
+            enrolledAt: k.enrolledAt,
+            xpEnabled: k.xpEnabled,
+            updatedAt: k.enrolledAt,
+          ),
+      ],
+      updatedAt: now,
+    );
+  }
+
+  List<PresenceInfo> _demoPresence(DateTime now) => [
+    PresenceInfo(
+      deviceId: DemoSession.linkId,
+      deviceType: 'link',
+      displayName: DemoSession.selfDisplayName,
+      lastSeen: now,
+    ),
+    PresenceInfo(
+      deviceId: DemoSession.partnerId,
+      deviceType: 'link',
+      displayName: DemoSession.partnerDisplayName,
+      lastSeen: now.subtract(const Duration(minutes: 12)),
+    ),
+    PresenceInfo(
+      deviceId: DemoSession.secondPartnerId,
+      deviceType: 'link',
+      displayName: DemoSession.secondPartnerDisplayName,
+      lastSeen: now.subtract(const Duration(hours: 5)),
+    ),
+    PresenceInfo(
+      deviceId: 'demo-mees',
+      deviceType: 'kid',
+      displayName: 'Mees',
+      lastSeen: now.subtract(const Duration(hours: 2)),
+    ),
+  ];
+
+  List<EnrolledKid> _demoKids() {
+    final enrolledAt = DateTime.now().toUtc().subtract(
+      const Duration(days: 40),
+    );
+    return [
+      EnrolledKid(
+        id: 'demo-mees',
+        name: 'Mees',
+        enrolledAt: enrolledAt,
+      ),
+      // Contrast: XP & goals off so the settings toggle is visible in demos.
+      EnrolledKid(
+        id: 'demo-fien',
+        name: 'Fien',
+        enrolledAt: enrolledAt,
+        xpEnabled: false,
+      ),
+    ];
+  }
+
+  /// When [otherLinkMembers] is true, adds missions verified by Alex and by Sam
+  /// so the kids-panel verifier filter is visible with multiple Link members.
+  List<ICalTask> _demoKidTasks(
+    List<EnrolledKid> kids, {
+    bool secondLinkMember = false,
+  }) {
+    final now = DateTime.now().toUtc();
+    ICalTask chore({
+      required String summary,
+      required String kidId,
+      ICalTaskStatus status = ICalTaskStatus.needsAction,
+      int xp = 10,
+      String? verifierLinkId,
+    }) {
+      final verifierPart = verifierLinkId != null
+          ? ';xKineticVerifierLinkId:$verifierLinkId'
+          : '';
+      return ICalTask(
+        uid: const Uuid().v4(),
+        summary: summary,
+        description:
+            'xKineticTargetKidId:$kidId;xKineticXpReward:$xp$verifierPart',
+        status: status,
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
+
+    final mees = kids.first.id;
+    final fien = kids.last.id;
+    return [
+      chore(summary: 'Shirts in the hamper', kidId: mees),
+      chore(summary: 'Brush teeth', kidId: mees),
+      chore(
+        summary: 'Make bed',
+        kidId: mees,
+        status: ICalTaskStatus.completed,
+        xp: 15,
+      ),
+      chore(summary: 'Tidy room', kidId: fien),
+      // Awaiting verification by this device — accept/reject are offered.
+      chore(
+        summary: 'Walk the dog',
+        kidId: mees,
+        status: ICalTaskStatus.inProcess,
+        verifierLinkId: DemoSession.linkId,
+      ),
+      // Alex is the designated verifier — this device only sees pending.
+      if (secondLinkMember)
+        chore(
+          summary: 'Water the plants',
+          kidId: fien,
+          status: ICalTaskStatus.inProcess,
+          verifierLinkId: DemoSession.partnerId,
+        ),
+      // Sam is the designated verifier — also pending-only for this device.
+      if (secondLinkMember)
+        chore(
+          summary: 'Feed the cat',
+          kidId: mees,
+          status: ICalTaskStatus.inProcess,
+          verifierLinkId: DemoSession.secondPartnerId,
+        ),
+      // Unassigned verifier — any participating link member may accept.
+      ICalTask(
+        uid: const Uuid().v4(),
+        summary: 'Set the table',
+        description: 'xKineticXpReward:10;xKineticTargetKidId:$mees',
+        status: ICalTaskStatus.inProcess,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    ];
+  }
+
+  Future<void> _seedBusyDay(bool dutch, {bool compact = false}) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day, 16, 0);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final tomorrow = today.add(const Duration(days: 1));
+
+    Future<void> add({
+      required String en,
+      required String nl,
+      TaskPriority priority = TaskPriority.none,
+      DateTime? due,
+      bool allDay = true,
+      DateTime? remindAt,
+      String? categoryEn,
+      String? categoryNl,
+    }) {
+      return _todoRepo.createTask(
+        title: dutch ? nl : en,
+        priority: priority,
+        dueDate: due?.toUtc(),
+        isAllDay: allDay,
+        remindAt: remindAt?.toUtc(),
+        customCategory: dutch ? categoryNl : categoryEn,
+      );
+    }
+
+    await add(
+      en: 'File tax return',
+      nl: 'Belastingaangifte',
+      priority: TaskPriority.high,
+      due: yesterday,
+      categoryEn: 'Admin',
+      categoryNl: 'Admin',
+    );
+    await add(
+      en: 'School run',
+      nl: 'Schoolrondje',
+      due: today,
+      allDay: false,
+      remindAt: DateTime(now.year, now.month, now.day, now.hour + 1),
+      categoryEn: 'School',
+      categoryNl: 'School',
+    );
+    await add(
+      en: 'Call the dentist',
+      nl: 'Tandarts bellen',
+      priority: TaskPriority.high,
+      categoryEn: 'Health',
+      categoryNl: 'Gezondheid',
+    );
+    await add(
+      en: 'Groceries',
+      nl: 'Boodschappen',
+      due: tomorrow,
+      categoryEn: 'Household',
+      categoryNl: 'Huishouden',
+    );
+    if (!compact) {
+      await add(en: 'Unpack the attic box', nl: 'Zolderdoos uitpakken');
+      final done = await _todoRepo.createTask(
+        title: dutch ? 'Vaatwasser leeghalen' : 'Empty the dishwasher',
+        customCategory: dutch ? 'Huishouden' : 'Household',
+      );
+      await _todoRepo.completeTask(done.id);
+    }
+  }
+
+  Future<void> _seedSuggestions(bool dutch) async {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final due = DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 10);
+
+    await _suggestionRepo.upsertSuggestion(
+      AiSuggestion.create(
+        title: dutch ? 'Boodschappen' : 'Groceries',
+        reason: SuggestionReason.habit,
+        suggestedDueDate: due.toUtc(),
+        explanation: dutch
+            ? 'Ongeveer elke 7 dagen, voor het laatst 8 dagen geleden'
+            : 'About every 7 days, last 8 days ago',
+        dedupeKey: 'demo-habit-groceries',
+      ),
+    );
+    await _suggestionRepo.upsertSuggestion(
+      AiSuggestion.create(
+        title: dutch ? 'Oude klus' : 'Old chore',
+        reason: SuggestionReason.stale,
+        explanation: dutch
+            ? 'Staat 12 dagen open zonder herinnering'
+            : 'Has been open 12 days without a reminder',
+        dedupeKey: 'demo-stale',
+      ),
+    );
+    await _suggestionRepo.upsertSuggestion(
+      AiSuggestion.create(
+        title: dutch
+            ? 'Kun jij deze week iets in huishouden oppakken?'
+            : 'Can you pick something up in household this week?',
+        reason: SuggestionReason.loadBalance,
+        category: 'household',
+        explanation: dutch
+            ? 'Je hebt 4 open taken in huishouden. De hint is bewust algemeen.'
+            : 'You have 4 open household tasks. The hint is intentionally generic.',
+        dedupeKey: 'demo-load-balance',
+      ),
+    );
+
+    await _proposalRepo.createManualProposal(
+      myLinkId: DemoSession.partnerId,
+      taskTitle: dutch ? 'Hond uitlaten' : 'Walk the dog',
+      taskNotes: dutch ? 'Graag voor 18:00' : 'Before 18:00 if you can',
+      taskPriority: TaskPriority.medium,
+      taskDueDate: due.toUtc(),
+    );
+    await _proposalRepo.createManualProposal(
+      myLinkId: DemoSession.secondPartnerId,
+      taskTitle: dutch ? 'Pakket ophalen' : 'Pick up the parcel',
+      taskNotes: dutch ? 'Bij de buurvrouw' : 'At the neighbour\'s',
+      taskPriority: TaskPriority.low,
+      taskDueDate: due.toUtc(),
+    );
+  }
+
+  Future<void> _seedNotes(bool dutch) async {
+    final remind = DateTime.now().add(const Duration(hours: 3));
+    await _noteRepo.insert(
+      title: dutch ? 'Verjaardag Mees' : "Mees' birthday",
+      body: dutch
+          ? 'Cadeau: boek. Taart zaterdag bakken.'
+          : 'Gift: book. Bake the cake on Saturday.',
+      remindAt: remind.toUtc(),
+    );
+    await _noteRepo.insert(
+      title: dutch ? 'Weekmenu' : 'Weekly menu',
+      body: dutch
+          ? 'Ma: pasta\nDi: soep\nWo: rijst'
+          : 'Mon: pasta\nTue: soup\nWed: rice',
+      isShared: true,
+      sharedMemberIds: [
+        for (final m in DemoSession.otherDemoMembers) m.id,
+      ],
+    );
+  }
+}

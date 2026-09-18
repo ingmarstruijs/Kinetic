@@ -3,13 +3,13 @@
 /// Stored on WebDAV as `/kinetic/shared/presence/{deviceId}.json`,
 /// encrypted with the family key.
 class PresenceInfo {
-  /// Stable device identifier — parent's [SyncConfig.parentId] or kid's ID.
+  /// Stable device identifier — link device's [SyncConfig.linkId] or kid's ID.
   final String deviceId;
 
-  /// `'parent'` or `'kid'`.
+  /// `'link'` (Kinetic Link) or `'kid'` (Kinetic Kids).
   final String deviceType;
 
-  /// Human-readable name (WebDAV username for parents, kid name for kids).
+  /// Human-readable name (WebDAV username for link devices, kid name for kids).
   final String displayName;
 
   /// UTC timestamp of the most recent successful sync.

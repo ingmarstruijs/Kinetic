@@ -1,0 +1,319 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
+
+import '../../db/app_database.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../../settings/settings_repository.dart';
+import '../../sync/webdav_config_repository.dart';
+import '../vault_repository.dart';
+import 'vault_restore_screen.dart';
+
+class VaultWelcomeScreen extends StatelessWidget {
+  const VaultWelcomeScreen({
+    super.key,
+    required this.db,
+    required this.settingsRepo,
+    required this.configRepo,
+    required this.vaultRepo,
+    required this.onUnlocked,
+  });
+
+  final AppDatabase db;
+  final SettingsRepository settingsRepo;
+  final WebDavConfigRepository configRepo;
+  final VaultRepository vaultRepo;
+  final VoidCallback onUnlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              Icon(
+                Icons.lock_outline,
+                size: 56,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                l10n.vaultWelcomeTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.vaultWelcomeBody,
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => VaultCreateScreen(
+                        vaultRepo: vaultRepo,
+                        onUnlocked: onUnlocked,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(l10n.vaultNewVault),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => VaultRestoreScreen(
+                        db: db,
+                        settingsRepo: settingsRepo,
+                        configRepo: configRepo,
+                        vaultRepo: vaultRepo,
+                        onUnlocked: onUnlocked,
+                      ),
+                    ),
+                  );
+                },
+                child: Text(l10n.vaultRestoreVault),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VaultCreateScreen extends StatefulWidget {
+  const VaultCreateScreen({
+    super.key,
+    required this.vaultRepo,
+    required this.onUnlocked,
+    this.headline,
+    this.confirmLabel,
+    this.afterUnlock,
+  });
+
+  final VaultRepository vaultRepo;
+  final VoidCallback onUnlocked;
+  final String? headline;
+  final String? confirmLabel;
+  final Future<void> Function()? afterUnlock;
+
+  @override
+  State<VaultCreateScreen> createState() => _VaultCreateScreenState();
+}
+
+class _VaultCreateScreenState extends State<VaultCreateScreen> {
+  List<String>? _words;
+  List<int> _quiz = const [];
+  final _quizCtrls = List.generate(3, (_) => TextEditingController());
+  int _step = 0;
+  bool _busy = false;
+  String? _quizError;
+
+  @override
+  void initState() {
+    super.initState();
+    _generate();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _quizCtrls) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _generate() async {
+    final words = await KineticVault.generateMnemonic();
+    if (!mounted) return;
+    setState(() => _words = words);
+  }
+
+  void _startQuiz() {
+    final words = _words;
+    if (words == null) return;
+    setState(() {
+      _quiz = KineticVault.pickQuizIndices();
+      _quizError = null;
+      for (final c in _quizCtrls) {
+        c.clear();
+      }
+      _step = 1;
+    });
+  }
+
+  Future<void> _confirmQuiz() async {
+    final words = _words;
+    if (words == null) return;
+    final l10n = AppLocalizations.of(context);
+    final answers = _quizCtrls.map((c) => c.text).toList();
+    final ok = KineticVault.quizMatches(
+      mnemonic: words,
+      indices: _quiz,
+      answers: answers,
+    );
+    if (!ok) {
+      setState(() => _quizError = l10n.vaultQuizMismatch);
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await widget.vaultRepo.unlockWithPhrase(words.join(' '));
+      await widget.afterUnlock?.call();
+      if (!mounted) return;
+      widget.onUnlocked();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _quizError = l10n.vaultCreateFailed('$e');
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final words = _words;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          _step == 0 ? l10n.vaultRecoveryPhrase : l10n.vaultConfirm,
+        ),
+      ),
+      body: words == null
+          ? const Center(child: CircularProgressIndicator())
+          : _step == 0
+          ? _buildShowWords(context, words, l10n)
+          : _buildQuiz(context, l10n),
+    );
+  }
+
+  Widget _buildShowWords(
+    BuildContext context,
+    List<String> words,
+    AppLocalizations l10n,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            widget.headline ?? l10n.vaultWriteWords,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3.6,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: words.length,
+              itemBuilder: (context, i) {
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('${i + 1}.  ${words[i]}'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: words.join(' ')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.vaultPhraseCopied)),
+              );
+            },
+            icon: const Icon(Icons.copy),
+            label: Text(l10n.commonCopy),
+          ),
+          FilledButton(
+            onPressed: _startQuiz,
+            child: Text(l10n.vaultIWroteThemDown),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuiz(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.vaultQuizPrompt,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: 24),
+          for (var i = 0; i < _quiz.length; i++) ...[
+            TextFormField(
+              controller: _quizCtrls[i],
+              decoration: InputDecoration(
+                labelText: l10n.vaultWordN(_quiz[i] + 1),
+              ),
+              autocorrect: false,
+              enableSuggestions: false,
+              textInputAction: i == _quiz.length - 1
+                  ? TextInputAction.done
+                  : TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (_quizError != null)
+            Text(
+              _quizError!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          const Spacer(),
+          TextButton(
+            onPressed: _busy
+                ? null
+                : () => setState(() {
+                    _step = 0;
+                    _quizError = null;
+                  }),
+            child: Text(l10n.vaultBackToWords),
+          ),
+          FilledButton(
+            onPressed: _busy ? null : _confirmQuiz,
+            child: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(widget.confirmLabel ?? l10n.vaultCreateVault),
+          ),
+        ],
+      ),
+    );
+  }
+}

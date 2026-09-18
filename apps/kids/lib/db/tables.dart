@@ -1,16 +1,16 @@
 import 'package:drift/drift.dart';
 
-/// KidsTasks — assigned tasks from parent app
+/// KidsTasks — assigned tasks from link app
 ///
-/// Kids can see, mark complete, and track progress on tasks assigned by parents.
+/// Kids can see, mark complete, and track progress on tasks assigned from the link app.
 /// All tasks are synced via WebDAV with the family key.
 @DataClassName('KidsTaskRow')
 class KidsTasks extends Table {
-  /// Unique task ID (UUID) — matches parent's task ID
+  /// Unique task ID (UUID) — matches the Kinetic Link task id
   TextColumn get id => text()();
 
-  /// Parent who assigned this task
-  TextColumn get parentId => text()();
+  /// Link task this mission was created from
+  TextColumn get linkTaskId => text()();
 
   /// Task content
   TextColumn get title => text()();
@@ -23,15 +23,15 @@ class KidsTasks extends Table {
   /// Scheduling
   DateTimeColumn get dueDate => dateTime().nullable()();
 
-  /// Completion tracking — [isCompleted] is true only after parent acceptance.
+  /// Completion tracking — [isCompleted] is true only after link-app acceptance.
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get completedAt => dateTime().nullable()();
 
-  /// True while waiting for the parent to accept/reject a completion request.
+  /// True while waiting for the link app to accept/reject a completion request.
   BoolColumn get awaitingVerification =>
       boolean().withDefault(const Constant(false))();
 
-  /// XP reward for completion (counts only after parent acceptance)
+  /// XP reward for completion (counts only after link-app acceptance)
   IntColumn get xpReward => integer().withDefault(const Constant(10))();
 
   /// Local-only: kid hid this completed task from the home list (XP still counts).

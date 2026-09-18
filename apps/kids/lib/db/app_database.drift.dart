@@ -18,10 +18,10 @@ class $KidsTasksTable extends KidsTasks
     requiredDuringInsert: true,
   );
   static const VerificationMeta _parentIdMeta = const VerificationMeta(
-    'parentId',
+    'linkTaskId',
   );
   @override
-  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+  late final GeneratedColumn<String> linkTaskId = GeneratedColumn<String>(
     'parent_id',
     aliasedName,
     false,
@@ -196,7 +196,7 @@ class $KidsTasksTable extends KidsTasks
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    parentId,
+    linkTaskId,
     title,
     notes,
     category,
@@ -232,7 +232,7 @@ class $KidsTasksTable extends KidsTasks
     if (data.containsKey('parent_id')) {
       context.handle(
         _parentIdMeta,
-        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+        linkTaskId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
       );
     } else if (isInserting) {
       context.missing(_parentIdMeta);
@@ -352,7 +352,7 @@ class $KidsTasksTable extends KidsTasks
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      parentId: attachedDatabase.typeMapping.read(
+      linkTaskId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}parent_id'],
       )!,
@@ -426,7 +426,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   final String id;
 
   /// Parent who assigned this task
-  final String parentId;
+  final String linkTaskId;
 
   /// Task content
   final String title;
@@ -463,7 +463,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   final DateTime updatedAt;
   const KidsTaskRow({
     required this.id,
-    required this.parentId,
+    required this.linkTaskId,
     required this.title,
     this.notes,
     required this.category,
@@ -483,7 +483,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['parent_id'] = Variable<String>(parentId);
+    map['parent_id'] = Variable<String>(linkTaskId);
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
@@ -512,7 +512,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   KidsTasksCompanion toCompanion(bool nullToAbsent) {
     return KidsTasksCompanion(
       id: Value(id),
-      parentId: Value(parentId),
+      linkTaskId: Value(linkTaskId),
       title: Value(title),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
@@ -545,7 +545,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return KidsTaskRow(
       id: serializer.fromJson<String>(json['id']),
-      parentId: serializer.fromJson<String>(json['parentId']),
+      linkTaskId: serializer.fromJson<String>(json['linkTaskId']),
       title: serializer.fromJson<String>(json['title']),
       notes: serializer.fromJson<String?>(json['notes']),
       category: serializer.fromJson<String>(json['category']),
@@ -569,7 +569,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'parentId': serializer.toJson<String>(parentId),
+      'linkTaskId': serializer.toJson<String>(linkTaskId),
       'title': serializer.toJson<String>(title),
       'notes': serializer.toJson<String?>(notes),
       'category': serializer.toJson<String>(category),
@@ -589,7 +589,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
 
   KidsTaskRow copyWith({
     String? id,
-    String? parentId,
+    String? linkTaskId,
     String? title,
     Value<String?> notes = const Value.absent(),
     String? category,
@@ -606,7 +606,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
     DateTime? updatedAt,
   }) => KidsTaskRow(
     id: id ?? this.id,
-    parentId: parentId ?? this.parentId,
+    linkTaskId: linkTaskId ?? this.linkTaskId,
     title: title ?? this.title,
     notes: notes.present ? notes.value : this.notes,
     category: category ?? this.category,
@@ -625,7 +625,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   KidsTaskRow copyWithCompanion(KidsTasksCompanion data) {
     return KidsTaskRow(
       id: data.id.present ? data.id.value : this.id,
-      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      linkTaskId: data.linkTaskId.present ? data.linkTaskId.value : this.linkTaskId,
       title: data.title.present ? data.title.value : this.title,
       notes: data.notes.present ? data.notes.value : this.notes,
       category: data.category.present ? data.category.value : this.category,
@@ -657,7 +657,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   String toString() {
     return (StringBuffer('KidsTaskRow(')
           ..write('id: $id, ')
-          ..write('parentId: $parentId, ')
+          ..write('linkTaskId: $linkTaskId, ')
           ..write('title: $title, ')
           ..write('notes: $notes, ')
           ..write('category: $category, ')
@@ -679,7 +679,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
   @override
   int get hashCode => Object.hash(
     id,
-    parentId,
+    linkTaskId,
     title,
     notes,
     category,
@@ -700,7 +700,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
       identical(this, other) ||
       (other is KidsTaskRow &&
           other.id == this.id &&
-          other.parentId == this.parentId &&
+          other.linkTaskId == this.linkTaskId &&
           other.title == this.title &&
           other.notes == this.notes &&
           other.category == this.category &&
@@ -719,7 +719,7 @@ class KidsTaskRow extends DataClass implements Insertable<KidsTaskRow> {
 
 class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   final Value<String> id;
-  final Value<String> parentId;
+  final Value<String> linkTaskId;
   final Value<String> title;
   final Value<String?> notes;
   final Value<String> category;
@@ -737,7 +737,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   final Value<int> rowid;
   const KidsTasksCompanion({
     this.id = const Value.absent(),
-    this.parentId = const Value.absent(),
+    this.linkTaskId = const Value.absent(),
     this.title = const Value.absent(),
     this.notes = const Value.absent(),
     this.category = const Value.absent(),
@@ -756,7 +756,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   });
   KidsTasksCompanion.insert({
     required String id,
-    required String parentId,
+    required String linkTaskId,
     required String title,
     this.notes = const Value.absent(),
     this.category = const Value.absent(),
@@ -773,13 +773,13 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       parentId = Value(parentId),
+       linkTaskId = Value(linkTaskId),
        title = Value(title),
        createdAt = Value(createdAt),
        updatedAt = Value(updatedAt);
   static Insertable<KidsTaskRow> custom({
     Expression<String>? id,
-    Expression<String>? parentId,
+    Expression<String>? linkTaskId,
     Expression<String>? title,
     Expression<String>? notes,
     Expression<String>? category,
@@ -798,7 +798,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (parentId != null) 'parent_id': parentId,
+      if (linkTaskId != null) 'parent_id': linkTaskId,
       if (title != null) 'title': title,
       if (notes != null) 'notes': notes,
       if (category != null) 'category': category,
@@ -820,7 +820,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
 
   KidsTasksCompanion copyWith({
     Value<String>? id,
-    Value<String>? parentId,
+    Value<String>? linkTaskId,
     Value<String>? title,
     Value<String?>? notes,
     Value<String>? category,
@@ -839,7 +839,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   }) {
     return KidsTasksCompanion(
       id: id ?? this.id,
-      parentId: parentId ?? this.parentId,
+      linkTaskId: linkTaskId ?? this.linkTaskId,
       title: title ?? this.title,
       notes: notes ?? this.notes,
       category: category ?? this.category,
@@ -864,8 +864,8 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (parentId.present) {
-      map['parent_id'] = Variable<String>(parentId.value);
+    if (linkTaskId.present) {
+      map['parent_id'] = Variable<String>(linkTaskId.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -919,7 +919,7 @@ class KidsTasksCompanion extends UpdateCompanion<KidsTaskRow> {
   String toString() {
     return (StringBuffer('KidsTasksCompanion(')
           ..write('id: $id, ')
-          ..write('parentId: $parentId, ')
+          ..write('linkTaskId: $linkTaskId, ')
           ..write('title: $title, ')
           ..write('notes: $notes, ')
           ..write('category: $category, ')
@@ -954,7 +954,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$KidsTasksTableCreateCompanionBuilder =
     KidsTasksCompanion Function({
       required String id,
-      required String parentId,
+      required String linkTaskId,
       required String title,
       Value<String?> notes,
       Value<String> category,
@@ -974,7 +974,7 @@ typedef $$KidsTasksTableCreateCompanionBuilder =
 typedef $$KidsTasksTableUpdateCompanionBuilder =
     KidsTasksCompanion Function({
       Value<String> id,
-      Value<String> parentId,
+      Value<String> linkTaskId,
       Value<String> title,
       Value<String?> notes,
       Value<String> category,
@@ -1006,8 +1006,8 @@ class $$KidsTasksTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get parentId => $composableBuilder(
-    column: $table.parentId,
+  ColumnFilters<String> get linkTaskId => $composableBuilder(
+    column: $table.linkTaskId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1096,8 +1096,8 @@ class $$KidsTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get parentId => $composableBuilder(
-    column: $table.parentId,
+  ColumnOrderings<String> get linkTaskId => $composableBuilder(
+    column: $table.linkTaskId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1184,8 +1184,8 @@ class $$KidsTasksTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get parentId =>
-      $composableBuilder(column: $table.parentId, builder: (column) => column);
+  GeneratedColumn<String> get linkTaskId =>
+      $composableBuilder(column: $table.linkTaskId, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -1272,7 +1272,7 @@ class $$KidsTasksTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> parentId = const Value.absent(),
+                Value<String> linkTaskId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<String> category = const Value.absent(),
@@ -1290,7 +1290,7 @@ class $$KidsTasksTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => KidsTasksCompanion(
                 id: id,
-                parentId: parentId,
+                linkTaskId: linkTaskId,
                 title: title,
                 notes: notes,
                 category: category,
@@ -1310,7 +1310,7 @@ class $$KidsTasksTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                required String parentId,
+                required String linkTaskId,
                 required String title,
                 Value<String?> notes = const Value.absent(),
                 Value<String> category = const Value.absent(),
@@ -1328,7 +1328,7 @@ class $$KidsTasksTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => KidsTasksCompanion.insert(
                 id: id,
-                parentId: parentId,
+                linkTaskId: linkTaskId,
                 title: title,
                 notes: notes,
                 category: category,

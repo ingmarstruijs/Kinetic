@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../partner/services/partner_proposal_repository.dart';
+import '../../sync/webdav_config_repository.dart';
 import '../../todo/services/todo_repository.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
 
@@ -15,8 +18,28 @@ import '../../todo/widgets/task_detail_sheet.dart';
 class QuickAddBar extends StatefulWidget {
   final TodoRepository repo;
   final String? activeListId;
+  final bool hasFamilyKey;
+  final bool partnerPaired;
+  final PartnerProposalRepository? proposalRepo;
+  final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
+  final WebDavConfigRepository? configRepo;
+  final Future<List<PresenceInfo>> Function()? pullPresence;
+  final bool kidsParticipation;
 
-  const QuickAddBar({super.key, required this.repo, this.activeListId});
+  const QuickAddBar({
+    super.key,
+    required this.repo,
+    this.activeListId,
+    this.hasFamilyKey = false,
+    this.partnerPaired = false,
+    this.proposalRepo,
+    this.myLinkId,
+    this.otherLinkMembers = const [],
+    this.configRepo,
+    this.pullPresence,
+    this.kidsParticipation = true,
+  });
 
   @override
   State<QuickAddBar> createState() => _QuickAddBarState();
@@ -59,6 +82,14 @@ class _QuickAddBarState extends State<QuickAddBar> {
         repo: widget.repo,
         initialListId: widget.activeListId,
         initialTitle: title.isEmpty ? null : title,
+        hasFamilyKey: widget.hasFamilyKey,
+        partnerPaired: widget.partnerPaired,
+        proposalRepo: widget.proposalRepo,
+        myLinkId: widget.myLinkId,
+        otherLinkMembers: widget.otherLinkMembers,
+        configRepo: widget.configRepo,
+        pullPresence: widget.pullPresence,
+        kidsParticipation: widget.kidsParticipation,
       ),
     );
   }
@@ -91,10 +122,14 @@ class _QuickAddBarState extends State<QuickAddBar> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _hasText ? Theme.of(context).colorScheme.primary : scheme.outlineVariant,
+                        color: _hasText
+                            ? Theme.of(context).colorScheme.primary
+                            : scheme.outlineVariant,
                         width: 2,
                       ),
-                      color: _hasText ? Theme.of(context).colorScheme.primary : Colors.transparent,
+                      color: _hasText
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.transparent,
                     ),
                     child: _hasText
                         ? const Icon(Icons.add, size: 18, color: Colors.white)

@@ -131,6 +131,9 @@ class PersonalNotes extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
+  /// Link member id of the last editor (synced for shared notes).
+  TextColumn get updatedByLinkId => text().nullable()();
+
   /// Set when the note is moved to trash; null = active.
   DateTimeColumn get deletedAt => dateTime().nullable()();
 

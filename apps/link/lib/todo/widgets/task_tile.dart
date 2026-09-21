@@ -49,6 +49,7 @@ class TaskTile extends StatelessWidget {
   final bool partnerPaired;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
 
@@ -60,6 +61,7 @@ class TaskTile extends StatelessWidget {
     this.partnerPaired = false,
     this.proposalRepo,
     this.myLinkId,
+    this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
   });
@@ -94,6 +96,7 @@ class TaskTile extends StatelessWidget {
         partnerPaired: partnerPaired,
         proposalRepo: proposalRepo,
         myLinkId: myLinkId,
+        otherLinkMembers: otherLinkMembers,
         configRepo: configRepo,
         pullPresence: pullPresence,
       ),
@@ -108,6 +111,7 @@ class _TaskTileContent extends StatefulWidget {
   final bool partnerPaired;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
 
@@ -118,6 +122,7 @@ class _TaskTileContent extends StatefulWidget {
     this.partnerPaired = false,
     this.proposalRepo,
     this.myLinkId,
+    this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
   });
@@ -316,29 +321,30 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                     ),
                   // ── Accepted from partner proposal ─────────────────────────
                   if (widget.proposalRepo != null)
-                    StreamBuilder<bool>(
+                    StreamBuilder(
                       stream: widget.proposalRepo!.watchAcceptedProposalForTask(
                         taskTitle: widget.task.title,
                       ),
                       builder: (context, snapshot) {
-                        if (snapshot.data == true) {
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Tooltip(
-                              message: AppLocalizations.of(
-                                context,
-                              ).tasksFromPartner(
-                                AppLocalizations.of(context).partnerGenericName,
-                              ),
-                              child: Icon(
-                                Icons.person_add_outlined,
-                                size: 14,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                        final proposal = snapshot.data;
+                        if (proposal == null) return const SizedBox.shrink();
+                        final l10n = AppLocalizations.of(context);
+                        final fromName = _memberName(
+                          widget.otherLinkMembers,
+                          proposal.fromLinkId,
+                          l10n.partnerGenericName,
+                        );
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Tooltip(
+                            message: l10n.tasksFromPartner(fromName),
+                            child: Icon(
+                              Icons.person_add_outlined,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                          );
-                        }
-                        return const SizedBox.shrink();
+                          ),
+                        );
                       },
                     ),
                   // ── Outgoing proposal status ───────────────────────────────
@@ -403,6 +409,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
         partnerPaired: widget.partnerPaired,
         proposalRepo: widget.proposalRepo,
         myLinkId: widget.myLinkId,
+        otherLinkMembers: widget.otherLinkMembers,
         configRepo: widget.configRepo,
         pullPresence: widget.pullPresence,
       ),
@@ -514,4 +521,15 @@ class _SwipeBackground extends StatelessWidget {
       child: Icon(icon, color: Colors.white),
     );
   }
+}
+
+String _memberName(
+  List<({String id, String name})> members,
+  String id,
+  String fallback,
+) {
+  for (final m in members) {
+    if (m.id == id && m.name.trim().isNotEmpty) return m.name.trim();
+  }
+  return fallback;
 }

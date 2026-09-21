@@ -11,10 +11,14 @@ class NoteRepository {
   final NotificationService? _notifications;
   final void Function()? onWrite;
 
+  /// Current device link member id; stamped on local edits.
+  String? currentLinkId;
+
   NoteRepository({
     required AppDatabase db,
     NotificationService? notifications,
     this.onWrite,
+    this.currentLinkId,
   }) : _db = db,
        _notifications = notifications;
 
@@ -74,6 +78,7 @@ class NoteRepository {
         remindAt: remindAt,
         category: category,
         sortOrder: sortOrder,
+        updatedByLinkId: currentLinkId,
       );
       await _db.into(_db.personalNotes).insert(_noteToCompanion(note));
       await _scheduleReminderFor(note);
@@ -87,12 +92,15 @@ class NoteRepository {
   /// Update an existing note.
   Future<void> update(PersonalNote note) async {
     try {
+      final stamped = currentLinkId == null
+          ? note
+          : note.copyWith(updatedByLinkId: currentLinkId);
       await (_db.update(
         _db.personalNotes,
-      )..where((t) => t.id.equals(note.id))).write(_noteToCompanion(note));
+      )..where((t) => t.id.equals(note.id))).write(_noteToCompanion(stamped));
       // Cancel old reminder, schedule new one.
       await _notifications?.cancelReminder(_notifId(note.id));
-      await _scheduleReminderFor(note);
+      await _scheduleReminderFor(stamped);
       onWrite?.call();
     } catch (e) {
       rethrow;
@@ -110,6 +118,8 @@ class NoteRepository {
         PersonalNotesCompanion(
           deletedAt: Value(DateTime.now().toUtc()),
           updatedAt: Value(DateTime.now().toUtc()),
+          updatedByLinkId: Value(currentLinkId),
+          syncState: const Value('dirty'),
         ),
       );
       onWrite?.call();
@@ -124,6 +134,8 @@ class NoteRepository {
       PersonalNotesCompanion(
         deletedAt: const Value(null),
         updatedAt: Value(DateTime.now().toUtc()),
+        updatedByLinkId: Value(currentLinkId),
+        syncState: const Value('dirty'),
       ),
     );
     final note = await getNote(id);
@@ -171,6 +183,8 @@ class NoteRepository {
       PersonalNotesCompanion(
         category: Value(category),
         updatedAt: Value(DateTime.now().toUtc()),
+        updatedByLinkId: Value(currentLinkId),
+        syncState: const Value('dirty'),
       ),
     );
     onWrite?.call();
@@ -189,6 +203,8 @@ class NoteRepository {
             category: Value(u.category),
             sortOrder: Value(u.sortOrder),
             updatedAt: Value(DateTime.now().toUtc()),
+            updatedByLinkId: Value(currentLinkId),
+            syncState: const Value('dirty'),
           ),
         );
       }
@@ -222,6 +238,7 @@ class NoteRepository {
       sortOrder: Value(note.sortOrder),
       createdAt: Value(note.createdAt),
       updatedAt: Value(note.updatedAt),
+      updatedByLinkId: Value(note.updatedByLinkId),
       deletedAt: Value(note.deletedAt),
       syncState: const Value('dirty'),
       webdavEtag: const Value(null),

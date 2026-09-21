@@ -86,6 +86,10 @@ class ICalSerializer {
     if (members != null && members.isNotEmpty) {
       buf.writeln('X-KINETIC-SHARED-MEMBERS:${members.join(',')}');
     }
+    final updatedBy = note.updatedByLinkId;
+    if (updatedBy != null && updatedBy.isNotEmpty) {
+      buf.writeln('X-KINETIC-UPDATED-BY:$updatedBy');
+    }
     if (note.remindAt != null) {
       buf.writeln('BEGIN:VALARM');
       buf.writeln('ACTION:DISPLAY');
@@ -112,6 +116,10 @@ class ICalSerializer {
       updatedAt: _parseDateTime(_req(props, 'LAST-MODIFIED')),
       isShared: (props['X-KINETIC-SHARED'] ?? '0') == '1',
       sharedMemberIds: _parseSharedMembers(props['X-KINETIC-SHARED-MEMBERS']),
+      updatedByLinkId: () {
+        final raw = props['X-KINETIC-UPDATED-BY']?.trim();
+        return (raw == null || raw.isEmpty) ? null : raw;
+      }(),
       remindAt: alarmProps['TRIGGER'] != null
           ? _parseTrigger(alarmProps['TRIGGER']!)
           : null,

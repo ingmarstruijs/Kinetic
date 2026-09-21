@@ -37,10 +37,10 @@
   "settingsPartner": "Gezinslid",
   "settingsFamilyMembers": "Gezinsleden",
   "settingsPartnerPaired": "Gezinslid gekoppeld",
-  "settingsPartnerLinkHint": "Koppel met een andere ouder",
+  "settingsPartnerLinkHint": "Koppel met een ander gezinslid",
   "settingsKids": "Kinderen",
-  "settingsKidsParticipation": "Kinderpanelen tonen",
-  "settingsKidsParticipationSubtitle": "Toon taken van kinderen hier en laat dit apparaat ze goedkeuren",
+  "settingsKidsParticipation": "Kindertaken op dit apparaat",
+  "settingsKidsParticipationSubtitle": "Uit = dit apparaat kan kindertaken niet zien, maken, toewijzen of goedkeuren",
   "settingsKidsLinkHint": "Koppel de kinderenapp",
   "settingsKidsEnrolledCount": "{count, plural, =1{1 kind gekoppeld} other{{count} kinderen gekoppeld}}",
   "@settingsKidsEnrolledCount": {
@@ -67,10 +67,10 @@
   "notifExactAlarmBanner": "Precieze herinneringen zijn uitgeschakeld. Sta \"Alarmen & herinneringen\" toe voor exacte tijden.",
 
   "familyKeyScanTitle": "Familiesleutel scannen",
-  "familyKeyScanHint": "Richt op de QR-code van je partner",
+  "familyKeyScanHint": "Richt op de QR-code van het gezinslid",
   "familyKeyEnterPhrase": "Zin invoeren",
   "familyKeyFound": "Sleutel gevonden",
-  "familyKeyPartner": "Partner",
+  "familyKeyPartner": "Gezinslid",
   "familyKeyServer": "Server",
   "familyKeyFingerprint": "Vingerafdruk",
   "familyKeyServerMismatch": "De server in de QR-code ({scanned}) komt niet overeen met jouw server ({current}). Weet je zeker dat je doorgaat?",
@@ -80,10 +80,10 @@
       "current": {"type": "String"}
     }
   },
-  "familyKeyConfirmPartner": "Is dit de juiste partner? Controleer de gebruikersnaam hierboven.",
+  "familyKeyConfirmPartner": "Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.",
   "familyKeyAlreadyPairedWarning": "Je hebt al een familiesleutel. Als je een nieuwe importeert, wordt data die al met de huidige sleutel is versleuteld onleesbaar totdat je opnieuw synchroniseert.",
   "familyKeyEnterTitle": "Familiesleutel invoeren",
-  "familyKeyEnterSubtitle": "Vul de 12 woorden van je partner in. Daarna zie je de vingerafdruk ter controle.",
+  "familyKeyEnterSubtitle": "Vul hun 12 woorden in. Daarna zie je de vingerafdruk ter controle.",
   "familyKeySaved": "Familiesleutel opgeslagen.",
   "familyKeySaveError": "Fout bij opslaan: {error}",
   "@familyKeySaveError": {
@@ -99,8 +99,8 @@
   },
 
   "familyKeyShareTitle": "Familiesleutel delen",
-  "familyKeyShareLegacyBody": "Laat je partner deze QR-code scannen. Deze familiesleutel is van vóór de herstelzin en heeft geen 12 woorden.",
-  "familyKeyShareBody": "Laat je partner deze QR-code scannen, of de 12 woorden typen.",
+  "familyKeyShareLegacyBody": "Laat het gezinslid deze QR-code scannen. Deze familiesleutel is van vóór de herstelzin en heeft geen 12 woorden.",
+  "familyKeyShareBody": "Laat het gezinslid deze QR-code scannen, of de 12 woorden typen.",
   "familyKeyShareNoPassword": "De code bevat geen WebDAV-wachtwoord. Controleer samen de vingerafdruk.",
   "familyKeyShareNoEntropy": "Geen herstelzin-gegevens op dit apparaat. Maak een nieuwe familiesleutel.",
   "familyKeyShareFingerprint": "Vingerafdruk  {fingerprint}",
@@ -109,7 +109,7 @@
       "fingerprint": {"type": "String"}
     }
   },
-  "familyKeyPartnerScanned": "Partner heeft gescand",
+  "familyKeyPartnerScanned": "Gezinslid heeft gescand",
   "familyKeyShared": "Familiesleutel gedeeld",
 
   "vaultWelcomeTitle": "Jouw kluis",
@@ -158,7 +158,7 @@
   "vaultPhraseFieldLabel": "Herstelzin (12 woorden)",
 
   "vaultMigrateTitle": "Nieuwe herstelzin",
-  "vaultMigrateBody": "Je huidige sleutel is willekeurig (versie 0.2) en kan niet in 12 woorden. Taken en notities op dit apparaat blijven staan. We maken een nieuwe herstelzin. Bij de volgende sync worden persoonlijke bestanden opnieuw versleuteld. De familiesleutel blijft hetzelfde — partner en kinderen hoeven niet opnieuw te koppelen.",
+  "vaultMigrateBody": "Je huidige sleutel is willekeurig (versie 0.2) en kan niet in 12 woorden. Taken en notities op dit apparaat blijven staan. We maken een nieuwe herstelzin. Bij de volgende sync worden persoonlijke bestanden opnieuw versleuteld. De familiesleutel blijft hetzelfde — gezinsleden en kinderen hoeven niet opnieuw te koppelen.",
   "vaultMigrateActivate": "Nieuwe herstelzin activeren",
   "vaultMigrateHeadline": "Schrijf deze nieuwe 12 woorden op. De oude sleutel werkt daarna niet meer voor WebDAV of een .kvault.",
 
@@ -170,7 +170,7 @@
   "vaultRevealWarning": "Schrijf de woorden opnieuw op papier als je de kopie kwijt bent. Laat dit scherm niet openstaan.",
 
   "familyCreateTitle": "Familiesleutel",
-  "familyCreateWriteWords": "Schrijf deze 12 woorden op. Ze horen bij de familiesleutel die je deelt met je partner. We slaan de woorden niet op.",
+  "familyCreateWriteWords": "Schrijf deze 12 woorden op. Ze horen bij de familiesleutel die je deelt met gezinsleden. We slaan de woorden niet op.",
   "familyCreateFailed": "Kon de familiesleutel niet aanmaken: {error}",
   "@familyCreateFailed": {
     "placeholders": {
@@ -206,30 +206,30 @@
   "partnerVerifyBody": "Vul de 12 woorden in. We tonen ze niet; we controleren alleen of ze kloppen.",
   "partnerVerifyOk": "De familiesleutel klopt.",
   "partnerVerifyMismatch": "Deze herstelzin hoort niet bij deze familiesleutel.",
-  "partnerRevealMissing": "Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat partner en kinderen opnieuw koppelen.",
-  "partnerUnlinkTitle": "Partner ontkoppelen?",
-  "partnerUnlinkBody": "Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Je partner verliest de verbinding niet — alleen jij verlaat de gedeelde werkruimte.",
+  "partnerRevealMissing": "Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat gezinsleden en kinderen opnieuw koppelen.",
+  "partnerUnlinkTitle": "Familie verlaten?",
+  "partnerUnlinkBody": "Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.",
   "partnerShareViaQr": "Familiesleutel delen via QR",
-  "partnerShareViaQrSubtitle": "Laat je partner de QR-code scannen om samen te werken.",
+  "partnerShareViaQrSubtitle": "Laat een gezinslid de QR-code scannen om samen te werken.",
   "partnerScanKey": "Familiesleutel scannen",
-  "partnerScanKeySubtitle": "Scan de QR of typ de 12 woorden van je partner.",
+  "partnerScanKeySubtitle": "Scan de QR of typ hun 12 woorden.",
   "partnerReshareKey": "Familiesleutel opnieuw delen",
-  "partnerReshareKeySubtitle": "Deel de sleutel met een nieuw apparaat van je partner.",
+  "partnerReshareKeySubtitle": "Deel de sleutel met een nieuw apparaat van een gezinslid.",
   "partnerVerifyPhrase": "Herstelzin controleren",
   "partnerVerifyPhraseSubtitle": "Controleer of je de 12 woorden van de familiesleutel nog kent.",
   "partnerShowKey": "Familiesleutel tonen",
   "partnerShowKeySubtitle": "Toon de 12 woorden op dit apparaat (schermvergrendeling).",
-  "partnerUnlink": "Partner ontkoppelen",
+  "partnerUnlink": "Familie verlaten",
   "partnerUnlinkSubtitle": "Verwijder de familiesleutel en gedeelde notities van dit apparaat.",
-  "partnerStatusPaired": "Partner gekoppeld — familiesleutel aanwezig",
-  "partnerStatusUnpaired": "Partner niet gekoppeld — scan of deel de QR-code om te koppelen",
-  "partnerLastSeen": "Partner voor het laatst gezien {when}",
+  "partnerStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
+  "partnerStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
+  "partnerLastSeen": "Laatst gezien {when}",
   "@partnerLastSeen": {
     "placeholders": {
       "when": {"type": "String"}
     }
   },
-  "partnerLastSeenWarning": "Waarschuwing: partner voor het laatst gezien {when}",
+  "partnerLastSeenWarning": "Waarschuwing: laatst gezien {when}",
   "@partnerLastSeenWarning": {
     "placeholders": {
       "when": {"type": "String"}
@@ -321,7 +321,7 @@
   "commonPrivate": "Privé",
   "commonShared": "Gedeeld",
   "commonKids": "Kinderen",
-  "commonPartner": "Partner",
+  "commonPartner": "Gezinslid",
   "commonReminder": "Herinnering",
   "commonTime": "Tijd",
   "commonCategory": "Categorie",
@@ -376,6 +376,12 @@
   },
   "dateTodayTime": "Vandaag {time}",
   "@dateTodayTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateYesterdayTime": "Gisteren {time}",
+  "@dateYesterdayTime": {
     "placeholders": {
       "time": {"type": "String"}
     }
@@ -585,7 +591,7 @@
   },
   "tasksForFamily": "Voor familie",
   "tasksFromFamily": "Van familie",
-  "partnerGenericName": "partner",
+  "partnerGenericName": "gezinslid",
   "tasksAccept": "Accepteren",
   "tasksXpResetTitle": "XP resetten voor {name}?",
   "@tasksXpResetTitle": {
@@ -637,9 +643,9 @@
   },
   "taskForwardTitle": "Taak doorsturen",
   "taskAssignmentCreated": "Opdracht aangemaakt ✓",
-  "taskNoConnectedFamily": "Geen verbonden partner of kinderen",
+  "taskNoConnectedFamily": "Geen verbonden gezinsleden of kinderen",
   "taskStaleConnectionTitle": "Verbinding verouderd",
-  "taskStalePartnerBody": "Je partner is voor het laatst gezien {status}. Toch sturen?",
+  "taskStalePartnerBody": "Dit gezinslid is voor het laatst gezien {status}. Toch sturen?",
   "@taskStalePartnerBody": {
     "placeholders": {
       "status": {"type": "String"}
@@ -689,6 +695,8 @@
   "taskAddCategory": "Categorie toevoegen",
   "taskRepeat": "Herhalen",
   "taskForward": "Doorsturen",
+  "taskAssignToLabel": "Toewijzen aan",
+  "taskAssignToMe": "Mij",
   "taskRecurrenceNone": "Geen herhaling",
   "taskRecurrenceDaily": "Dagelijks",
   "taskRecurrenceWeekdays": "Werkdagen",
@@ -704,10 +712,11 @@
   "notesEmptyShared": "Geen gedeelde notities",
   "notesEmptyPrivate": "Geen privé notities",
   "notesEmpty": "Geen notities",
-  "notesEmptySharedHint": "Notities gedeeld met je partner verschijnen hier",
+  "notesEmptySharedHint": "Notities gedeeld met gezinsleden verschijnen hier",
   "notesEmptyPrivateHint": "Je privé notities verschijnen hier",
   "notesEmptyHint": "Privé- en gedeelde notities verschijnen hier",
   "notesSaved": "Notitie opgeslagen",
+  "notesLastModified": "Laatst gewijzigd",
   "notesSharedBadge": "Gedeeld",
   "notesTitleRequired": "Titel is verplicht",
   "notesDeleteTitle": "Notitie verwijderen?",
@@ -723,11 +732,17 @@
   "notesShareAllAdults": "Alle gezinsleden",
   "notesSharePickAdults": "Kies wie deze notitie mag zien",
   "notesShareAudienceHint": "Gedeeld met geselecteerde leden",
-  "notesHideContent": "Inhoud verbergen & ontgrendelen vereisen",
-  "notesHideContentHint": "Tekst blijft uit de lijst; openen met biometrie of apparaat-pincode",
+  "notesSharedWithNames": "Met {names}",
+  "@notesSharedWithNames": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "notesHideContent": "Ontgrendelen vereisen",
+  "notesHideContentHint": "Openen vereist biometrie of apparaat-pincode",
   "notesUnlockReason": "Ontgrendel deze notitie",
   "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
-  "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om notitie-inhoud te verbergen",
+  "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om ontgrendelen te vereisen",
   "notesEditMarkdown": "Bewerken",
   "notesPreviewMarkdown": "Voorbeeld",
   "notesMarkdownHint": "Schrijf markdown…",
@@ -762,7 +777,7 @@
     }
   },
   "suggestReasonHabit": "Gewoonte",
-  "suggestReasonPartner": "Partner-aanvulling",
+  "suggestReasonPartner": "Gezinsaanvulling",
   "suggestReasonSeasonal": "Seizoensgebonden",
   "suggestReasonLoadBalance": "Taakverdeling",
   "suggestReasonStale": "Open taak",
@@ -801,11 +816,11 @@
     }
   },
   "suggestPartnerTitleSchool": "Schoolrondje of opvang deze week?",
-  "suggestPartnerExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je partner ziet dit.",
+  "suggestPartnerExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.",
   "suggestPartnerTitleHousehold": "Kun jij deze week iets in huis oppakken?",
   "suggestPartnerExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.",
   "suggestPartnerTitleHealth": "Iets rond zorg of gezondheid oppakken?",
-  "suggestPartnerExplanationHealth": "Er speelt iets rond zorg. Je partner ziet alleen deze algemene vraag.",
+  "suggestPartnerExplanationHealth": "Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.",
   "suggestPartnerTitleSport": "Sporttas of training deze week?",
   "suggestPartnerExplanationSport": "Op basis van je taken lijkt sport een thema. Geen privédetails.",
   "suggestPartnerTitleAdmin": "Een administratieve klus deze week?",

@@ -4,7 +4,7 @@ This document describes the smart reminder chips, reminder time defaults, notes 
 
 ## Notes list
 
-Note rows are paper-style cards: title, a short body preview, and optional reminder / shared chips. They are not laid out like task rows.
+Note rows are paper-style cards: title, last-modified time (and shared audience when applicable), plus optional reminder / locked chips. They are not laid out like task rows.
 
 ## Reminder time picker
 

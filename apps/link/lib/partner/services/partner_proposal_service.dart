@@ -104,13 +104,29 @@ class PartnerProposalService {
 
   /// Accept a proposal: update status to 'accepted' and create a task.
   Future<void> acceptProposal(PartnerProposal proposal) async {
-    // Create task from proposal
+    final due = proposal.taskDueDate;
+    final timed =
+        due != null && (due.toLocal().hour != 0 || due.toLocal().minute != 0);
+    final categoryRaw = proposal.taskCategory.trim();
+    final enumCategory = TaskCategory.values
+        .where((c) => c.name == categoryRaw)
+        .firstOrNull;
+    final customCategory =
+        enumCategory == null &&
+            categoryRaw.isNotEmpty &&
+            categoryRaw != 'other'
+        ? categoryRaw
+        : null;
+
     await todoRepository.createTask(
       title: proposal.taskTitle,
       notes: proposal.taskNotes,
-      category: TaskCategory.other,
+      category: enumCategory ?? TaskCategory.other,
+      customCategory: customCategory,
       priority: proposal.taskPriority,
-      dueDate: proposal.taskDueDate,
+      dueDate: due,
+      isAllDay: due == null || !timed,
+      remindAt: timed ? due : null,
       isPrivate: false,
     );
 

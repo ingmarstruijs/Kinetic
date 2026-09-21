@@ -235,7 +235,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     final isPaired = await _webDavConfig.isPartnerPaired();
     final kidsCount = (await _webDavConfig.loadEnrolledKids()).length;
     final kidsParticipation = await _webDavConfig.loadKidsParticipation();
-    if (mounted && kidsParticipation != _kidsParticipation) {
+    if (mounted) {
       setState(() => _kidsParticipation = kidsParticipation);
     }
 
@@ -273,6 +273,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
     final roster = await _webDavConfig.loadCachedRoster();
     final myId = config?.linkId ?? '';
+    _noteRepository.currentLinkId = config?.linkId;
     _otherLinkMembers = [
       for (final a in roster?.otherLinkMembers(myId) ?? const [])
         (id: a.id, name: a.displayName),
@@ -408,6 +409,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                     final otherLinks = demo.active
                         ? demo.otherLinkMembers
                         : _otherLinkMembers;
+                    _noteRepository.currentLinkId = demo.active
+                        ? DemoSession.linkId
+                        : _syncOrchestrator?.linkId;
                     final screens = <Widget>[
                       TasksScreen(
                         repo: _todoRepository,
@@ -467,6 +471,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         onSyncRetry: _triggerSync,
                         syncStatus: hasWebDav ? syncStatus : null,
                         partnerPaired: paired,
+                        myLinkId: demo.active
+                            ? DemoSession.linkId
+                            : _syncOrchestrator?.linkId,
                         otherLinkMembers: otherLinks,
                       ),
                       SettingsScreen(

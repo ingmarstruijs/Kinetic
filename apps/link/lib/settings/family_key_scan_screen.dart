@@ -200,33 +200,12 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
   Future<void> _importFromPhrase() async {
     if (_processing) return;
     setState(() => _processing = true);
-    final ctrl = TextEditingController();
     final l10n = AppLocalizations.of(context);
-    final phrase = await showDialog<String>(
+    final phrase = await showMnemonicPhraseDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.familyKeyEnterTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.familyKeyEnterSubtitle),
-            const SizedBox(height: 12),
-            MnemonicPhraseField(controller: ctrl),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: Text(l10n.commonContinue),
-          ),
-        ],
-      ),
+      title: l10n.familyKeyEnterTitle,
+      body: l10n.familyKeyEnterSubtitle,
     );
-    ctrl.dispose();
     if (!mounted) return;
     if (phrase == null || phrase.trim().isEmpty) {
       setState(() => _processing = false);

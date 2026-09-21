@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link/l10n/generated/app_localizations_en.dart';
 import 'package:link/l10n/generated/app_localizations_nl.dart';
+import 'package:link/theme/app_themes.dart';
 import 'package:link/todo/models/enums.dart';
 import 'package:link/todo/models/personal_task.dart';
 import 'package:link/todo/services/reminder_proposal_engine.dart';
@@ -42,11 +43,23 @@ void main() {
       );
       expect(chips, isNotEmpty);
       expect(labels(chips, now, dutch: false), contains('In 1 hour'));
-      expect(labels(chips, now, dutch: false), contains('Tomorrow 09:00'));
+      expect(
+        labels(chips, now, dutch: false),
+        contains('Tomorrow ${formatClockTime(DateTime(2026, 6, 18, 9), en)}'),
+      );
       expect(labels(chips, now, dutch: true), contains('Over 1 uur'));
-      expect(labels(chips, now, dutch: true), contains('Morgen 09:00'));
-      expect(labels(chips, now, dutch: true), contains('Vanavond 20:00'));
-      expect(labels(chips, now, dutch: true), contains('Morgen 20:00'));
+      expect(
+        labels(chips, now, dutch: true),
+        contains('Morgen ${formatClockTime(DateTime(2026, 6, 18, 9), nl)}'),
+      );
+      expect(
+        labels(chips, now, dutch: true),
+        contains('Vanavond ${formatClockTime(DateTime(2026, 6, 17, 20), nl)}'),
+      );
+      expect(
+        labels(chips, now, dutch: true),
+        contains('Morgen ${formatClockTime(DateTime(2026, 6, 18, 20), nl)}'),
+      );
     });
 
     test('school keyword suggests tomorrow morning', () {
@@ -58,11 +71,11 @@ void main() {
       );
       expect(
         formatReminderChipLabel(chips.first, en, now: now),
-        'Tomorrow 07:00',
+        'Tomorrow ${formatClockTime(DateTime(2026, 6, 18, 7), en)}',
       );
       expect(
         formatReminderChipLabel(chips.first, nl, now: now),
-        'Morgen 07:00',
+        'Morgen ${formatClockTime(DateTime(2026, 6, 18, 7), nl)}',
       );
     });
 
@@ -101,11 +114,17 @@ void main() {
       );
       expect(
         labels(chips, now, dutch: false),
-        isNot(contains('Tonight 20:00')),
+        isNot(
+          contains('Tonight ${formatClockTime(DateTime(2026, 6, 17, 20), en)}'),
+        ),
       );
       expect(
         labels(chips, now, dutch: true),
-        isNot(contains('Vanavond 20:00')),
+        isNot(
+          contains(
+            'Vanavond ${formatClockTime(DateTime(2026, 6, 17, 20), nl)}',
+          ),
+        ),
       );
     });
 

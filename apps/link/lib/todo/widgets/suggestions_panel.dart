@@ -5,6 +5,7 @@ import '../../partner/models/partner_proposal.dart';
 import '../../partner/services/partner_proposal_repository.dart';
 import '../../theme/app_themes.dart';
 import '../models/ai_suggestion.dart';
+import '../models/enums.dart';
 import '../services/ai_suggestion_repository.dart';
 import '../services/suggestion_actions.dart';
 import '../services/todo_repository.dart';
@@ -19,6 +20,7 @@ class SuggestionsPanel extends StatefulWidget {
   final bool partnerPaired;
   final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRequested;
+  final ValueChanged<bool>? onVisibilityChanged;
 
   const SuggestionsPanel({
     super.key,
@@ -29,6 +31,7 @@ class SuggestionsPanel extends StatefulWidget {
     this.partnerPaired = false,
     this.otherLinkMembers = const [],
     this.onSyncRequested,
+    this.onVisibilityChanged,
   });
 
   @override
@@ -39,6 +42,16 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
   bool _expanded = true;
   late Stream<List<AiSuggestion>> _pending;
   Stream<List<PartnerProposal>>? _proposals;
+  bool? _lastVisible;
+
+  void _reportVisibility(bool visible) {
+    if (_lastVisible == visible) return;
+    _lastVisible = visible;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onVisibilityChanged?.call(visible);
+    });
+  }
 
   @override
   void initState() {
@@ -88,6 +101,7 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
             ];
             final fromPartner = proposalSnap.data ?? const <PartnerProposal>[];
             final total = self.length + forPartner.length + fromPartner.length;
+            _reportVisibility(total > 0);
             if (total == 0) return const SizedBox.shrink();
 
             return _SuggestionsCard(
@@ -482,6 +496,16 @@ class _IncomingProposalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final notes = proposal.taskNotes?.trim();
+    final due = proposal.taskDueDate;
+    final timed =
+        due != null && (due.toLocal().hour != 0 || due.toLocal().minute != 0);
+    final metaParts = <String>[
+      if (due != null) formatDueDate(due, l10n, allDay: !timed),
+      if (proposal.taskPriority != TaskPriority.none)
+        _priorityName(proposal.taskPriority, l10n),
+      ?_proposalCategoryLabel(proposal.taskCategory),
+    ];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
@@ -495,6 +519,7 @@ class _IncomingProposalRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const _LeadingIcon(icon: Icons.person_outline),
                   const SizedBox(width: 12),
@@ -510,6 +535,26 @@ class _IncomingProposalRow extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
+                        if (notes != null && notes.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            notes,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                        if (metaParts.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            metaParts.join(' · '),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
                         const SizedBox(height: 2),
                         Text(
                           l10n.suggestionsProposedByPartner(fromName),
@@ -550,6 +595,21 @@ class _IncomingProposalRow extends StatelessWidget {
       ),
     );
   }
+}
+
+String _priorityName(TaskPriority priority, AppLocalizations l10n) =>
+    switch (priority) {
+      TaskPriority.low => l10n.commonLow,
+      TaskPriority.medium => l10n.commonMedium,
+      TaskPriority.high => l10n.commonHigh,
+      TaskPriority.none => l10n.commonNone,
+    };
+
+String? _proposalCategoryLabel(String raw) {
+  final value = raw.trim();
+  if (value.isEmpty || value == 'other') return null;
+  if (TaskCategory.values.any((c) => c.name == value)) return null;
+  return value;
 }
 
 class _LeadingIcon extends StatelessWidget {

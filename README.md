@@ -8,7 +8,7 @@
 
 <p align="center">
   <strong>Tasks. Notes. Family.</strong><br>
-  Local-first family task management — encrypted on your device, optional WebDAV sync.
+  Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
 </p>
 
 <p align="center">
@@ -21,22 +21,31 @@
 
 ---
 
-Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Manage personal tasks and notes locally, coordinate with your family member via proposals, assign chores to kids with XP rewards, and optionally sync everything to your own WebDAV server.
+Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: partner proposals, kids assignments, shared notes, presence, and multi-device sync.
 
 Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, iCal, WebDAV client).
 
 ## Features
 
+### Always available (local / vault)
+
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
-- **Partner coordination** — QR pairing, encrypted task proposals, accept/decline flow; partner-targeted suggestions require an explicit **Send to partner** action after a **What your partner sees** preview (nothing is auto-sent)
-- **Kids tasks** — assign to one child or **Everyone** (all enrolled kids); configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
-- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); personal or shared with partner; optional **hide content** (list shows title only; open requires device biometrics/PIN)
-- **AI suggestions** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history, privacy-preserving partner hints) with human-readable explanations
+- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN)
+- **AI suggestions (for you)** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history) with human-readable explanations
 - **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
-- **Connection-aware send** — partner and kids listed individually with WebDAV presence status before forwarding
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
-- **WebDAV sync** — optional; bring your own server, no vendor backend
-- **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words, from a file **or** from WebDAV
+- **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words from a file (WebDAV restore also needs a configured server)
+
+### Requires WebDAV
+
+Family features are **not** available offline-only. Configure WebDAV in **Settings** first; then pairing, proposals, kids, and shared data use that server.
+
+- **WebDAV sync** — bring your own server, no vendor backend
+- **Partner coordination** — QR pairing, encrypted task proposals, accept/decline flow; partner-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
+- **Kids tasks** — assign to one child or **Everyone**; configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
+- **Shared notes** — share notes with other link members (needs pairing)
+- **Connection-aware send** — family members listed with WebDAV presence status before forwarding
+- **Partner / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
 
 ## Apps
 
@@ -64,7 +73,7 @@ melos run test        # run all tests
 cd apps/link && flutter run
 ```
 
-No server required — the app works fully offline. Configure WebDAV in **Settings** to enable sync and family pairing.
+No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (partner pairing, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need a WebDAV connection in **Settings**.
 
 ### Build a release APK
 
@@ -83,6 +92,8 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 ## Family Setup
 
+**Prerequisite:** WebDAV configured and working in Kinetic Link. Without it there is no shared folder, no pairing, and no kids sync — Family settings stay inactive for those flows.
+
 ### Partner pairing
 
 1. **Settings → Family → Partner** → share QR (12 family words + entropy QR)
@@ -97,7 +108,7 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 Ship Kinetic Link **and** Kinetic Kids at the same minor version when enrollment/QR formats change.
 
-The **Family** screen shows **Proposals** and **Kids** tabs only when a partner is paired or kids are enrolled. Shared notes require partner pairing.
+The **Family** screen shows partner/kids tools only when WebDAV is set up; proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require partner pairing.
 
 ## AI Suggestion Engine
 

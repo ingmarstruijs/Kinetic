@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPartnerLinkHint.
   ///
   /// In en, this message translates to:
-  /// **'Link with another adult'**
+  /// **'Link with another family member'**
   String get settingsPartnerLinkHint;
 
   /// No description provided for @settingsKids.
@@ -311,13 +311,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsKidsParticipation.
   ///
   /// In en, this message translates to:
-  /// **'Show kids panels'**
+  /// **'Kids tasks on this device'**
   String get settingsKidsParticipation;
 
   /// No description provided for @settingsKidsParticipationSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Show kids missions here and let this device verify them'**
+  /// **'When off, this device cannot see, create, assign, or verify kids tasks'**
   String get settingsKidsParticipationSubtitle;
 
   /// No description provided for @settingsKidsLinkHint.
@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyScanHint.
   ///
   /// In en, this message translates to:
-  /// **'Point at your partner\'s QR code'**
+  /// **'Point at the family member\'s QR code'**
   String get familyKeyScanHint;
 
   /// No description provided for @familyKeyEnterPhrase.
@@ -425,7 +425,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyPartner.
   ///
   /// In en, this message translates to:
-  /// **'Partner'**
+  /// **'Family member'**
   String get familyKeyPartner;
 
   /// No description provided for @familyKeyServer.
@@ -449,7 +449,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyConfirmPartner.
   ///
   /// In en, this message translates to:
-  /// **'Is this the right partner? Check the username above.'**
+  /// **'Is this the right family member? Check the username above.'**
   String get familyKeyConfirmPartner;
 
   /// No description provided for @familyKeyAlreadyPairedWarning.
@@ -467,7 +467,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyEnterSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your partner\'s 12 words. You will then see the fingerprint to verify.'**
+  /// **'Enter their 12 words. You will then see the fingerprint to verify.'**
   String get familyKeyEnterSubtitle;
 
   /// No description provided for @familyKeySaved.
@@ -497,13 +497,13 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyShareLegacyBody.
   ///
   /// In en, this message translates to:
-  /// **'Have your partner scan this QR code. This family key is from before the recovery phrase and has no 12 words.'**
+  /// **'Have the family member scan this QR code. This family key is from before the recovery phrase and has no 12 words.'**
   String get familyKeyShareLegacyBody;
 
   /// No description provided for @familyKeyShareBody.
   ///
   /// In en, this message translates to:
-  /// **'Have your partner scan this QR code, or type the 12 words.'**
+  /// **'Have the family member scan this QR code, or type the 12 words.'**
   String get familyKeyShareBody;
 
   /// No description provided for @familyKeyShareNoPassword.
@@ -527,7 +527,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyPartnerScanned.
   ///
   /// In en, this message translates to:
-  /// **'Partner has scanned'**
+  /// **'Family member has scanned'**
   String get familyKeyPartnerScanned;
 
   /// No description provided for @familyKeyShared.
@@ -743,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @vaultMigrateBody.
   ///
   /// In en, this message translates to:
-  /// **'Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — partner and kids do not need to re-link.'**
+  /// **'Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — family members and kids do not need to re-link.'**
   String get vaultMigrateBody;
 
   /// No description provided for @vaultMigrateActivate.
@@ -803,7 +803,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyCreateWriteWords.
   ///
   /// In en, this message translates to:
-  /// **'Write these 12 words down. They belong to the family key you share with your partner. We do not store the words.'**
+  /// **'Write these 12 words down. They belong to the family key you share with family members. We do not store the words.'**
   String get familyCreateWriteWords;
 
   /// No description provided for @familyCreateFailed.
@@ -881,19 +881,19 @@ abstract class AppLocalizations {
   /// No description provided for @partnerRevealMissing.
   ///
   /// In en, this message translates to:
-  /// **'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have partner and kids re-link.'**
+  /// **'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have family members and kids re-link.'**
   String get partnerRevealMissing;
 
   /// No description provided for @partnerUnlinkTitle.
   ///
   /// In en, this message translates to:
-  /// **'Unlink partner?'**
+  /// **'Leave family?'**
   String get partnerUnlinkTitle;
 
   /// No description provided for @partnerUnlinkBody.
   ///
   /// In en, this message translates to:
-  /// **'All shared notes will be removed from this device. Your own tasks and private notes stay. Your partner does not lose the connection — only you leave the shared workspace.'**
+  /// **'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.'**
   String get partnerUnlinkBody;
 
   /// No description provided for @partnerShareViaQr.
@@ -905,7 +905,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerShareViaQrSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Have your partner scan the QR code to collaborate.'**
+  /// **'Have a family member scan the QR code to collaborate.'**
   String get partnerShareViaQrSubtitle;
 
   /// No description provided for @partnerScanKey.
@@ -917,7 +917,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerScanKeySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Scan the QR or type your partner\'s 12 words.'**
+  /// **'Scan the QR or type their 12 words.'**
   String get partnerScanKeySubtitle;
 
   /// No description provided for @partnerReshareKey.
@@ -929,7 +929,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerReshareKeySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Share the key with a new device of your partner.'**
+  /// **'Share the key with a new device of a family member.'**
   String get partnerReshareKeySubtitle;
 
   /// No description provided for @partnerVerifyPhrase.
@@ -959,7 +959,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerUnlink.
   ///
   /// In en, this message translates to:
-  /// **'Unlink partner'**
+  /// **'Leave family'**
   String get partnerUnlink;
 
   /// No description provided for @partnerUnlinkSubtitle.
@@ -971,25 +971,25 @@ abstract class AppLocalizations {
   /// No description provided for @partnerStatusPaired.
   ///
   /// In en, this message translates to:
-  /// **'Partner linked — family key present'**
+  /// **'Family member linked — family key present'**
   String get partnerStatusPaired;
 
   /// No description provided for @partnerStatusUnpaired.
   ///
   /// In en, this message translates to:
-  /// **'Partner not linked — scan or share the QR code to link'**
+  /// **'Family member not linked — scan or share the QR code to link'**
   String get partnerStatusUnpaired;
 
   /// No description provided for @partnerLastSeen.
   ///
   /// In en, this message translates to:
-  /// **'Partner last seen {when}'**
+  /// **'Last seen {when}'**
   String partnerLastSeen(String when);
 
   /// No description provided for @partnerLastSeenWarning.
   ///
   /// In en, this message translates to:
-  /// **'Warning: partner last seen {when}'**
+  /// **'Warning: last seen {when}'**
   String partnerLastSeenWarning(String when);
 
   /// No description provided for @partnerFingerprint.
@@ -1247,7 +1247,7 @@ abstract class AppLocalizations {
   /// No description provided for @commonPartner.
   ///
   /// In en, this message translates to:
-  /// **'Partner'**
+  /// **'Family member'**
   String get commonPartner;
 
   /// No description provided for @commonReminder.
@@ -1345,6 +1345,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Today {time}'**
   String dateTodayTime(String time);
+
+  /// No description provided for @dateYesterdayTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday {time}'**
+  String dateYesterdayTime(String time);
 
   /// No description provided for @dateTomorrowTime.
   ///
@@ -1937,7 +1943,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerGenericName.
   ///
   /// In en, this message translates to:
-  /// **'partner'**
+  /// **'family member'**
   String get partnerGenericName;
 
   /// No description provided for @tasksAccept.
@@ -2087,7 +2093,7 @@ abstract class AppLocalizations {
   /// No description provided for @taskNoConnectedFamily.
   ///
   /// In en, this message translates to:
-  /// **'No connected partner or kids'**
+  /// **'No connected family members or kids'**
   String get taskNoConnectedFamily;
 
   /// No description provided for @taskStaleConnectionTitle.
@@ -2099,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @taskStalePartnerBody.
   ///
   /// In en, this message translates to:
-  /// **'Your partner was last seen {status}. Send anyway?'**
+  /// **'This family member was last seen {status}. Send anyway?'**
   String taskStalePartnerBody(String status);
 
   /// No description provided for @taskStaleKidBody.
@@ -2198,6 +2204,18 @@ abstract class AppLocalizations {
   /// **'Forward'**
   String get taskForward;
 
+  /// No description provided for @taskAssignToLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to'**
+  String get taskAssignToLabel;
+
+  /// No description provided for @taskAssignToMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get taskAssignToMe;
+
   /// No description provided for @taskRecurrenceNone.
   ///
   /// In en, this message translates to:
@@ -2285,7 +2303,7 @@ abstract class AppLocalizations {
   /// No description provided for @notesEmptySharedHint.
   ///
   /// In en, this message translates to:
-  /// **'Notes shared with your partner appear here'**
+  /// **'Notes shared with family members appear here'**
   String get notesEmptySharedHint;
 
   /// No description provided for @notesEmptyPrivateHint.
@@ -2305,6 +2323,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note saved'**
   String get notesSaved;
+
+  /// No description provided for @notesLastModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Last modified'**
+  String get notesLastModified;
 
   /// No description provided for @notesSharedBadge.
   ///
@@ -2396,16 +2420,22 @@ abstract class AppLocalizations {
   /// **'Shared with selected members'**
   String get notesShareAudienceHint;
 
+  /// No description provided for @notesSharedWithNames.
+  ///
+  /// In en, this message translates to:
+  /// **'With {names}'**
+  String notesSharedWithNames(String names);
+
   /// No description provided for @notesHideContent.
   ///
   /// In en, this message translates to:
-  /// **'Hide content & require unlock'**
+  /// **'Require unlock'**
   String get notesHideContent;
 
   /// No description provided for @notesHideContentHint.
   ///
   /// In en, this message translates to:
-  /// **'Body stays off the list; open with biometrics or device PIN'**
+  /// **'Opening requires biometrics or device PIN'**
   String get notesHideContentHint;
 
   /// No description provided for @notesUnlockReason.
@@ -2423,7 +2453,7 @@ abstract class AppLocalizations {
   /// No description provided for @notesHideNeedsDeviceLock.
   ///
   /// In en, this message translates to:
-  /// **'Turn on a screen lock on this device to hide note content'**
+  /// **'Turn on a screen lock on this device to require unlock'**
   String get notesHideNeedsDeviceLock;
 
   /// No description provided for @notesEditMarkdown.
@@ -2567,7 +2597,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestReasonPartner.
   ///
   /// In en, this message translates to:
-  /// **'Partner complement'**
+  /// **'Family complement'**
   String get suggestReasonPartner;
 
   /// No description provided for @suggestReasonSeasonal.
@@ -2669,7 +2699,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestPartnerExplanationSchool.
   ///
   /// In en, this message translates to:
-  /// **'Based on your tasks (without private details), school looks like a theme this week. Your partner sees this.'**
+  /// **'Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.'**
   String get suggestPartnerExplanationSchool;
 
   /// No description provided for @suggestPartnerTitleHousehold.
@@ -2693,7 +2723,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestPartnerExplanationHealth.
   ///
   /// In en, this message translates to:
-  /// **'Something around care is going on. Your partner only sees this generic question.'**
+  /// **'Something around care is going on. Your family member only sees this generic question.'**
   String get suggestPartnerExplanationHealth;
 
   /// No description provided for @suggestPartnerTitleSport.

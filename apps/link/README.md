@@ -1,16 +1,18 @@
 # Kinetic Link
 
-Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally, coordinate with family members via task proposals, manage children's assigned tasks overview, and optionally sync to a WebDAV server.
+Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally with an encrypted vault. **Family features** (partner proposals, kids overview, shared notes, multi-device sync) require a configured WebDAV connection — without WebDAV those extras are unavailable.
 
 ## Screens
 
 | Screen | Description |
 |---|---|
-| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **Forward** sends tasks to partner, one kid, or **Everyone** (all enrolled kids) with connection-aware gating. A collapsible **suggestions** card sits above the list (self, partner-targeted, and incoming proposals). When kids are enrolled, a collapsible **kids** section shows assignments grouped by child (plus an Everyone bucket for untargeted shared chores), XP, and goals. Reminder notifications offer **Done** and **Snooze**. Task row icons: lock = private; person+ = accepted partner proposal. |
-| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). One list with **Private** and **Shared** sections (share with partner from the editor). Optional **hide content**: list shows title + locked badge only; opening requires device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION). |
-| **Settings** | WebDAV config, connection test, **theme selector** (Default, Calm, Night). **Vault**: verify the 12-word recovery phrase (the words are not stored on device). **Family** section: Partner pairing (share/scan QR), Kids enrollment (QR without WebDAV password) with status. **Backup & Restore**: encrypted `.kvault` export/import (passphrase required; no key in the file). Restoring a backup automatically reschedules all notifications. Debug builds also have **UI scenarios** to load local mock states for screenshots and manual QA. |
+| **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **With WebDAV + family:** forward tasks to a link member, one kid, or **Everyone**; collapsible **suggestions** (self, family-targeted, incoming proposals) and **kids** section (assignments, XP, goals). Reminder notifications offer **Done** and **Snooze**. Task row icons: person+ = accepted family proposal. |
+| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). Local private notes always; **Shared** section and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). |
+| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **WebDAV** config and connection test unlock sync. **Family** (partner QR, kids enrollment, presence) is only useful once WebDAV is connected. Debug builds also have **UI scenarios** for screenshots and manual QA. |
 
 ## Family Setup
+
+**Requires WebDAV.** Pairing, proposals, kids enrollment, and shared folders all go through your server. Configure WebDAV in Settings before using Family.
 
 ### Partner Pairing
 1. Settings → Family → Partner → "Share family key via QR"
@@ -51,7 +53,7 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 ### Tasks
 - `xpReward` (integer, default 10): XP the child earns when completing a task sent via "Send to kids". Configurable per task before sending.
 - `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. When **null**, the assignment is for **Everyone** — each kids device shows it (`xKineticTargetKidId` missing or empty). When set, only that child's UUID matches.
-- `isContentHidden` (notes, local): When true, the notes list hides the body and opening the note requires device unlock. Not synced to WebDAV; the body still syncs as usual.
+- `isContentHidden` (notes, local): When true, opening the note requires device unlock. Not synced to WebDAV; the body still syncs as usual. List rows never show body preview.
 
 ### Security
 - **Personal vault**: 12 BIP-39 words → derived AES key stored on-device. The words and BIP-39 entropy are **not** stored; paper from onboarding is the only recovery. Settings can verify a typed phrase against the derived key.
@@ -168,9 +170,14 @@ When a device explicitly leaves the family, it writes an encrypted **tombstone**
 
 ## Conditional UI
 
+Without WebDAV, Tasks stays a personal list (plus local “for you” suggestions). Partner send, kids panel, incoming proposals, and shared notes only appear after WebDAV is connected and family is set up.
+
 **Kids panel** on Tasks is only visible when:
 
+- This Link device has **Kids tasks on this device** enabled (Settings → Kids)
 - At least one child is enrolled (`enrolledKidsCount > 0`)
 - WebDAV config and sync are available so assignments can be loaded
+
+With participation off, this device cannot see the kids panel, assign to kids, enroll/remove kids, or verify completions. Other Link members keep their own setting; the roster stores each member’s `kidsParticipation` flag.
 
 **Suggestions panel** on Tasks is hidden when there are no pending self suggestions, partner-targeted hints, or incoming proposals.

@@ -405,37 +405,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<String?> _askPhrase({
     required String title,
     required String body,
-  }) async {
-    final ctrl = TextEditingController();
-    final phrase = await showDialog<String>(
+  }) {
+    return showMnemonicPhraseDialog(
       context: context,
-      builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx);
-        return AlertDialog(
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(body),
-              const SizedBox(height: 12),
-              MnemonicPhraseField(controller: ctrl),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, ctrl.text),
-              child: Text(l10n.commonContinue),
-            ),
-          ],
-        );
-      },
+      title: title,
+      body: body,
     );
-    ctrl.dispose();
-    return phrase;
   }
 
   Future<void> _verifyPhrase() async {

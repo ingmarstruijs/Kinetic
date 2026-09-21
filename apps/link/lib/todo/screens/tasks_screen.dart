@@ -74,6 +74,7 @@ class TasksScreen extends StatefulWidget {
 
 class _TasksScreenState extends State<TasksScreen> {
   final _kidsKey = GlobalKey<KidsPanelState>();
+  bool _suggestionsVisible = false;
 
   @override
   void initState() {
@@ -212,8 +213,12 @@ class _TasksScreenState extends State<TasksScreen> {
                   repo: widget.repo,
                   hasFamilyKey: widget.hasFamilyKey,
                   partnerPaired: widget.partnerPaired,
+                  proposalRepo: widget.proposalRepo,
+                  myLinkId: widget.myLinkId,
+                  otherLinkMembers: widget.otherLinkMembers,
                   configRepo: widget.configRepo,
                   pullPresence: widget.pullPresence,
+                  kidsParticipation: widget.kidsParticipation,
                 ),
               ),
             ),
@@ -223,13 +228,13 @@ class _TasksScreenState extends State<TasksScreen> {
           repo: widget.repo,
           hasFamilyKey: widget.hasFamilyKey,
           partnerPaired: widget.partnerPaired,
-          familyContext: widget.hasFamilyKey ||
-              widget.partnerPaired ||
-              widget.enrolledKidsCount > 0 ||
-              _showKids,
+          // Compact personal empty only when Suggestions or Kids chrome is up —
+          // partner-paired alone still gets the centered "All done!" state.
+          familyContext: _showKids || _suggestionsVisible,
           settingsRepo: widget.settingsRepo,
           proposalRepo: widget.proposalRepo,
           myLinkId: widget.myLinkId,
+          otherLinkMembers: widget.otherLinkMembers,
           configRepo: widget.configRepo,
           pullPresence: widget.pullPresence,
           header: Column(
@@ -244,6 +249,10 @@ class _TasksScreenState extends State<TasksScreen> {
                   partnerPaired: widget.partnerPaired,
                   otherLinkMembers: widget.otherLinkMembers,
                   onSyncRequested: widget.onSyncRetry,
+                  onVisibilityChanged: (visible) {
+                    if (!mounted || _suggestionsVisible == visible) return;
+                    setState(() => _suggestionsVisible = visible);
+                  },
                 ),
               if (_showKids)
                 KidsPanel(
@@ -270,7 +279,17 @@ class _TasksScreenState extends State<TasksScreen> {
             ],
           ),
         ),
-        bottomSheet: QuickAddBar(repo: widget.repo),
+        bottomSheet: QuickAddBar(
+          repo: widget.repo,
+          hasFamilyKey: widget.hasFamilyKey,
+          partnerPaired: widget.partnerPaired,
+          proposalRepo: widget.proposalRepo,
+          myLinkId: widget.myLinkId,
+          otherLinkMembers: widget.otherLinkMembers,
+          configRepo: widget.configRepo,
+          pullPresence: widget.pullPresence,
+          kidsParticipation: widget.kidsParticipation,
+        ),
       ),
     );
   }
@@ -327,12 +346,13 @@ class _TasksBody extends StatefulWidget {
   final TodoRepository repo;
   final bool hasFamilyKey;
   final bool partnerPaired;
-  /// When true, the personal-task list empty state stays compact and does not
-  /// claim "all done" while kids / partner panels may still need attention.
+  /// When true, the personal-task list empty state stays compact (no "all done"
+  /// hero) because Suggestions and/or Kids panels already occupy the header.
   final bool familyContext;
   final SettingsRepository? settingsRepo;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
   final Widget header;
@@ -345,6 +365,7 @@ class _TasksBody extends StatefulWidget {
     this.settingsRepo,
     this.proposalRepo,
     this.myLinkId,
+    this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
     required this.header,
@@ -509,6 +530,7 @@ class _TasksBodyState extends State<_TasksBody> {
                       partnerPaired: widget.partnerPaired,
                       proposalRepo: widget.proposalRepo,
                       myLinkId: widget.myLinkId,
+                      otherLinkMembers: widget.otherLinkMembers,
                       configRepo: widget.configRepo,
                       pullPresence: widget.pullPresence,
                     );
@@ -679,6 +701,7 @@ class _DraggableTaskRow extends StatelessWidget {
   final bool partnerPaired;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
 
@@ -691,6 +714,7 @@ class _DraggableTaskRow extends StatelessWidget {
     required this.partnerPaired,
     this.proposalRepo,
     this.myLinkId,
+    this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
   });
@@ -708,6 +732,7 @@ class _DraggableTaskRow extends StatelessWidget {
             partnerPaired: partnerPaired,
             proposalRepo: proposalRepo,
             myLinkId: myLinkId,
+            otherLinkMembers: otherLinkMembers,
             configRepo: configRepo,
             pullPresence: pullPresence,
           ),

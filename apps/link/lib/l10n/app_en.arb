@@ -37,10 +37,10 @@
   "settingsPartner": "Family member",
   "settingsFamilyMembers": "Family members",
   "settingsPartnerPaired": "Family member linked",
-  "settingsPartnerLinkHint": "Link with another adult",
+  "settingsPartnerLinkHint": "Link with another family member",
   "settingsKids": "Kids",
-  "settingsKidsParticipation": "Show kids panels",
-  "settingsKidsParticipationSubtitle": "Show kids missions here and let this device verify them",
+  "settingsKidsParticipation": "Kids tasks on this device",
+  "settingsKidsParticipationSubtitle": "When off, this device cannot see, create, assign, or verify kids tasks",
   "settingsKidsLinkHint": "Link the kids app",
   "settingsKidsEnrolledCount": "{count, plural, =1{1 kid linked} other{{count} kids linked}}",
   "@settingsKidsEnrolledCount": {
@@ -67,10 +67,10 @@
   "notifExactAlarmBanner": "Exact reminders are disabled. Allow \"Alarms & reminders\" for precise times.",
 
   "familyKeyScanTitle": "Scan family key",
-  "familyKeyScanHint": "Point at your partner's QR code",
+  "familyKeyScanHint": "Point at the family member's QR code",
   "familyKeyEnterPhrase": "Enter phrase",
   "familyKeyFound": "Key found",
-  "familyKeyPartner": "Partner",
+  "familyKeyPartner": "Family member",
   "familyKeyServer": "Server",
   "familyKeyFingerprint": "Fingerprint",
   "familyKeyServerMismatch": "The server in the QR code ({scanned}) does not match your server ({current}). Are you sure you want to continue?",
@@ -80,10 +80,10 @@
       "current": {"type": "String"}
     }
   },
-  "familyKeyConfirmPartner": "Is this the right partner? Check the username above.",
+  "familyKeyConfirmPartner": "Is this the right family member? Check the username above.",
   "familyKeyAlreadyPairedWarning": "You already have a family key. Importing a new one will make data encrypted with the current key unreadable until you sync again.",
   "familyKeyEnterTitle": "Enter family key",
-  "familyKeyEnterSubtitle": "Enter your partner's 12 words. You will then see the fingerprint to verify.",
+  "familyKeyEnterSubtitle": "Enter their 12 words. You will then see the fingerprint to verify.",
   "familyKeySaved": "Family key saved.",
   "familyKeySaveError": "Error saving: {error}",
   "@familyKeySaveError": {
@@ -99,8 +99,8 @@
   },
 
   "familyKeyShareTitle": "Share family key",
-  "familyKeyShareLegacyBody": "Have your partner scan this QR code. This family key is from before the recovery phrase and has no 12 words.",
-  "familyKeyShareBody": "Have your partner scan this QR code, or type the 12 words.",
+  "familyKeyShareLegacyBody": "Have the family member scan this QR code. This family key is from before the recovery phrase and has no 12 words.",
+  "familyKeyShareBody": "Have the family member scan this QR code, or type the 12 words.",
   "familyKeyShareNoPassword": "The code does not include the WebDAV password. Check the fingerprint together.",
   "familyKeyShareNoEntropy": "No recovery-phrase data on this device. Create a new family key.",
   "familyKeyShareFingerprint": "Fingerprint  {fingerprint}",
@@ -109,7 +109,7 @@
       "fingerprint": {"type": "String"}
     }
   },
-  "familyKeyPartnerScanned": "Partner has scanned",
+  "familyKeyPartnerScanned": "Family member has scanned",
   "familyKeyShared": "Family key shared",
 
   "vaultWelcomeTitle": "Your vault",
@@ -158,7 +158,7 @@
   "vaultPhraseFieldLabel": "Recovery phrase (12 words)",
 
   "vaultMigrateTitle": "New recovery phrase",
-  "vaultMigrateBody": "Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — partner and kids do not need to re-link.",
+  "vaultMigrateBody": "Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — family members and kids do not need to re-link.",
   "vaultMigrateActivate": "Activate new recovery phrase",
   "vaultMigrateHeadline": "Write down these new 12 words. The old key will no longer work for WebDAV or a .kvault.",
 
@@ -170,7 +170,7 @@
   "vaultRevealWarning": "Write the words down again on paper if you lost your copy. Do not leave this screen open.",
 
   "familyCreateTitle": "Family key",
-  "familyCreateWriteWords": "Write these 12 words down. They belong to the family key you share with your partner. We do not store the words.",
+  "familyCreateWriteWords": "Write these 12 words down. They belong to the family key you share with family members. We do not store the words.",
   "familyCreateFailed": "Could not create the family key: {error}",
   "@familyCreateFailed": {
     "placeholders": {
@@ -206,30 +206,30 @@
   "partnerVerifyBody": "Enter the 12 words. We will not show them; we only check that they match.",
   "partnerVerifyOk": "The family key matches.",
   "partnerVerifyMismatch": "This recovery phrase does not match this family key.",
-  "partnerRevealMissing": "This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have partner and kids re-link.",
-  "partnerUnlinkTitle": "Unlink partner?",
-  "partnerUnlinkBody": "All shared notes will be removed from this device. Your own tasks and private notes stay. Your partner does not lose the connection — only you leave the shared workspace.",
+  "partnerRevealMissing": "This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have family members and kids re-link.",
+  "partnerUnlinkTitle": "Leave family?",
+  "partnerUnlinkBody": "All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.",
   "partnerShareViaQr": "Share family key via QR",
-  "partnerShareViaQrSubtitle": "Have your partner scan the QR code to collaborate.",
+  "partnerShareViaQrSubtitle": "Have a family member scan the QR code to collaborate.",
   "partnerScanKey": "Scan family key",
-  "partnerScanKeySubtitle": "Scan the QR or type your partner's 12 words.",
+  "partnerScanKeySubtitle": "Scan the QR or type their 12 words.",
   "partnerReshareKey": "Share family key again",
-  "partnerReshareKeySubtitle": "Share the key with a new device of your partner.",
+  "partnerReshareKeySubtitle": "Share the key with a new device of a family member.",
   "partnerVerifyPhrase": "Verify recovery phrase",
   "partnerVerifyPhraseSubtitle": "Check that you still know the 12 words of the family key.",
   "partnerShowKey": "Show family key",
   "partnerShowKeySubtitle": "Show the 12 words on this device (screen lock).",
-  "partnerUnlink": "Unlink partner",
+  "partnerUnlink": "Leave family",
   "partnerUnlinkSubtitle": "Remove the family key and shared notes from this device.",
-  "partnerStatusPaired": "Partner linked — family key present",
-  "partnerStatusUnpaired": "Partner not linked — scan or share the QR code to link",
-  "partnerLastSeen": "Partner last seen {when}",
+  "partnerStatusPaired": "Family member linked — family key present",
+  "partnerStatusUnpaired": "Family member not linked — scan or share the QR code to link",
+  "partnerLastSeen": "Last seen {when}",
   "@partnerLastSeen": {
     "placeholders": {
       "when": {"type": "String"}
     }
   },
-  "partnerLastSeenWarning": "Warning: partner last seen {when}",
+  "partnerLastSeenWarning": "Warning: last seen {when}",
   "@partnerLastSeenWarning": {
     "placeholders": {
       "when": {"type": "String"}
@@ -321,7 +321,7 @@
   "commonPrivate": "Private",
   "commonShared": "Shared",
   "commonKids": "Kids",
-  "commonPartner": "Partner",
+  "commonPartner": "Family member",
   "commonReminder": "Reminder",
   "commonTime": "Time",
   "commonCategory": "Category",
@@ -376,6 +376,12 @@
   },
   "dateTodayTime": "Today {time}",
   "@dateTodayTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateYesterdayTime": "Yesterday {time}",
+  "@dateYesterdayTime": {
     "placeholders": {
       "time": {"type": "String"}
     }
@@ -585,7 +591,7 @@
   },
   "tasksForFamily": "For family",
   "tasksFromFamily": "From family",
-  "partnerGenericName": "partner",
+  "partnerGenericName": "family member",
   "tasksAccept": "Accept",
   "tasksXpResetTitle": "Reset XP for {name}?",
   "@tasksXpResetTitle": {
@@ -637,9 +643,9 @@
   },
   "taskForwardTitle": "Forward task",
   "taskAssignmentCreated": "Assignment created ✓",
-  "taskNoConnectedFamily": "No connected partner or kids",
+  "taskNoConnectedFamily": "No connected family members or kids",
   "taskStaleConnectionTitle": "Connection stale",
-  "taskStalePartnerBody": "Your partner was last seen {status}. Send anyway?",
+  "taskStalePartnerBody": "This family member was last seen {status}. Send anyway?",
   "@taskStalePartnerBody": {
     "placeholders": {
       "status": {"type": "String"}
@@ -689,6 +695,8 @@
   "taskAddCategory": "Add category",
   "taskRepeat": "Repeat",
   "taskForward": "Forward",
+  "taskAssignToLabel": "Assign to",
+  "taskAssignToMe": "Me",
   "taskRecurrenceNone": "No recurrence",
   "taskRecurrenceDaily": "Daily",
   "taskRecurrenceWeekdays": "Weekdays",
@@ -704,10 +712,11 @@
   "notesEmptyShared": "No shared notes",
   "notesEmptyPrivate": "No private notes",
   "notesEmpty": "No notes",
-  "notesEmptySharedHint": "Notes shared with your partner appear here",
+  "notesEmptySharedHint": "Notes shared with family members appear here",
   "notesEmptyPrivateHint": "Your private notes appear here",
   "notesEmptyHint": "Private and shared notes appear here",
   "notesSaved": "Note saved",
+  "notesLastModified": "Last modified",
   "notesSharedBadge": "Shared",
   "notesTitleRequired": "Title is required",
   "notesDeleteTitle": "Delete note?",
@@ -723,11 +732,17 @@
   "notesShareAllAdults": "All family members",
   "notesSharePickAdults": "Choose who can see this note",
   "notesShareAudienceHint": "Shared with selected members",
-  "notesHideContent": "Hide content & require unlock",
-  "notesHideContentHint": "Body stays off the list; open with biometrics or device PIN",
+  "notesSharedWithNames": "With {names}",
+  "@notesSharedWithNames": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "notesHideContent": "Require unlock",
+  "notesHideContentHint": "Opening requires biometrics or device PIN",
   "notesUnlockReason": "Unlock this note",
   "notesUnlockFailed": "Could not unlock the note",
-  "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to hide note content",
+  "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to require unlock",
   "notesEditMarkdown": "Edit",
   "notesPreviewMarkdown": "Preview",
   "notesMarkdownHint": "Write markdown…",
@@ -762,7 +777,7 @@
     }
   },
   "suggestReasonHabit": "Habit",
-  "suggestReasonPartner": "Partner complement",
+  "suggestReasonPartner": "Family complement",
   "suggestReasonSeasonal": "Seasonal",
   "suggestReasonLoadBalance": "Load balance",
   "suggestReasonStale": "Open task",
@@ -801,11 +816,11 @@
     }
   },
   "suggestPartnerTitleSchool": "School run or childcare this week?",
-  "suggestPartnerExplanationSchool": "Based on your tasks (without private details), school looks like a theme this week. Your partner sees this.",
+  "suggestPartnerExplanationSchool": "Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.",
   "suggestPartnerTitleHousehold": "Can you pick up something around the house this week?",
   "suggestPartnerExplanationHousehold": "You have several household tasks open. The suggestion is intentionally generic.",
   "suggestPartnerTitleHealth": "Something around care or health to pick up?",
-  "suggestPartnerExplanationHealth": "Something around care is going on. Your partner only sees this generic question.",
+  "suggestPartnerExplanationHealth": "Something around care is going on. Your family member only sees this generic question.",
   "suggestPartnerTitleSport": "Sports bag or training this week?",
   "suggestPartnerExplanationSport": "Based on your tasks, sport looks like a theme. No private details.",
   "suggestPartnerTitleAdmin": "An admin chore this week?",

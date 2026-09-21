@@ -25,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -111,6 +111,9 @@ class AppDatabase extends _$AppDatabase {
             personalTasks.verifierLinkId,
           );
         }
+      }
+      if (from < 19) {
+        await m.addColumn(personalNotes, personalNotes.updatedByLinkId);
       }
     },
   );

@@ -109,17 +109,17 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsPartnerPaired => 'Gezinslid gekoppeld';
 
   @override
-  String get settingsPartnerLinkHint => 'Koppel met een andere ouder';
+  String get settingsPartnerLinkHint => 'Koppel met een ander gezinslid';
 
   @override
   String get settingsKids => 'Kinderen';
 
   @override
-  String get settingsKidsParticipation => 'Kinderpanelen tonen';
+  String get settingsKidsParticipation => 'Kindertaken op dit apparaat';
 
   @override
   String get settingsKidsParticipationSubtitle =>
-      'Toon taken van kinderen hier en laat dit apparaat ze goedkeuren';
+      'Uit = dit apparaat kan kindertaken niet zien, maken, toewijzen of goedkeuren';
 
   @override
   String get settingsKidsLinkHint => 'Koppel de kinderenapp';
@@ -179,7 +179,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get familyKeyScanTitle => 'Familiesleutel scannen';
 
   @override
-  String get familyKeyScanHint => 'Richt op de QR-code van je partner';
+  String get familyKeyScanHint => 'Richt op de QR-code van het gezinslid';
 
   @override
   String get familyKeyEnterPhrase => 'Zin invoeren';
@@ -188,7 +188,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get familyKeyFound => 'Sleutel gevonden';
 
   @override
-  String get familyKeyPartner => 'Partner';
+  String get familyKeyPartner => 'Gezinslid';
 
   @override
   String get familyKeyServer => 'Server';
@@ -203,7 +203,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyKeyConfirmPartner =>
-      'Is dit de juiste partner? Controleer de gebruikersnaam hierboven.';
+      'Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.';
 
   @override
   String get familyKeyAlreadyPairedWarning =>
@@ -214,7 +214,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyKeyEnterSubtitle =>
-      'Vul de 12 woorden van je partner in. Daarna zie je de vingerafdruk ter controle.';
+      'Vul hun 12 woorden in. Daarna zie je de vingerafdruk ter controle.';
 
   @override
   String get familyKeySaved => 'Familiesleutel opgeslagen.';
@@ -234,11 +234,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyKeyShareLegacyBody =>
-      'Laat je partner deze QR-code scannen. Deze familiesleutel is van vóór de herstelzin en heeft geen 12 woorden.';
+      'Laat het gezinslid deze QR-code scannen. Deze familiesleutel is van vóór de herstelzin en heeft geen 12 woorden.';
 
   @override
   String get familyKeyShareBody =>
-      'Laat je partner deze QR-code scannen, of de 12 woorden typen.';
+      'Laat het gezinslid deze QR-code scannen, of de 12 woorden typen.';
 
   @override
   String get familyKeyShareNoPassword =>
@@ -254,7 +254,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get familyKeyPartnerScanned => 'Partner heeft gescand';
+  String get familyKeyPartnerScanned => 'Gezinslid heeft gescand';
 
   @override
   String get familyKeyShared => 'Familiesleutel gedeeld';
@@ -376,7 +376,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get vaultMigrateBody =>
-      'Je huidige sleutel is willekeurig (versie 0.2) en kan niet in 12 woorden. Taken en notities op dit apparaat blijven staan. We maken een nieuwe herstelzin. Bij de volgende sync worden persoonlijke bestanden opnieuw versleuteld. De familiesleutel blijft hetzelfde — partner en kinderen hoeven niet opnieuw te koppelen.';
+      'Je huidige sleutel is willekeurig (versie 0.2) en kan niet in 12 woorden. Taken en notities op dit apparaat blijven staan. We maken een nieuwe herstelzin. Bij de volgende sync worden persoonlijke bestanden opnieuw versleuteld. De familiesleutel blijft hetzelfde — gezinsleden en kinderen hoeven niet opnieuw te koppelen.';
 
   @override
   String get vaultMigrateActivate => 'Nieuwe herstelzin activeren';
@@ -411,7 +411,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyCreateWriteWords =>
-      'Schrijf deze 12 woorden op. Ze horen bij de familiesleutel die je deelt met je partner. We slaan de woorden niet op.';
+      'Schrijf deze 12 woorden op. Ze horen bij de familiesleutel die je deelt met gezinsleden. We slaan de woorden niet op.';
 
   @override
   String familyCreateFailed(String error) {
@@ -461,35 +461,34 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get partnerRevealMissing =>
-      'Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat partner en kinderen opnieuw koppelen.';
+      'Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat gezinsleden en kinderen opnieuw koppelen.';
 
   @override
-  String get partnerUnlinkTitle => 'Partner ontkoppelen?';
+  String get partnerUnlinkTitle => 'Familie verlaten?';
 
   @override
   String get partnerUnlinkBody =>
-      'Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Je partner verliest de verbinding niet — alleen jij verlaat de gedeelde werkruimte.';
+      'Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.';
 
   @override
   String get partnerShareViaQr => 'Familiesleutel delen via QR';
 
   @override
   String get partnerShareViaQrSubtitle =>
-      'Laat je partner de QR-code scannen om samen te werken.';
+      'Laat een gezinslid de QR-code scannen om samen te werken.';
 
   @override
   String get partnerScanKey => 'Familiesleutel scannen';
 
   @override
-  String get partnerScanKeySubtitle =>
-      'Scan de QR of typ de 12 woorden van je partner.';
+  String get partnerScanKeySubtitle => 'Scan de QR of typ hun 12 woorden.';
 
   @override
   String get partnerReshareKey => 'Familiesleutel opnieuw delen';
 
   @override
   String get partnerReshareKeySubtitle =>
-      'Deel de sleutel met een nieuw apparaat van je partner.';
+      'Deel de sleutel met een nieuw apparaat van een gezinslid.';
 
   @override
   String get partnerVerifyPhrase => 'Herstelzin controleren';
@@ -506,7 +505,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Toon de 12 woorden op dit apparaat (schermvergrendeling).';
 
   @override
-  String get partnerUnlink => 'Partner ontkoppelen';
+  String get partnerUnlink => 'Familie verlaten';
 
   @override
   String get partnerUnlinkSubtitle =>
@@ -514,20 +513,20 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get partnerStatusPaired =>
-      'Partner gekoppeld — familiesleutel aanwezig';
+      'Gezinslid gekoppeld — familiesleutel aanwezig';
 
   @override
   String get partnerStatusUnpaired =>
-      'Partner niet gekoppeld — scan of deel de QR-code om te koppelen';
+      'Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen';
 
   @override
   String partnerLastSeen(String when) {
-    return 'Partner voor het laatst gezien $when';
+    return 'Laatst gezien $when';
   }
 
   @override
   String partnerLastSeenWarning(String when) {
-    return 'Waarschuwing: partner voor het laatst gezien $when';
+    return 'Waarschuwing: laatst gezien $when';
   }
 
   @override
@@ -675,7 +674,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get commonKids => 'Kinderen';
 
   @override
-  String get commonPartner => 'Partner';
+  String get commonPartner => 'Gezinslid';
 
   @override
   String get commonReminder => 'Herinnering';
@@ -745,6 +744,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String dateTodayTime(String time) {
     return 'Vandaag $time';
+  }
+
+  @override
+  String dateYesterdayTime(String time) {
+    return 'Gisteren $time';
   }
 
   @override
@@ -1109,7 +1113,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksFromFamily => 'Van familie';
 
   @override
-  String get partnerGenericName => 'partner';
+  String get partnerGenericName => 'gezinslid';
 
   @override
   String get tasksAccept => 'Accepteren';
@@ -1196,14 +1200,14 @@ class AppLocalizationsNl extends AppLocalizations {
   String get taskAssignmentCreated => 'Opdracht aangemaakt ✓';
 
   @override
-  String get taskNoConnectedFamily => 'Geen verbonden partner of kinderen';
+  String get taskNoConnectedFamily => 'Geen verbonden gezinsleden of kinderen';
 
   @override
   String get taskStaleConnectionTitle => 'Verbinding verouderd';
 
   @override
   String taskStalePartnerBody(String status) {
-    return 'Je partner is voor het laatst gezien $status. Toch sturen?';
+    return 'Dit gezinslid is voor het laatst gezien $status. Toch sturen?';
   }
 
   @override
@@ -1268,6 +1272,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get taskForward => 'Doorsturen';
 
   @override
+  String get taskAssignToLabel => 'Toewijzen aan';
+
+  @override
+  String get taskAssignToMe => 'Mij';
+
+  @override
   String get taskRecurrenceNone => 'Geen herhaling';
 
   @override
@@ -1311,7 +1321,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesEmptySharedHint =>
-      'Notities gedeeld met je partner verschijnen hier';
+      'Notities gedeeld met gezinsleden verschijnen hier';
 
   @override
   String get notesEmptyPrivateHint => 'Je privé notities verschijnen hier';
@@ -1321,6 +1331,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesSaved => 'Notitie opgeslagen';
+
+  @override
+  String get notesLastModified => 'Laatst gewijzigd';
 
   @override
   String get notesSharedBadge => 'Gedeeld';
@@ -1370,11 +1383,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notesShareAudienceHint => 'Gedeeld met geselecteerde leden';
 
   @override
-  String get notesHideContent => 'Inhoud verbergen & ontgrendelen vereisen';
+  String notesSharedWithNames(String names) {
+    return 'Met $names';
+  }
+
+  @override
+  String get notesHideContent => 'Ontgrendelen vereisen';
 
   @override
   String get notesHideContentHint =>
-      'Tekst blijft uit de lijst; openen met biometrie of apparaat-pincode';
+      'Openen vereist biometrie of apparaat-pincode';
 
   @override
   String get notesUnlockReason => 'Ontgrendel deze notitie';
@@ -1384,7 +1402,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesHideNeedsDeviceLock =>
-      'Zet een schermvergrendeling aan om notitie-inhoud te verbergen';
+      'Zet een schermvergrendeling aan om ontgrendelen te vereisen';
 
   @override
   String get notesEditMarkdown => 'Bewerken';
@@ -1464,7 +1482,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestReasonHabit => 'Gewoonte';
 
   @override
-  String get suggestReasonPartner => 'Partner-aanvulling';
+  String get suggestReasonPartner => 'Gezinsaanvulling';
 
   @override
   String get suggestReasonSeasonal => 'Seizoensgebonden';
@@ -1529,7 +1547,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestPartnerExplanationSchool =>
-      'Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je partner ziet dit.';
+      'Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.';
 
   @override
   String get suggestPartnerTitleHousehold =>
@@ -1545,7 +1563,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestPartnerExplanationHealth =>
-      'Er speelt iets rond zorg. Je partner ziet alleen deze algemene vraag.';
+      'Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.';
 
   @override
   String get suggestPartnerTitleSport => 'Sporttas of training deze week?';

@@ -30,6 +30,7 @@ class TaskDetailSheet extends StatefulWidget {
   final TodoRepository repo;
   final PartnerProposalRepository? proposalRepo;
   final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final String? initialListId;
   final String? initialTitle;
   final String? initialNotes;
@@ -42,6 +43,9 @@ class TaskDetailSheet extends StatefulWidget {
   final bool partnerPaired;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+
+  /// When false, kid assign chips and kids send-on-create are unavailable.
+  final bool kidsParticipation;
 
   /// When set (or [assignToEveryone] is true), saving a new task also
   /// assigns it to kids via [TodoRepository.sendToKids].
@@ -63,6 +67,7 @@ class TaskDetailSheet extends StatefulWidget {
     this.task,
     this.proposalRepo,
     this.myLinkId,
+    this.otherLinkMembers = const [],
     this.initialListId,
     this.initialTitle,
     this.initialNotes,
@@ -75,6 +80,7 @@ class TaskDetailSheet extends StatefulWidget {
     this.partnerPaired = false,
     this.configRepo,
     this.pullPresence,
+    this.kidsParticipation = true,
     this.assignToKidId,
     this.assignToEveryone = false,
     this.showXpReward = false,
@@ -106,6 +112,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   List<PersonalTask> _completedTasks = [];
   FamilyMemberStatus? _partnerStatus;
   List<FamilyMemberStatus> _linkStatuses = const [];
+  List<FamilyMemberStatus> _kidStatuses = const [];
+  /// When creating a task: null = keep for me; otherwise send on save.
+  FamilyMemberStatus? _assignTo;
   Timer? _chipDebounce;
   final _reminderEngine = ReminderProposalEngine();
   bool _didPrefillReminder = false;
@@ -151,7 +160,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   }
 
   Future<void> _loadFamilyConnections() async {
-    if (!widget.partnerPaired) return;
+    if (!widget.partnerPaired && !widget.hasFamilyKey) return;
     try {
       final demo = DemoSession.instance;
       if (demo.active && demo.roster != null) {
@@ -166,9 +175,14 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             allowWithoutPresence: true,
           );
           _partnerStatus = FamilyConnectionService.partnerStatus(
-            partnerPaired: true,
+            partnerPaired: widget.partnerPaired || otherLinkMembers.isNotEmpty,
             presenceList: demo.presence,
             otherLinkMembers: otherLinkMembers,
+            allowWithoutPresence: true,
+          );
+          _kidStatuses = FamilyConnectionService.kidStatuses(
+            enrolledKids: demo.kids,
+            presenceList: demo.presence,
             allowWithoutPresence: true,
           );
         });
@@ -179,8 +193,10 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       final presence = widget.pullPresence != null
           ? await widget.pullPresence!()
           : <PresenceInfo>[];
-      final partnerPaired = await widget.configRepo!.isPartnerPaired();
+      final partnerPaired = widget.partnerPaired ||
+          await widget.configRepo!.isPartnerPaired();
       final roster = await widget.configRepo!.loadCachedRoster();
+      final enrolledKids = await widget.configRepo!.loadEnrolledKids();
       if (!mounted) return;
       final allowWithoutPresence = widget.pullPresence == null;
       final otherLinkMembers =
@@ -198,8 +214,27 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           otherLinkMembers: otherLinkMembers,
           allowWithoutPresence: allowWithoutPresence,
         );
+        _kidStatuses = FamilyConnectionService.kidStatuses(
+          enrolledKids: enrolledKids,
+          presenceList: presence,
+          allowWithoutPresence: allowWithoutPresence,
+        );
       });
     } catch (_) {}
+  }
+
+  List<FamilyMemberStatus> get _assignChips {
+    if (widget.task != null || widget._isKidsAssignment) return const [];
+    final link = [
+      for (final m in _linkStatuses)
+        if (m.isConnected && widget.proposalRepo != null) m,
+    ];
+    final kids = [
+      if (widget.kidsParticipation)
+        for (final m in _kidStatuses)
+          if (m.isConnected) m,
+    ];
+    return [...link, ...kids];
   }
 
   void _refreshReminderChips() {
@@ -264,6 +299,31 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 : 0,
             verifierLinkId: widget.myLinkId,
           );
+        } else if (_assignTo != null) {
+          final target = _assignTo!;
+          if (target.type == FamilyMemberType.kid) {
+            if (!widget.kidsParticipation) {
+              // Participation turned off — keep the personal task only.
+            } else {
+              await widget.repo.sendToKids(
+                created.id,
+                targetKidId: target.id,
+                xpReward: 10,
+                verifierLinkId: widget.myLinkId,
+              );
+            }
+          } else if (widget.proposalRepo != null &&
+              (widget.myLinkId ?? '').isNotEmpty) {
+            await widget.proposalRepo!.createManualProposal(
+              myLinkId: widget.myLinkId!,
+              toMemberId: target.id,
+              taskTitle: title,
+              taskNotes: newNotes.isEmpty ? null : newNotes,
+              taskCategory: _customCategory ?? 'other',
+              taskPriority: _priority,
+              taskDueDate: _dueDate,
+            );
+          }
         }
       } else {
         await widget.repo.updateTask(
@@ -459,6 +519,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       toMemberId: toMemberId,
       taskTitle: task.title,
       taskNotes: task.notes,
+      taskCategory: task.customCategory ?? 'other',
       taskPriority: task.priority,
       taskDueDate: task.dueDate,
     );
@@ -471,30 +532,36 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final maxHeight =
+        MediaQuery.sizeOf(context).height -
+        viewInsets.bottom -
+        MediaQuery.paddingOf(context).top;
 
     return Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: scheme.surface,
       child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ── Drag handle ──────────────────────────────────────────────────
-            const SizedBox(height: 8),
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withAlpha(80),
-                  borderRadius: BorderRadius.circular(2),
+        padding: EdgeInsets.only(bottom: viewInsets.bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Drag handle ──────────────────────────────────────────────
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.outlineVariant.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-            ),
             if (widget._isKidsAssignment) ...[
               const SizedBox(height: 12),
               Padding(
@@ -528,7 +595,45 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                   ],
                 ),
               ),
-            ],
+            ] else if (widget.task != null && widget.proposalRepo != null)
+              StreamBuilder(
+                stream: widget.proposalRepo!.watchAcceptedProposalForTask(
+                  taskTitle: widget.task!.title,
+                ),
+                builder: (context, snapshot) {
+                  final proposal = snapshot.data;
+                  if (proposal == null) return const SizedBox.shrink();
+                  final l10n = AppLocalizations.of(context);
+                  final fromName = _originName(
+                    widget.otherLinkMembers,
+                    _linkStatuses,
+                    proposal.fromLinkId,
+                    l10n.partnerGenericName,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person_add_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.tasksFromPartner(fromName),
+                            style: tt.titleSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             const SizedBox(height: 12),
 
             // ── Title ────────────────────────────────────────────────────────
@@ -766,53 +871,104 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 ),
               ),
 
-            const SizedBox(height: 8),
-
-            // ── Action bar ───────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: Row(
-                children: [
-                  if (widget.task != null)
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      color: Theme.of(context).colorScheme.error,
-                      tooltip: AppLocalizations.of(context).commonDelete,
-                      onPressed: _saving ? null : () => _confirmDelete(context),
-                    ),
-                  if (widget.partnerPaired &&
-                      widget.proposalRepo != null &&
-                      widget.task != null &&
-                      widget.task!.kidsTaskId == null)
-                    IconButton(
-                      icon: const Icon(Icons.send_outlined),
-                      tooltip: _canSendToPartner
-                          ? AppLocalizations.of(context).taskForward
-                          : AppLocalizations.of(context).taskNoConnectedFamily,
-                      onPressed: _saving || !_canSendToPartner
-                          ? null
-                          : () => _showSendDialog(context),
-                    ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(AppLocalizations.of(context).commonCancel),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child: Text(
-                      widget.task == null
-                          ? AppLocalizations.of(context).commonAdd
-                          : AppLocalizations.of(context).commonSave,
-                    ),
-                  ),
-                ],
+            if (_assignChips.isNotEmpty) ...[
+              DetailMetaRow(
+                icon: Icons.group_outlined,
+                label: AppLocalizations.of(context).taskAssignToLabel,
+                active: _assignTo != null,
+                onTap: null,
               ),
-            ),
-          ],
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                leading: const SizedBox(width: 40),
+                title: Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    FilterChip(
+                      label: Text(
+                        AppLocalizations.of(context).taskAssignToMe,
+                      ),
+                      selected: _assignTo == null,
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onSelected: (_) => setState(() => _assignTo = null),
+                    ),
+                    for (final member in _assignChips)
+                      FilterChip(
+                        avatar: Icon(
+                          member.type == FamilyMemberType.kid
+                              ? Icons.child_care_outlined
+                              : Icons.person_outline,
+                          size: 16,
+                        ),
+                        label: Text(member.name),
+                        selected: _assignTo?.id == member.id,
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                        onSelected: (_) =>
+                            setState(() => _assignTo = member),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+                      const SizedBox(height: 8),
+
+              // ── Action bar ─────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: Row(
+                  children: [
+                    if (widget.task != null)
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        color: scheme.error,
+                        tooltip: AppLocalizations.of(context).commonDelete,
+                        onPressed:
+                            _saving ? null : () => _confirmDelete(context),
+                      ),
+                    if (widget.partnerPaired &&
+                        widget.proposalRepo != null &&
+                        widget.task != null &&
+                        widget.task!.kidsTaskId == null)
+                      IconButton(
+                        icon: const Icon(Icons.send_outlined),
+                        tooltip: _canSendToPartner
+                            ? AppLocalizations.of(context).taskForward
+                            : AppLocalizations.of(
+                                context,
+                              ).taskNoConnectedFamily,
+                        onPressed: _saving || !_canSendToPartner
+                            ? null
+                            : () => _showSendDialog(context),
+                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(AppLocalizations.of(context).commonCancel),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      onPressed: _saving ? null : _save,
+                      child: Text(
+                        widget.task == null
+                            ? (_assignTo == null
+                                  ? AppLocalizations.of(context).commonAdd
+                                  : AppLocalizations.of(context).commonSend)
+                            : AppLocalizations.of(context).commonSave,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    ),
     );
   }
 
@@ -903,21 +1059,22 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   }
 
   String _formatDateOnly(DateTime d) {
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     if (d.year == now.year && d.month == now.month && d.day == now.day) {
-      return AppLocalizations.of(context).dateToday;
+      return l10n.dateToday;
     }
     final tomorrow = now.add(const Duration(days: 1));
     if (d.year == tomorrow.year &&
         d.month == tomorrow.month &&
         d.day == tomorrow.day) {
-      return AppLocalizations.of(context).dateTomorrow;
+      return l10n.dateTomorrow;
     }
-    return '${d.day.toString().padLeft(2, '0')}-${d.month.toString().padLeft(2, '0')}-${d.year}';
+    return formatMediumDate(d, l10n);
   }
 
   String _formatTimeOnly(DateTime d) {
-    return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    return formatClockTime(d, AppLocalizations.of(context));
   }
 
   Future<void> _pickCategory(BuildContext context) async {
@@ -1017,4 +1174,23 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       ),
     );
   }
+}
+
+String _originName(
+  List<({String id, String name})> members,
+  List<FamilyMemberStatus> linkStatuses,
+  String fromLinkId,
+  String fallback,
+) {
+  for (final m in members) {
+    if (m.id == fromLinkId && m.name.trim().isNotEmpty) {
+      return m.name.trim();
+    }
+  }
+  for (final s in linkStatuses) {
+    if (s.id == fromLinkId && s.name.trim().isNotEmpty) {
+      return s.name.trim();
+    }
+  }
+  return fallback;
 }

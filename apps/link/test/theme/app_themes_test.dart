@@ -261,7 +261,36 @@ void main() {
     test('formatDueDate includes time when not allDay', () {
       final date = DateTime(2026, 4, 15, 14, 30);
       final formatted = formatDueDate(date, l10n, allDay: false);
-      expect(formatted, isNotEmpty);
+      expect(formatted, contains(formatClockTime(date, l10n)));
+    });
+
+    test('formatClockTime uses 12h for English and 24h for Dutch', () {
+      final date = DateTime(2026, 6, 18, 7, 0);
+      final en = lookupAppLocalizations(const Locale('en'));
+      final nl = lookupAppLocalizations(const Locale('nl'));
+      expect(formatClockTime(date, en), contains('AM'));
+      expect(formatClockTime(date, nl), '07:00');
+    });
+
+    test('formatNoteUpdatedAt uses yesterday + locale time', () {
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final at = DateTime(
+        yesterday.year,
+        yesterday.month,
+        yesterday.day,
+        14,
+        30,
+      );
+      final en = lookupAppLocalizations(const Locale('en'));
+      final nl = lookupAppLocalizations(const Locale('nl'));
+      expect(
+        formatNoteUpdatedAt(at, en),
+        'Yesterday ${formatClockTime(at, en)}',
+      );
+      expect(
+        formatNoteUpdatedAt(at, nl),
+        'Gisteren ${formatClockTime(at, nl)}',
+      );
     });
   });
 }

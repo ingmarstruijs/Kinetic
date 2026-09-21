@@ -18,6 +18,7 @@ class NotesScreen extends StatefulWidget {
   final ValueNotifier<SyncStatus>? syncStatus;
   final bool partnerPaired;
   final VoidCallback? onSyncRetry;
+  final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
 
   const NotesScreen({
@@ -27,6 +28,7 @@ class NotesScreen extends StatefulWidget {
     this.syncStatus,
     this.partnerPaired = false,
     this.onSyncRetry,
+    this.myLinkId,
     this.otherLinkMembers = const [],
   });
 
@@ -136,6 +138,8 @@ class _NotesScreenState extends State<NotesScreen> {
       body: _NotesListBody(
         repo: widget.repo,
         partnerPaired: widget.partnerPaired,
+        myLinkId: widget.myLinkId,
+        otherLinkMembers: widget.otherLinkMembers,
         onEditNote: (note) => _openEditor(note: note),
       ),
       floatingActionButton: FloatingActionButton(
@@ -154,11 +158,15 @@ class _NotesScreenState extends State<NotesScreen> {
 class _NotesListBody extends StatelessWidget {
   final NoteRepository repo;
   final bool partnerPaired;
+  final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final void Function(PersonalNote note) onEditNote;
 
   const _NotesListBody({
     required this.repo,
     required this.partnerPaired,
+    required this.myLinkId,
+    required this.otherLinkMembers,
     required this.onEditNote,
   });
 
@@ -234,6 +242,8 @@ class _NotesListBody extends StatelessWidget {
           notes: notes,
           repo: repo,
           partnerPaired: partnerPaired,
+          myLinkId: myLinkId,
+          otherLinkMembers: otherLinkMembers,
           onEditNote: onEditNote,
         );
       },
@@ -261,12 +271,16 @@ class _NoteGroupedList extends StatelessWidget {
   final List<PersonalNote> notes;
   final NoteRepository repo;
   final bool partnerPaired;
+  final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final void Function(PersonalNote note) onEditNote;
 
   const _NoteGroupedList({
     required this.notes,
     required this.repo,
     required this.partnerPaired,
+    required this.myLinkId,
+    required this.otherLinkMembers,
     required this.onEditNote,
   });
 
@@ -319,6 +333,8 @@ class _NoteGroupedList extends StatelessWidget {
           child: _NoteCard(
             note: noteItem.note,
             repo: repo,
+            myLinkId: myLinkId,
+            otherLinkMembers: otherLinkMembers,
             dragIndex: index,
             onTap: () => onEditNote(noteItem.note),
           ),
@@ -400,12 +416,16 @@ class _NoteSectionHeader extends StatelessWidget {
 class _NoteCard extends StatelessWidget {
   final PersonalNote note;
   final NoteRepository repo;
+  final String? myLinkId;
+  final List<({String id, String name})> otherLinkMembers;
   final int dragIndex;
   final VoidCallback onTap;
 
   const _NoteCard({
     required this.note,
     required this.repo,
+    required this.myLinkId,
+    required this.otherLinkMembers,
     required this.dragIndex,
     required this.onTap,
   });
@@ -414,7 +434,14 @@ class _NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final preview = note.bodyPreview;
+    final l10n = AppLocalizations.of(context);
+    final updatedLabel = formatNoteUpdatedAt(note.updatedAt, l10n);
+    final editorLabel = note.isShared
+        ? _lastEditorLabel(note, myLinkId, otherLinkMembers, l10n)
+        : null;
+    final metaLine = editorLabel == null
+        ? '${l10n.notesLastModified} · $updatedLabel'
+        : '${l10n.notesLastModified} · $updatedLabel · $editorLabel';
     final reminderPassed = note.remindAt != null && isOverdue(note.remindAt!);
     final showMeta = note.remindAt != null || note.isContentHidden;
 
@@ -457,18 +484,16 @@ class _NoteCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (preview.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  preview,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
+              const SizedBox(height: 6),
+              Text(
+                metaLine,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.4,
                 ),
-              ],
+              ),
               if (showMeta) ...[
                 const SizedBox(height: 12),
                 Wrap(
@@ -478,7 +503,7 @@ class _NoteCard extends StatelessWidget {
                     if (note.isContentHidden)
                       _NoteMetaChip(
                         icon: Icons.lock_outline,
-                        label: AppLocalizations.of(context).notesLockedBadge,
+                        label: l10n.notesLockedBadge,
                         color: scheme.onSurfaceVariant,
                       ),
                     if (note.remindAt != null)
@@ -486,7 +511,7 @@ class _NoteCard extends StatelessWidget {
                         icon: Icons.schedule,
                         label: formatDueDate(
                           note.remindAt!,
-                          AppLocalizations.of(context),
+                          l10n,
                           allDay: false,
                         ),
                         color: reminderPassed
@@ -515,6 +540,23 @@ class _NoteCard extends StatelessWidget {
       await repo.updateNoteCategory(note.id, result.isEmpty ? null : result);
     }
   }
+}
+
+String? _lastEditorLabel(
+  PersonalNote note,
+  String? myLinkId,
+  List<({String id, String name})> members,
+  AppLocalizations l10n,
+) {
+  final id = note.updatedByLinkId?.trim();
+  if (id == null || id.isEmpty) return null;
+  if (myLinkId != null && myLinkId.isNotEmpty && id == myLinkId) {
+    return l10n.taskAssignToMe;
+  }
+  final match = members.where((m) => m.id == id).firstOrNull;
+  final name = match?.name.trim();
+  if (name != null && name.isNotEmpty) return name;
+  return null;
 }
 
 class _NoteMetaChip extends StatelessWidget {
@@ -636,13 +678,12 @@ class _NotesTrashSheet extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        subtitle: note.bodyPreview.isEmpty
-                            ? null
-                            : Text(
-                                note.bodyPreview,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        subtitle: Text(
+                          '${l10n.notesLastModified} · '
+                          '${formatNoteUpdatedAt(note.updatedAt, l10n)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         trailing: TextButton(
                           onPressed: () => repo.restore(note.id),
                           child: Text(l10n.notesRestore),

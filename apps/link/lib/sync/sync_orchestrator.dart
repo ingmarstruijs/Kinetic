@@ -608,6 +608,7 @@ class SyncOrchestrator {
       description: row.body,
       isShared: row.isShared,
       sharedMemberIds: PersonalNote.decodeSharedMemberIds(row.sharedMemberIds),
+      updatedByLinkId: row.updatedByLinkId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       remindAt: row.remindAt,
@@ -627,6 +628,7 @@ class SyncOrchestrator {
       sharedMemberIds: Value(
         members == null || members.isEmpty ? null : jsonEncode(members),
       ),
+      updatedByLinkId: Value(note.updatedByLinkId),
       createdAt: Value(note.createdAt),
       updatedAt: Value(note.updatedAt),
       remindAt: Value(note.remindAt),
@@ -735,39 +737,51 @@ class SyncOrchestrator {
     }
 
     // 4a. Clean up tasks for accepted outgoing proposals.
-    // If a proposal sent by this device (fromLinkId == myLinkId) changed
-    // from pending to accepted, the task should be deleted from this device.
+    // If we sent a proposal and it is (now) accepted, remove the matching
+    // open task from this device. Do not require syncState=clean — most
+    // recently sent tasks are still dirty.
     final myLinkId = _config.linkId;
     for (final proposal in merged) {
-      if (proposal.fromLinkId != myLinkId) continue; // Not ours
-      if (proposal.status != ProposalStatus.accepted) continue; // Not accepted
+      if (proposal.fromLinkId != myLinkId) continue;
+      if (proposal.status != ProposalStatus.accepted) continue;
 
-      // Find the local proposal's previous status
       final localProposal = locals
           .where((p) => p.id == proposal.id)
           .firstOrNull;
-      if (localProposal != null &&
-          localProposal.status == ProposalStatus.pending) {
-        // This proposal was just accepted — delete the corresponding task
-        // Search by title (since proposals don't have an explicit taskId link)
-        final task =
-            await (_db.select(_db.personalTasks)..where(
-                  (t) =>
-                      t.title.equals(proposal.taskTitle) &
-                      t.syncState.equals('clean') &
-                      t.isCompleted.equals(false),
-                ))
-                .getSingleOrNull();
+      final newlyAccepted =
+          localProposal == null ||
+          localProposal.status != ProposalStatus.accepted;
+      final needle = _normalizeProposalTitle(proposal.taskTitle);
 
-        if (task != null) {
-          // Soft-delete the task (mark as deleted, keep for tombstone sync)
-          await (_db.update(_db.personalTasks)
-                ..where((t) => t.id.equals(task.id)))
-              .write(const PersonalTasksCompanion(syncState: Value('deleted')));
+      final openTasks =
+          await (_db.select(_db.personalTasks)..where(
+                (t) =>
+                    t.isCompleted.equals(false) &
+                    t.syncState.equals('deleted').not(),
+              ))
+              .get();
+
+      for (final task in openTasks) {
+        if (_normalizeProposalTitle(task.title) != needle) continue;
+        // On later syncs, only retry-delete tasks that predate acceptance so a
+        // brand-new same-title task is kept.
+        if (!newlyAccepted && task.createdAt.isAfter(proposal.updatedAt)) {
+          continue;
         }
+        await (_db.update(_db.personalTasks)
+              ..where((t) => t.id.equals(task.id)))
+            .write(
+              PersonalTasksCompanion(
+                syncState: const Value('deleted'),
+                updatedAt: Value(DateTime.now().toUtc()),
+              ),
+            );
       }
     }
   }
+
+  static String _normalizeProposalTitle(String title) =>
+      title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
 
   PartnerProposal _proposalRowToProposal(PartnerProposalRow row) {
     return PartnerProposal(

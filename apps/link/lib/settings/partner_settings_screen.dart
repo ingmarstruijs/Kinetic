@@ -143,32 +143,12 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final stored = await widget.configRepo.loadFamilyKey();
     if (stored == null || !mounted) return;
     final l10n = AppLocalizations.of(context);
-    final ctrl = TextEditingController();
-    final phrase = await showDialog<String>(
+    final phrase = await showMnemonicPhraseDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.partnerVerifyTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.partnerVerifyBody),
-            const SizedBox(height: 12),
-            MnemonicPhraseField(controller: ctrl),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text),
-            child: Text(l10n.commonVerify),
-          ),
-        ],
-      ),
+      title: l10n.partnerVerifyTitle,
+      body: l10n.partnerVerifyBody,
+      confirmLabel: l10n.commonVerify,
     );
-    ctrl.dispose();
     if (phrase == null || !mounted) return;
     try {
       final derived = await KineticVault.deriveAesKey(phrase);

@@ -2,6 +2,8 @@
 
 Child-facing Flutter app. Children see tasks assigned from Kinetic Link via a unique QR enrollment code, mark them done, and earn XP toward optional goals.
 
+**WebDAV is required** — Kinetic Kids has no offline-only mode. Enrollment and every sync go through the same WebDAV server as Kinetic Link.
+
 Kinetic Link themes, reminder picker, notes list, and the suggestion engine do **not** apply here. Enrollment uses a family-key QR **without** the WebDAV password; you type that password once on the kids device.
 
 ## Setup

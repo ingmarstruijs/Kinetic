@@ -15,6 +15,9 @@ class ICalNote {
   /// Link member ids this note is shared with. Null/empty = all link members.
   final List<String>? sharedMemberIds;
 
+  /// Link member id of the last editor.
+  final String? updatedByLinkId;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,6 +30,7 @@ class ICalNote {
     this.description,
     this.isShared = false,
     this.sharedMemberIds,
+    this.updatedByLinkId,
     required this.createdAt,
     required this.updatedAt,
     this.remindAt,
@@ -39,6 +43,8 @@ class ICalNote {
     bool? isShared,
     List<String>? sharedMemberIds,
     bool clearSharedMemberIds = false,
+    String? updatedByLinkId,
+    bool clearUpdatedByLinkId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? remindAt,
@@ -51,6 +57,9 @@ class ICalNote {
       sharedMemberIds: clearSharedMemberIds
           ? null
           : (sharedMemberIds ?? this.sharedMemberIds),
+      updatedByLinkId: clearUpdatedByLinkId
+          ? null
+          : (updatedByLinkId ?? this.updatedByLinkId),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       remindAt: remindAt ?? this.remindAt,

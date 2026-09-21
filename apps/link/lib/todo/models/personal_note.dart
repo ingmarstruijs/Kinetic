@@ -21,6 +21,10 @@ class PersonalNote {
   final int sortOrder;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Link member id of the last editor (synced for shared notes).
+  final String? updatedByLinkId;
+
   final DateTime? deletedAt;
 
   const PersonalNote({
@@ -35,6 +39,7 @@ class PersonalNote {
     this.sortOrder = 0,
     required this.createdAt,
     required this.updatedAt,
+    this.updatedByLinkId,
     this.deletedAt,
   });
 
@@ -47,6 +52,7 @@ class PersonalNote {
     DateTime? remindAt,
     String? category,
     int sortOrder = 0,
+    String? updatedByLinkId,
   }) {
     final now = DateTime.now().toUtc();
     return PersonalNote(
@@ -61,6 +67,7 @@ class PersonalNote {
       sortOrder: sortOrder,
       createdAt: now,
       updatedAt: now,
+      updatedByLinkId: updatedByLinkId,
     );
   }
 
@@ -77,6 +84,7 @@ class PersonalNote {
       sortOrder: row.sortOrder,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      updatedByLinkId: row.updatedByLinkId,
       deletedAt: row.deletedAt,
     );
   }
@@ -121,6 +129,8 @@ class PersonalNote {
     String? category,
     bool clearCategory = false,
     int? sortOrder,
+    String? updatedByLinkId,
+    bool clearUpdatedByLinkId = false,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
   }) {
@@ -138,6 +148,9 @@ class PersonalNote {
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt,
       updatedAt: DateTime.now().toUtc(),
+      updatedByLinkId: clearUpdatedByLinkId
+          ? null
+          : (updatedByLinkId ?? this.updatedByLinkId),
       deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }

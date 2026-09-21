@@ -1,4 +1,5 @@
 import '../../l10n/generated/app_localizations.dart';
+import '../../theme/app_themes.dart';
 import '../models/enums.dart';
 import '../models/personal_task.dart';
 
@@ -54,7 +55,7 @@ String formatReminderChipLabel(
 }) {
   final clock = (now ?? DateTime.now()).toLocal();
   final at = chip.at.toLocal();
-  final time = _hhmm(at);
+  final time = formatClockTime(at, l10n);
 
   switch (chip.labelMode) {
     case ReminderLabelMode.relativeHours:
@@ -104,9 +105,6 @@ String formatReminderChipExplanation(
     ReminderExplainKind.quick => l10n.reminderWhyQuick,
   };
 }
-
-String _hhmm(DateTime at) =>
-    '${at.hour.toString().padLeft(2, '0')}:${at.minute.toString().padLeft(2, '0')}';
 
 String _shortWeekday(int weekday, AppLocalizations l10n) => switch (weekday) {
   1 => l10n.dateWeekdayShortMonday,

@@ -77,14 +77,65 @@ String formatDueDate(
     -1 => l10n.dateYesterday,
     _ when diff < 0 => l10n.dateDaysOverdue(diff.abs()),
     _ when diff < 7 => _weekday(d.weekday, l10n),
-    _ => '${d.day} ${_month(d.month, l10n)}',
+    _ => formatMediumDate(d, l10n),
   };
 
   if (allDay) return datePart;
-  final h = d.hour.toString().padLeft(2, '0');
-  final m = d.minute.toString().padLeft(2, '0');
-  return '$datePart $h:$m';
+  return '$datePart ${formatClockTime(d, l10n)}';
 }
+
+/// Last-modified stamp for notes list rows (never uses "overdue" wording).
+String formatNoteUpdatedAt(DateTime updatedAt, AppLocalizations l10n) {
+  final now = DateTime.now();
+  final d = updatedAt.toLocal();
+  final diff = DateTime(
+    d.year,
+    d.month,
+    d.day,
+  ).difference(DateTime(now.year, now.month, now.day)).inDays;
+  final time = formatClockTime(d, l10n);
+  return switch (diff) {
+    0 => l10n.dateTodayTime(time),
+    -1 => l10n.dateYesterdayTime(time),
+    _ when diff > -7 && diff < 0 => '${_weekday(d.weekday, l10n)} $time',
+    _ => '${formatMediumDate(d, l10n)} $time',
+  };
+}
+
+/// Clock time for the active app language (12h English, 24h Dutch).
+String formatClockTime(DateTime dt, AppLocalizations l10n) {
+  final d = dt.toLocal();
+  if (_isEnglishLocale(l10n)) {
+    final hour12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    final period = d.hour < 12 ? 'AM' : 'PM';
+    final minute = d.minute.toString().padLeft(2, '0');
+    return '$hour12:$minute $period';
+  }
+  return '${d.hour.toString().padLeft(2, '0')}:'
+      '${d.minute.toString().padLeft(2, '0')}';
+}
+
+/// Short month+day for the active app language (e.g. "Jan 15" / "15 jan").
+String formatMediumDate(DateTime dt, AppLocalizations l10n) {
+  final d = dt.toLocal();
+  final month = _month(d.month, l10n);
+  if (_isEnglishLocale(l10n)) {
+    return '$month ${d.day}';
+  }
+  return '${d.day} $month';
+}
+
+/// Numeric date for the active app language (e.g. "4/15/2026" / "15-4-2026").
+String formatNumericDate(DateTime dt, AppLocalizations l10n) {
+  final d = dt.toLocal();
+  if (_isEnglishLocale(l10n)) {
+    return '${d.month}/${d.day}/${d.year}';
+  }
+  return '${d.day}-${d.month}-${d.year}';
+}
+
+bool _isEnglishLocale(AppLocalizations l10n) =>
+    l10n.localeName.toLowerCase().startsWith('en');
 
 bool isOverdue(DateTime due, {bool isAllDay = false}) {
   final now = DateTime.now();

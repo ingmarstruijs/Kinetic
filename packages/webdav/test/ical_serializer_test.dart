@@ -146,12 +146,14 @@ void main() {
     });
 
     test('vjournalToNote round-trips all fields', () {
-      final original = _sampleNote();
+      final original = _sampleNote().copyWith(updatedByLinkId: 'link-abc');
       final ical = ICalSerializer.noteToVjournal(original);
       final parsed = ICalSerializer.vjournalToNote(ical);
 
       expect(parsed.uid, equals(original.uid));
       expect(parsed.summary, equals(original.summary));
+      expect(parsed.updatedByLinkId, equals('link-abc'));
+      expect(ical, contains('X-KINETIC-UPDATED-BY:link-abc'));
       expect(parsed.description, equals(original.description));
       expect(parsed.isShared, equals(original.isShared));
       expect(parsed.createdAt, equals(original.createdAt));

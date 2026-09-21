@@ -109,17 +109,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPartnerPaired => 'Family member linked';
 
   @override
-  String get settingsPartnerLinkHint => 'Link with another adult';
+  String get settingsPartnerLinkHint => 'Link with another family member';
 
   @override
   String get settingsKids => 'Kids';
 
   @override
-  String get settingsKidsParticipation => 'Show kids panels';
+  String get settingsKidsParticipation => 'Kids tasks on this device';
 
   @override
   String get settingsKidsParticipationSubtitle =>
-      'Show kids missions here and let this device verify them';
+      'When off, this device cannot see, create, assign, or verify kids tasks';
 
   @override
   String get settingsKidsLinkHint => 'Link the kids app';
@@ -179,7 +179,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyKeyScanTitle => 'Scan family key';
 
   @override
-  String get familyKeyScanHint => 'Point at your partner\'s QR code';
+  String get familyKeyScanHint => 'Point at the family member\'s QR code';
 
   @override
   String get familyKeyEnterPhrase => 'Enter phrase';
@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyKeyFound => 'Key found';
 
   @override
-  String get familyKeyPartner => 'Partner';
+  String get familyKeyPartner => 'Family member';
 
   @override
   String get familyKeyServer => 'Server';
@@ -203,7 +203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyKeyConfirmPartner =>
-      'Is this the right partner? Check the username above.';
+      'Is this the right family member? Check the username above.';
 
   @override
   String get familyKeyAlreadyPairedWarning =>
@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyKeyEnterSubtitle =>
-      'Enter your partner\'s 12 words. You will then see the fingerprint to verify.';
+      'Enter their 12 words. You will then see the fingerprint to verify.';
 
   @override
   String get familyKeySaved => 'Family key saved.';
@@ -234,11 +234,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyKeyShareLegacyBody =>
-      'Have your partner scan this QR code. This family key is from before the recovery phrase and has no 12 words.';
+      'Have the family member scan this QR code. This family key is from before the recovery phrase and has no 12 words.';
 
   @override
   String get familyKeyShareBody =>
-      'Have your partner scan this QR code, or type the 12 words.';
+      'Have the family member scan this QR code, or type the 12 words.';
 
   @override
   String get familyKeyShareNoPassword =>
@@ -254,7 +254,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familyKeyPartnerScanned => 'Partner has scanned';
+  String get familyKeyPartnerScanned => 'Family member has scanned';
 
   @override
   String get familyKeyShared => 'Family key shared';
@@ -376,7 +376,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vaultMigrateBody =>
-      'Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — partner and kids do not need to re-link.';
+      'Your current key is random (version 0.2) and cannot become 12 words. Tasks and notes on this device stay. We will create a new recovery phrase. On the next sync, personal files are re-encrypted. The family key stays the same — family members and kids do not need to re-link.';
 
   @override
   String get vaultMigrateActivate => 'Activate new recovery phrase';
@@ -411,7 +411,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyCreateWriteWords =>
-      'Write these 12 words down. They belong to the family key you share with your partner. We do not store the words.';
+      'Write these 12 words down. They belong to the family key you share with family members. We do not store the words.';
 
   @override
   String familyCreateFailed(String error) {
@@ -461,35 +461,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get partnerRevealMissing =>
-      'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have partner and kids re-link.';
+      'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have family members and kids re-link.';
 
   @override
-  String get partnerUnlinkTitle => 'Unlink partner?';
+  String get partnerUnlinkTitle => 'Leave family?';
 
   @override
   String get partnerUnlinkBody =>
-      'All shared notes will be removed from this device. Your own tasks and private notes stay. Your partner does not lose the connection — only you leave the shared workspace.';
+      'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.';
 
   @override
   String get partnerShareViaQr => 'Share family key via QR';
 
   @override
   String get partnerShareViaQrSubtitle =>
-      'Have your partner scan the QR code to collaborate.';
+      'Have a family member scan the QR code to collaborate.';
 
   @override
   String get partnerScanKey => 'Scan family key';
 
   @override
-  String get partnerScanKeySubtitle =>
-      'Scan the QR or type your partner\'s 12 words.';
+  String get partnerScanKeySubtitle => 'Scan the QR or type their 12 words.';
 
   @override
   String get partnerReshareKey => 'Share family key again';
 
   @override
   String get partnerReshareKeySubtitle =>
-      'Share the key with a new device of your partner.';
+      'Share the key with a new device of a family member.';
 
   @override
   String get partnerVerifyPhrase => 'Verify recovery phrase';
@@ -506,27 +505,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show the 12 words on this device (screen lock).';
 
   @override
-  String get partnerUnlink => 'Unlink partner';
+  String get partnerUnlink => 'Leave family';
 
   @override
   String get partnerUnlinkSubtitle =>
       'Remove the family key and shared notes from this device.';
 
   @override
-  String get partnerStatusPaired => 'Partner linked — family key present';
+  String get partnerStatusPaired => 'Family member linked — family key present';
 
   @override
   String get partnerStatusUnpaired =>
-      'Partner not linked — scan or share the QR code to link';
+      'Family member not linked — scan or share the QR code to link';
 
   @override
   String partnerLastSeen(String when) {
-    return 'Partner last seen $when';
+    return 'Last seen $when';
   }
 
   @override
   String partnerLastSeenWarning(String when) {
-    return 'Warning: partner last seen $when';
+    return 'Warning: last seen $when';
   }
 
   @override
@@ -674,7 +673,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonKids => 'Kids';
 
   @override
-  String get commonPartner => 'Partner';
+  String get commonPartner => 'Family member';
 
   @override
   String get commonReminder => 'Reminder';
@@ -744,6 +743,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String dateTodayTime(String time) {
     return 'Today $time';
+  }
+
+  @override
+  String dateYesterdayTime(String time) {
+    return 'Yesterday $time';
   }
 
   @override
@@ -1107,7 +1111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksFromFamily => 'From family';
 
   @override
-  String get partnerGenericName => 'partner';
+  String get partnerGenericName => 'family member';
 
   @override
   String get tasksAccept => 'Accept';
@@ -1194,14 +1198,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskAssignmentCreated => 'Assignment created ✓';
 
   @override
-  String get taskNoConnectedFamily => 'No connected partner or kids';
+  String get taskNoConnectedFamily => 'No connected family members or kids';
 
   @override
   String get taskStaleConnectionTitle => 'Connection stale';
 
   @override
   String taskStalePartnerBody(String status) {
-    return 'Your partner was last seen $status. Send anyway?';
+    return 'This family member was last seen $status. Send anyway?';
   }
 
   @override
@@ -1265,6 +1269,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskForward => 'Forward';
 
   @override
+  String get taskAssignToLabel => 'Assign to';
+
+  @override
+  String get taskAssignToMe => 'Me';
+
+  @override
   String get taskRecurrenceNone => 'No recurrence';
 
   @override
@@ -1308,7 +1318,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesEmptySharedHint =>
-      'Notes shared with your partner appear here';
+      'Notes shared with family members appear here';
 
   @override
   String get notesEmptyPrivateHint => 'Your private notes appear here';
@@ -1318,6 +1328,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesSaved => 'Note saved';
+
+  @override
+  String get notesLastModified => 'Last modified';
 
   @override
   String get notesSharedBadge => 'Shared';
@@ -1367,11 +1380,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesShareAudienceHint => 'Shared with selected members';
 
   @override
-  String get notesHideContent => 'Hide content & require unlock';
+  String notesSharedWithNames(String names) {
+    return 'With $names';
+  }
+
+  @override
+  String get notesHideContent => 'Require unlock';
 
   @override
   String get notesHideContentHint =>
-      'Body stays off the list; open with biometrics or device PIN';
+      'Opening requires biometrics or device PIN';
 
   @override
   String get notesUnlockReason => 'Unlock this note';
@@ -1381,7 +1399,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesHideNeedsDeviceLock =>
-      'Turn on a screen lock on this device to hide note content';
+      'Turn on a screen lock on this device to require unlock';
 
   @override
   String get notesEditMarkdown => 'Edit';
@@ -1460,7 +1478,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestReasonHabit => 'Habit';
 
   @override
-  String get suggestReasonPartner => 'Partner complement';
+  String get suggestReasonPartner => 'Family complement';
 
   @override
   String get suggestReasonSeasonal => 'Seasonal';
@@ -1526,7 +1544,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestPartnerExplanationSchool =>
-      'Based on your tasks (without private details), school looks like a theme this week. Your partner sees this.';
+      'Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.';
 
   @override
   String get suggestPartnerTitleHousehold =>
@@ -1542,7 +1560,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestPartnerExplanationHealth =>
-      'Something around care is going on. Your partner only sees this generic question.';
+      'Something around care is going on. Your family member only sees this generic question.';
 
   @override
   String get suggestPartnerTitleSport => 'Sports bag or training this week?';

@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../theme/app_themes.dart';
 import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../reminder_time.dart';
@@ -473,26 +474,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   String _formatDateOnly(DateTime dt) {
-    const months = [
-      'jan',
-      'feb',
-      'mrt',
-      'apr',
-      'mei',
-      'jun',
-      'jul',
-      'aug',
-      'sep',
-      'okt',
-      'nov',
-      'dec',
-    ];
-    return '${dt.day} ${months[dt.month - 1]}';
+    return formatMediumDate(dt, AppLocalizations.of(context));
   }
 
   String _formatTimeOnly(DateTime dt) {
-    return '${dt.hour.toString().padLeft(2, '0')}:'
-        '${dt.minute.toString().padLeft(2, '0')}';
+    return formatClockTime(dt, AppLocalizations.of(context));
   }
 
   @override

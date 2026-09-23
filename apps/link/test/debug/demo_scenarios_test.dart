@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:link/debug/demo_scenarios.dart';
 import 'package:link/debug/demo_session.dart';
-import 'package:link/partner/services/partner_proposal_repository.dart';
+import 'package:link/family/proposals/link_member_proposal_repository.dart';
 import 'package:link/settings/models/enrolled_kid.dart';
 import 'package:link/todo/services/ai_suggestion_repository.dart';
 import 'package:link/todo/services/note_repository.dart';
@@ -24,7 +24,7 @@ void main() {
         todoRepo: todoRepo,
         noteRepo: NoteRepository(db: db),
         suggestionRepo: AiSuggestionRepository(db),
-        proposalRepo: PartnerProposalRepository(
+        proposalRepo: LinkMemberProposalRepository(
           db: db,
           todoRepository: todoRepo,
         ),
@@ -35,7 +35,7 @@ void main() {
       final tasks = await todoRepo.watchAllTasks().first;
       final notes = await NoteRepository(db: db).watchAll().first;
       final suggestions = await AiSuggestionRepository(db).watchPending().first;
-      final inbox = await PartnerProposalRepository(
+      final inbox = await LinkMemberProposalRepository(
         db: db,
         todoRepository: todoRepo,
       ).watchPending(myLinkId: DemoSession.linkId).first;
@@ -50,7 +50,7 @@ void main() {
       expect(suggestions.length, greaterThanOrEqualTo(2));
       expect(inbox, hasLength(2));
       expect(DemoSession.instance.active, isTrue);
-      expect(DemoSession.instance.partnerPaired, isTrue);
+      expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
       expect(DemoSession.instance.kids, hasLength(2));
       expect(DemoSession.instance.kidTasks, isNotEmpty);
       expect(DemoSession.instance.roster, isNotNull);
@@ -60,7 +60,7 @@ void main() {
       );
       expect(
         DemoSession.instance.otherLinkMembers.map((m) => m.id),
-        [DemoSession.partnerId, DemoSession.secondPartnerId],
+        [DemoSession.linkMemberId, DemoSession.secondLinkMemberId],
       );
       expect(DemoSession.instance.presence, isNotEmpty);
       expect(
@@ -68,7 +68,7 @@ void main() {
           (t) =>
               t.status == ICalTaskStatus.inProcess &&
               (t.description ?? '').contains(
-                'xKineticVerifierLinkId:${DemoSession.partnerId}',
+                'xKineticVerifierLinkId:${DemoSession.linkMemberId}',
               ),
         ),
         isTrue,
@@ -78,7 +78,7 @@ void main() {
           (t) =>
               t.status == ICalTaskStatus.inProcess &&
               (t.description ?? '').contains(
-                'xKineticVerifierLinkId:${DemoSession.secondPartnerId}',
+                'xKineticVerifierLinkId:${DemoSession.secondLinkMemberId}',
               ),
         ),
         isTrue,
@@ -103,12 +103,12 @@ void main() {
       todoRepo: todoRepo,
       noteRepo: NoteRepository(db: db),
       suggestionRepo: AiSuggestionRepository(db),
-      proposalRepo: PartnerProposalRepository(db: db, todoRepository: todoRepo),
+      proposalRepo: LinkMemberProposalRepository(db: db, todoRepository: todoRepo),
     );
 
     await loader.apply(DemoScenario.family, dutch: false);
 
-    expect(DemoSession.instance.partnerPaired, isTrue);
+    expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
     expect(DemoSession.instance.kids, hasLength(2));
     expect(DemoSession.instance.otherLinkMembers, hasLength(2));
     expect(
@@ -117,7 +117,7 @@ void main() {
     );
     expect(await NoteRepository(db: db).watchAll().first, isNotEmpty);
     expect(
-      await PartnerProposalRepository(
+      await LinkMemberProposalRepository(
         db: db,
         todoRepository: todoRepo,
       ).watchPending(myLinkId: DemoSession.linkId).first,
@@ -125,7 +125,7 @@ void main() {
     );
   });
 
-  test('notes scenario enables partner overlay for shared notes', () async {
+  test('notes scenario enables family overlay for shared notes', () async {
     final db = createTestDatabase();
     addTearDown(() async {
       DemoSession.instance.clear();
@@ -137,7 +137,7 @@ void main() {
       todoRepo: todoRepo,
       noteRepo: NoteRepository(db: db),
       suggestionRepo: AiSuggestionRepository(db),
-      proposalRepo: PartnerProposalRepository(db: db, todoRepository: todoRepo),
+      proposalRepo: LinkMemberProposalRepository(db: db, todoRepository: todoRepo),
     );
 
     await loader.apply(DemoScenario.notes, dutch: true);
@@ -146,7 +146,7 @@ void main() {
     expect(notes, isNotEmpty);
     expect(notes.any((n) => n.isShared), isTrue);
     expect(DemoSession.instance.active, isTrue);
-    expect(DemoSession.instance.partnerPaired, isTrue);
+    expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
     expect(DemoSession.instance.otherLinkMembers, isNotEmpty);
   });
 
@@ -154,7 +154,7 @@ void main() {
     addTearDown(DemoSession.instance.clear);
     final now = DateTime.utc(2026, 9, 16);
     DemoSession.instance.apply(
-      partnerPaired: true,
+      hasOtherLinkMembers: true,
       kids: [EnrolledKid(id: 'mees', name: 'Mees', enrolledAt: now)],
       kidTasks: [
         ICalTask(
@@ -174,7 +174,7 @@ void main() {
     );
 
     DemoSession.instance.apply(
-      partnerPaired: true,
+      hasOtherLinkMembers: true,
       kids: [EnrolledKid(id: 'mees', name: 'Mees', enrolledAt: now)],
       kidTasks: [
         ICalTask(
@@ -197,7 +197,7 @@ void main() {
     addTearDown(DemoSession.instance.clear);
     final now = DateTime.utc(2026, 9, 16);
     DemoSession.instance.apply(
-      partnerPaired: false,
+      hasOtherLinkMembers: false,
       kids: [EnrolledKid(id: 'mees', name: 'Mees', enrolledAt: now)],
       kidTasks: [
         ICalTask(uid: 'keep', summary: 'Keep', createdAt: now, updatedAt: now),

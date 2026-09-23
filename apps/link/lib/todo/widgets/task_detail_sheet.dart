@@ -6,7 +6,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../family/family_connection_service.dart';
 import '../../debug/demo_session.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../todo/models/enums.dart';
@@ -28,7 +28,7 @@ import 'hour_first_time_picker.dart';
 class TaskDetailSheet extends StatefulWidget {
   final PersonalTask? task;
   final TodoRepository repo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final String? initialListId;
@@ -40,7 +40,7 @@ class TaskDetailSheet extends StatefulWidget {
   final bool prefillReminder;
   final VoidCallback? onSaved;
   final bool hasFamilyKey;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
 
@@ -77,7 +77,7 @@ class TaskDetailSheet extends StatefulWidget {
     this.prefillReminder = false,
     this.onSaved,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.configRepo,
     this.pullPresence,
     this.kidsParticipation = true,
@@ -110,7 +110,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   bool _saving = false;
   List<ReminderChipProposal> _reminderChips = [];
   List<PersonalTask> _completedTasks = [];
-  FamilyMemberStatus? _partnerStatus;
+  FamilyMemberStatus? _otherLinkMemberStatus;
   List<FamilyMemberStatus> _linkStatuses = const [];
   List<FamilyMemberStatus> _kidStatuses = const [];
   /// When creating a task: null = keep for me; otherwise send on save.
@@ -160,7 +160,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   }
 
   Future<void> _loadFamilyConnections() async {
-    if (!widget.partnerPaired && !widget.hasFamilyKey) return;
+    if (!widget.hasOtherLinkMembers && !widget.hasFamilyKey) return;
     try {
       final demo = DemoSession.instance;
       if (demo.active && demo.roster != null) {
@@ -174,8 +174,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             presenceList: demo.presence,
             allowWithoutPresence: true,
           );
-          _partnerStatus = FamilyConnectionService.partnerStatus(
-            partnerPaired: widget.partnerPaired || otherLinkMembers.isNotEmpty,
+          _otherLinkMemberStatus = FamilyConnectionService.otherLinkMemberStatus(
+            hasOtherLinkMembers: widget.hasOtherLinkMembers || otherLinkMembers.isNotEmpty,
             presenceList: demo.presence,
             otherLinkMembers: otherLinkMembers,
             allowWithoutPresence: true,
@@ -193,8 +193,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       final presence = widget.pullPresence != null
           ? await widget.pullPresence!()
           : <PresenceInfo>[];
-      final partnerPaired = widget.partnerPaired ||
-          await widget.configRepo!.isPartnerPaired();
+      final hasOtherLinkMembers = widget.hasOtherLinkMembers ||
+          await widget.configRepo!.hasOtherLinkMembers();
       final roster = await widget.configRepo!.loadCachedRoster();
       final enrolledKids = await widget.configRepo!.loadEnrolledKids();
       if (!mounted) return;
@@ -208,8 +208,8 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
           presenceList: presence,
           allowWithoutPresence: allowWithoutPresence,
         );
-        _partnerStatus = FamilyConnectionService.partnerStatus(
-          partnerPaired: partnerPaired,
+        _otherLinkMemberStatus = FamilyConnectionService.otherLinkMemberStatus(
+          hasOtherLinkMembers: hasOtherLinkMembers,
           presenceList: presence,
           otherLinkMembers: otherLinkMembers,
           allowWithoutPresence: allowWithoutPresence,
@@ -317,6 +317,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             await widget.proposalRepo!.createManualProposal(
               myLinkId: widget.myLinkId!,
               toMemberId: target.id,
+              sourceTaskId: created.id,
               taskTitle: title,
               taskNotes: newNotes.isEmpty ? null : newNotes,
               taskCategory: _customCategory ?? 'other',
@@ -392,16 +393,16 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     if (mounted) Navigator.pop(context);
   }
 
-  bool get _canSendToPartner =>
-      widget.partnerPaired &&
-      _partnerStatus != null &&
-      _partnerStatus!.isConnected;
+  bool get _canSendToFamilyMember =>
+      widget.hasOtherLinkMembers &&
+      _otherLinkMemberStatus != null &&
+      _otherLinkMemberStatus!.isConnected;
 
   void _showSendDialog(BuildContext context) {
     final task = widget.task;
     if (task == null) return;
 
-    if (!_canSendToPartner) {
+    if (!_canSendToFamilyMember) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).taskNoConnectedFamily),
@@ -419,7 +420,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       return;
     }
 
-    _sendToPartner(context);
+    _sendToFamilyMember(context);
   }
 
   /// Lets the user choose which link member receives the task.
@@ -448,15 +449,15 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     );
   }
 
-  Future<void> _sendToPartner(BuildContext context) async {
+  Future<void> _sendToFamilyMember(BuildContext context) async {
     final task = widget.task;
     if (task == null || widget.proposalRepo == null) return;
-    if (_partnerStatus?.isConnected != true) return;
+    if (_otherLinkMemberStatus?.isConnected != true) return;
 
     // With more than one other link member the sender picks the recipient; a
     // single member keeps the legacy broadcast proposal (toMemberId null).
     final candidates = _linkStatuses.where((a) => a.isConnected).toList();
-    FamilyMemberStatus target = _partnerStatus!;
+    FamilyMemberStatus target = _otherLinkMemberStatus!;
     String? toMemberId;
     if (candidates.length > 1) {
       final picked = await _pickLinkMember(context, candidates);
@@ -471,7 +472,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
         builder: (ctx) => AlertDialog(
           title: Text(AppLocalizations.of(context).taskStaleConnectionTitle),
           content: Text(
-            AppLocalizations.of(context).taskStalePartnerBody(
+            AppLocalizations.of(context).taskStaleFamilyMemberBody(
               target.statusLabel(AppLocalizations.of(context)).toLowerCase(),
             ),
           ),
@@ -496,10 +497,10 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
         final l10n = AppLocalizations.of(ctx);
         final recipient = target.name.trim().isNotEmpty
             ? target.name.trim()
-            : l10n.partnerGenericName;
+            : l10n.familyMemberGenericName;
         return AlertDialog(
-          title: Text(l10n.taskSendToPartnerTitle(recipient)),
-          content: Text(l10n.taskSendToPartnerBody(task.title, recipient)),
+          title: Text(l10n.taskSendToFamilyMemberTitle(recipient)),
+          content: Text(l10n.taskSendToFamilyMemberBody(task.title, recipient)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -517,14 +518,15 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     await widget.proposalRepo!.createManualProposal(
       myLinkId: widget.myLinkId ?? '',
       toMemberId: toMemberId,
+      sourceTaskId: task.id,
       taskTitle: task.title,
       taskNotes: task.notes,
       taskCategory: task.customCategory ?? 'other',
       taskPriority: task.priority,
       taskDueDate: task.dueDate,
     );
-    // Task stays in the sender's list until partner accepts the proposal.
-    // When partner accepts, the sync orchestrator will detect the status change
+    // Task stays in the sender's list until the family member accepts the proposal.
+    // When the family member accepts, the sync orchestrator will detect the status change
     // and clean up the task automatically.
     if (mounted) Navigator.pop(context);
   }
@@ -598,7 +600,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             ] else if (widget.task != null && widget.proposalRepo != null)
               StreamBuilder(
                 stream: widget.proposalRepo!.watchAcceptedProposalForTask(
-                  taskTitle: widget.task!.title,
+                  taskId: widget.task!.id,
                 ),
                 builder: (context, snapshot) {
                   final proposal = snapshot.data;
@@ -608,7 +610,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                     widget.otherLinkMembers,
                     _linkStatuses,
                     proposal.fromLinkId,
-                    l10n.partnerGenericName,
+                    l10n.familyMemberGenericName,
                   );
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -622,7 +624,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            l10n.tasksFromPartner(fromName),
+                            l10n.tasksFromFamilyMember(fromName),
                             style: tt.titleSmall?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
@@ -930,18 +932,18 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                         onPressed:
                             _saving ? null : () => _confirmDelete(context),
                       ),
-                    if (widget.partnerPaired &&
+                    if (widget.hasOtherLinkMembers &&
                         widget.proposalRepo != null &&
                         widget.task != null &&
                         widget.task!.kidsTaskId == null)
                       IconButton(
                         icon: const Icon(Icons.send_outlined),
-                        tooltip: _canSendToPartner
+                        tooltip: _canSendToFamilyMember
                             ? AppLocalizations.of(context).taskForward
                             : AppLocalizations.of(
                                 context,
                               ).taskNoConnectedFamily,
-                        onPressed: _saving || !_canSendToPartner
+                        onPressed: _saving || !_canSendToFamilyMember
                             ? null
                             : () => _showSendDialog(context),
                       ),

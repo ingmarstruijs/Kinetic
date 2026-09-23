@@ -12,7 +12,7 @@ import '../vault/widgets/mnemonic_phrase_field.dart';
 // FamilyKeyScanScreen
 //
 // Uses the device camera to scan a QR code produced by FamilyKeyShareScreen
-// on the partner's device. On a successful scan the payload is verified and
+// on the other Link device. On a successful scan the payload is verified and
 // the user is asked to confirm before the family key is saved.
 // ---------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
           children: [
             _InfoRow(
               icon: Icons.person_outline,
-              label: l10n.familyKeyPartner,
+              label: l10n.familyKeyLinkMember,
               value: payload.username.isNotEmpty
                   ? payload.username
                   : l10n.commonUnknown,
@@ -143,7 +143,7 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
             ] else ...[
               const SizedBox(height: 16),
               Text(
-                l10n.familyKeyConfirmPartner,
+                l10n.familyKeyConfirmLinkMember,
                 style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                   color: Theme.of(ctx).colorScheme.onSurfaceVariant,
                 ),

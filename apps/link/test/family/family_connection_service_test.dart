@@ -5,12 +5,12 @@ import 'package:link/settings/models/enrolled_kid.dart';
 
 void main() {
   group('FamilyConnectionService', () {
-    test('partner is connected when seen within 7 days', () {
-      final status = FamilyConnectionService.partnerStatus(
-        partnerPaired: true,
+    test('link member is connected when seen within 7 days', () {
+      final status = FamilyConnectionService.otherLinkMemberStatus(
+        hasOtherLinkMembers: true,
         presenceList: [
           PresenceInfo(
-            deviceId: 'partner-1',
+            deviceId: 'link-1',
             deviceType: 'link',
             displayName: 'Emma',
             lastSeen: DateTime.now().subtract(const Duration(days: 2)),
@@ -43,17 +43,17 @@ void main() {
       expect(statuses.single.isConnected, isFalse);
     });
 
-    test('allows send when partner is connected', () {
-      final partner = FamilyMemberStatus(
+    test('allows send when link member is connected', () {
+      final linkMember = FamilyMemberStatus(
         id: 'p1',
         name: 'Emma',
-        type: FamilyMemberType.partner,
+        type: FamilyMemberType.linkMember,
         isConnected: true,
         isStale: false,
         lastSeen: DateTime.now(),
       );
       expect(
-        FamilyConnectionService.canSend(partner: partner, kids: const []),
+        FamilyConnectionService.canSend(linkMember: linkMember, kids: const []),
         isTrue,
       );
     });

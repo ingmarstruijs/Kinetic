@@ -44,7 +44,7 @@ The first chip is highlighted with a ✨ icon. Long-press shows a tooltip with t
 
 ## Connection-aware send
 
-`FamilyConnectionService` (`lib/family/family_connection_service.dart`) evaluates partner and kid connectivity from WebDAV presence data.
+`FamilyConnectionService` (`lib/family/family_connection_service.dart`) evaluates link-member and kid connectivity from WebDAV presence data.
 
 ### Thresholds
 
@@ -60,20 +60,20 @@ When WebDAV presence is unavailable (no sync configured), enrolled members are t
 
 The **Forward** button is disabled when nobody is connected. The sheet lists:
 
-- **Partner** — one row with connection status
+- **Family member** — one row with connection status
 - **Kids** — one row per enrolled kid with connection status
 
 Offline members are visible but disabled. XP reward is still configured in the confirm dialog.
 
 ## AI suggestion engine
 
-`AiSuggestionEngine` (`lib/todo/services/ai_suggestion_engine.dart`) runs on app start and resume. Detectors create `AiSuggestion` rows first — nothing is auto-sent to the partner.
+`AiSuggestionEngine` (`lib/todo/services/ai_suggestion_engine.dart`) runs on app start and resume. Detectors create `AiSuggestion` rows first — nothing is auto-sent to a family member.
 
 ### Throttle
 
-Each path (self / partner) is throttled for 24 hours **only after that path created at least one suggestion**. An empty run does not set `lastSuggestionRunAt` / `lastPartnerSuggestionRunAt`, so new tasks can surface hints on the next open.
+Each path (self / family member) is throttled for 24 hours **only after that path created at least one suggestion**. An empty run does not set `lastSuggestionRunAt` / `lastFamilyMemberSuggestionRunAt`, so new tasks can surface hints on the next open.
 
-Partner detectors run when a partner is paired (`proposalRepo != null`). They do not require WebDAV `linkId` to *generate* hints; sending still needs pairing + link id.
+Family-member detectors run when another link member is linked (`proposalRepo != null`). They do not require WebDAV `linkId` to *generate* hints; sending still needs pairing + link id.
 
 ### Detectors
 
@@ -84,21 +84,21 @@ Partner detectors run when a partner is paired (`proposalRepo != null`). They do
 | **Stale** | For you | Open task older than 7 days with no due date and no reminder | Same title; **Reminder** applies a contextual time from `ReminderProposalEngine` |
 | **Seasonal** | For you | Completed in the same calendar month in a prior year | Original title + proposed reminder |
 | **Categorize** | For you | ≥ 3 uncategorized open tasks in the same auto-detected theme (`household`, `school`, …) | Proposed custom category; applied to those task ids |
-| **Partner complement** | For partner | Keywords in **your** open tasks, including private (e.g. `school`, `huiswerk`, `dokter`) | **Generic template only** — never the source title or notes |
-| **Load balance** | For partner | ≥ 3 open tasks in one category (private counted; `other` needs ≥ 5) | Generic “Can you pick something up in [category] this week?” |
+| **Family complement** | For family member | Keywords in **your** open tasks, including private (e.g. `school`, `huiswerk`, `dokter`) | **Generic template only** — never the source title or notes |
+| **Load balance** | For family member | ≥ 3 open tasks in one category (private counted; `other` needs ≥ 5) | Generic “Can you pick something up in [category] this week?” |
 
-Keyword families and calendar prompts live in `lib/todo/services/suggestion_heuristics.dart`. Stored titles for templates stay English as stable keys; the Tasks UI localizes them with the app language. Partner templates are capped at one per family per 14 days (`hasRecentWithTitle`). Dismissed suggestions are never re-created (`dedupeKey`, plus related task ids for categorize / stale).
+Keyword families and calendar prompts live in `lib/todo/services/suggestion_heuristics.dart`. Stored titles for templates stay English as stable keys; the Tasks UI localizes them with the app language. Family-member templates are capped at one per family per 14 days (`hasRecentWithTitle`). Dismissed suggestions are never re-created (`dedupeKey`, plus related task ids for categorize / stale).
 
-Example: a private task “Afspraak GZA schoolarts 14:30” can produce “School round or childcare this week?” — the partner never sees GZA or the time.
+Example: a private task “Afspraak GZA schoolarts 14:30” can produce “School round or childcare this week?” — the family member never sees GZA or the time.
 
 ### UI
 
 - **Tasks screen**: `SuggestionsPanel` is a collapsible card above the list. Hidden when empty.
-- Sections: **For you**, **For partner**, **From partner**
+- Sections: **For you**, **For family member**, **From family member**
 - **For you**: tap accepts; swipe dismisses. Stale suggestions apply a reminder instead of duplicating the task. Categorize suggestions assign the proposed label.
-- **Send to partner** opens **What your partner sees** (`confirmAndSendSuggestionToPartner`) before sending
-- Partner-targeted proposals are marked `autoGenerated`
+- **Send to family member** opens **What your family member sees** (`confirmAndSendSuggestionToFamilyMember`) before sending
+- Family-member-targeted proposals are marked `autoGenerated`
 
 ### Database
 
-`AiSuggestions.explanation` stores the human-readable reason (schema v12). Schema v14 adds `dedupeKey` (stable dismiss identity) and `relatedTaskIds` (stale / categorize). `reason` is a string enum: `habit`, `seasonal`, `calendar`, `stale`, `categorize`, `partnerComplement`, `loadBalance`.
+`AiSuggestions.explanation` stores the human-readable reason (schema v12). Schema v14 adds `dedupeKey` (stable dismiss identity) and `relatedTaskIds` (stale / categorize). `reason` is a string enum: `habit`, `seasonal`, `calendar`, `stale`, `categorize`, `familyMemberComplement`, `loadBalance`.

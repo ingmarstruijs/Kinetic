@@ -113,7 +113,7 @@ class PersonalSubtask {
 }
 
 // ---------------------------------------------------------------------------
-// PersonalTask — a parent's own todo item
+// PersonalTask — a Link member's own todo item
 // ---------------------------------------------------------------------------
 
 class PersonalTask {
@@ -129,7 +129,7 @@ class PersonalTask {
   final DateTime? completedAt;
   final bool isFlagged;
 
-  /// When true, this task is never sent to partner as a proposal.
+  /// When true, this task is never sent to a family member as a proposal.
   final bool isPrivate;
 
   /// Set when this task has been converted to a kids mission.

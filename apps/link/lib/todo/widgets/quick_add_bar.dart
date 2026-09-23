@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../todo/services/todo_repository.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
@@ -19,8 +19,8 @@ class QuickAddBar extends StatefulWidget {
   final TodoRepository repo;
   final String? activeListId;
   final bool hasFamilyKey;
-  final bool partnerPaired;
-  final PartnerProposalRepository? proposalRepo;
+  final bool hasOtherLinkMembers;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
@@ -32,7 +32,7 @@ class QuickAddBar extends StatefulWidget {
     required this.repo,
     this.activeListId,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.proposalRepo,
     this.myLinkId,
     this.otherLinkMembers = const [],
@@ -83,7 +83,7 @@ class _QuickAddBarState extends State<QuickAddBar> {
         initialListId: widget.activeListId,
         initialTitle: title.isEmpty ? null : title,
         hasFamilyKey: widget.hasFamilyKey,
-        partnerPaired: widget.partnerPaired,
+        hasOtherLinkMembers: widget.hasOtherLinkMembers,
         proposalRepo: widget.proposalRepo,
         myLinkId: widget.myLinkId,
         otherLinkMembers: widget.otherLinkMembers,

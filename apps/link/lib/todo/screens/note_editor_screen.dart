@@ -548,11 +548,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   String _shareLabel(AppLocalizations l10n) {
-    if (!_isShared) return l10n.notesSharedWithPartner;
+    if (!_isShared) return l10n.notesSharedWithFamily;
     final ids = _sharedMemberIds;
     if (ids == null || ids.isEmpty) return l10n.notesShareAllAdults;
     if (ids.length == 1 && widget.otherLinkMembers.length == 1) {
-      return l10n.notesSharedWithPartner;
+      return l10n.notesSharedWithFamily;
     }
     return l10n.notesShareAudienceHint;
   }

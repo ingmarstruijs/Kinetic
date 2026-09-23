@@ -54,7 +54,7 @@ final _familyKey = Uint8List.fromList(List.generate(32, (i) => i + 50));
   return (orchestrator, service);
 }
 
-/// Inserts a raw [PartnerProposalRow] with dirty syncState into [db].
+/// Inserts a raw [LinkMemberProposalRow] with dirty syncState into [db].
 Future<void> _insertDirtyProposal(
   AppDatabase db, {
   required String id,
@@ -64,9 +64,9 @@ Future<void> _insertDirtyProposal(
 }) async {
   final now = DateTime.now().toUtc();
   await db
-      .into(db.partnerProposals)
+      .into(db.linkMemberProposals)
       .insert(
-        PartnerProposalsCompanion.insert(
+        LinkMemberProposalsCompanion.insert(
           id: id,
           fromLinkId: fromLinkId,
           taskTitle: taskTitle,
@@ -79,9 +79,9 @@ Future<void> _insertDirtyProposal(
 }
 
 /// Returns the raw DB row for a proposal.
-Future<PartnerProposalRow?> _getRow(AppDatabase db, String id) async {
+Future<LinkMemberProposalRow?> _getRow(AppDatabase db, String id) async {
   return (db.select(
-    db.partnerProposals,
+    db.linkMemberProposals,
   )..where((t) => t.id.equals(id))).getSingleOrNull();
 }
 
@@ -134,7 +134,7 @@ void main() {
       await _insertDirtyProposal(
         dbA,
         id: 'prop-1',
-        fromLinkId: 'parent-a',
+        fromLinkId: 'link-a',
         taskTitle: 'Boodschappen doen',
       );
 
@@ -215,7 +215,7 @@ void main() {
       final row = await _getRow(dbB, 'prop-1');
       expect(row, isNotNull);
       expect(row!.taskTitle, equals('Boodschappen doen'));
-      expect(row.fromLinkId, equals('parent-a'));
+      expect(row.fromLinkId, equals('link-a'));
       expect(row.status, equals('pending'));
     });
 
@@ -223,7 +223,7 @@ void main() {
       await _insertDirtyProposal(
         dbA,
         id: 'prop-2',
-        fromLinkId: 'parent-a',
+        fromLinkId: 'link-a',
         taskTitle: 'Test',
       );
       await orchestratorA.syncWithService(serviceA);
@@ -237,7 +237,7 @@ void main() {
         await _insertDirtyProposal(
           dbA,
           id: 'prop-$i',
-          fromLinkId: 'parent-a',
+          fromLinkId: 'link-a',
           taskTitle: 'Taak $i',
         );
       }
@@ -260,7 +260,7 @@ void main() {
         await _insertDirtyProposal(
           dbA,
           id: 'prop-accept',
-          fromLinkId: 'parent-a',
+          fromLinkId: 'link-a',
           taskTitle: 'Ophalen kinderen',
         );
         await orchestratorA.syncWithService(serviceA);
@@ -268,9 +268,9 @@ void main() {
 
         // B accepts the proposal (marks it dirty with status='accepted').
         await (dbB.update(
-          dbB.partnerProposals,
+          dbB.linkMemberProposals,
         )..where((t) => t.id.equals('prop-accept'))).write(
-          PartnerProposalsCompanion(
+          LinkMemberProposalsCompanion(
             status: const Value('accepted'),
             syncState: const Value('dirty'),
             updatedAt: Value(
@@ -296,7 +296,7 @@ void main() {
         await _insertDirtyProposal(
           dbA,
           id: 'prop-dismiss',
-          fromLinkId: 'parent-a',
+          fromLinkId: 'link-a',
           taskTitle: 'Huishoudelijke klus',
         );
         await orchestratorA.syncWithService(serviceA);
@@ -304,9 +304,9 @@ void main() {
 
         // B dismisses (slightly later timestamp → B wins LWW).
         await (dbB.update(
-          dbB.partnerProposals,
+          dbB.linkMemberProposals,
         )..where((t) => t.id.equals('prop-dismiss'))).write(
-          PartnerProposalsCompanion(
+          LinkMemberProposalsCompanion(
             status: const Value('dismissed'),
             syncState: const Value('dirty'),
             updatedAt: Value(
@@ -330,23 +330,23 @@ void main() {
       () async {
         // Seed both devices with the same proposal (clean on both sides).
         final baseTime = DateTime.utc(2026, 4, 1, 12, 0, 0);
-        final companion = PartnerProposalsCompanion.insert(
+        final companion = LinkMemberProposalsCompanion.insert(
           id: 'prop-lww',
-          fromLinkId: 'parent-a',
+          fromLinkId: 'link-a',
           taskTitle: 'Conflicterende taak',
           status: const Value('pending'),
           syncState: const Value('clean'),
           receivedAt: baseTime,
           updatedAt: baseTime,
         );
-        await dbA.into(dbA.partnerProposals).insert(companion);
-        await dbB.into(dbB.partnerProposals).insert(companion);
+        await dbA.into(dbA.linkMemberProposals).insert(companion);
+        await dbB.into(dbB.linkMemberProposals).insert(companion);
 
         // A updates at T+1 → 'dismissed'.
         await (dbA.update(
-          dbA.partnerProposals,
+          dbA.linkMemberProposals,
         )..where((t) => t.id.equals('prop-lww'))).write(
-          PartnerProposalsCompanion(
+          LinkMemberProposalsCompanion(
             status: const Value('dismissed'),
             syncState: const Value('dirty'),
             updatedAt: Value(baseTime.add(const Duration(seconds: 1))),
@@ -355,9 +355,9 @@ void main() {
 
         // B updates at T+2 → 'accepted' (newer → should win).
         await (dbB.update(
-          dbB.partnerProposals,
+          dbB.linkMemberProposals,
         )..where((t) => t.id.equals('prop-lww'))).write(
-          PartnerProposalsCompanion(
+          LinkMemberProposalsCompanion(
             status: const Value('accepted'),
             syncState: const Value('dirty'),
             updatedAt: Value(baseTime.add(const Duration(seconds: 2))),
@@ -389,7 +389,7 @@ void main() {
         await _insertDirtyProposal(
           dbA,
           id: 'prop-key',
-          fromLinkId: 'parent-a',
+          fromLinkId: 'link-a',
           taskTitle: 'Beschermd voorstel',
         );
         await orchestratorA.syncWithService(serviceA);
@@ -430,7 +430,7 @@ void main() {
       await _insertDirtyProposal(
         dbA,
         id: 'prop-idem',
-        fromLinkId: 'parent-a',
+        fromLinkId: 'link-a',
         taskTitle: 'Idempotente taak',
       );
       await orchestratorA.syncWithService(serviceA);
@@ -441,7 +441,7 @@ void main() {
       await orchestratorB.syncWithService(serviceB);
 
       final rows = await (dbB.select(
-        dbB.partnerProposals,
+        dbB.linkMemberProposals,
       )..where((t) => t.id.equals('prop-idem'))).get();
       expect(rows, hasLength(1));
     });
@@ -545,7 +545,7 @@ void main() {
       test('pushProposal then pullProposals round-trips the JSON', () async {
         final json = {
           'id': 'test-id',
-          'fromLinkId': 'parent-a',
+          'fromLinkId': 'link-a',
           'taskTitle': 'Test taak',
           'taskNotes': null,
           'taskCategory': 'household',
@@ -569,11 +569,11 @@ void main() {
     test('task category and priority survive the round-trip', () async {
       final now = DateTime.now().toUtc();
       await dbA
-          .into(dbA.partnerProposals)
+          .into(dbA.linkMemberProposals)
           .insert(
-            PartnerProposalsCompanion.insert(
+            LinkMemberProposalsCompanion.insert(
               id: 'prop-meta',
-              fromLinkId: 'parent-a',
+              fromLinkId: 'link-a',
               taskTitle: 'Belasting aangifte',
               taskCategory: const Value('finance'),
               taskPriority: const Value(3), // TaskPriority.high

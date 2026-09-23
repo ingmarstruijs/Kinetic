@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart' hide isNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link/db/app_database.dart';
-import 'package:link/partner/services/partner_proposal_repository.dart';
+import 'package:link/family/proposals/link_member_proposal_repository.dart';
 import 'package:link/todo/models/ai_suggestion.dart';
 import 'package:link/todo/services/ai_suggestion_engine.dart';
 import 'package:link/todo/services/ai_suggestion_repository.dart';
@@ -80,7 +80,7 @@ void main() {
     tearDown(() async => db.close());
 
     AiSuggestionEngine _engine({
-      PartnerProposalRepository? proposalRepo,
+      LinkMemberProposalRepository? proposalRepo,
       String? myLinkId,
     }) => AiSuggestionEngine(
       db: db,
@@ -91,8 +91,8 @@ void main() {
       now: () => testNow,
     );
 
-    PartnerProposalRepository _proposalRepo() =>
-        PartnerProposalRepository(db: db, todoRepository: todoRepo);
+    LinkMemberProposalRepository _proposalRepo() =>
+        LinkMemberProposalRepository(db: db, todoRepository: todoRepo);
 
     group('habit detector', () {
       test('creates suggestion when median interval is exceeded', () async {
@@ -533,10 +533,10 @@ void main() {
 
           await _engine(
             proposalRepo: _proposalRepo(),
-            myLinkId: 'parent-1',
+            myLinkId: 'link-1',
           ).runIfDue();
 
-          final suggestions = await suggestionRepo.watchPendingPartner().first;
+          final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
           expect(suggestions, hasLength(1));
           expect(suggestions.first.reason, SuggestionReason.loadBalance);
           expect(suggestions.first.title, contains('house'));
@@ -563,10 +563,10 @@ void main() {
 
           await _engine(
             proposalRepo: _proposalRepo(),
-            myLinkId: 'parent-1',
+            myLinkId: 'link-1',
           ).runIfDue();
 
-          final suggestions = await suggestionRepo.watchPendingPartner().first;
+          final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
           expect(suggestions, isEmpty);
         },
       );
@@ -596,10 +596,10 @@ void main() {
 
         await _engine(
           proposalRepo: _proposalRepo(),
-          myLinkId: 'parent-1',
+          myLinkId: 'link-1',
         ).runIfDue();
 
-        final suggestions = await suggestionRepo.watchPendingPartner().first;
+        final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
         expect(suggestions, hasLength(1));
         expect(suggestions.first.reason, SuggestionReason.loadBalance);
         expect(suggestions.first.title.toLowerCase(), contains('house'));
@@ -608,8 +608,8 @@ void main() {
       });
     });
 
-    group('partner complement detector', () {
-      test('maps a private school keyword to a generic partner hint', () async {
+    group('family complement detector', () {
+      test('maps a private school keyword to a generic family-member hint', () async {
         await _insertOpenTask(
           db,
           id: 'p1',
@@ -620,12 +620,12 @@ void main() {
 
         await _engine(
           proposalRepo: _proposalRepo(),
-          myLinkId: 'parent-1',
+          myLinkId: 'link-1',
         ).runIfDue();
 
-        final suggestions = await suggestionRepo.watchPendingPartner().first;
+        final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
         expect(suggestions, isNotEmpty);
-        expect(suggestions.first.reason, SuggestionReason.partnerComplement);
+        expect(suggestions.first.reason, SuggestionReason.familyMemberComplement);
         expect(suggestions.first.title, isNot(contains('GZA')));
         expect(suggestions.first.title, isNot(contains('14:30')));
         expect(suggestions.first.notes, isNull);

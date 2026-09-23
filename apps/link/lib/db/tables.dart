@@ -26,7 +26,7 @@ class PersonalLists extends Table {
 }
 
 // ---------------------------------------------------------------------------
-// PersonalTasks — parent's own todo items
+// PersonalTasks — Link member's own todo items
 // ---------------------------------------------------------------------------
 
 @DataClassName('PersonalTaskRow')
@@ -54,7 +54,7 @@ class PersonalTasks extends Table {
 
   BoolColumn get isFlagged => boolean().withDefault(const Constant(false))();
 
-  // true = never propose this task to partner
+  // true = never propose this task to a family member
   BoolColumn get isPrivate => boolean().withDefault(const Constant(false))();
 
   // Set when this task was delegated to a child (kids task id)
@@ -96,7 +96,7 @@ class PersonalTasks extends Table {
 }
 
 // ---------------------------------------------------------------------------
-// PersonalNotes — parent's own notes (plaintext / markdown)
+// PersonalNotes — this Link device's notes (plaintext / markdown)
 // ---------------------------------------------------------------------------
 
 @DataClassName('PersonalNoteRow')
@@ -158,11 +158,11 @@ class PersonalSubtasks extends Table {
 }
 
 // ---------------------------------------------------------------------------
-// PartnerProposals — tasks proposed by the other link member (C3 inbox)
+// LinkMemberProposals — tasks proposed by the other link member (C3 inbox)
 // ---------------------------------------------------------------------------
 
-@DataClassName('PartnerProposalRow')
-class PartnerProposals extends Table {
+@DataClassName('LinkMemberProposalRow')
+class LinkMemberProposals extends Table {
   TextColumn get id => text()();
 
   // Originating link member ID
@@ -187,6 +187,12 @@ class PartnerProposals extends Table {
 
   // Sync state: clean (synced), dirty (modified locally), deleted (soft-delete)
   TextColumn get syncState => text().withDefault(const Constant('clean'))();
+
+  /// Sender's personal task id when this proposal was created (link→link send).
+  TextColumn get sourceTaskId => text().nullable()();
+
+  /// Receiver's personal task id created when this proposal was accepted.
+  TextColumn get resultTaskId => text().nullable()();
 
   DateTimeColumn get receivedAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
@@ -233,7 +239,7 @@ class AiSuggestions extends Table {
 
   DateTimeColumn get suggestedDueDate => dateTime().nullable()();
 
-  // habit | partnerComplement | seasonal | loadBalance
+  // habit | familyMemberComplement | seasonal | loadBalance
   TextColumn get reason => text()();
 
   // pending | accepted | dismissed | snoozed
@@ -280,7 +286,7 @@ class AppSettings extends Table {
 
   // Throttle timestamps for the AI suggestion engine
   DateTimeColumn get lastSuggestionRunAt => dateTime().nullable()();
-  DateTimeColumn get lastPartnerSuggestionRunAt => dateTime().nullable()();
+  DateTimeColumn get lastFamilyMemberSuggestionRunAt => dateTime().nullable()();
 
   DateTimeColumn get updatedAt => dateTime()();
 

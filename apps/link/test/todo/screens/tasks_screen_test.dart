@@ -177,7 +177,7 @@ void main() {
             body: SuggestionsPanel(
               suggestionRepo: suggestionRepo,
               todoRepo: todoRepo,
-              partnerPaired: true,
+              hasOtherLinkMembers: true,
             ),
           ),
         ),
@@ -197,7 +197,7 @@ void main() {
   });
 
   testWidgets(
-    'SuggestionsPanel drops a declined partner suggestion immediately',
+    'SuggestionsPanel drops a declined family-member suggestion immediately',
     (tester) async {
       await tester.runAsync(() async {
         final db = createTestDatabase();
@@ -217,7 +217,7 @@ void main() {
               body: SuggestionsPanel(
                 suggestionRepo: suggestionRepo,
                 todoRepo: todoRepo,
-                partnerPaired: true,
+                hasOtherLinkMembers: true,
               ),
             ),
           ),
@@ -283,7 +283,7 @@ void main() {
             TasksScreen(
               repo: todoRepo,
               suggestionRepo: suggestionRepo,
-              partnerPaired: true,
+              hasOtherLinkMembers: true,
               configRepo: WebDavConfigRepository(InMemoryKeyValueStore()),
               enrolledKidsCount: 2,
               enrolledKidsOverride: [

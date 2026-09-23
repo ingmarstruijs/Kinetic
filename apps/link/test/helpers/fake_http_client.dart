@@ -18,6 +18,8 @@ class SharedStorage {
 
   Uint8List? get(String path) => _files[_normalize(path)];
 
+  bool contains(String path) => _files.containsKey(_normalize(path));
+
   bool remove(String path) => _files.remove(_normalize(path)) != null;
 
   /// Returns paths of all direct children of [parentPath].

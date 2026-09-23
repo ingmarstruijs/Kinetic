@@ -4,7 +4,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../debug/demo_session.dart';
 import '../../main.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../settings/settings_repository.dart';
 import '../../sync/webdav_config_repository.dart';
@@ -21,12 +21,12 @@ import '../../todo/widgets/task_tile.dart';
 class TasksScreen extends StatefulWidget {
   final TodoRepository repo;
   final SettingsRepository? settingsRepo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final AiSuggestionRepository? suggestionRepo;
   final String? myLinkId;
   final ValueNotifier<SyncStatus>? syncStatus;
   final bool hasFamilyKey;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRetry;
   final WebDavConfigRepository? configRepo;
@@ -52,7 +52,7 @@ class TasksScreen extends StatefulWidget {
     this.myLinkId,
     this.syncStatus,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.otherLinkMembers = const [],
     this.onSyncRetry,
     this.configRepo,
@@ -129,7 +129,7 @@ class _TasksScreenState extends State<TasksScreen> {
       builder: (_) => TaskDetailSheet(
         repo: widget.repo,
         hasFamilyKey: widget.hasFamilyKey,
-        partnerPaired: widget.partnerPaired,
+        hasOtherLinkMembers: widget.hasOtherLinkMembers,
         proposalRepo: widget.proposalRepo,
         myLinkId: widget.myLinkId,
         configRepo: widget.configRepo,
@@ -212,7 +212,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 builder: (_) => TaskDetailSheet(
                   repo: widget.repo,
                   hasFamilyKey: widget.hasFamilyKey,
-                  partnerPaired: widget.partnerPaired,
+                  hasOtherLinkMembers: widget.hasOtherLinkMembers,
                   proposalRepo: widget.proposalRepo,
                   myLinkId: widget.myLinkId,
                   otherLinkMembers: widget.otherLinkMembers,
@@ -227,9 +227,9 @@ class _TasksScreenState extends State<TasksScreen> {
         body: _TasksBody(
           repo: widget.repo,
           hasFamilyKey: widget.hasFamilyKey,
-          partnerPaired: widget.partnerPaired,
+          hasOtherLinkMembers: widget.hasOtherLinkMembers,
           // Compact personal empty only when Suggestions or Kids chrome is up —
-          // partner-paired alone still gets the centered "All done!" state.
+          // family-linked alone still gets the centered "All done!" state.
           familyContext: _showKids || _suggestionsVisible,
           settingsRepo: widget.settingsRepo,
           proposalRepo: widget.proposalRepo,
@@ -246,7 +246,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   todoRepo: widget.repo,
                   proposalRepo: widget.proposalRepo,
                   myLinkId: widget.myLinkId,
-                  partnerPaired: widget.partnerPaired,
+                  hasOtherLinkMembers: widget.hasOtherLinkMembers,
                   otherLinkMembers: widget.otherLinkMembers,
                   onSyncRequested: widget.onSyncRetry,
                   onVisibilityChanged: (visible) {
@@ -282,7 +282,7 @@ class _TasksScreenState extends State<TasksScreen> {
         bottomSheet: QuickAddBar(
           repo: widget.repo,
           hasFamilyKey: widget.hasFamilyKey,
-          partnerPaired: widget.partnerPaired,
+          hasOtherLinkMembers: widget.hasOtherLinkMembers,
           proposalRepo: widget.proposalRepo,
           myLinkId: widget.myLinkId,
           otherLinkMembers: widget.otherLinkMembers,
@@ -345,12 +345,12 @@ class _TaskItem extends _ListItem {
 class _TasksBody extends StatefulWidget {
   final TodoRepository repo;
   final bool hasFamilyKey;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   /// When true, the personal-task list empty state stays compact (no "all done"
   /// hero) because Suggestions and/or Kids panels already occupy the header.
   final bool familyContext;
   final SettingsRepository? settingsRepo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
@@ -360,7 +360,7 @@ class _TasksBody extends StatefulWidget {
   const _TasksBody({
     required this.repo,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.familyContext = false,
     this.settingsRepo,
     this.proposalRepo,
@@ -527,7 +527,7 @@ class _TasksBodyState extends State<_TasksBody> {
                       task: taskItem.task,
                       repo: widget.repo,
                       hasFamilyKey: widget.hasFamilyKey,
-                      partnerPaired: widget.partnerPaired,
+                      hasOtherLinkMembers: widget.hasOtherLinkMembers,
                       proposalRepo: widget.proposalRepo,
                       myLinkId: widget.myLinkId,
                       otherLinkMembers: widget.otherLinkMembers,
@@ -698,8 +698,8 @@ class _DraggableTaskRow extends StatelessWidget {
   final PersonalTask task;
   final TodoRepository repo;
   final bool hasFamilyKey;
-  final bool partnerPaired;
-  final PartnerProposalRepository? proposalRepo;
+  final bool hasOtherLinkMembers;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
@@ -711,7 +711,7 @@ class _DraggableTaskRow extends StatelessWidget {
     required this.task,
     required this.repo,
     required this.hasFamilyKey,
-    required this.partnerPaired,
+    required this.hasOtherLinkMembers,
     this.proposalRepo,
     this.myLinkId,
     this.otherLinkMembers = const [],
@@ -729,7 +729,7 @@ class _DraggableTaskRow extends StatelessWidget {
             task: task,
             repo: repo,
             hasFamilyKey: hasFamilyKey,
-            partnerPaired: partnerPaired,
+            hasOtherLinkMembers: hasOtherLinkMembers,
             proposalRepo: proposalRepo,
             myLinkId: myLinkId,
             otherLinkMembers: otherLinkMembers,

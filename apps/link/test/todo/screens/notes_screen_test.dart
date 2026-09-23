@@ -6,12 +6,12 @@ import 'package:link/todo/services/note_repository.dart';
 
 import '../../helpers/test_database.dart';
 
-Widget _app({required NoteRepository repo, required bool partnerPaired}) {
+Widget _app({required NoteRepository repo, required bool hasOtherLinkMembers}) {
   return MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('en'),
-    home: NotesScreen(repo: repo, partnerPaired: partnerPaired),
+    home: NotesScreen(repo: repo, hasOtherLinkMembers: hasOtherLinkMembers),
   );
 }
 
@@ -23,7 +23,7 @@ void main() {
       final db = createTestDatabase();
       final repo = NoteRepository(db: db);
 
-      await tester.pumpWidget(_app(repo: repo, partnerPaired: true));
+      await tester.pumpWidget(_app(repo: repo, hasOtherLinkMembers: true));
       await tester.pump();
       await tester.pumpAndSettle();
       expect(find.byType(TabBar), findsNothing);
@@ -54,7 +54,7 @@ void main() {
       final db = createTestDatabase();
       final repo = NoteRepository(db: db);
 
-      await tester.pumpWidget(_app(repo: repo, partnerPaired: false));
+      await tester.pumpWidget(_app(repo: repo, hasOtherLinkMembers: false));
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField), 'Quick title');

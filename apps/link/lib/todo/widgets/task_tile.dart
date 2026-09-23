@@ -6,7 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../todo/models/enums.dart';
@@ -46,8 +46,8 @@ class TaskTile extends StatelessWidget {
   final PersonalTask task;
   final TodoRepository repo;
   final bool hasFamilyKey;
-  final bool partnerPaired;
-  final PartnerProposalRepository? proposalRepo;
+  final bool hasOtherLinkMembers;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
@@ -58,7 +58,7 @@ class TaskTile extends StatelessWidget {
     required this.task,
     required this.repo,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.proposalRepo,
     this.myLinkId,
     this.otherLinkMembers = const [],
@@ -93,7 +93,7 @@ class TaskTile extends StatelessWidget {
         task: task,
         repo: repo,
         hasFamilyKey: hasFamilyKey,
-        partnerPaired: partnerPaired,
+        hasOtherLinkMembers: hasOtherLinkMembers,
         proposalRepo: proposalRepo,
         myLinkId: myLinkId,
         otherLinkMembers: otherLinkMembers,
@@ -108,8 +108,8 @@ class _TaskTileContent extends StatefulWidget {
   final PersonalTask task;
   final TodoRepository repo;
   final bool hasFamilyKey;
-  final bool partnerPaired;
-  final PartnerProposalRepository? proposalRepo;
+  final bool hasOtherLinkMembers;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
@@ -119,7 +119,7 @@ class _TaskTileContent extends StatefulWidget {
     required this.task,
     required this.repo,
     this.hasFamilyKey = false,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.proposalRepo,
     this.myLinkId,
     this.otherLinkMembers = const [],
@@ -319,11 +319,11 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                         color: kColorWarmGrey,
                       ),
                     ),
-                  // ── Accepted from partner proposal ─────────────────────────
+                  // ── Accepted from family-member proposal ─────────────────────────
                   if (widget.proposalRepo != null)
                     StreamBuilder(
                       stream: widget.proposalRepo!.watchAcceptedProposalForTask(
-                        taskTitle: widget.task.title,
+                        taskId: widget.task.id,
                       ),
                       builder: (context, snapshot) {
                         final proposal = snapshot.data;
@@ -332,12 +332,12 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                         final fromName = _memberName(
                           widget.otherLinkMembers,
                           proposal.fromLinkId,
-                          l10n.partnerGenericName,
+                          l10n.familyMemberGenericName,
                         );
                         return Padding(
                           padding: const EdgeInsets.only(left: 6),
                           child: Tooltip(
-                            message: l10n.tasksFromPartner(fromName),
+                            message: l10n.tasksFromFamilyMember(fromName),
                             child: Icon(
                               Icons.person_add_outlined,
                               size: 14,
@@ -353,7 +353,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                       widget.myLinkId!.isNotEmpty)
                     StreamBuilder<ProposalStatus?>(
                       stream: widget.proposalRepo!.watchOutgoingProposalStatus(
-                        taskTitle: widget.task.title,
+                        taskId: widget.task.id,
                         fromLinkId: widget.myLinkId!,
                       ),
                       builder: (context, snapshot) {
@@ -406,7 +406,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
         task: widget.task,
         repo: widget.repo,
         hasFamilyKey: widget.hasFamilyKey,
-        partnerPaired: widget.partnerPaired,
+        hasOtherLinkMembers: widget.hasOtherLinkMembers,
         proposalRepo: widget.proposalRepo,
         myLinkId: widget.myLinkId,
         otherLinkMembers: widget.otherLinkMembers,

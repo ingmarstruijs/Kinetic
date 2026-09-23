@@ -10,20 +10,20 @@ class DemoSession extends ChangeNotifier {
   static final DemoSession instance = DemoSession._();
 
   static const linkId = 'demo-link';
-  static const partnerId = 'demo-partner';
-  static const secondPartnerId = 'demo-partner-2';
+  static const linkMemberId = 'demo-link-member';
+  static const secondLinkMemberId = 'demo-link-member-2';
   static const selfDisplayName = 'You';
-  static const partnerDisplayName = 'Alex';
-  static const secondPartnerDisplayName = 'Sam';
+  static const linkMemberDisplayName = 'Alex';
+  static const secondLinkMemberDisplayName = 'Sam';
 
   /// Other Kinetic Link members seeded when a family overlay is active.
   static const otherDemoMembers = <({String id, String name})>[
-    (id: partnerId, name: partnerDisplayName),
-    (id: secondPartnerId, name: secondPartnerDisplayName),
+    (id: linkMemberId, name: linkMemberDisplayName),
+    (id: secondLinkMemberId, name: secondLinkMemberDisplayName),
   ];
 
   bool active = false;
-  bool partnerPaired = false;
+  bool hasOtherLinkMembers = false;
   List<EnrolledKid> kids = const [];
   List<ICalTask> kidTasks = const [];
   FamilyRoster? roster;
@@ -49,14 +49,14 @@ class DemoSession extends ChangeNotifier {
   );
 
   void apply({
-    required bool partnerPaired,
+    required bool hasOtherLinkMembers,
     required List<EnrolledKid> kids,
     required List<ICalTask> kidTasks,
     FamilyRoster? roster,
     List<PresenceInfo> presence = const [],
   }) {
     active = true;
-    this.partnerPaired = partnerPaired;
+    this.hasOtherLinkMembers = hasOtherLinkMembers;
     this.kids = kids;
     this.kidTasks = kidTasks;
     this.roster = roster;
@@ -112,7 +112,7 @@ class DemoSession extends ChangeNotifier {
 
   void clear() {
     active = false;
-    partnerPaired = false;
+    hasOtherLinkMembers = false;
     kids = const [];
     kidTasks = const [];
     roster = null;

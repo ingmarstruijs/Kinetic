@@ -34,10 +34,10 @@
   "settingsWebDavConnected": "Verbonden",
   "settingsWebDavConnectHint": "Verbind met een Nextcloud- of WebDAV-server",
   "settingsSectionFamily": "Familie",
-  "settingsPartner": "Gezinslid",
+  "settingsFamilyMember": "Gezinslid",
   "settingsFamilyMembers": "Gezinsleden",
-  "settingsPartnerPaired": "Gezinslid gekoppeld",
-  "settingsPartnerLinkHint": "Koppel met een ander gezinslid",
+  "settingsFamilyMemberLinked": "Gezinslid gekoppeld",
+  "settingsFamilyMemberLinkHint": "Koppel met een ander gezinslid",
   "settingsKids": "Kinderen",
   "settingsKidsParticipation": "Kindertaken op dit apparaat",
   "settingsKidsParticipationSubtitle": "Uit = dit apparaat kan kindertaken niet zien, maken, toewijzen of goedkeuren",
@@ -70,7 +70,7 @@
   "familyKeyScanHint": "Richt op de QR-code van het gezinslid",
   "familyKeyEnterPhrase": "Zin invoeren",
   "familyKeyFound": "Sleutel gevonden",
-  "familyKeyPartner": "Gezinslid",
+  "familyKeyLinkMember": "Gezinslid",
   "familyKeyServer": "Server",
   "familyKeyFingerprint": "Vingerafdruk",
   "familyKeyServerMismatch": "De server in de QR-code ({scanned}) komt niet overeen met jouw server ({current}). Weet je zeker dat je doorgaat?",
@@ -80,7 +80,7 @@
       "current": {"type": "String"}
     }
   },
-  "familyKeyConfirmPartner": "Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.",
+  "familyKeyConfirmLinkMember": "Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.",
   "familyKeyAlreadyPairedWarning": "Je hebt al een familiesleutel. Als je een nieuwe importeert, wordt data die al met de huidige sleutel is versleuteld onleesbaar totdat je opnieuw synchroniseert.",
   "familyKeyEnterTitle": "Familiesleutel invoeren",
   "familyKeyEnterSubtitle": "Vul hun 12 woorden in. Daarna zie je de vingerafdruk ter controle.",
@@ -109,7 +109,7 @@
       "fingerprint": {"type": "String"}
     }
   },
-  "familyKeyPartnerScanned": "Gezinslid heeft gescand",
+  "familyKeyLinkMemberScanned": "Gezinslid heeft gescand",
   "familyKeyShared": "Familiesleutel gedeeld",
 
   "vaultWelcomeTitle": "Jouw kluis",
@@ -202,55 +202,55 @@
     }
   },
 
-  "partnerVerifyTitle": "Familiesleutel controleren",
-  "partnerVerifyBody": "Vul de 12 woorden in. We tonen ze niet; we controleren alleen of ze kloppen.",
-  "partnerVerifyOk": "De familiesleutel klopt.",
-  "partnerVerifyMismatch": "Deze herstelzin hoort niet bij deze familiesleutel.",
-  "partnerRevealMissing": "Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat gezinsleden en kinderen opnieuw koppelen.",
-  "partnerUnlinkTitle": "Familie verlaten?",
-  "partnerUnlinkBody": "Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.",
-  "partnerShareViaQr": "Familiesleutel delen via QR",
-  "partnerShareViaQrSubtitle": "Laat een gezinslid de QR-code scannen om samen te werken.",
-  "partnerScanKey": "Familiesleutel scannen",
-  "partnerScanKeySubtitle": "Scan de QR of typ hun 12 woorden.",
-  "partnerReshareKey": "Familiesleutel opnieuw delen",
-  "partnerReshareKeySubtitle": "Deel de sleutel met een nieuw apparaat van een gezinslid.",
-  "partnerVerifyPhrase": "Herstelzin controleren",
-  "partnerVerifyPhraseSubtitle": "Controleer of je de 12 woorden van de familiesleutel nog kent.",
-  "partnerShowKey": "Familiesleutel tonen",
-  "partnerShowKeySubtitle": "Toon de 12 woorden op dit apparaat (schermvergrendeling).",
-  "partnerUnlink": "Familie verlaten",
-  "partnerUnlinkSubtitle": "Verwijder de familiesleutel en gedeelde notities van dit apparaat.",
-  "partnerRemoveMemberTooltip": "Uit familie verwijderen",
-  "partnerRemoveMemberTitle": "{name} verwijderen?",
-  "@partnerRemoveMemberTitle": {
+  "familyMemberVerifyTitle": "Familiesleutel controleren",
+  "familyMemberVerifyBody": "Vul de 12 woorden in. We tonen ze niet; we controleren alleen of ze kloppen.",
+  "familyMemberVerifyOk": "De familiesleutel klopt.",
+  "familyMemberVerifyMismatch": "Deze herstelzin hoort niet bij deze familiesleutel.",
+  "familyMemberRevealMissing": "Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat gezinsleden en kinderen opnieuw koppelen.",
+  "familyMemberUnlinkTitle": "Familie verlaten?",
+  "familyMemberUnlinkBody": "Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.",
+  "familyMemberShareViaQr": "Familiesleutel delen via QR",
+  "familyMemberShareViaQrSubtitle": "Laat een gezinslid de QR-code scannen om samen te werken.",
+  "familyMemberScanKey": "Familiesleutel scannen",
+  "familyMemberScanKeySubtitle": "Scan de QR of typ hun 12 woorden.",
+  "familyMemberReshareKey": "Familiesleutel opnieuw delen",
+  "familyMemberReshareKeySubtitle": "Deel de sleutel met een nieuw apparaat van een gezinslid.",
+  "familyMemberVerifyPhrase": "Herstelzin controleren",
+  "familyMemberVerifyPhraseSubtitle": "Controleer of je de 12 woorden van de familiesleutel nog kent.",
+  "familyMemberShowKey": "Familiesleutel tonen",
+  "familyMemberShowKeySubtitle": "Toon de 12 woorden op dit apparaat (schermvergrendeling).",
+  "familyMemberUnlink": "Familie verlaten",
+  "familyMemberUnlinkSubtitle": "Verwijder de familiesleutel en gedeelde notities van dit apparaat.",
+  "familyMemberRemoveTooltip": "Uit familie verwijderen",
+  "familyMemberRemoveTitle": "{name} verwijderen?",
+  "@familyMemberRemoveTitle": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
-  "partnerRemoveMemberBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.",
-  "@partnerRemoveMemberBody": {
+  "familyMemberRemoveBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.",
+  "@familyMemberRemoveBody": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
-  "partnerRemovedFromFamily": "Je bent op een ander apparaat uit de familie verwijderd.",
-  "partnerStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
-  "partnerStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
-  "partnerLastSeen": "Laatst gezien {when}",
-  "@partnerLastSeen": {
+  "familyMemberRemovedFromFamily": "Je bent op een ander apparaat uit de familie verwijderd.",
+  "otherLinkMemberStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
+  "otherLinkMemberStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
+  "familyMemberLastSeen": "Laatst gezien {when}",
+  "@familyMemberLastSeen": {
     "placeholders": {
       "when": {"type": "String"}
     }
   },
-  "partnerLastSeenWarning": "Waarschuwing: laatst gezien {when}",
-  "@partnerLastSeenWarning": {
+  "familyMemberLastSeenWarning": "Waarschuwing: laatst gezien {when}",
+  "@familyMemberLastSeenWarning": {
     "placeholders": {
       "when": {"type": "String"}
     }
   },
-  "partnerFingerprint": "Vingerafdruk {fingerprint}",
-  "@partnerFingerprint": {
+  "familyMemberFingerprint": "Vingerafdruk {fingerprint}",
+  "@familyMemberFingerprint": {
     "placeholders": {
       "fingerprint": {"type": "String"}
     }
@@ -335,7 +335,7 @@
   "commonPrivate": "Privé",
   "commonShared": "Gedeeld",
   "commonKids": "Kinderen",
-  "commonPartner": "Gezinslid",
+  "commonFamilyMember": "Gezinslid",
   "commonReminder": "Herinnering",
   "commonTime": "Tijd",
   "commonCategory": "Categorie",
@@ -591,21 +591,21 @@
   "tasksSyncFailed": "Sync mislukt, tap om opnieuw te proberen.",
   "tasksSyncing": "Synchroniseren",
   "tasksForYou": "Voor jou",
-  "tasksForPartner": "Voor {name}",
-  "@tasksForPartner": {
+  "tasksForFamilyMember": "Voor {name}",
+  "@tasksForFamilyMember": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
-  "tasksFromPartner": "Van {name}",
-  "@tasksFromPartner": {
+  "tasksFromFamilyMember": "Van {name}",
+  "@tasksFromFamilyMember": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
   "tasksForFamily": "Voor familie",
   "tasksFromFamily": "Van familie",
-  "partnerGenericName": "gezinslid",
+  "familyMemberGenericName": "gezinslid",
   "tasksAccept": "Accepteren",
   "tasksXpResetTitle": "XP resetten voor {name}?",
   "@tasksXpResetTitle": {
@@ -659,8 +659,8 @@
   "taskAssignmentCreated": "Opdracht aangemaakt ✓",
   "taskNoConnectedFamily": "Geen verbonden gezinsleden of kinderen",
   "taskStaleConnectionTitle": "Verbinding verouderd",
-  "taskStalePartnerBody": "Dit gezinslid is voor het laatst gezien {status}. Toch sturen?",
-  "@taskStalePartnerBody": {
+  "taskStaleFamilyMemberBody": "Dit gezinslid is voor het laatst gezien {status}. Toch sturen?",
+  "@taskStaleFamilyMemberBody": {
     "placeholders": {
       "status": {"type": "String"}
     }
@@ -674,14 +674,14 @@
   },
   "taskSendAnyway": "Toch sturen",
   "familyMemberPickerTitle": "Naar welk gezinslid sturen?",
-  "taskSendToPartnerTitle": "Stuur naar {name}?",
-  "@taskSendToPartnerTitle": {
+  "taskSendToFamilyMemberTitle": "Stuur naar {name}?",
+  "@taskSendToFamilyMemberTitle": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
-  "taskSendToPartnerBody": "\"{title}\" wordt als voorstel naar {name} gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.",
-  "@taskSendToPartnerBody": {
+  "taskSendToFamilyMemberBody": "\"{title}\" wordt als voorstel naar {name} gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.",
+  "@taskSendToFamilyMemberBody": {
     "placeholders": {
       "title": {"type": "String"},
       "name": {"type": "String"}
@@ -742,7 +742,7 @@
   "notesRestore": "Terugzetten",
   "notesEmptyTrashTitle": "Prullenbak legen?",
   "notesEmptyTrashBody": "Verwijderde notities worden definitief gewist. Dit kan niet ongedaan worden gemaakt.",
-  "notesSharedWithPartner": "Gedeeld met gezin",
+  "notesSharedWithFamily": "Gedeeld met gezin",
   "notesShareAllAdults": "Alle gezinsleden",
   "notesSharePickAdults": "Kies wie deze notitie mag zien",
   "notesShareAudienceHint": "Gedeeld met geselecteerde leden",
@@ -770,14 +770,14 @@
   "notesLockedBadge": "Vergrendeld",
 
   "suggestWebDavRequired": "Koppel eerst WebDAV om een voorstel te sturen.",
-  "suggestPartnerSeesTitle": "Dit ziet {name}",
-  "@suggestPartnerSeesTitle": {
+  "suggestFamilyMemberSeesTitle": "Dit ziet {name}",
+  "@suggestFamilyMemberSeesTitle": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
-  "suggestPartnerSeesGeneric": "Bewust algemeen — geen privé-titels of notities.",
-  "suggestPartnerSeesFull": "Titel en eventuele notities van deze suggestie gaan mee.",
+  "suggestFamilyMemberSeesGeneric": "Bewust algemeen — geen privé-titels of notities.",
+  "suggestFamilyMemberSeesFull": "Titel en eventuele notities van deze suggestie gaan mee.",
   "suggestSend": "Versturen",
   "suggestSent": "Voorstel naar {name} gestuurd",
   "@suggestSent": {
@@ -786,7 +786,7 @@
     }
   },
   "suggestReasonHabit": "Gewoonte",
-  "suggestReasonPartner": "Gezinsaanvulling",
+  "suggestReasonFamilyMember": "Gezinsaanvulling",
   "suggestReasonSeasonal": "Seizoensgebonden",
   "suggestReasonLoadBalance": "Taakverdeling",
   "suggestReasonStale": "Open taak",
@@ -824,16 +824,16 @@
       "category": {"type": "String"}
     }
   },
-  "suggestPartnerTitleSchool": "Schoolrondje of opvang deze week?",
-  "suggestPartnerExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.",
-  "suggestPartnerTitleHousehold": "Kun jij deze week iets in huis oppakken?",
-  "suggestPartnerExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.",
-  "suggestPartnerTitleHealth": "Iets rond zorg of gezondheid oppakken?",
-  "suggestPartnerExplanationHealth": "Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.",
-  "suggestPartnerTitleSport": "Sporttas of training deze week?",
-  "suggestPartnerExplanationSport": "Op basis van je taken lijkt sport een thema. Geen privédetails.",
-  "suggestPartnerTitleAdmin": "Een administratieve klus deze week?",
-  "suggestPartnerExplanationAdmin": "Er staat administratie open. De hint noemt geen concrete taak.",
+  "suggestFamilyMemberTitleSchool": "Schoolrondje of opvang deze week?",
+  "suggestFamilyMemberExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.",
+  "suggestFamilyMemberTitleHousehold": "Kun jij deze week iets in huis oppakken?",
+  "suggestFamilyMemberExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.",
+  "suggestFamilyMemberTitleHealth": "Iets rond zorg of gezondheid oppakken?",
+  "suggestFamilyMemberExplanationHealth": "Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.",
+  "suggestFamilyMemberTitleSport": "Sporttas of training deze week?",
+  "suggestFamilyMemberExplanationSport": "Op basis van je taken lijkt sport een thema. Geen privédetails.",
+  "suggestFamilyMemberTitleAdmin": "Een administratieve klus deze week?",
+  "suggestFamilyMemberExplanationAdmin": "Er staat administratie open. De hint noemt geen concrete taak.",
   "suggestCalendarTaxTitle": "Belastingaangifte controleren",
   "suggestCalendarTaxExplanation": "Maart — tijd om de belastingaangifte te controleren.",
   "suggestCalendarSchoolTitle": "Schoolspullen klaarzetten",
@@ -896,8 +896,8 @@
 
   "suggestionsTitle": "Suggesties",
   "suggestionsSubtitle": "Handige taken om vandaag te overwegen",
-  "suggestionsProposedByPartner": "Voorgesteld door {name}",
-  "@suggestionsProposedByPartner": {
+  "suggestionsProposedByFamilyMember": "Voorgesteld door {name}",
+  "@suggestionsProposedByFamilyMember": {
     "placeholders": {
       "name": {"type": "String"}
     }

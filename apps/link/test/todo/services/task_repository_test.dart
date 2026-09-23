@@ -225,7 +225,7 @@ void main() {
       );
     });
 
-    test('removeKidsAssignment tombstones the linked parent task', () async {
+    test('removeKidsAssignment tombstones the linked Link task', () async {
       final created = await repo.createTask(title: 'Shirts');
       await repo.sendToKids(created.id, targetKidId: 'mees');
       final linked = await repo.getTask(created.id);
@@ -241,7 +241,7 @@ void main() {
       expect((await repo.watchAllTasks().first).single.title, 'Stay');
     });
 
-    test('completeByKidsTaskId marks linked parent task completed', () async {
+    test('completeByKidsTaskId marks linked Link task completed', () async {
       final created = await repo.createTask(title: 'Shirts');
       await repo.sendToKids(created.id, targetKidId: 'mees');
       final linked = await repo.getTask(created.id);

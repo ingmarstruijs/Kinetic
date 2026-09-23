@@ -3,7 +3,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../settings/models/enrolled_kid.dart';
 
-enum FamilyMemberType { partner, kid }
+enum FamilyMemberType { linkMember, kid }
 
 /// Connection state for a family member eligible for task delegation.
 class FamilyMemberStatus {
@@ -32,7 +32,7 @@ class FamilyMemberStatus {
       );
 }
 
-/// Evaluates partner/kid connectivity from enrollment flags and presence data.
+/// Evaluates link-member / kid connectivity from enrollment and presence data.
 class FamilyConnectionService {
   static const connectedThreshold = Duration(days: 7);
   static const staleThreshold = Duration(days: 14);
@@ -42,7 +42,7 @@ class FamilyConnectionService {
   /// [otherLinkMembers] comes from the shared roster
   /// (`FamilyRoster.otherLinkMembers(myId)`). When it is empty the list is derived
   /// from presence entries with `deviceType == 'link'` so devices that have
-  /// not merged a roster yet still see their partner.
+  /// not merged a roster yet still see their family member.
   static List<FamilyMemberStatus> linkStatuses({
     List<FamilyLinkMember> otherLinkMembers = const [],
     required List<PresenceInfo> presenceList,
@@ -65,7 +65,7 @@ class FamilyConnectionService {
       return FamilyMemberStatus(
         id: id,
         name: name,
-        type: FamilyMemberType.partner,
+        type: FamilyMemberType.linkMember,
         isConnected: connected,
         isStale: stale,
         lastSeen: lastSeen,
@@ -77,7 +77,9 @@ class FamilyConnectionService {
         for (final member in otherLinkMembers)
           build(
             id: member.id,
-            name: member.displayName.isNotEmpty ? member.displayName : 'Partner',
+            name: member.displayName.isNotEmpty
+                ? member.displayName
+                : 'Family member',
             lastSeen: presenceById[member.id]?.lastSeen,
           ),
       ];
@@ -87,28 +89,27 @@ class FamilyConnectionService {
         .where((p) => p.deviceType == 'link')
         .toList();
     if (linkDevices.isEmpty) {
-      return [build(id: 'partner', name: 'Partner')];
+      return [build(id: 'unknown-link-member', name: 'Family member')];
     }
     return [
       for (final p in linkDevices)
         build(
           id: p.deviceId,
-          name: p.displayName.isNotEmpty ? p.displayName : 'Partner',
+          name: p.displayName.isNotEmpty ? p.displayName : 'Family member',
           lastSeen: p.lastSeen,
         ),
     ];
   }
 
-  /// Legacy single-partner view over [linkStatuses]; returns the first other
-  /// link member so pre-roster callers keep working.
-  static FamilyMemberStatus? partnerStatus({
-    required bool partnerPaired,
+  /// Convenience over [linkStatuses]; returns the first other link member.
+  static FamilyMemberStatus? otherLinkMemberStatus({
+    required bool hasOtherLinkMembers,
     required List<PresenceInfo> presenceList,
     List<FamilyLinkMember> otherLinkMembers = const [],
     DateTime? now,
     bool allowWithoutPresence = false,
   }) {
-    if (!partnerPaired) return null;
+    if (!hasOtherLinkMembers) return null;
     final members = linkStatuses(
       otherLinkMembers: otherLinkMembers,
       presenceList: presenceList,
@@ -149,11 +150,11 @@ class FamilyConnectionService {
   }
 
   static bool canSend({
-    FamilyMemberStatus? partner,
+    FamilyMemberStatus? linkMember,
     List<FamilyMemberStatus> linkMembers = const [],
     required List<FamilyMemberStatus> kids,
   }) {
-    if (partner?.isConnected == true) return true;
+    if (linkMember?.isConnected == true) return true;
     if (linkMembers.any((m) => m.isConnected)) return true;
     return kids.any((k) => k.isConnected);
   }

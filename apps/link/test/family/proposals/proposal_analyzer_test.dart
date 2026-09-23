@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link/db/app_database.dart';
-import 'package:link/partner/services/proposal_analyzer.dart';
+import 'package:link/family/proposals/proposal_analyzer.dart';
 import '../../helpers/test_database.dart';
 
 // ---------------------------------------------------------------------------
@@ -42,9 +42,9 @@ Future<void> _insertProposal(
   required DateTime receivedAt,
 }) async {
   await db
-      .into(db.partnerProposals)
+      .into(db.linkMemberProposals)
       .insert(
-        PartnerProposalsCompanion.insert(
+        LinkMemberProposalsCompanion.insert(
           id: id,
           fromLinkId: fromLinkId,
           taskTitle: taskTitle,
@@ -58,7 +58,7 @@ void main() {
   late AppDatabase db;
   late ProposalAnalyzer analyzer;
 
-  const selfId = 'parent-self';
+  const selfId = 'link-self';
 
   setUp(() {
     db = createTestDatabase();
@@ -314,7 +314,7 @@ void main() {
   // --------------------------------------------------------------------------
   group('ProposalAnalyzer.findCandidates — deduplication', () {
     test(
-      'skips tasks recently proposed by this parent (within 14 days)',
+      'skips tasks recently proposed by this link member (within 14 days)',
       () async {
         await _insertTask(
           db,
@@ -322,7 +322,7 @@ void main() {
           title: 'Afwas doen',
           category: 'household',
         );
-        // Insert a recent proposal with the same normalized title from this parent
+        // Insert a recent proposal with the same normalized title from this link member
         final recentDate = DateTime.now().toUtc().subtract(
           const Duration(days: 7),
         );
@@ -360,7 +360,7 @@ void main() {
     });
 
     test(
-      'deduplication is NOT applied for proposals from partner (different linkId)',
+      'deduplication is NOT applied for proposals from another link member (different linkId)',
       () async {
         await _insertTask(
           db,
@@ -371,11 +371,11 @@ void main() {
         final recentDate = DateTime.now().toUtc().subtract(
           const Duration(days: 3),
         );
-        // Proposal is from the partner, not from selfId
+        // Proposal is from another link member, not from selfId
         await _insertProposal(
           db,
           id: 'prop-1',
-          fromLinkId: 'partner-other',
+          fromLinkId: 'link-other',
           taskTitle: 'Afwas doen',
           receivedAt: recentDate,
         );

@@ -20,8 +20,8 @@ import 'models/enrolled_kid.dart';
 // Kids-task visibility on this device is controlled from Settings → Family
 // (kidsParticipation), not here.
 //
-// Available as soon as WebDAV is configured — no partner pairing required.
-// Without a family vault the parent first writes down 12 words.
+// Available as soon as WebDAV is configured — no family linking required.
+// Without a family vault the Link user first writes down 12 words.
 // ---------------------------------------------------------------------------
 
 class KidsSettingsScreen extends StatefulWidget {

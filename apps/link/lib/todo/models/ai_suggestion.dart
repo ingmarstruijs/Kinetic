@@ -5,7 +5,7 @@ import '../../l10n/generated/app_localizations.dart';
 /// Reason a suggestion was generated.
 enum SuggestionReason {
   habit,
-  partnerComplement,
+  familyMemberComplement,
   seasonal,
   loadBalance,
   stale,
@@ -28,7 +28,7 @@ String joinRelatedTaskIds(Iterable<String> ids) =>
 extension SuggestionReasonLabel on SuggestionReason {
   String label(AppLocalizations l10n) => switch (this) {
     SuggestionReason.habit => l10n.suggestReasonHabit,
-    SuggestionReason.partnerComplement => l10n.suggestReasonPartner,
+    SuggestionReason.familyMemberComplement => l10n.suggestReasonFamilyMember,
     SuggestionReason.seasonal => l10n.suggestReasonSeasonal,
     SuggestionReason.loadBalance => l10n.suggestReasonLoadBalance,
     SuggestionReason.stale => l10n.suggestReasonStale,
@@ -43,8 +43,8 @@ extension SuggestionReasonLabel on SuggestionReason {
       this == SuggestionReason.calendar ||
       this == SuggestionReason.categorize;
 
-  bool get isPartnerTargeted =>
-      this == SuggestionReason.partnerComplement ||
+  bool get isFamilyMemberTargeted =>
+      this == SuggestionReason.familyMemberComplement ||
       this == SuggestionReason.loadBalance;
 }
 
@@ -84,7 +84,7 @@ class AiSuggestion {
     required this.updatedAt,
   });
 
-  bool get isPartnerTargeted => reason.isPartnerTargeted;
+  bool get isFamilyMemberTargeted => reason.isFamilyMemberTargeted;
 
   static AiSuggestion create({
     required String title,

@@ -9,5 +9,5 @@ enum TaskPriority {
 /// Auto-detected task category used by the load analyser and proposals.
 enum TaskCategory { household, health, admin, school, finance, other }
 
-/// Proposal status in the partner inbox.
+/// Proposal status in the family-member inbox.
 enum ProposalStatus { pending, accepted, dismissed, rejected }

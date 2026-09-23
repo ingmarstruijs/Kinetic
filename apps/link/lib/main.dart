@@ -10,7 +10,7 @@ import 'db/app_database.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'notifications/notification_service.dart';
 import 'notifications/reminder_action.dart';
-import 'partner/services/partner_proposal_repository.dart';
+import 'family/proposals/link_member_proposal_repository.dart';
 import 'settings/settings_repository.dart';
 import 'settings/settings_screen.dart';
 import 'support/link_notification_service.dart';
@@ -108,13 +108,13 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   late final NotificationService _notifSvc;
   late final TodoRepository _todoRepository;
   late final NoteRepository _noteRepository;
-  late final PartnerProposalRepository _proposalRepository;
+  late final LinkMemberProposalRepository _proposalRepository;
   late final WebDavConfigRepository _webDavConfig;
   late final AiSuggestionRepository _aiSuggestionRepository;
   AiSuggestionEngine? _aiSuggestionEngine;
   SyncOrchestrator? _syncOrchestrator;
   final syncStatus = ValueNotifier<SyncStatus>(SyncStatus.idle);
-  final partnerPaired = ValueNotifier<bool>(false);
+  final hasOtherLinkMembers = ValueNotifier<bool>(false);
   final enrolledKidsCount = ValueNotifier<int>(0);
   final webDavConfigured = ValueNotifier<bool>(false);
 
@@ -155,7 +155,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       notifications: _notifSvc,
       onWrite: _scheduleDebouncedSync,
     );
-    _proposalRepository = PartnerProposalRepository(
+    _proposalRepository = LinkMemberProposalRepository(
       db: widget.db,
       todoRepository: _todoRepository,
     );
@@ -236,7 +236,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
   Future<void> _initSync() async {
     final config = await _webDavConfig.load();
-    final isPaired = await _webDavConfig.isPartnerPaired();
+    final isPaired = await _webDavConfig.hasOtherLinkMembers();
     final kidsCount = (await _webDavConfig.loadEnrolledKids()).length;
     final kidsParticipation = await _webDavConfig.loadKidsParticipation();
     if (mounted) {
@@ -254,7 +254,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
         onDisconnectsDetected: _handleDisconnects,
         onRosterUpdated: (roster) {
           final myId = config.linkId;
-          partnerPaired.value = roster.otherLinkMembers(myId).isNotEmpty;
+          hasOtherLinkMembers.value = roster.otherLinkMembers(myId).isNotEmpty;
           enrolledKidsCount.value = roster.kids.length;
           _otherLinkMembers = [
             for (final a in roster.otherLinkMembers(myId))
@@ -272,7 +272,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
     // Set notifiers after the orchestrator is ready so any rebuild triggered
     // by these changes sees the correct config.
-    partnerPaired.value = isPaired;
+    hasOtherLinkMembers.value = isPaired;
     enrolledKidsCount.value = kidsCount;
 
     final roster = await _webDavConfig.loadCachedRoster();
@@ -286,7 +286,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
     if (config != null) _triggerSync(); // fire-and-forget initial sync
 
-    // Rebuild engine whenever sync config changes (partner repo may be null initially).
+    // Rebuild engine whenever sync config changes (proposal repo may be null initially).
     _aiSuggestionEngine = AiSuggestionEngine(
       db: widget.db,
       suggestionRepo: _aiSuggestionRepository,
@@ -330,7 +330,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
   /// Called by [SyncOrchestrator] when disconnect tombstones are found.
   ///
-  /// Updates the partner-paired and enrolled-kids notifiers so the UI reacts
+  /// Updates the family-linked and enrolled-kids notifiers so the UI reacts
   /// immediately without requiring the user to navigate away and back.
   Future<void> _handleDisconnects(List<String> disconnectedIds) async {
     final myId = _syncOrchestrator?.linkId ?? '';
@@ -339,9 +339,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       return;
     }
 
-    final isPaired = await _webDavConfig.isPartnerPaired();
+    final isPaired = await _webDavConfig.hasOtherLinkMembers();
     final kids = await _webDavConfig.loadEnrolledKids();
-    partnerPaired.value = isPaired;
+    hasOtherLinkMembers.value = isPaired;
     enrolledKidsCount.value = kids.length;
   }
 
@@ -351,13 +351,13 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     await (widget.db.delete(
       widget.db.personalNotes,
     )..where((n) => n.isShared.equals(true))).go();
-    await widget.db.delete(widget.db.partnerProposals).go();
+    await widget.db.delete(widget.db.linkMemberProposals).go();
     await _webDavConfig.clearFamilyKey();
     await _initSync();
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.partnerRemovedFromFamily)),
+      SnackBar(content: Text(l10n.familyMemberRemovedFromFamily)),
     );
   }
 
@@ -417,7 +417,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       listenable: DemoSession.instance,
       builder: (context, _) {
         return ValueListenableBuilder<bool>(
-          valueListenable: partnerPaired,
+          valueListenable: hasOtherLinkMembers,
           builder: (context, pairedReal, _) {
             return ValueListenableBuilder<int>(
               valueListenable: enrolledKidsCount,
@@ -427,7 +427,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                   builder: (context, hasWebDav, _) {
                     final demo = DemoSession.instance;
                     final paired = demo.active
-                        ? demo.partnerPaired
+                        ? demo.hasOtherLinkMembers
                         : pairedReal;
                     final kidsCount = demo.active
                         ? demo.kids.length
@@ -449,7 +449,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                             : _syncOrchestrator?.linkId,
                         syncStatus: hasWebDav ? syncStatus : null,
                         hasFamilyKey: paired || kidsCount > 0,
-                        partnerPaired: paired,
+                        hasOtherLinkMembers: paired,
                         otherLinkMembers: otherLinks,
                         onSyncRetry: _triggerSync,
                         configRepo: _webDavConfig,
@@ -496,7 +496,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         settingsRepo: widget.settingsRepo,
                         onSyncRetry: _triggerSync,
                         syncStatus: hasWebDav ? syncStatus : null,
-                        partnerPaired: paired,
+                        hasOtherLinkMembers: paired,
                         myLinkId: demo.active
                             ? DemoSession.linkId
                             : _syncOrchestrator?.linkId,

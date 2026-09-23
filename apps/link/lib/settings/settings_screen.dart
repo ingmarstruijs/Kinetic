@@ -22,7 +22,7 @@ import '../debug/demo_scenarios.dart';
 import '../debug/demo_scenarios_screen.dart';
 import '../debug/demo_session.dart';
 import 'kids_settings_screen.dart';
-import 'partner_settings_screen.dart';
+import 'family_members_settings_screen.dart';
 import 'settings_repository.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   SyncConfig? _config;
-  bool _partnerPaired = false;
+  bool _hasOtherLinkMembers = false;
   int _enrolledKidsCount = 0;
   bool _kidsParticipation = true;
   bool _kidsParticipationLoaded = false;
@@ -67,13 +67,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadConfig() async {
     final config = await widget.configRepo.load();
-    final paired = await widget.configRepo.isPartnerPaired();
+    final paired = await widget.configRepo.hasOtherLinkMembers();
     final kids = await widget.configRepo.loadEnrolledKids();
     final kidsParticipation = await widget.configRepo.loadKidsParticipation();
     if (mounted) {
       setState(() {
         _config = config;
-        _partnerPaired = paired;
+        _hasOtherLinkMembers = paired;
         _enrolledKidsCount = kids.length;
         _kidsParticipation = kidsParticipation;
         _kidsParticipationLoaded = true;
@@ -93,10 +93,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return _enrolledKidsCount;
   }
 
-  bool get _displayPartnerPaired {
+  bool get _displayHasOtherLinkMembers {
     final demo = DemoSession.instance;
-    if (demo.active) return demo.partnerPaired;
-    return _partnerPaired;
+    if (demo.active) return demo.hasOtherLinkMembers;
+    return _hasOtherLinkMembers;
   }
 
   @override
@@ -182,15 +182,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       leading: Icon(Icons.people_outline, color: iconColor),
                       title: Text(l10n.settingsFamilyMembers),
                       subtitle: Text(
-                        _displayPartnerPaired
-                            ? l10n.settingsPartnerPaired
-                            : l10n.settingsPartnerLinkHint,
+                        _displayHasOtherLinkMembers
+                            ? l10n.settingsFamilyMemberLinked
+                            : l10n.settingsFamilyMemberLinkHint,
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         await Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => PartnerSettingsScreen(
+                            builder: (_) => FamilyMembersSettingsScreen(
                               db: widget.db,
                               configRepo: widget.configRepo,
                               syncOrchestrator: widget.syncOrchestrator,

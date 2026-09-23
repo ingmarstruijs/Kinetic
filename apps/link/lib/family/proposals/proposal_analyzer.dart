@@ -5,7 +5,7 @@ import '../../db/app_database.dart';
 import '../../todo/models/enums.dart';
 
 /// ProposalAnalyzer — scores the local task list for shareability and returns
-/// candidates to be proposed to the partner.
+/// candidates to be proposed to a family member.
 ///
 /// Scoring is entirely on-device using Dutch keyword heuristics and learned
 /// exclusion rules (stored via [storeExclusionFromTitle]).
@@ -100,7 +100,7 @@ class ProposalAnalyzer {
       const Duration(days: _deduplicationDays),
     );
     final recentRows =
-        await (_db.select(_db.partnerProposals)..where(
+        await (_db.select(_db.linkMemberProposals)..where(
               (p) =>
                   p.fromLinkId.equals(myLinkId) &
                   p.receivedAt.isBiggerOrEqualValue(deduplicationCutoff),

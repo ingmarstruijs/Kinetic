@@ -34,7 +34,7 @@ void main() {
     );
   });
 
-  test('calendar and partner templates localize from dedupe keys', () {
+  test('calendar and family-member templates localize from dedupe keys', () {
     final calendar = AiSuggestion.create(
       title: 'Check tax return',
       reason: SuggestionReason.calendar,
@@ -46,13 +46,13 @@ void main() {
       'Belastingaangifte controleren',
     );
 
-    final partner = AiSuggestion.create(
+    final familyMember = AiSuggestion.create(
       title: 'School run or childcare this week?',
-      reason: SuggestionReason.partnerComplement,
-      dedupeKey: 'partnerComplement:school',
+      reason: SuggestionReason.familyMemberComplement,
+      dedupeKey: 'familyMemberComplement:school',
     );
     expect(
-      suggestionDisplayTitle(partner, nl),
+      suggestionDisplayTitle(familyMember, nl),
       'Schoolrondje of opvang deze week?',
     );
   });

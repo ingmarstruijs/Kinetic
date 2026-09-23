@@ -22,19 +22,19 @@ class CalendarPrompt {
   String get dedupeKey => 'calendar:$id';
 }
 
-/// Generic partner hint. Never includes the source task title or notes.
-class PartnerHintTemplate {
+/// Generic family-member hint. Never includes the source task title or notes.
+class FamilyMemberHintTemplate {
   final String familyId;
   final List<String> keywords;
   final Set<TaskCategory> categories;
-  final String partnerTitle;
+  final String familyMemberTitle;
   final String explanation;
 
-  const PartnerHintTemplate({
+  const FamilyMemberHintTemplate({
     required this.familyId,
     required this.keywords,
     required this.categories,
-    required this.partnerTitle,
+    required this.familyMemberTitle,
     required this.explanation,
   });
 }
@@ -63,8 +63,8 @@ const calendarPrompts = <CalendarPrompt>[
   ),
 ];
 
-const partnerHintTemplates = <PartnerHintTemplate>[
-  PartnerHintTemplate(
+const familyMemberHintTemplates = <FamilyMemberHintTemplate>[
+  FamilyMemberHintTemplate(
     familyId: 'school',
     keywords: [
       'school',
@@ -78,12 +78,12 @@ const partnerHintTemplates = <PartnerHintTemplate>[
       'homework',
     ],
     categories: {TaskCategory.school},
-    partnerTitle: 'School run or childcare this week?',
+    familyMemberTitle: 'School run or childcare this week?',
     explanation:
         'Based on your tasks (without private details), school looks like a '
-        'theme this week. Your partner sees this.',
+        'theme this week. Your family member sees this.',
   ),
-  PartnerHintTemplate(
+  FamilyMemberHintTemplate(
     familyId: 'household',
     keywords: [
       'boodschappen',
@@ -96,11 +96,11 @@ const partnerHintTemplates = <PartnerHintTemplate>[
       'laundry',
     ],
     categories: {TaskCategory.household},
-    partnerTitle: 'Can you pick up something around the house this week?',
+    familyMemberTitle: 'Can you pick up something around the house this week?',
     explanation:
         'You have several household tasks open. The suggestion is intentionally generic.',
   ),
-  PartnerHintTemplate(
+  FamilyMemberHintTemplate(
     familyId: 'health',
     keywords: [
       'dokter',
@@ -113,19 +113,19 @@ const partnerHintTemplates = <PartnerHintTemplate>[
       'dentist',
     ],
     categories: {TaskCategory.health},
-    partnerTitle: 'Something around care or health to pick up?',
+    familyMemberTitle: 'Something around care or health to pick up?',
     explanation:
-        'Something around care is going on. Your partner only sees this generic question.',
+        'Something around care is going on. Your family member only sees this generic question.',
   ),
-  PartnerHintTemplate(
+  FamilyMemberHintTemplate(
     familyId: 'sport',
     keywords: ['sport', 'training', 'sporttas', 'wedstrijd'],
     categories: {},
-    partnerTitle: 'Sports bag or training this week?',
+    familyMemberTitle: 'Sports bag or training this week?',
     explanation:
         'Based on your tasks, sport looks like a theme. No private details.',
   ),
-  PartnerHintTemplate(
+  FamilyMemberHintTemplate(
     familyId: 'admin',
     keywords: [
       'belasting',
@@ -137,7 +137,7 @@ const partnerHintTemplates = <PartnerHintTemplate>[
       'insurance',
     ],
     categories: {TaskCategory.admin, TaskCategory.finance},
-    partnerTitle: 'An admin chore this week?',
+    familyMemberTitle: 'An admin chore this week?',
     explanation:
         'There is admin work open. The suggestion does not name a concrete task.',
   ),
@@ -172,13 +172,13 @@ bool isStrongHabitTitle(String title) =>
 List<CalendarPrompt> calendarPromptsForMonth(int month) =>
     calendarPrompts.where((p) => p.months.contains(month)).toList();
 
-/// First matching partner template based on keywords in title/notes.
+/// First matching family-member template based on keywords in title/notes.
 /// Category-only matching is intentionally omitted — volume-by-category is
 /// handled by the load-balance detector so a single private task does not
 /// leak a theme unless a keyword hits.
-PartnerHintTemplate? matchPartnerHint({required String title, String? notes}) {
+FamilyMemberHintTemplate? matchFamilyMemberHint({required String title, String? notes}) {
   final corpus = '$title ${notes ?? ''}';
-  for (final t in partnerHintTemplates) {
+  for (final t in familyMemberHintTemplates) {
     if (containsAnyKeyword(corpus, t.keywords)) return t;
   }
   return null;

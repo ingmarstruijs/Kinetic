@@ -7,7 +7,7 @@ import '../../notifications/notification_service.dart';
 import '../../notifications/reminder_action.dart';
 
 import '../../db/app_database.dart';
-import '../../partner/models/partner_proposal.dart';
+import '../../family/proposals/link_member_proposal.dart';
 import '../models/enums.dart';
 import '../models/personal_task.dart';
 import 'category_classifier.dart';
@@ -363,6 +363,7 @@ class TodoRepository {
           updatedAt: Value(DateTime.now().toUtc()),
         ),
       );
+      await _archiveProposalsForTask(taskId);
       onWrite?.call();
       return;
     }
@@ -377,8 +378,26 @@ class TodoRepository {
         syncState: const Value('dirty'),
       ),
     );
+    await _archiveProposalsForTask(taskId);
     await _notifications?.cancelReminder(_notifId(taskId));
     onWrite?.call();
+  }
+
+  /// Soft-delete family-member proposals linked to [taskId] so they stop matching
+  /// future same-title tasks via leftover accepted/outgoing rows.
+  Future<void> _archiveProposalsForTask(String taskId) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.linkMemberProposals)..where(
+          (p) =>
+              (p.sourceTaskId.equals(taskId) | p.resultTaskId.equals(taskId)) &
+              p.syncState.equals('deleted').not(),
+        ))
+        .write(
+          LinkMemberProposalsCompanion(
+            syncState: const Value('deleted'),
+            updatedAt: Value(now),
+          ),
+        );
   }
 
   /// Compute the next occurrence date for a given RRULE and current due date.
@@ -484,6 +503,7 @@ class TodoRepository {
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
+    await _archiveProposalsForTask(taskId);
     onWrite?.call();
   }
 
@@ -717,21 +737,21 @@ class TodoRepository {
     )..where((t) => t.id.equals(subtaskId))).go();
   }
 
-  // ── Partner Proposals ──────────────────────────────────────────────────────
+  // ── Family-member proposals ──────────────────────────────────────────────────────
 
-  Stream<List<PartnerProposal>> watchPendingProposals() {
-    return (_db.select(_db.partnerProposals)
+  Stream<List<LinkMemberProposal>> watchPendingProposals() {
+    return (_db.select(_db.linkMemberProposals)
           ..where((t) => t.status.equals('pending'))
           ..orderBy([(t) => OrderingTerm.desc(t.receivedAt)]))
         .watch()
         .map((rows) => rows.map(_proposalFromRow).toList());
   }
 
-  Future<void> saveProposal(PartnerProposal proposal) async {
+  Future<void> saveProposal(LinkMemberProposal proposal) async {
     await _db
-        .into(_db.partnerProposals)
+        .into(_db.linkMemberProposals)
         .insertOnConflictUpdate(
-          PartnerProposalsCompanion.insert(
+          LinkMemberProposalsCompanion.insert(
             id: proposal.id,
             fromLinkId: proposal.fromLinkId,
             toMemberId: Value(proposal.toMemberId),
@@ -752,9 +772,9 @@ class TodoRepository {
     ProposalStatus status,
   ) async {
     await (_db.update(
-      _db.partnerProposals,
+      _db.linkMemberProposals,
     )..where((t) => t.id.equals(proposalId))).write(
-      PartnerProposalsCompanion(
+      LinkMemberProposalsCompanion(
         status: Value(status.name),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -880,7 +900,7 @@ class TodoRepository {
     sortOrder: r.sortOrder,
   );
 
-  PartnerProposal _proposalFromRow(PartnerProposalRow r) => PartnerProposal(
+  LinkMemberProposal _proposalFromRow(LinkMemberProposalRow r) => LinkMemberProposal(
     id: r.id,
     fromLinkId: r.fromLinkId,
     toMemberId: r.toMemberId,

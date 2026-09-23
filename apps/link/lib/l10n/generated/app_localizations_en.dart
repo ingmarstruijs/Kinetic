@@ -100,16 +100,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionFamily => 'Family';
 
   @override
-  String get settingsPartner => 'Family member';
+  String get settingsFamilyMember => 'Family member';
 
   @override
   String get settingsFamilyMembers => 'Family members';
 
   @override
-  String get settingsPartnerPaired => 'Family member linked';
+  String get settingsFamilyMemberLinked => 'Family member linked';
 
   @override
-  String get settingsPartnerLinkHint => 'Link with another family member';
+  String get settingsFamilyMemberLinkHint => 'Link with another family member';
 
   @override
   String get settingsKids => 'Kids';
@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyKeyFound => 'Key found';
 
   @override
-  String get familyKeyPartner => 'Family member';
+  String get familyKeyLinkMember => 'Family member';
 
   @override
   String get familyKeyServer => 'Server';
@@ -202,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familyKeyConfirmPartner =>
+  String get familyKeyConfirmLinkMember =>
       'Is this the right family member? Check the username above.';
 
   @override
@@ -254,7 +254,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familyKeyPartnerScanned => 'Family member has scanned';
+  String get familyKeyLinkMemberScanned => 'Family member has scanned';
 
   @override
   String get familyKeyShared => 'Family key shared';
@@ -446,107 +446,109 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get partnerVerifyTitle => 'Verify family key';
+  String get familyMemberVerifyTitle => 'Verify family key';
 
   @override
-  String get partnerVerifyBody =>
+  String get familyMemberVerifyBody =>
       'Enter the 12 words. We will not show them; we only check that they match.';
 
   @override
-  String get partnerVerifyOk => 'The family key matches.';
+  String get familyMemberVerifyOk => 'The family key matches.';
 
   @override
-  String get partnerVerifyMismatch =>
+  String get familyMemberVerifyMismatch =>
       'This recovery phrase does not match this family key.';
 
   @override
-  String get partnerRevealMissing =>
+  String get familyMemberRevealMissing =>
       'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have family members and kids re-link.';
 
   @override
-  String get partnerUnlinkTitle => 'Leave family?';
+  String get familyMemberUnlinkTitle => 'Leave family?';
 
   @override
-  String get partnerUnlinkBody =>
+  String get familyMemberUnlinkBody =>
       'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.';
 
   @override
-  String get partnerShareViaQr => 'Share family key via QR';
+  String get familyMemberShareViaQr => 'Share family key via QR';
 
   @override
-  String get partnerShareViaQrSubtitle =>
+  String get familyMemberShareViaQrSubtitle =>
       'Have a family member scan the QR code to collaborate.';
 
   @override
-  String get partnerScanKey => 'Scan family key';
+  String get familyMemberScanKey => 'Scan family key';
 
   @override
-  String get partnerScanKeySubtitle => 'Scan the QR or type their 12 words.';
+  String get familyMemberScanKeySubtitle =>
+      'Scan the QR or type their 12 words.';
 
   @override
-  String get partnerReshareKey => 'Share family key again';
+  String get familyMemberReshareKey => 'Share family key again';
 
   @override
-  String get partnerReshareKeySubtitle =>
+  String get familyMemberReshareKeySubtitle =>
       'Share the key with a new device of a family member.';
 
   @override
-  String get partnerVerifyPhrase => 'Verify recovery phrase';
+  String get familyMemberVerifyPhrase => 'Verify recovery phrase';
 
   @override
-  String get partnerVerifyPhraseSubtitle =>
+  String get familyMemberVerifyPhraseSubtitle =>
       'Check that you still know the 12 words of the family key.';
 
   @override
-  String get partnerShowKey => 'Show family key';
+  String get familyMemberShowKey => 'Show family key';
 
   @override
-  String get partnerShowKeySubtitle =>
+  String get familyMemberShowKeySubtitle =>
       'Show the 12 words on this device (screen lock).';
 
   @override
-  String get partnerUnlink => 'Leave family';
+  String get familyMemberUnlink => 'Leave family';
 
   @override
-  String get partnerUnlinkSubtitle =>
+  String get familyMemberUnlinkSubtitle =>
       'Remove the family key and shared notes from this device.';
 
   @override
-  String get partnerRemoveMemberTooltip => 'Remove from family';
+  String get familyMemberRemoveTooltip => 'Remove from family';
 
   @override
-  String partnerRemoveMemberTitle(String name) {
+  String familyMemberRemoveTitle(String name) {
     return 'Remove $name?';
   }
 
   @override
-  String partnerRemoveMemberBody(String name) {
+  String familyMemberRemoveBody(String name) {
     return '$name will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.';
   }
 
   @override
-  String get partnerRemovedFromFamily =>
+  String get familyMemberRemovedFromFamily =>
       'You were removed from the family on another device.';
 
   @override
-  String get partnerStatusPaired => 'Family member linked — family key present';
+  String get otherLinkMemberStatusPaired =>
+      'Family member linked — family key present';
 
   @override
-  String get partnerStatusUnpaired =>
+  String get otherLinkMemberStatusUnpaired =>
       'Family member not linked — scan or share the QR code to link';
 
   @override
-  String partnerLastSeen(String when) {
+  String familyMemberLastSeen(String when) {
     return 'Last seen $when';
   }
 
   @override
-  String partnerLastSeenWarning(String when) {
+  String familyMemberLastSeenWarning(String when) {
     return 'Warning: last seen $when';
   }
 
   @override
-  String partnerFingerprint(String fingerprint) {
+  String familyMemberFingerprint(String fingerprint) {
     return 'Fingerprint $fingerprint';
   }
 
@@ -690,7 +692,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonKids => 'Kids';
 
   @override
-  String get commonPartner => 'Family member';
+  String get commonFamilyMember => 'Family member';
 
   @override
   String get commonReminder => 'Reminder';
@@ -1112,12 +1114,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksForYou => 'For you';
 
   @override
-  String tasksForPartner(String name) {
+  String tasksForFamilyMember(String name) {
     return 'For $name';
   }
 
   @override
-  String tasksFromPartner(String name) {
+  String tasksFromFamilyMember(String name) {
     return 'From $name';
   }
 
@@ -1128,7 +1130,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksFromFamily => 'From family';
 
   @override
-  String get partnerGenericName => 'family member';
+  String get familyMemberGenericName => 'family member';
 
   @override
   String get tasksAccept => 'Accept';
@@ -1221,7 +1223,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskStaleConnectionTitle => 'Connection stale';
 
   @override
-  String taskStalePartnerBody(String status) {
+  String taskStaleFamilyMemberBody(String status) {
     return 'This family member was last seen $status. Send anyway?';
   }
 
@@ -1237,12 +1239,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get familyMemberPickerTitle => 'Send to which family member?';
 
   @override
-  String taskSendToPartnerTitle(String name) {
+  String taskSendToFamilyMemberTitle(String name) {
     return 'Send to $name?';
   }
 
   @override
-  String taskSendToPartnerBody(String title, String name) {
+  String taskSendToFamilyMemberBody(String title, String name) {
     return '\"$title\" will be sent as a proposal to $name and removed from your list once they accept it.';
   }
 
@@ -1385,7 +1387,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deleted notes will be permanently removed. This cannot be undone.';
 
   @override
-  String get notesSharedWithPartner => 'Shared with family';
+  String get notesSharedWithFamily => 'Shared with family';
 
   @override
   String get notesShareAllAdults => 'All family members';
@@ -1455,16 +1457,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestWebDavRequired => 'Link WebDAV first to send a suggestion.';
 
   @override
-  String suggestPartnerSeesTitle(String name) {
+  String suggestFamilyMemberSeesTitle(String name) {
     return 'What $name sees';
   }
 
   @override
-  String get suggestPartnerSeesGeneric =>
+  String get suggestFamilyMemberSeesGeneric =>
       'Intentionally generic — no private titles or notes.';
 
   @override
-  String get suggestPartnerSeesFull =>
+  String get suggestFamilyMemberSeesFull =>
       'The title and any notes from this suggestion will be included.';
 
   @override
@@ -1479,7 +1481,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestReasonHabit => 'Habit';
 
   @override
-  String get suggestReasonPartner => 'Family complement';
+  String get suggestReasonFamilyMember => 'Family complement';
 
   @override
   String get suggestReasonSeasonal => 'Seasonal';
@@ -1541,40 +1543,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get suggestPartnerTitleSchool => 'School run or childcare this week?';
+  String get suggestFamilyMemberTitleSchool =>
+      'School run or childcare this week?';
 
   @override
-  String get suggestPartnerExplanationSchool =>
+  String get suggestFamilyMemberExplanationSchool =>
       'Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.';
 
   @override
-  String get suggestPartnerTitleHousehold =>
+  String get suggestFamilyMemberTitleHousehold =>
       'Can you pick up something around the house this week?';
 
   @override
-  String get suggestPartnerExplanationHousehold =>
+  String get suggestFamilyMemberExplanationHousehold =>
       'You have several household tasks open. The suggestion is intentionally generic.';
 
   @override
-  String get suggestPartnerTitleHealth =>
+  String get suggestFamilyMemberTitleHealth =>
       'Something around care or health to pick up?';
 
   @override
-  String get suggestPartnerExplanationHealth =>
+  String get suggestFamilyMemberExplanationHealth =>
       'Something around care is going on. Your family member only sees this generic question.';
 
   @override
-  String get suggestPartnerTitleSport => 'Sports bag or training this week?';
+  String get suggestFamilyMemberTitleSport =>
+      'Sports bag or training this week?';
 
   @override
-  String get suggestPartnerExplanationSport =>
+  String get suggestFamilyMemberExplanationSport =>
       'Based on your tasks, sport looks like a theme. No private details.';
 
   @override
-  String get suggestPartnerTitleAdmin => 'An admin chore this week?';
+  String get suggestFamilyMemberTitleAdmin => 'An admin chore this week?';
 
   @override
-  String get suggestPartnerExplanationAdmin =>
+  String get suggestFamilyMemberExplanationAdmin =>
       'There is admin work open. The suggestion does not name a concrete task.';
 
   @override
@@ -1698,7 +1702,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestionsSubtitle => 'Handy tasks to consider today';
 
   @override
-  String suggestionsProposedByPartner(String name) {
+  String suggestionsProposedByFamilyMember(String name) {
     return 'Suggested by $name';
   }
 

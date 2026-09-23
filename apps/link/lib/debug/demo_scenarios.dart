@@ -2,7 +2,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
-import '../partner/services/partner_proposal_repository.dart';
+import '../family/proposals/link_member_proposal_repository.dart';
 import '../settings/models/enrolled_kid.dart';
 import '../todo/models/ai_suggestion.dart';
 import '../todo/models/enums.dart';
@@ -57,8 +57,8 @@ const demoScenarioCatalog = <DemoScenarioInfo>[
   ),
   DemoScenarioInfo(
     id: DemoScenario.suggestions,
-    titleEn: 'Suggestions + partner',
-    titleNl: 'Suggesties + partner',
+    titleEn: 'Suggestions + family member',
+    titleNl: 'Suggesties + gezinslid',
     subtitleEn: 'Inbox, for-you hints, and multiple Link members',
     subtitleNl: 'Inbox, voor-jou-hints, en meerdere Link-leden',
   ),
@@ -98,7 +98,7 @@ class DemoScenarioLoader {
     required TodoRepository todoRepo,
     required NoteRepository noteRepo,
     required AiSuggestionRepository suggestionRepo,
-    required PartnerProposalRepository proposalRepo,
+    required LinkMemberProposalRepository proposalRepo,
   }) : _db = db,
        _todoRepo = todoRepo,
        _noteRepo = noteRepo,
@@ -109,7 +109,7 @@ class DemoScenarioLoader {
   final TodoRepository _todoRepo;
   final NoteRepository _noteRepo;
   final AiSuggestionRepository _suggestionRepo;
-  final PartnerProposalRepository _proposalRepo;
+  final LinkMemberProposalRepository _proposalRepo;
 
   Future<void> apply(DemoScenario scenario, {required bool dutch}) async {
     await _clearPersonalData();
@@ -123,22 +123,22 @@ class DemoScenarioLoader {
       case DemoScenario.suggestions:
         await _seedBusyDay(dutch, compact: true);
         await _seedSuggestions(dutch);
-        _setFamily(partner: true, kids: const []);
+        _setFamily(hasOtherLinkMembers: true, kids: const []);
       case DemoScenario.kids:
         await _seedBusyDay(dutch, compact: true);
-        _setFamily(partner: false, kids: _demoKids());
+        _setFamily(hasOtherLinkMembers: false, kids: _demoKids());
       case DemoScenario.notes:
         await _seedNotes(dutch);
-        _setFamily(partner: true, kids: const []);
+        _setFamily(hasOtherLinkMembers: true, kids: const []);
       case DemoScenario.family:
         await _seedSuggestions(dutch);
         await _seedNotes(dutch);
-        _setFamily(partner: true, kids: _demoKids());
+        _setFamily(hasOtherLinkMembers: true, kids: _demoKids());
       case DemoScenario.fullHouse:
         await _seedBusyDay(dutch);
         await _seedSuggestions(dutch);
         await _seedNotes(dutch);
-        _setFamily(partner: true, kids: _demoKids());
+        _setFamily(hasOtherLinkMembers: true, kids: _demoKids());
     }
   }
 
@@ -146,30 +146,30 @@ class DemoScenarioLoader {
     await _db.delete(_db.personalSubtasks).go();
     await _db.delete(_db.personalTasks).go();
     await _db.delete(_db.personalNotes).go();
-    await _db.delete(_db.partnerProposals).go();
+    await _db.delete(_db.linkMemberProposals).go();
     await _db.delete(_db.aiSuggestions).go();
   }
 
-  void _setFamily({required bool partner, required List<EnrolledKid> kids}) {
+  void _setFamily({required bool hasOtherLinkMembers, required List<EnrolledKid> kids}) {
     final now = DateTime.now().toUtc();
     final roster = _demoRoster(
-      partner: partner,
+      hasOtherLinkMembers: hasOtherLinkMembers,
       kids: kids,
       now: now,
     );
     DemoSession.instance.apply(
-      partnerPaired: partner,
+      hasOtherLinkMembers: hasOtherLinkMembers,
       kids: kids,
       kidTasks: kids.isEmpty
           ? const []
-          : _demoKidTasks(kids, secondLinkMember: partner),
+          : _demoKidTasks(kids, secondLinkMember: hasOtherLinkMembers),
       roster: roster,
-      presence: partner ? _demoPresence(now) : const [],
+      presence: hasOtherLinkMembers ? _demoPresence(now) : const [],
     );
   }
 
   FamilyRoster _demoRoster({
-    required bool partner,
+    required bool hasOtherLinkMembers,
     required List<EnrolledKid> kids,
     required DateTime now,
   }) {
@@ -183,7 +183,7 @@ class DemoScenarioLoader {
     );
     final linkMembers = <FamilyLinkMember>[
       self,
-      if (partner)
+      if (hasOtherLinkMembers)
         for (final (i, member) in DemoSession.otherDemoMembers.indexed)
           FamilyLinkMember(
             id: member.id,
@@ -217,15 +217,15 @@ class DemoScenarioLoader {
       lastSeen: now,
     ),
     PresenceInfo(
-      deviceId: DemoSession.partnerId,
+      deviceId: DemoSession.linkMemberId,
       deviceType: 'link',
-      displayName: DemoSession.partnerDisplayName,
+      displayName: DemoSession.linkMemberDisplayName,
       lastSeen: now.subtract(const Duration(minutes: 12)),
     ),
     PresenceInfo(
-      deviceId: DemoSession.secondPartnerId,
+      deviceId: DemoSession.secondLinkMemberId,
       deviceType: 'link',
-      displayName: DemoSession.secondPartnerDisplayName,
+      displayName: DemoSession.secondLinkMemberDisplayName,
       lastSeen: now.subtract(const Duration(hours: 5)),
     ),
     PresenceInfo(
@@ -309,7 +309,7 @@ class DemoScenarioLoader {
           summary: 'Water the plants',
           kidId: fien,
           status: ICalTaskStatus.inProcess,
-          verifierLinkId: DemoSession.partnerId,
+          verifierLinkId: DemoSession.linkMemberId,
         ),
       // Sam is the designated verifier — also pending-only for this device.
       if (secondLinkMember)
@@ -317,7 +317,7 @@ class DemoScenarioLoader {
           summary: 'Feed the cat',
           kidId: mees,
           status: ICalTaskStatus.inProcess,
-          verifierLinkId: DemoSession.secondPartnerId,
+          verifierLinkId: DemoSession.secondLinkMemberId,
         ),
       // Unassigned verifier — any participating link member may accept.
       ICalTask(
@@ -438,14 +438,14 @@ class DemoScenarioLoader {
     );
 
     await _proposalRepo.createManualProposal(
-      myLinkId: DemoSession.partnerId,
+      myLinkId: DemoSession.linkMemberId,
       taskTitle: dutch ? 'Hond uitlaten' : 'Walk the dog',
       taskNotes: dutch ? 'Graag voor 18:00' : 'Before 18:00 if you can',
       taskPriority: TaskPriority.medium,
       taskDueDate: due.toUtc(),
     );
     await _proposalRepo.createManualProposal(
-      myLinkId: DemoSession.secondPartnerId,
+      myLinkId: DemoSession.secondLinkMemberId,
       taskTitle: dutch ? 'Pakket ophalen' : 'Pick up the parcel',
       taskNotes: dutch ? 'Bij de buurvrouw' : 'At the neighbour\'s',
       taskPriority: TaskPriority.low,

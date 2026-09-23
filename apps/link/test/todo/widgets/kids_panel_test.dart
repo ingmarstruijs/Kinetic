@@ -163,7 +163,7 @@ void main() {
     expect(kidAvatarColor('Job'), kidAvatarColor('Job'));
   });
 
-  testWidgets('parent can delete a kid task from the panel', (tester) async {
+  testWidgets('Link can delete a kid task from the panel', (tester) async {
     await tester.runAsync(() async {
       final deleted = <String>[];
       await tester.pumpWidget(
@@ -202,7 +202,7 @@ void main() {
     });
   });
 
-  testWidgets('parent can accept a pending kid task', (tester) async {
+  testWidgets('Link can accept a pending kid task', (tester) async {
     await tester.runAsync(() async {
       final accepted = <String>[];
       await tester.pumpWidget(

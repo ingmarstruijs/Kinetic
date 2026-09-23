@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../partner/models/partner_proposal.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../theme/app_themes.dart';
 import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
@@ -15,9 +15,9 @@ import 'tasks_section_header.dart';
 class SuggestionsPanel extends StatefulWidget {
   final AiSuggestionRepository suggestionRepo;
   final TodoRepository todoRepo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRequested;
   final ValueChanged<bool>? onVisibilityChanged;
@@ -28,7 +28,7 @@ class SuggestionsPanel extends StatefulWidget {
     required this.todoRepo,
     this.proposalRepo,
     this.myLinkId,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.otherLinkMembers = const [],
     this.onSyncRequested,
     this.onVisibilityChanged,
@@ -41,7 +41,7 @@ class SuggestionsPanel extends StatefulWidget {
 class _SuggestionsPanelState extends State<SuggestionsPanel> {
   bool _expanded = true;
   late Stream<List<AiSuggestion>> _pending;
-  Stream<List<PartnerProposal>>? _proposals;
+  Stream<List<LinkMemberProposal>>? _proposals;
   bool? _lastVisible;
 
   void _reportVisibility(bool visible) {
@@ -64,7 +64,7 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.suggestionRepo != widget.suggestionRepo ||
         oldWidget.proposalRepo != widget.proposalRepo ||
-        oldWidget.partnerPaired != widget.partnerPaired ||
+        oldWidget.hasOtherLinkMembers != widget.hasOtherLinkMembers ||
         oldWidget.myLinkId != widget.myLinkId ||
         oldWidget.otherLinkMembers != widget.otherLinkMembers) {
       setState(_bindStreams);
@@ -73,7 +73,7 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
 
   void _bindStreams() {
     _pending = widget.suggestionRepo.watchPending();
-    _proposals = widget.proposalRepo != null && widget.partnerPaired
+    _proposals = widget.proposalRepo != null && widget.hasOtherLinkMembers
         ? widget.proposalRepo!.watchPending(myLinkId: widget.myLinkId)
         : null;
   }
@@ -87,7 +87,7 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
     return StreamBuilder<List<AiSuggestion>>(
       stream: _pending,
       builder: (context, pendingSnap) {
-        return StreamBuilder<List<PartnerProposal>>(
+        return StreamBuilder<List<LinkMemberProposal>>(
           stream: _proposals,
           builder: (context, proposalSnap) {
             final pending = pendingSnap.data ?? const <AiSuggestion>[];
@@ -95,12 +95,12 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
               for (final s in pending)
                 if (s.reason.isSelfTargeted) s,
             ];
-            final forPartner = [
+            final forFamilyMember = [
               for (final s in pending)
-                if (s.reason.isPartnerTargeted) s,
+                if (s.reason.isFamilyMemberTargeted) s,
             ];
-            final fromPartner = proposalSnap.data ?? const <PartnerProposal>[];
-            final total = self.length + forPartner.length + fromPartner.length;
+            final fromFamilyMember = proposalSnap.data ?? const <LinkMemberProposal>[];
+            final total = self.length + forFamilyMember.length + fromFamilyMember.length;
             _reportVisibility(total > 0);
             if (total == 0) return const SizedBox.shrink();
 
@@ -109,13 +109,13 @@ class _SuggestionsPanelState extends State<SuggestionsPanel> {
               onToggle: () => setState(() => _expanded = !_expanded),
               count: total,
               self: self,
-              forPartner: forPartner,
-              fromPartner: fromPartner,
+              forFamilyMember: forFamilyMember,
+              fromFamilyMember: fromFamilyMember,
               suggestionRepo: widget.suggestionRepo,
               todoRepo: widget.todoRepo,
               proposalRepo: widget.proposalRepo,
               myLinkId: widget.myLinkId,
-              partnerPaired: widget.partnerPaired,
+              hasOtherLinkMembers: widget.hasOtherLinkMembers,
               otherLinkMembers: widget.otherLinkMembers,
               onSyncRequested: widget.onSyncRequested,
               onChanged: _refresh,
@@ -132,13 +132,13 @@ class _SuggestionsCard extends StatelessWidget {
   final VoidCallback onToggle;
   final int count;
   final List<AiSuggestion> self;
-  final List<AiSuggestion> forPartner;
-  final List<PartnerProposal> fromPartner;
+  final List<AiSuggestion> forFamilyMember;
+  final List<LinkMemberProposal> fromFamilyMember;
   final AiSuggestionRepository suggestionRepo;
   final TodoRepository todoRepo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final List<({String id, String name})> otherLinkMembers;
   final VoidCallback? onSyncRequested;
   final VoidCallback onChanged;
@@ -148,13 +148,13 @@ class _SuggestionsCard extends StatelessWidget {
     required this.onToggle,
     required this.count,
     required this.self,
-    required this.forPartner,
-    required this.fromPartner,
+    required this.forFamilyMember,
+    required this.fromFamilyMember,
     required this.suggestionRepo,
     required this.todoRepo,
     required this.proposalRepo,
     required this.myLinkId,
-    required this.partnerPaired,
+    required this.hasOtherLinkMembers,
     required this.otherLinkMembers,
     this.onSyncRequested,
     required this.onChanged,
@@ -190,26 +190,26 @@ class _SuggestionsCard extends StatelessWidget {
                 todoRepo: todoRepo,
                 onChanged: onChanged,
               ),
-            if (forPartner.isNotEmpty) _SectionLabel(label: forLabel),
-            for (final suggestion in forPartner)
-              _PartnerTargetRow(
+            if (forFamilyMember.isNotEmpty) _SectionLabel(label: forLabel),
+            for (final suggestion in forFamilyMember)
+              _FamilyMemberTargetRow(
                 suggestion: suggestion,
                 suggestionRepo: suggestionRepo,
                 proposalRepo: proposalRepo,
                 myLinkId: myLinkId,
-                partnerPaired: partnerPaired,
+                hasOtherLinkMembers: hasOtherLinkMembers,
                 otherLinkMembers: otherLinkMembers,
                 onChanged: onChanged,
               ),
-            if (fromPartner.isNotEmpty) _SectionLabel(label: fromLabel),
-            for (final proposal in fromPartner)
+            if (fromFamilyMember.isNotEmpty) _SectionLabel(label: fromLabel),
+            for (final proposal in fromFamilyMember)
               _IncomingProposalRow(
                 proposal: proposal,
                 proposalRepo: proposalRepo!,
                 fromName: _memberName(
                   otherLinkMembers,
                   proposal.fromLinkId,
-                  l10n.partnerGenericName,
+                  l10n.familyMemberGenericName,
                 ),
                 onSyncRequested: onSyncRequested,
                 onChanged: onChanged,
@@ -227,10 +227,10 @@ String _forSectionLabel(
   List<({String id, String name})> members,
 ) {
   if (members.length == 1) {
-    return l10n.tasksForPartner(members.first.name);
+    return l10n.tasksForFamilyMember(members.first.name);
   }
   if (members.isEmpty) {
-    return l10n.tasksForPartner(l10n.partnerGenericName);
+    return l10n.tasksForFamilyMember(l10n.familyMemberGenericName);
   }
   return l10n.tasksForFamily;
 }
@@ -240,10 +240,10 @@ String _fromSectionLabel(
   List<({String id, String name})> members,
 ) {
   if (members.length == 1) {
-    return l10n.tasksFromPartner(members.first.name);
+    return l10n.tasksFromFamilyMember(members.first.name);
   }
   if (members.isEmpty) {
-    return l10n.tasksFromPartner(l10n.partnerGenericName);
+    return l10n.tasksFromFamilyMember(l10n.familyMemberGenericName);
   }
   return l10n.tasksFromFamily;
 }
@@ -371,21 +371,21 @@ class _SelfSuggestionRow extends StatelessWidget {
   }
 }
 
-class _PartnerTargetRow extends StatelessWidget {
+class _FamilyMemberTargetRow extends StatelessWidget {
   final AiSuggestion suggestion;
   final AiSuggestionRepository suggestionRepo;
-  final PartnerProposalRepository? proposalRepo;
+  final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final List<({String id, String name})> otherLinkMembers;
   final VoidCallback onChanged;
 
-  const _PartnerTargetRow({
+  const _FamilyMemberTargetRow({
     required this.suggestion,
     required this.suggestionRepo,
     required this.proposalRepo,
     required this.myLinkId,
-    required this.partnerPaired,
+    required this.hasOtherLinkMembers,
     required this.otherLinkMembers,
     required this.onChanged,
   });
@@ -452,10 +452,10 @@ class _PartnerTargetRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: proposalRepo == null || !partnerPaired
+                    onPressed: proposalRepo == null || !hasOtherLinkMembers
                         ? null
                         : () async {
-                            await confirmAndSendSuggestionToPartner(
+                            await confirmAndSendSuggestionToFamilyMember(
                               context: context,
                               suggestion: suggestion,
                               proposalRepo: proposalRepo!,
@@ -478,8 +478,8 @@ class _PartnerTargetRow extends StatelessWidget {
 }
 
 class _IncomingProposalRow extends StatelessWidget {
-  final PartnerProposal proposal;
-  final PartnerProposalRepository proposalRepo;
+  final LinkMemberProposal proposal;
+  final LinkMemberProposalRepository proposalRepo;
   final String fromName;
   final VoidCallback? onSyncRequested;
   final VoidCallback onChanged;
@@ -557,7 +557,7 @@ class _IncomingProposalRow extends StatelessWidget {
                         ],
                         const SizedBox(height: 2),
                         Text(
-                          l10n.suggestionsProposedByPartner(fromName),
+                          l10n.suggestionsProposedByFamilyMember(fromName),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),

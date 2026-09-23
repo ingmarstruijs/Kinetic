@@ -1,6 +1,6 @@
 # Kinetic Link
 
-Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally with an encrypted vault. **Family features** (partner proposals, kids overview, shared notes, multi-device sync) require a configured WebDAV connection — without WebDAV those extras are unavailable.
+Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally with an encrypted vault. **Family features** (family-member proposals, kids overview, shared notes, multi-device sync) require a configured WebDAV connection — without WebDAV those extras are unavailable.
 
 ## Screens
 
@@ -8,17 +8,17 @@ Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally 
 |---|---|
 | **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **With WebDAV + family:** forward tasks to a link member, one kid, or **Everyone**; collapsible **suggestions** (self, family-targeted, incoming proposals) and **kids** section (assignments, XP, goals). Reminder notifications offer **Done** and **Snooze**. Task row icons: person+ = accepted family proposal. |
 | **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). Local private notes always; **Shared** section and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). |
-| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **WebDAV** config and connection test unlock sync. **Family** (partner QR, kids enrollment, presence) is only useful once WebDAV is connected. Debug builds also have **UI scenarios** for screenshots and manual QA. |
+| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **WebDAV** config and connection test unlock sync. **Family** (family-member QR, kids enrollment, presence) is only useful once WebDAV is connected. Debug builds also have **UI scenarios** for screenshots and manual QA. |
 
 ## Family Setup
 
 **Requires WebDAV.** Pairing, proposals, kids enrollment, and shared folders all go through your server. Configure WebDAV in Settings before using Family.
 
-### Partner Pairing
-1. Settings → Family → Partner → "Share family key via QR"
+### Family Member Linking
+1. Settings → Family → Family members → "Share family key via QR"
 2. Write down the 12 family words (quiz), then show the QR (entropy only)
-3. Partner scans **or** types the same 12 words and checks the fingerprint
-4. Partnership activated; `family.key.enc` is stored in the personal WebDAV folder
+3. The other family member scans **or** types the same 12 words and checks the fingerprint
+4. Linking activated; `family.key.enc` is stored in the personal WebDAV folder
 
 ### Kids Enrollment
 Each child device enrolls independently:
@@ -58,7 +58,7 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 ### Security
 - **Personal vault**: 12 BIP-39 words → derived AES key stored on-device. The words and BIP-39 entropy are **not** stored; paper from onboarding is the only recovery. Settings can verify a typed phrase against the derived key.
 - **Family Key**: 12 BIP-39 words (quiz on create); QR v2 entropy; fingerprint; `family.key.enc` on personal WebDAV. A 0.2.x random family key is kept (no words).
-- **Partner Paired Flag**: Stored as `kinetic_partner_paired` secure storage key; set only when QR pairing succeeds
+- **Has Other Link Members Flag**: Stored as `kinetic_has_other_link_members` secure storage key; set when QR pairing succeeds
 - **Enrolled Kids List**: Stored as JSON in `kinetic_enrolled_kids` secure storage key; persisted on the Kinetic Link device (and shared via roster)
 
 ## Development
@@ -76,11 +76,10 @@ All secrets are stored at runtime via secure storage — no `--dart-define` flag
 
 ```
 lib/
-├── db/            — Drift schema (PersonalTasks with targetKidId column, PersonalNotes, PartnerProposals, AiSuggestions)
-├── family/        — FamilyConnectionService (presence-based send gating)
+├── db/            — Drift schema (PersonalTasks with targetKidId column, PersonalNotes, LinkMemberProposals, AiSuggestions)
+├── family/        — FamilyConnectionService + proposals (presence-based send gating)
 ├── l10n/          — ARB localizations (English template + Dutch)
 ├── notifications/ — local notification scheduling
-├── partner/       — proposals, pairing services
 ├── secure/        — secure storage wrappers
 ├── settings/      — WebDAV config, theme, family key share/scan screens
 ├── sync/          — SyncOrchestrator (WebDAV pull/push, LWW merge, xKineticTargetKidId embedding)
@@ -100,7 +99,7 @@ See also: [docs/SMART_FEATURES.md](docs/SMART_FEATURES.md) for reminder chips, s
 
 The engine runs on start and resume. A path is throttled for 24 hours **only after it created at least one suggestion**. Empty runs do not block later hits.
 
-Partner-targeted detectors create suggestions — they do not auto-send proposals. Sending always goes through **What your partner sees**.
+Family-member-targeted detectors create suggestions — they do not auto-send proposals. Sending always goes through **What your family member sees**.
 
 | Detector | Trigger | Action |
 |---|---|---|
@@ -108,19 +107,19 @@ Partner-targeted detectors create suggestions — they do not auto-send proposal
 | **Calendar** | Month prompt (Dutch keyword examples: belasting / schoolspullen / kerst) with no prior-year history required | Suggests a seasonal chore (→ you) |
 | **Stale** | Open task > 7 days with no due date or reminder | Suggests setting a reminder on that task (→ you) |
 | **Seasonal** | Completed in the same calendar month last year | Suggests re-doing it (→ you) |
-| **Partner complement** | Keywords in **your** open tasks, including private | Generic partner hint — never copies the private title (→ partner) |
-| **Load balance** | ≥ 3 open tasks in the same category (private counted) | Generic “help with this category?” hint (→ partner) |
+| **Family complement** | Keywords in **your** open tasks, including private | Generic family-member hint — never copies the private title (→ family member) |
+| **Load balance** | ≥ 3 open tasks in the same category (private counted) | Generic “help with this category?” hint (→ family member) |
 
-Each suggestion stores an `explanation` field. Template titles and reasons (load balance, partner hints, calendar) are localized in the UI from the app language. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`.
+Each suggestion stores an `explanation` field. Template titles and reasons (load balance, family-member hints, calendar) are localized in the UI from the app language. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`.
 
 ### Suggestion UI
 
 - **Tasks screen**: `SuggestionsPanel` is a collapsible card above the list. Hidden when there is nothing pending.
-- Sections: **For you**, **For partner** (when paired), **From partner** (inbox)
+- Sections: **For you**, **For family member** (when linked), **From family member** (inbox)
 - **For you**: tap accepts (creates the task, applies a stale reminder, or assigns a category); swipe dismisses
-- **For partner**: **Send** opens **What your partner sees**; **Decline** dismisses
-- **From partner**: **Accept** / **Decline** on the incoming proposal
-- Partner-targeted proposals are marked `autoGenerated` in the database
+- **For family member**: **Send** opens **What your family member sees**; **Decline** dismisses
+- **From family member**: **Accept** / **Decline** on the incoming proposal
+- Family-member-targeted proposals are marked `autoGenerated` in the database
 
 Suggestions are stored in the local `AiSuggestions` table and never synced to WebDAV.
 
@@ -130,7 +129,7 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 
 ## Connection-Aware Send
 
-`FamilyConnectionService` evaluates partner/kid connectivity from WebDAV presence (7-day connected / 14-day offline thresholds). The send sheet lists each family member individually with status, plus **Everyone** when more than one kid is enrolled. The send button is disabled when nobody is connected.
+`FamilyConnectionService` evaluates link-member / kid connectivity from WebDAV presence (7-day connected / 14-day offline thresholds). The send sheet lists each family member individually with status, plus **Everyone** when more than one kid is enrolled. The send button is disabled when nobody is connected.
 
 ### WebDAV layout
 
@@ -141,7 +140,7 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 
 /kinetic/shared/
 ├── notes/{uid}.ics        — shared notes (family key)
-├── proposals/{id}.json    — partner proposals (family key)
+├── proposals/{id}.json    — link-member proposals (family key)
 ├── load/{linkId}.json   — workload metrics (family key)
 ├── tasks/{uid}.ics        — tasks assigned to children (family key, with optional xKineticTargetKidId)
 ├── goals/{kidId}.json     — per-kid XP goals (family key)
@@ -156,8 +155,8 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 ### Presence & Heartbeat Protocol
 Every sync cycle each device writes an encrypted **presence file** to `/kinetic/shared/presence/{deviceId}.json` (family key). The file contains `deviceId`, `deviceType` (`'link'` or `'kid'`), `displayName`, and `lastSeen` (UTC ISO-8601).
 
-- **Parent Settings screen** reads presence files for the connected partner and displays a relative last-seen timestamp ("just now", "X minutes ago", etc.).
-- **Kids Settings screen** reads presence files for each enrolled kid, showing last-seen per kid in the list.
+- **Family members settings** reads presence files for other Link devices and displays a relative last-seen timestamp ("just now", "X minutes ago", etc.).
+- **Kids settings** reads presence files for each enrolled kid, showing last-seen per kid in the list.
 - Entries older than **14 days** are shown as a stale warning with error styling.
 
 ### Disconnect Tombstone Protocol
@@ -171,7 +170,7 @@ When a device explicitly leaves the family, it writes an encrypted **tombstone**
 
 ## Conditional UI
 
-Without WebDAV, Tasks stays a personal list (plus local “for you” suggestions). Partner send, kids panel, incoming proposals, and shared notes only appear after WebDAV is connected and family is set up.
+Without WebDAV, Tasks stays a personal list (plus local “for you” suggestions). Family-member send, kids panel, incoming proposals, and shared notes only appear after WebDAV is connected and family is set up.
 
 **Kids panel** on Tasks is only visible when:
 
@@ -181,4 +180,4 @@ Without WebDAV, Tasks stays a personal list (plus local “for you” suggestion
 
 With participation off, this device cannot see the kids panel, assign to kids, or verify completions. Enrollment (Settings → Kids) stays available. Other Link members keep their own setting; the roster stores each member’s `kidsParticipation` flag.
 
-**Suggestions panel** on Tasks is hidden when there are no pending self suggestions, partner-targeted hints, or incoming proposals.
+**Suggestions panel** on Tasks is hidden when there are no pending self suggestions, family-member-targeted hints, or incoming proposals.

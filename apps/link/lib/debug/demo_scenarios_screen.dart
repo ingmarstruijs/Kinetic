@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../db/app_database.dart';
 import '../l10n/generated/app_localizations.dart';
-import '../partner/services/partner_proposal_repository.dart';
+import '../family/proposals/link_member_proposal_repository.dart';
 import '../theme/app_header.dart';
 import '../todo/services/ai_suggestion_repository.dart';
 import '../todo/services/note_repository.dart';
@@ -34,7 +34,7 @@ class DemoScenariosScreen extends StatelessWidget {
             child: Text(
               nl
                   ? 'Vervangt taken, notities, suggesties en voorstellen op dit debug-toestel. Partnerkoppeling en kinderen blijven lokaal (niet in WebDAV).'
-                  : 'Replaces tasks, notes, suggestions and proposals on this debug device. Partner pairing and kids stay local (not on WebDAV).',
+                  : 'Replaces tasks, notes, suggestions and proposals on this debug device. Family linking and kids stay local (not on WebDAV).',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -85,7 +85,7 @@ class DemoScenariosScreen extends StatelessWidget {
       todoRepo: todoRepo,
       noteRepo: NoteRepository(db: db),
       suggestionRepo: AiSuggestionRepository(db),
-      proposalRepo: PartnerProposalRepository(db: db, todoRepository: todoRepo),
+      proposalRepo: LinkMemberProposalRepository(db: db, todoRepository: todoRepo),
     );
     await loader.apply(item.id, dutch: nl);
     if (!context.mounted) return;

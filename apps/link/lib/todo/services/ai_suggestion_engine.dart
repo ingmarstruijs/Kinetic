@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../db/app_database.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/todo_repository.dart';
@@ -23,12 +23,12 @@ class AiSuggestionEngine {
   final AppDatabase _db;
   final AiSuggestionRepository _suggestionRepo;
   final TodoRepository _todoRepo;
-  final PartnerProposalRepository? _proposalRepo;
+  final LinkMemberProposalRepository? _proposalRepo;
   final String? myLinkId;
   final DateTime Function() _now;
 
   static const _maxPendingSelf = 3;
-  static const _maxPendingPartner = 3;
+  static const _maxPendingFamilyMember = 3;
   static const _staleAfterDays = 7;
   static const _singleHabitSilenceDays = 14;
   static const _privacyBudget = Duration(days: 14);
@@ -40,7 +40,7 @@ class AiSuggestionEngine {
     required AppDatabase db,
     required AiSuggestionRepository suggestionRepo,
     required TodoRepository todoRepo,
-    PartnerProposalRepository? proposalRepo,
+    LinkMemberProposalRepository? proposalRepo,
     this.myLinkId,
     DateTime Function()? now,
   }) : _db = db,
@@ -56,7 +56,7 @@ class AiSuggestionEngine {
     final now = _nowUtc;
 
     final selfDue = _isDue(settings?.lastSuggestionRunAt, now);
-    final partnerDue = _isDue(settings?.lastPartnerSuggestionRunAt, now);
+    final partnerDue = _isDue(settings?.lastFamilyMemberSuggestionRunAt, now);
 
     if (!selfDue && !partnerDue) return;
 
@@ -82,10 +82,10 @@ class AiSuggestionEngine {
     }
 
     if (partnerDue && _proposalRepo != null) {
-      final before = await _suggestionRepo.countPendingPartner();
-      await _runPartnerComplementDetector(openTasks);
+      final before = await _suggestionRepo.countPendingFamilyMember();
+      await _runFamilyComplementDetector(openTasks);
       await _runLoadBalanceDetector(openTasks);
-      final after = await _suggestionRepo.countPendingPartner();
+      final after = await _suggestionRepo.countPendingFamilyMember();
       if (after > before) await _updateLastRun(selfPath: false);
     }
   }
@@ -154,38 +154,38 @@ class AiSuggestionEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Detector 2 — Partner complement from the user's own tasks (→ partner)
+  // Detector 2 — Family complement from the user's own tasks (→ family member)
   // ---------------------------------------------------------------------------
 
-  Future<void> _runPartnerComplementDetector(
+  Future<void> _runFamilyComplementDetector(
     List<PersonalTask> openTasks,
   ) async {
-    if (await _suggestionRepo.countPendingPartner() >= _maxPendingPartner) {
+    if (await _suggestionRepo.countPendingFamilyMember() >= _maxPendingFamilyMember) {
       return;
     }
 
     final seenFamilies = <String>{};
     for (final task in openTasks) {
-      if (await _suggestionRepo.countPendingPartner() >= _maxPendingPartner) {
+      if (await _suggestionRepo.countPendingFamilyMember() >= _maxPendingFamilyMember) {
         break;
       }
-      final hint = matchPartnerHint(title: task.title, notes: task.notes);
+      final hint = matchFamilyMemberHint(title: task.title, notes: task.notes);
       if (hint == null) continue;
       if (!seenFamilies.add(hint.familyId)) continue;
       if (await _suggestionRepo.hasRecentWithTitle(
-        hint.partnerTitle,
+        hint.familyMemberTitle,
         within: _privacyBudget,
       )) {
         continue;
       }
 
       final suggested = AiSuggestion.create(
-        title: hint.partnerTitle,
+        title: hint.familyMemberTitle,
         category: hint.categories.isEmpty
             ? task.category.name
             : hint.categories.first.name,
-        reason: SuggestionReason.partnerComplement,
-        dedupeKey: 'partnerComplement:${hint.familyId}',
+        reason: SuggestionReason.familyMemberComplement,
+        dedupeKey: 'familyMemberComplement:${hint.familyId}',
         explanation: hint.explanation,
       );
       await _suggestionRepo.upsertSuggestion(suggested);
@@ -387,11 +387,11 @@ class AiSuggestionEngine {
   }
 
   // ---------------------------------------------------------------------------
-  // Detector 4 — Load balance (→ partner, generic payload)
+  // Detector 4 — Load balance (→ family member, generic payload)
   // ---------------------------------------------------------------------------
 
   Future<void> _runLoadBalanceDetector(List<PersonalTask> openTasks) async {
-    if (await _suggestionRepo.countPendingPartner() >= _maxPendingPartner) {
+    if (await _suggestionRepo.countPendingFamilyMember() >= _maxPendingFamilyMember) {
       return;
     }
 
@@ -401,7 +401,7 @@ class AiSuggestionEngine {
     }
 
     for (final entry in byCategory.entries) {
-      if (await _suggestionRepo.countPendingPartner() >= _maxPendingPartner) {
+      if (await _suggestionRepo.countPendingFamilyMember() >= _maxPendingFamilyMember) {
         break;
       }
       final threshold = entry.key == 'other' ? 5 : 3;
@@ -467,7 +467,7 @@ class AiSuggestionEngine {
                 )
               : AppSettingsCompanion(
                   key: const Value('default'),
-                  lastPartnerSuggestionRunAt: Value(now),
+                  lastFamilyMemberSuggestionRunAt: Value(now),
                   updatedAt: Value(now),
                 ),
         );

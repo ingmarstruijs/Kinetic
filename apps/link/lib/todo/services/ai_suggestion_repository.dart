@@ -84,10 +84,10 @@ class AiSuggestionRepository {
     );
   }
 
-  /// Pending suggestions the user may forward to their partner.
-  Stream<List<AiSuggestion>> watchPendingPartner() {
+  /// Pending suggestions the user may forward to a family member.
+  Stream<List<AiSuggestion>> watchPendingFamilyMember() {
     return watchPending().map(
-      (all) => all.where((s) => s.reason.isPartnerTargeted).toList(),
+      (all) => all.where((s) => s.reason.isFamilyMemberTargeted).toList(),
     );
   }
 
@@ -113,8 +113,8 @@ class AiSuggestionRepository {
     return all.length;
   }
 
-  Future<int> countPendingPartner() async {
-    final all = await watchPendingPartner().first;
+  Future<int> countPendingFamilyMember() async {
+    final all = await watchPendingFamilyMember().first;
     return all.length;
   }
 

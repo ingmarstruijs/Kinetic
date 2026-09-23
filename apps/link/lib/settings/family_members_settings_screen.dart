@@ -14,19 +14,19 @@ import 'family_key_scan_screen.dart';
 import 'family_key_share_screen.dart';
 
 // ---------------------------------------------------------------------------
-// PartnerSettingsScreen
+// FamilyMembersSettingsScreen
 //
-// Manages partner pairing: share/scan family key QR, backup family key,
+// Manages family linking: share/scan family key QR, backup family key,
 // and leaving the family.  Only reachable when WebDAV is configured.
 // ---------------------------------------------------------------------------
 
-class PartnerSettingsScreen extends StatefulWidget {
+class FamilyMembersSettingsScreen extends StatefulWidget {
   final AppDatabase db;
   final WebDavConfigRepository configRepo;
   final SyncOrchestrator? syncOrchestrator;
   final VoidCallback? onConfigSaved;
 
-  const PartnerSettingsScreen({
+  const FamilyMembersSettingsScreen({
     super.key,
     required this.db,
     required this.configRepo,
@@ -35,12 +35,12 @@ class PartnerSettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<PartnerSettingsScreen> createState() => _PartnerSettingsScreenState();
+  State<FamilyMembersSettingsScreen> createState() => _FamilyMembersSettingsScreenState();
 }
 
-class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
+class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScreen> {
   SyncConfig? _config;
-  bool _partnerPaired = false;
+  bool _hasOtherLinkMembers = false;
   List<PresenceInfo> _presenceList = [];
   List<FamilyLinkMember> _otherLinkMembers = const [];
   String? _fingerprint;
@@ -54,7 +54,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
 
   Future<void> _loadConfig() async {
     final config = await widget.configRepo.load();
-    final paired = await widget.configRepo.isPartnerPaired();
+    final paired = await widget.configRepo.hasOtherLinkMembers();
     final roster = await widget.configRepo.loadCachedRoster();
     String? fingerprint;
     if (config?.familyKeyBytes != null) {
@@ -63,7 +63,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     if (mounted) {
       setState(() {
         _config = config;
-        _partnerPaired = paired;
+        _hasOtherLinkMembers = paired;
         _fingerprint = fingerprint;
         _otherLinkMembers =
             roster?.otherLinkMembers(config?.linkId ?? '') ?? const [];
@@ -114,7 +114,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
       ),
     );
     if ((keyWasGenerated ?? false) && mounted) {
-      await widget.configRepo.setPartnerPaired(true);
+      await widget.configRepo.setHasOtherLinkMembers(true);
       await FamilyVaultSync.pushIfPossible(widget.configRepo);
       await _loadConfig();
       widget.onConfigSaved?.call();
@@ -132,7 +132,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
       ),
     );
     if (result == true && mounted) {
-      await widget.configRepo.setPartnerPaired(true);
+      await widget.configRepo.setHasOtherLinkMembers(true);
       await FamilyVaultSync.pushIfPossible(widget.configRepo);
       await _loadConfig();
       widget.onConfigSaved?.call();
@@ -145,8 +145,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final l10n = AppLocalizations.of(context);
     final phrase = await showMnemonicPhraseDialog(
       context: context,
-      title: l10n.partnerVerifyTitle,
-      body: l10n.partnerVerifyBody,
+      title: l10n.familyMemberVerifyTitle,
+      body: l10n.familyMemberVerifyBody,
       confirmLabel: l10n.commonVerify,
     );
     if (phrase == null || !mounted) return;
@@ -157,14 +157,14 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            ok ? l10n.partnerVerifyOk : l10n.partnerVerifyMismatch,
+            ok ? l10n.familyMemberVerifyOk : l10n.familyMemberVerifyMismatch,
           ),
         ),
       );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.partnerVerifyMismatch)),
+        SnackBar(content: Text(l10n.familyMemberVerifyMismatch)),
       );
     }
   }
@@ -179,7 +179,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
         if (entropy == null) return null;
         return KineticVault.mnemonicFromEntropy(entropy);
       },
-      missingMessage: l10n.partnerRevealMissing,
+      missingMessage: l10n.familyMemberRevealMissing,
     );
   }
 
@@ -188,8 +188,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.partnerUnlinkTitle),
-        content: Text(l10n.partnerUnlinkBody),
+        title: Text(l10n.familyMemberUnlinkTitle),
+        content: Text(l10n.familyMemberUnlinkBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -210,7 +210,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     await (widget.db.delete(
       widget.db.personalNotes,
     )..where((n) => n.isShared.equals(true))).go();
-    await widget.db.delete(widget.db.partnerProposals).go();
+    await widget.db.delete(widget.db.linkMemberProposals).go();
     // Write disconnect tombstone so the other link member is notified.
     try {
       await widget.syncOrchestrator?.pushDisconnect();
@@ -224,13 +224,13 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
   Future<void> _confirmRemoveMember(FamilyLinkMember member) async {
     final l10n = AppLocalizations.of(context);
     final name = member.displayName.isEmpty
-        ? l10n.partnerGenericName
+        ? l10n.familyMemberGenericName
         : member.displayName;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.partnerRemoveMemberTitle(name)),
-        content: Text(l10n.partnerRemoveMemberBody(name)),
+        title: Text(l10n.familyMemberRemoveTitle(name)),
+        content: Text(l10n.familyMemberRemoveBody(name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -261,7 +261,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final demo = DemoSession.instance;
     if (demo.active) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.settingsPartner), centerTitle: false),
+        appBar: AppBar(title: Text(l10n.settingsFamilyMember), centerTitle: false),
         body: ListView(
           children: [
             const SizedBox(height: 8),
@@ -270,10 +270,10 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                 Icons.check_circle_outline,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              title: Text(l10n.partnerStatusPaired),
+              title: Text(l10n.otherLinkMemberStatusPaired),
               subtitle: Text(
                 demo.otherLinkMembers.isEmpty
-                    ? l10n.settingsPartnerLinkHint
+                    ? l10n.settingsFamilyMemberLinkHint
                     : demo.otherLinkMembers
                         .map((m) => m.name)
                         .join(', '),
@@ -294,20 +294,20 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     }
 
     final config = _config;
-    final paired = _partnerPaired;
+    final paired = _hasOtherLinkMembers;
 
-    // Partner presence: other Kinetic Link devices only.
+    // Link-member presence: other Kinetic Link devices only.
     final partnerPresence = _presenceList
         .where((p) => p.deviceType == 'link')
         .toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsPartner), centerTitle: false),
+      appBar: AppBar(title: Text(l10n.settingsFamilyMember), centerTitle: false),
       body: ListView(
         children: [
           if (config != null) ...[
             const SizedBox(height: 8),
-            _PartnerStatusBanner(
+            _FamilyMemberStatusBanner(
               paired: paired,
               presenceList: partnerPresence,
               fingerprint: _fingerprint,
@@ -322,7 +322,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   ),
                   title: Text(
                     member.displayName.isEmpty
-                        ? l10n.partnerGenericName
+                        ? l10n.familyMemberGenericName
                         : member.displayName,
                   ),
                   subtitle: Text(_presenceSubtitleFor(l10n, member.id)),
@@ -331,7 +331,7 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                       Icons.person_remove_outlined,
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    tooltip: l10n.partnerRemoveMemberTooltip,
+                    tooltip: l10n.familyMemberRemoveTooltip,
                     onPressed: () => _confirmRemoveMember(member),
                   ),
                 ),
@@ -342,8 +342,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   Icons.people_outline,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text(l10n.partnerShareViaQr),
-                subtitle: Text(l10n.partnerShareViaQrSubtitle),
+                title: Text(l10n.familyMemberShareViaQr),
+                subtitle: Text(l10n.familyMemberShareViaQrSubtitle),
                 trailing: const Icon(Icons.qr_code),
                 onTap: _exportFamilyKey,
               ),
@@ -352,8 +352,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   Icons.qr_code_scanner,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text(l10n.partnerScanKey),
-                subtitle: Text(l10n.partnerScanKeySubtitle),
+                title: Text(l10n.familyMemberScanKey),
+                subtitle: Text(l10n.familyMemberScanKeySubtitle),
                 onTap: _importFamilyKey,
               ),
             ],
@@ -363,8 +363,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   Icons.qr_code,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text(l10n.partnerReshareKey),
-                subtitle: Text(l10n.partnerReshareKeySubtitle),
+                title: Text(l10n.familyMemberReshareKey),
+                subtitle: Text(l10n.familyMemberReshareKeySubtitle),
                 trailing: const Icon(Icons.qr_code),
                 onTap: _exportFamilyKey,
               ),
@@ -373,8 +373,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   Icons.verified_user_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text(l10n.partnerVerifyPhrase),
-                subtitle: Text(l10n.partnerVerifyPhraseSubtitle),
+                title: Text(l10n.familyMemberVerifyPhrase),
+                subtitle: Text(l10n.familyMemberVerifyPhraseSubtitle),
                 onTap: _verifyFamilyPhrase,
               ),
               ListTile(
@@ -382,8 +382,8 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   Icons.visibility_outlined,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                title: Text(l10n.partnerShowKey),
-                subtitle: Text(l10n.partnerShowKeySubtitle),
+                title: Text(l10n.familyMemberShowKey),
+                subtitle: Text(l10n.familyMemberShowKeySubtitle),
                 onTap: _revealFamilyPhrase,
               ),
               ListTile(
@@ -392,10 +392,10 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                   color: Theme.of(context).colorScheme.error,
                 ),
                 title: Text(
-                  l10n.partnerUnlink,
+                  l10n.familyMemberUnlink,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
-                subtitle: Text(l10n.partnerUnlinkSubtitle),
+                subtitle: Text(l10n.familyMemberUnlinkSubtitle),
                 onTap: _leaveFamily,
               ),
             ],
@@ -409,9 +409,9 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final match = DemoSession.instance.presence
         .where((p) => p.deviceType == 'link' && p.displayName == name)
         .firstOrNull;
-    if (match == null) return l10n.settingsPartnerPaired;
-    return l10n.partnerLastSeen(
-      _PartnerStatusBanner._formatLastSeen(
+    if (match == null) return l10n.settingsFamilyMemberLinked;
+    return l10n.familyMemberLastSeen(
+      _FamilyMemberStatusBanner._formatLastSeen(
         l10n,
         DateTime.now(),
         match.lastSeen,
@@ -423,9 +423,9 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     final match = _presenceList
         .where((p) => p.deviceType == 'link' && p.deviceId == linkId)
         .firstOrNull;
-    if (match == null) return l10n.settingsPartnerPaired;
-    return l10n.partnerLastSeen(
-      _PartnerStatusBanner._formatLastSeen(
+    if (match == null) return l10n.settingsFamilyMemberLinked;
+    return l10n.familyMemberLastSeen(
+      _FamilyMemberStatusBanner._formatLastSeen(
         l10n,
         DateTime.now(),
         match.lastSeen,
@@ -434,12 +434,12 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
   }
 }
 
-class _PartnerStatusBanner extends StatelessWidget {
+class _FamilyMemberStatusBanner extends StatelessWidget {
   final bool paired;
   final List<PresenceInfo> presenceList;
   final String? fingerprint;
 
-  const _PartnerStatusBanner({
+  const _FamilyMemberStatusBanner({
     required this.paired,
     required this.presenceList,
     this.fingerprint,
@@ -450,7 +450,7 @@ class _PartnerStatusBanner extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
-    // Determine stale state: warn if partner hasn't synced in 14 days.
+    // Determine stale state: warn if the family member hasn't synced in 14 days.
     final now = DateTime.now().toUtc();
     const staleThreshold = Duration(days: 14);
     final partnerPresence = presenceList.isNotEmpty ? presenceList.first : null;
@@ -504,8 +504,8 @@ class _PartnerStatusBanner extends StatelessWidget {
                 children: [
                   Text(
                     paired
-                        ? l10n.partnerStatusPaired
-                        : l10n.partnerStatusUnpaired,
+                        ? l10n.otherLinkMemberStatusPaired
+                        : l10n.otherLinkMemberStatusUnpaired,
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(color: statusColor),
@@ -514,8 +514,8 @@ class _PartnerStatusBanner extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       isStale
-                          ? l10n.partnerLastSeenWarning(lastSeenText)
-                          : l10n.partnerLastSeen(lastSeenText),
+                          ? l10n.familyMemberLastSeenWarning(lastSeenText)
+                          : l10n.familyMemberLastSeen(lastSeenText),
                       style: Theme.of(
                         context,
                       ).textTheme.labelSmall?.copyWith(color: statusColor),
@@ -524,7 +524,7 @@ class _PartnerStatusBanner extends StatelessWidget {
                   if (fingerprint != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      l10n.partnerFingerprint(fingerprint!),
+                      l10n.familyMemberFingerprint(fingerprint!),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontFamily: 'monospace',
                         letterSpacing: 1.2,

@@ -278,11 +278,11 @@ abstract class AppLocalizations {
   /// **'Family'**
   String get settingsSectionFamily;
 
-  /// No description provided for @settingsPartner.
+  /// No description provided for @settingsFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'Family member'**
-  String get settingsPartner;
+  String get settingsFamilyMember;
 
   /// No description provided for @settingsFamilyMembers.
   ///
@@ -290,17 +290,17 @@ abstract class AppLocalizations {
   /// **'Family members'**
   String get settingsFamilyMembers;
 
-  /// No description provided for @settingsPartnerPaired.
+  /// No description provided for @settingsFamilyMemberLinked.
   ///
   /// In en, this message translates to:
   /// **'Family member linked'**
-  String get settingsPartnerPaired;
+  String get settingsFamilyMemberLinked;
 
-  /// No description provided for @settingsPartnerLinkHint.
+  /// No description provided for @settingsFamilyMemberLinkHint.
   ///
   /// In en, this message translates to:
   /// **'Link with another family member'**
-  String get settingsPartnerLinkHint;
+  String get settingsFamilyMemberLinkHint;
 
   /// No description provided for @settingsKids.
   ///
@@ -422,11 +422,11 @@ abstract class AppLocalizations {
   /// **'Key found'**
   String get familyKeyFound;
 
-  /// No description provided for @familyKeyPartner.
+  /// No description provided for @familyKeyLinkMember.
   ///
   /// In en, this message translates to:
   /// **'Family member'**
-  String get familyKeyPartner;
+  String get familyKeyLinkMember;
 
   /// No description provided for @familyKeyServer.
   ///
@@ -446,11 +446,11 @@ abstract class AppLocalizations {
   /// **'The server in the QR code ({scanned}) does not match your server ({current}). Are you sure you want to continue?'**
   String familyKeyServerMismatch(String scanned, String current);
 
-  /// No description provided for @familyKeyConfirmPartner.
+  /// No description provided for @familyKeyConfirmLinkMember.
   ///
   /// In en, this message translates to:
   /// **'Is this the right family member? Check the username above.'**
-  String get familyKeyConfirmPartner;
+  String get familyKeyConfirmLinkMember;
 
   /// No description provided for @familyKeyAlreadyPairedWarning.
   ///
@@ -524,11 +524,11 @@ abstract class AppLocalizations {
   /// **'Fingerprint  {fingerprint}'**
   String familyKeyShareFingerprint(String fingerprint);
 
-  /// No description provided for @familyKeyPartnerScanned.
+  /// No description provided for @familyKeyLinkMemberScanned.
   ///
   /// In en, this message translates to:
   /// **'Family member has scanned'**
-  String get familyKeyPartnerScanned;
+  String get familyKeyLinkMemberScanned;
 
   /// No description provided for @familyKeyShared.
   ///
@@ -854,173 +854,173 @@ abstract class AppLocalizations {
   /// **'{count} days ago'**
   String relativeDaysAgo(int count);
 
-  /// No description provided for @partnerVerifyTitle.
+  /// No description provided for @familyMemberVerifyTitle.
   ///
   /// In en, this message translates to:
   /// **'Verify family key'**
-  String get partnerVerifyTitle;
+  String get familyMemberVerifyTitle;
 
-  /// No description provided for @partnerVerifyBody.
+  /// No description provided for @familyMemberVerifyBody.
   ///
   /// In en, this message translates to:
   /// **'Enter the 12 words. We will not show them; we only check that they match.'**
-  String get partnerVerifyBody;
+  String get familyMemberVerifyBody;
 
-  /// No description provided for @partnerVerifyOk.
+  /// No description provided for @familyMemberVerifyOk.
   ///
   /// In en, this message translates to:
   /// **'The family key matches.'**
-  String get partnerVerifyOk;
+  String get familyMemberVerifyOk;
 
-  /// No description provided for @partnerVerifyMismatch.
+  /// No description provided for @familyMemberVerifyMismatch.
   ///
   /// In en, this message translates to:
   /// **'This recovery phrase does not match this family key.'**
-  String get partnerVerifyMismatch;
+  String get familyMemberVerifyMismatch;
 
-  /// No description provided for @partnerRevealMissing.
+  /// No description provided for @familyMemberRevealMissing.
   ///
   /// In en, this message translates to:
   /// **'This family key is from before the recovery phrase (0.2) or arrived as a raw key. We cannot show the words. Create a new family key and have family members and kids re-link.'**
-  String get partnerRevealMissing;
+  String get familyMemberRevealMissing;
 
-  /// No description provided for @partnerUnlinkTitle.
+  /// No description provided for @familyMemberUnlinkTitle.
   ///
   /// In en, this message translates to:
   /// **'Leave family?'**
-  String get partnerUnlinkTitle;
+  String get familyMemberUnlinkTitle;
 
-  /// No description provided for @partnerUnlinkBody.
+  /// No description provided for @familyMemberUnlinkBody.
   ///
   /// In en, this message translates to:
   /// **'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.'**
-  String get partnerUnlinkBody;
+  String get familyMemberUnlinkBody;
 
-  /// No description provided for @partnerShareViaQr.
+  /// No description provided for @familyMemberShareViaQr.
   ///
   /// In en, this message translates to:
   /// **'Share family key via QR'**
-  String get partnerShareViaQr;
+  String get familyMemberShareViaQr;
 
-  /// No description provided for @partnerShareViaQrSubtitle.
+  /// No description provided for @familyMemberShareViaQrSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Have a family member scan the QR code to collaborate.'**
-  String get partnerShareViaQrSubtitle;
+  String get familyMemberShareViaQrSubtitle;
 
-  /// No description provided for @partnerScanKey.
+  /// No description provided for @familyMemberScanKey.
   ///
   /// In en, this message translates to:
   /// **'Scan family key'**
-  String get partnerScanKey;
+  String get familyMemberScanKey;
 
-  /// No description provided for @partnerScanKeySubtitle.
+  /// No description provided for @familyMemberScanKeySubtitle.
   ///
   /// In en, this message translates to:
   /// **'Scan the QR or type their 12 words.'**
-  String get partnerScanKeySubtitle;
+  String get familyMemberScanKeySubtitle;
 
-  /// No description provided for @partnerReshareKey.
+  /// No description provided for @familyMemberReshareKey.
   ///
   /// In en, this message translates to:
   /// **'Share family key again'**
-  String get partnerReshareKey;
+  String get familyMemberReshareKey;
 
-  /// No description provided for @partnerReshareKeySubtitle.
+  /// No description provided for @familyMemberReshareKeySubtitle.
   ///
   /// In en, this message translates to:
   /// **'Share the key with a new device of a family member.'**
-  String get partnerReshareKeySubtitle;
+  String get familyMemberReshareKeySubtitle;
 
-  /// No description provided for @partnerVerifyPhrase.
+  /// No description provided for @familyMemberVerifyPhrase.
   ///
   /// In en, this message translates to:
   /// **'Verify recovery phrase'**
-  String get partnerVerifyPhrase;
+  String get familyMemberVerifyPhrase;
 
-  /// No description provided for @partnerVerifyPhraseSubtitle.
+  /// No description provided for @familyMemberVerifyPhraseSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Check that you still know the 12 words of the family key.'**
-  String get partnerVerifyPhraseSubtitle;
+  String get familyMemberVerifyPhraseSubtitle;
 
-  /// No description provided for @partnerShowKey.
+  /// No description provided for @familyMemberShowKey.
   ///
   /// In en, this message translates to:
   /// **'Show family key'**
-  String get partnerShowKey;
+  String get familyMemberShowKey;
 
-  /// No description provided for @partnerShowKeySubtitle.
+  /// No description provided for @familyMemberShowKeySubtitle.
   ///
   /// In en, this message translates to:
   /// **'Show the 12 words on this device (screen lock).'**
-  String get partnerShowKeySubtitle;
+  String get familyMemberShowKeySubtitle;
 
-  /// No description provided for @partnerUnlink.
+  /// No description provided for @familyMemberUnlink.
   ///
   /// In en, this message translates to:
   /// **'Leave family'**
-  String get partnerUnlink;
+  String get familyMemberUnlink;
 
-  /// No description provided for @partnerUnlinkSubtitle.
+  /// No description provided for @familyMemberUnlinkSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Remove the family key and shared notes from this device.'**
-  String get partnerUnlinkSubtitle;
+  String get familyMemberUnlinkSubtitle;
 
-  /// No description provided for @partnerRemoveMemberTooltip.
+  /// No description provided for @familyMemberRemoveTooltip.
   ///
   /// In en, this message translates to:
   /// **'Remove from family'**
-  String get partnerRemoveMemberTooltip;
+  String get familyMemberRemoveTooltip;
 
-  /// No description provided for @partnerRemoveMemberTitle.
+  /// No description provided for @familyMemberRemoveTitle.
   ///
   /// In en, this message translates to:
   /// **'Remove {name}?'**
-  String partnerRemoveMemberTitle(String name);
+  String familyMemberRemoveTitle(String name);
 
-  /// No description provided for @partnerRemoveMemberBody.
+  /// No description provided for @familyMemberRemoveBody.
   ///
   /// In en, this message translates to:
   /// **'{name} will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.'**
-  String partnerRemoveMemberBody(String name);
+  String familyMemberRemoveBody(String name);
 
-  /// No description provided for @partnerRemovedFromFamily.
+  /// No description provided for @familyMemberRemovedFromFamily.
   ///
   /// In en, this message translates to:
   /// **'You were removed from the family on another device.'**
-  String get partnerRemovedFromFamily;
+  String get familyMemberRemovedFromFamily;
 
-  /// No description provided for @partnerStatusPaired.
+  /// No description provided for @otherLinkMemberStatusPaired.
   ///
   /// In en, this message translates to:
   /// **'Family member linked — family key present'**
-  String get partnerStatusPaired;
+  String get otherLinkMemberStatusPaired;
 
-  /// No description provided for @partnerStatusUnpaired.
+  /// No description provided for @otherLinkMemberStatusUnpaired.
   ///
   /// In en, this message translates to:
   /// **'Family member not linked — scan or share the QR code to link'**
-  String get partnerStatusUnpaired;
+  String get otherLinkMemberStatusUnpaired;
 
-  /// No description provided for @partnerLastSeen.
+  /// No description provided for @familyMemberLastSeen.
   ///
   /// In en, this message translates to:
   /// **'Last seen {when}'**
-  String partnerLastSeen(String when);
+  String familyMemberLastSeen(String when);
 
-  /// No description provided for @partnerLastSeenWarning.
+  /// No description provided for @familyMemberLastSeenWarning.
   ///
   /// In en, this message translates to:
   /// **'Warning: last seen {when}'**
-  String partnerLastSeenWarning(String when);
+  String familyMemberLastSeenWarning(String when);
 
-  /// No description provided for @partnerFingerprint.
+  /// No description provided for @familyMemberFingerprint.
   ///
   /// In en, this message translates to:
   /// **'Fingerprint {fingerprint}'**
-  String partnerFingerprint(String fingerprint);
+  String familyMemberFingerprint(String fingerprint);
 
   /// No description provided for @kidsLinkApp.
   ///
@@ -1268,11 +1268,11 @@ abstract class AppLocalizations {
   /// **'Kids'**
   String get commonKids;
 
-  /// No description provided for @commonPartner.
+  /// No description provided for @commonFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'Family member'**
-  String get commonPartner;
+  String get commonFamilyMember;
 
   /// No description provided for @commonReminder.
   ///
@@ -1940,17 +1940,17 @@ abstract class AppLocalizations {
   /// **'For you'**
   String get tasksForYou;
 
-  /// No description provided for @tasksForPartner.
+  /// No description provided for @tasksForFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'For {name}'**
-  String tasksForPartner(String name);
+  String tasksForFamilyMember(String name);
 
-  /// No description provided for @tasksFromPartner.
+  /// No description provided for @tasksFromFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'From {name}'**
-  String tasksFromPartner(String name);
+  String tasksFromFamilyMember(String name);
 
   /// No description provided for @tasksForFamily.
   ///
@@ -1964,11 +1964,11 @@ abstract class AppLocalizations {
   /// **'From family'**
   String get tasksFromFamily;
 
-  /// No description provided for @partnerGenericName.
+  /// No description provided for @familyMemberGenericName.
   ///
   /// In en, this message translates to:
   /// **'family member'**
-  String get partnerGenericName;
+  String get familyMemberGenericName;
 
   /// No description provided for @tasksAccept.
   ///
@@ -2126,11 +2126,11 @@ abstract class AppLocalizations {
   /// **'Connection stale'**
   String get taskStaleConnectionTitle;
 
-  /// No description provided for @taskStalePartnerBody.
+  /// No description provided for @taskStaleFamilyMemberBody.
   ///
   /// In en, this message translates to:
   /// **'This family member was last seen {status}. Send anyway?'**
-  String taskStalePartnerBody(String status);
+  String taskStaleFamilyMemberBody(String status);
 
   /// No description provided for @taskStaleKidBody.
   ///
@@ -2150,17 +2150,17 @@ abstract class AppLocalizations {
   /// **'Send to which family member?'**
   String get familyMemberPickerTitle;
 
-  /// No description provided for @taskSendToPartnerTitle.
+  /// No description provided for @taskSendToFamilyMemberTitle.
   ///
   /// In en, this message translates to:
   /// **'Send to {name}?'**
-  String taskSendToPartnerTitle(String name);
+  String taskSendToFamilyMemberTitle(String name);
 
-  /// No description provided for @taskSendToPartnerBody.
+  /// No description provided for @taskSendToFamilyMemberBody.
   ///
   /// In en, this message translates to:
   /// **'\"{title}\" will be sent as a proposal to {name} and removed from your list once they accept it.'**
-  String taskSendToPartnerBody(String title, String name);
+  String taskSendToFamilyMemberBody(String title, String name);
 
   /// No description provided for @taskSendToKidTitle.
   ///
@@ -2420,11 +2420,11 @@ abstract class AppLocalizations {
   /// **'Deleted notes will be permanently removed. This cannot be undone.'**
   String get notesEmptyTrashBody;
 
-  /// No description provided for @notesSharedWithPartner.
+  /// No description provided for @notesSharedWithFamily.
   ///
   /// In en, this message translates to:
   /// **'Shared with family'**
-  String get notesSharedWithPartner;
+  String get notesSharedWithFamily;
 
   /// No description provided for @notesShareAllAdults.
   ///
@@ -2552,23 +2552,23 @@ abstract class AppLocalizations {
   /// **'Link WebDAV first to send a suggestion.'**
   String get suggestWebDavRequired;
 
-  /// No description provided for @suggestPartnerSeesTitle.
+  /// No description provided for @suggestFamilyMemberSeesTitle.
   ///
   /// In en, this message translates to:
   /// **'What {name} sees'**
-  String suggestPartnerSeesTitle(String name);
+  String suggestFamilyMemberSeesTitle(String name);
 
-  /// No description provided for @suggestPartnerSeesGeneric.
+  /// No description provided for @suggestFamilyMemberSeesGeneric.
   ///
   /// In en, this message translates to:
   /// **'Intentionally generic — no private titles or notes.'**
-  String get suggestPartnerSeesGeneric;
+  String get suggestFamilyMemberSeesGeneric;
 
-  /// No description provided for @suggestPartnerSeesFull.
+  /// No description provided for @suggestFamilyMemberSeesFull.
   ///
   /// In en, this message translates to:
   /// **'The title and any notes from this suggestion will be included.'**
-  String get suggestPartnerSeesFull;
+  String get suggestFamilyMemberSeesFull;
 
   /// No description provided for @suggestSend.
   ///
@@ -2588,11 +2588,11 @@ abstract class AppLocalizations {
   /// **'Habit'**
   String get suggestReasonHabit;
 
-  /// No description provided for @suggestReasonPartner.
+  /// No description provided for @suggestReasonFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'Family complement'**
-  String get suggestReasonPartner;
+  String get suggestReasonFamilyMember;
 
   /// No description provided for @suggestReasonSeasonal.
   ///
@@ -2684,65 +2684,65 @@ abstract class AppLocalizations {
   /// **'You have several open tasks in {category}. The suggestion is intentionally generic.'**
   String suggestLoadBalanceExplanationGeneric(String category);
 
-  /// No description provided for @suggestPartnerTitleSchool.
+  /// No description provided for @suggestFamilyMemberTitleSchool.
   ///
   /// In en, this message translates to:
   /// **'School run or childcare this week?'**
-  String get suggestPartnerTitleSchool;
+  String get suggestFamilyMemberTitleSchool;
 
-  /// No description provided for @suggestPartnerExplanationSchool.
+  /// No description provided for @suggestFamilyMemberExplanationSchool.
   ///
   /// In en, this message translates to:
   /// **'Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.'**
-  String get suggestPartnerExplanationSchool;
+  String get suggestFamilyMemberExplanationSchool;
 
-  /// No description provided for @suggestPartnerTitleHousehold.
+  /// No description provided for @suggestFamilyMemberTitleHousehold.
   ///
   /// In en, this message translates to:
   /// **'Can you pick up something around the house this week?'**
-  String get suggestPartnerTitleHousehold;
+  String get suggestFamilyMemberTitleHousehold;
 
-  /// No description provided for @suggestPartnerExplanationHousehold.
+  /// No description provided for @suggestFamilyMemberExplanationHousehold.
   ///
   /// In en, this message translates to:
   /// **'You have several household tasks open. The suggestion is intentionally generic.'**
-  String get suggestPartnerExplanationHousehold;
+  String get suggestFamilyMemberExplanationHousehold;
 
-  /// No description provided for @suggestPartnerTitleHealth.
+  /// No description provided for @suggestFamilyMemberTitleHealth.
   ///
   /// In en, this message translates to:
   /// **'Something around care or health to pick up?'**
-  String get suggestPartnerTitleHealth;
+  String get suggestFamilyMemberTitleHealth;
 
-  /// No description provided for @suggestPartnerExplanationHealth.
+  /// No description provided for @suggestFamilyMemberExplanationHealth.
   ///
   /// In en, this message translates to:
   /// **'Something around care is going on. Your family member only sees this generic question.'**
-  String get suggestPartnerExplanationHealth;
+  String get suggestFamilyMemberExplanationHealth;
 
-  /// No description provided for @suggestPartnerTitleSport.
+  /// No description provided for @suggestFamilyMemberTitleSport.
   ///
   /// In en, this message translates to:
   /// **'Sports bag or training this week?'**
-  String get suggestPartnerTitleSport;
+  String get suggestFamilyMemberTitleSport;
 
-  /// No description provided for @suggestPartnerExplanationSport.
+  /// No description provided for @suggestFamilyMemberExplanationSport.
   ///
   /// In en, this message translates to:
   /// **'Based on your tasks, sport looks like a theme. No private details.'**
-  String get suggestPartnerExplanationSport;
+  String get suggestFamilyMemberExplanationSport;
 
-  /// No description provided for @suggestPartnerTitleAdmin.
+  /// No description provided for @suggestFamilyMemberTitleAdmin.
   ///
   /// In en, this message translates to:
   /// **'An admin chore this week?'**
-  String get suggestPartnerTitleAdmin;
+  String get suggestFamilyMemberTitleAdmin;
 
-  /// No description provided for @suggestPartnerExplanationAdmin.
+  /// No description provided for @suggestFamilyMemberExplanationAdmin.
   ///
   /// In en, this message translates to:
   /// **'There is admin work open. The suggestion does not name a concrete task.'**
-  String get suggestPartnerExplanationAdmin;
+  String get suggestFamilyMemberExplanationAdmin;
 
   /// No description provided for @suggestCalendarTaxTitle.
   ///
@@ -2954,11 +2954,11 @@ abstract class AppLocalizations {
   /// **'Handy tasks to consider today'**
   String get suggestionsSubtitle;
 
-  /// No description provided for @suggestionsProposedByPartner.
+  /// No description provided for @suggestionsProposedByFamilyMember.
   ///
   /// In en, this message translates to:
   /// **'Suggested by {name}'**
-  String suggestionsProposedByPartner(String name);
+  String suggestionsProposedByFamilyMember(String name);
 
   /// No description provided for @tasksDecline.
   ///

@@ -13,7 +13,7 @@ void main() {
         serverUrl: 'https://nextcloud.example.com/remote.php/dav',
         username: 'testuser',
         password: 'testpass',
-        linkId: 'test-parent-id',
+        linkId: 'test-link-id',
         personalKeyBytes: Uint8List.fromList(List.generate(32, (i) => i)),
         familyKeyBytes: Uint8List.fromList(List.generate(32, (i) => i + 1)),
       );

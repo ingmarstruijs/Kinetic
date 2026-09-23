@@ -17,7 +17,7 @@ class NotesScreen extends StatefulWidget {
   final NoteRepository repo;
   final SettingsRepository? settingsRepo;
   final ValueNotifier<SyncStatus>? syncStatus;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final VoidCallback? onSyncRetry;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
@@ -27,7 +27,7 @@ class NotesScreen extends StatefulWidget {
     required this.repo,
     this.settingsRepo,
     this.syncStatus,
-    this.partnerPaired = false,
+    this.hasOtherLinkMembers = false,
     this.onSyncRetry,
     this.myLinkId,
     this.otherLinkMembers = const [],
@@ -70,7 +70,7 @@ class _NotesScreenState extends State<NotesScreen> {
         builder: (_) => NoteEditorScreen(
           repo: widget.repo,
           note: note,
-          hasFamilyKey: widget.partnerPaired,
+          hasFamilyKey: widget.hasOtherLinkMembers,
           initialIsShared: note?.isShared ?? initialIsShared,
           otherLinkMembers: widget.otherLinkMembers,
         ),
@@ -153,14 +153,14 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
         body: _NotesListBody(
           repo: widget.repo,
-          partnerPaired: widget.partnerPaired,
+          hasOtherLinkMembers: widget.hasOtherLinkMembers,
           myLinkId: widget.myLinkId,
           otherLinkMembers: widget.otherLinkMembers,
           onEditNote: (note) => _openEditor(note: note),
         ),
         bottomSheet: NoteQuickAddBar(
           repo: widget.repo,
-          hasFamilyKey: widget.partnerPaired,
+          hasFamilyKey: widget.hasOtherLinkMembers,
           otherLinkMembers: widget.otherLinkMembers,
         ),
       ),
@@ -174,14 +174,14 @@ class _NotesScreenState extends State<NotesScreen> {
 
 class _NotesListBody extends StatelessWidget {
   final NoteRepository repo;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final void Function(PersonalNote note) onEditNote;
 
   const _NotesListBody({
     required this.repo,
-    required this.partnerPaired,
+    required this.hasOtherLinkMembers,
     required this.myLinkId,
     required this.otherLinkMembers,
     required this.onEditNote,
@@ -264,7 +264,7 @@ class _NotesListBody extends StatelessWidget {
         return _NoteGroupedList(
           notes: notes,
           repo: repo,
-          partnerPaired: partnerPaired,
+          hasOtherLinkMembers: hasOtherLinkMembers,
           myLinkId: myLinkId,
           otherLinkMembers: otherLinkMembers,
           onEditNote: onEditNote,
@@ -293,7 +293,7 @@ class _NoteDataItem extends _NoteListItem {
 class _NoteGroupedList extends StatelessWidget {
   final List<PersonalNote> notes;
   final NoteRepository repo;
-  final bool partnerPaired;
+  final bool hasOtherLinkMembers;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
   final void Function(PersonalNote note) onEditNote;
@@ -301,7 +301,7 @@ class _NoteGroupedList extends StatelessWidget {
   const _NoteGroupedList({
     required this.notes,
     required this.repo,
-    required this.partnerPaired,
+    required this.hasOtherLinkMembers,
     required this.myLinkId,
     required this.otherLinkMembers,
     required this.onEditNote,
@@ -312,7 +312,7 @@ class _NoteGroupedList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final privateNotes = notes.where((n) => !n.isShared).toList();
     final sharedNotes = notes.where((n) => n.isShared).toList();
-    final showSharedSection = partnerPaired || sharedNotes.isNotEmpty;
+    final showSharedSection = hasOtherLinkMembers || sharedNotes.isNotEmpty;
     final showHeaders = showSharedSection;
 
     final flatItems = <_NoteListItem>[];

@@ -16,7 +16,7 @@ const _kFamilyKey = 'kinetic_webdav_family_key';
 const _kFamilyEntropy = 'kinetic_webdav_family_entropy';
 const _kLinkId = 'kinetic_webdav_link_id';
 const _kEnrolledKids = 'kinetic_enrolled_kids';
-const _kPartnerPaired = 'kinetic_partner_paired';
+const _kHasOtherLinkMembers = 'kinetic_has_other_link_members';
 const _kKidsParticipation = 'kinetic_kids_participation';
 const _kCachedRoster = 'kinetic_family_roster';
 
@@ -101,7 +101,7 @@ class WebDavConfigRepository {
   /// Updates only the password in secure storage.
   ///
   /// The family key is intentionally left unchanged — it is independent of
-  /// the WebDAV password and is shared explicitly between parents.
+  /// the WebDAV password and is shared explicitly between Link family members.
   Future<void> updatePassword(String newPassword) async {
     await _store.write(key: _kPassword, value: newPassword);
   }
@@ -175,36 +175,25 @@ class WebDavConfigRepository {
   Future<void> clearFamilyKey() async {
     await _store.delete(key: _kFamilyKey);
     await _store.delete(key: _kFamilyEntropy);
-    await _store.delete(key: _kPartnerPaired);
+    await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kCachedRoster);
   }
 
-  /// Marks whether the user has explicitly paired with a partner.
-  ///
-  /// Prefer [hasOtherLinkMembers] / roster sync for new code; this flag remains
-  /// as a migration bridge and offline hint.
-  Future<void> setPartnerPaired(bool paired) async {
-    await _store.write(key: _kPartnerPaired, value: paired ? '1' : '0');
+  /// Marks whether another Link member has been linked (offline hint).
+  /// Prefer roster [hasOtherLinkMembers] for UI when a roster is available.
+  Future<void> setHasOtherLinkMembers(bool linked) async {
+    await _store.write(key: _kHasOtherLinkMembers, value: linked ? '1' : '0');
   }
 
-  /// Returns true if the user has explicitly paired with a partner.
-  Future<bool> isPartnerPaired() async {
-    final val = await _store.read(key: _kPartnerPaired);
-    if (val == '1') return true;
-    final roster = await loadCachedRoster();
-    if (roster == null) return false;
-    final myId = await _store.read(key: _kLinkId) ?? '';
-    return roster.otherLinkMembers(myId).isNotEmpty;
-  }
-
-  /// True when the shared roster lists at least one other Kinetic Link device.
+  /// True when another Link member is linked: roster first, then local flag.
   Future<bool> hasOtherLinkMembers() async {
     final roster = await loadCachedRoster();
     final myId = await _store.read(key: _kLinkId) ?? '';
     if (roster != null && roster.otherLinkMembers(myId).isNotEmpty) {
       return true;
     }
-    return isPartnerPaired();
+    final val = await _store.read(key: _kHasOtherLinkMembers);
+    return val == '1';
   }
 
   // ---------------------------------------------------------------------------
@@ -245,7 +234,7 @@ class WebDavConfigRepository {
     );
     final myId = await _store.read(key: _kLinkId) ?? '';
     if (roster.otherLinkMembers(myId).isNotEmpty) {
-      await setPartnerPaired(true);
+      await setHasOtherLinkMembers(true);
     }
   }
 
@@ -322,7 +311,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kPersonalEntropy);
     await _store.delete(key: _kFamilyKey);
     await _store.delete(key: _kFamilyEntropy);
-    await _store.delete(key: _kPartnerPaired);
+    await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kKidsParticipation);
     await _store.delete(key: _kCachedRoster);
   }

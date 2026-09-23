@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../partner/services/partner_proposal_repository.dart';
+import '../../family/proposals/link_member_proposal_repository.dart';
 import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
 import 'ai_suggestion_repository.dart';
@@ -20,10 +20,10 @@ String suggestionDisplayTitle(AiSuggestion suggestion, AppLocalizations l10n) {
       return l10n.suggestCategorizeTitle(count, label);
     case SuggestionReason.loadBalance:
       return _loadBalanceTitle(l10n, suggestion.category);
-    case SuggestionReason.partnerComplement:
-      return _partnerTitle(
+    case SuggestionReason.familyMemberComplement:
+      return _familyMemberTitle(
             l10n,
-            _idAfterPrefix(suggestion.dedupeKey, 'partnerComplement:'),
+            _idAfterPrefix(suggestion.dedupeKey, 'familyMemberComplement:'),
           ) ??
           suggestion.title;
     case SuggestionReason.calendar:
@@ -51,10 +51,10 @@ String suggestionDisplayExplanation(
         return l10n.suggestLoadBalanceExplanationGeneric(category);
       }
       return l10n.suggestLoadBalanceExplanation(count, category);
-    case SuggestionReason.partnerComplement:
-      return _partnerExplanation(
+    case SuggestionReason.familyMemberComplement:
+      return _familyMemberExplanation(
             l10n,
-            _idAfterPrefix(suggestion.dedupeKey, 'partnerComplement:'),
+            _idAfterPrefix(suggestion.dedupeKey, 'familyMemberComplement:'),
           ) ??
           (suggestion.explanation ?? '');
     case SuggestionReason.calendar:
@@ -103,23 +103,23 @@ String _loadBalanceTitle(AppLocalizations l10n, String category) =>
       _ => l10n.suggestLoadBalanceTitleOther,
     };
 
-String? _partnerTitle(AppLocalizations l10n, String? familyId) =>
+String? _familyMemberTitle(AppLocalizations l10n, String? familyId) =>
     switch (familyId) {
-      'school' => l10n.suggestPartnerTitleSchool,
-      'household' => l10n.suggestPartnerTitleHousehold,
-      'health' => l10n.suggestPartnerTitleHealth,
-      'sport' => l10n.suggestPartnerTitleSport,
-      'admin' => l10n.suggestPartnerTitleAdmin,
+      'school' => l10n.suggestFamilyMemberTitleSchool,
+      'household' => l10n.suggestFamilyMemberTitleHousehold,
+      'health' => l10n.suggestFamilyMemberTitleHealth,
+      'sport' => l10n.suggestFamilyMemberTitleSport,
+      'admin' => l10n.suggestFamilyMemberTitleAdmin,
       _ => null,
     };
 
-String? _partnerExplanation(AppLocalizations l10n, String? familyId) =>
+String? _familyMemberExplanation(AppLocalizations l10n, String? familyId) =>
     switch (familyId) {
-      'school' => l10n.suggestPartnerExplanationSchool,
-      'household' => l10n.suggestPartnerExplanationHousehold,
-      'health' => l10n.suggestPartnerExplanationHealth,
-      'sport' => l10n.suggestPartnerExplanationSport,
-      'admin' => l10n.suggestPartnerExplanationAdmin,
+      'school' => l10n.suggestFamilyMemberExplanationSchool,
+      'household' => l10n.suggestFamilyMemberExplanationHousehold,
+      'health' => l10n.suggestFamilyMemberExplanationHealth,
+      'sport' => l10n.suggestFamilyMemberExplanationSport,
+      'admin' => l10n.suggestFamilyMemberExplanationAdmin,
       _ => null,
     };
 
@@ -202,12 +202,12 @@ Future<void> acceptSelfSuggestion({
   await suggestionRepo.accept(suggestion.id);
 }
 
-/// Shows what the partner will see, then sends. Returns false if cancelled
+/// Shows what the family member will see, then sends. Returns false if cancelled
 /// or if pairing data is missing.
-Future<bool> confirmAndSendSuggestionToPartner({
+Future<bool> confirmAndSendSuggestionToFamilyMember({
   required BuildContext context,
   required AiSuggestion suggestion,
-  required PartnerProposalRepository proposalRepo,
+  required LinkMemberProposalRepository proposalRepo,
   required AiSuggestionRepository suggestionRepo,
   required String? myLinkId,
   List<({String id, String name})> otherLinkMembers = const [],
@@ -223,7 +223,7 @@ Future<bool> confirmAndSendSuggestionToPartner({
   }
 
   String? toMemberId;
-  var recipientName = l10n.partnerGenericName;
+  var recipientName = l10n.familyMemberGenericName;
   if (otherLinkMembers.length > 1) {
     final picked = await showDialog<({String id, String name})>(
       context: context,
@@ -264,7 +264,7 @@ Future<bool> confirmAndSendSuggestionToPartner({
       final dialogL10n = AppLocalizations.of(ctx);
       final tt = Theme.of(ctx).textTheme;
       return AlertDialog(
-        title: Text(dialogL10n.suggestPartnerSeesTitle(recipientName)),
+        title: Text(dialogL10n.suggestFamilyMemberSeesTitle(recipientName)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,9 +272,9 @@ Future<bool> confirmAndSendSuggestionToPartner({
             Text(title, style: tt.titleMedium),
             const SizedBox(height: 8),
             Text(
-              suggestion.isPartnerTargeted
-                  ? dialogL10n.suggestPartnerSeesGeneric
-                  : dialogL10n.suggestPartnerSeesFull,
+              suggestion.isFamilyMemberTargeted
+                  ? dialogL10n.suggestFamilyMemberSeesGeneric
+                  : dialogL10n.suggestFamilyMemberSeesFull,
               style: tt.bodySmall,
             ),
           ],
@@ -298,11 +298,11 @@ Future<bool> confirmAndSendSuggestionToPartner({
     myLinkId: myLinkId,
     toMemberId: toMemberId,
     taskTitle: title,
-    taskNotes: suggestion.isPartnerTargeted ? null : suggestion.notes,
+    taskNotes: suggestion.isFamilyMemberTargeted ? null : suggestion.notes,
     taskCategory: suggestion.category,
     taskPriority: TaskPriority.values[suggestion.priority],
     taskDueDate: suggestion.suggestedDueDate,
-    autoGenerated: suggestion.isPartnerTargeted,
+    autoGenerated: suggestion.isFamilyMemberTargeted,
   );
   await suggestionRepo.accept(suggestion.id);
   if (context.mounted) {

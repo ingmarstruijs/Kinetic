@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../db/app_database.dart';
-import '../partner/models/partner_proposal.dart';
+import '../family/proposals/link_member_proposal.dart';
 import '../settings/models/enrolled_kid.dart';
 import '../todo/models/enums.dart';
 import '../todo/models/personal_note.dart';
@@ -26,7 +26,7 @@ class SyncOrchestrator {
   /// Optional callback invoked after disconnect tombstones are processed.
   ///
   /// Receives the list of device IDs that sent an explicit disconnect so the
-  /// caller (main.dart) can update UI notifiers (partner pairing, kids count).
+  /// caller (main.dart) can update UI notifiers (family linking, kids count).
   final void Function(List<String> disconnectedIds)? onDisconnectsDetected;
 
   /// Called after the shared roster is merged so UI can refresh link members/kids.
@@ -184,7 +184,7 @@ class SyncOrchestrator {
   // ---------------------------------------------------------------------------
 
   /// Checks the shared disconnect folder.  If a tombstone for a known
-  /// partner or enrolled kid is found the callback is invoked and the
+  /// link member or enrolled kid is found the callback is invoked and the
   /// tombstone is cleaned up so it is not processed again.
   Future<void> _processDisconnects(WebDavSyncService service) async {
     if (_config.familyKeyBytes == null) return;
@@ -586,7 +586,7 @@ class SyncOrchestrator {
     final localList = await _db.select(_db.personalNotes).get();
     final remoteIds = remoteList.map((n) => n.uid).toSet();
 
-    // 3a. Detect and remove shared notes that were deleted on the partner's device.
+    // 3a. Detect and remove shared notes that were deleted on the other Link device.
     // If a shared note exists locally but not on the server, and it's clean (not dirty),
     // then it was deleted remotely and should be removed locally too.
     for (final local in localList) {
@@ -595,7 +595,7 @@ class SyncOrchestrator {
           !remoteIds.contains(local.id)) {
         if (kDebugMode) {
           debugPrint(
-            'Shared note deleted on partner device, removing locally: ${local.id}',
+            'Shared note deleted on another Link device, removing locally: ${local.id}',
           );
         }
         await (_db.delete(
@@ -755,18 +755,33 @@ class SyncOrchestrator {
     // 1. Push dirty local proposals (accepted/rejected/snoozed feedback +
     //    new auto-generated outbound proposals).
     final dirtyRows = await (_db.select(
-      _db.partnerProposals,
+      _db.linkMemberProposals,
     )..where((p) => p.syncState.equals('dirty'))).get();
     for (final row in dirtyRows) {
       try {
         final proposal = _proposalRowToProposal(row);
         final json = _proposalToJson(proposal);
         await service.pushProposal(json);
-        await (_db.update(_db.partnerProposals)
+        await (_db.update(_db.linkMemberProposals)
               ..where((p) => p.id.equals(row.id)))
-            .write(const PartnerProposalsCompanion(syncState: Value('clean')));
+            .write(const LinkMemberProposalsCompanion(syncState: Value('clean')));
       } catch (_) {
         // Leave dirty for next cycle.
+      }
+    }
+
+    // 1b. Push locally-deleted proposals, then remove the rows.
+    final deletedRows = await (_db.select(
+      _db.linkMemberProposals,
+    )..where((p) => p.syncState.equals('deleted'))).get();
+    for (final row in deletedRows) {
+      try {
+        await service.deleteProposal(row.id);
+        await (_db.delete(
+          _db.linkMemberProposals,
+        )..where((p) => p.id.equals(row.id))).go();
+      } catch (_) {
+        // Leave deleted for next cycle.
       }
     }
 
@@ -775,66 +790,45 @@ class SyncOrchestrator {
     final remoteProposals = _jsonListToProposals(remotes);
 
     // 3. Get local proposals and merge (LWW).
-    final localRows = await _db.select(_db.partnerProposals).get();
+    final localRows = await (_db.select(
+      _db.linkMemberProposals,
+    )..where((p) => p.syncState.equals('deleted').not())).get();
     final locals = localRows.map(_proposalRowToProposal).toList();
     final merged = _mergeProposals(locals, remoteProposals);
 
     // 4. Write merged proposals to local DB.
     for (final proposal in merged) {
       await _db
-          .into(_db.partnerProposals)
+          .into(_db.linkMemberProposals)
           .insertOnConflictUpdate(_proposalToCompanion(proposal));
     }
 
-    // 4a. Clean up tasks for accepted outgoing proposals.
-    // If we sent a proposal and it is (now) accepted, remove the matching
-    // open task from this device. Do not require syncState=clean — most
-    // recently sent tasks are still dirty.
+    // 4a. Clean up the sender task linked via sourceTaskId when accepted.
     final myLinkId = _config.linkId;
     for (final proposal in merged) {
       if (proposal.fromLinkId != myLinkId) continue;
       if (proposal.status != ProposalStatus.accepted) continue;
+      final sourceId = proposal.sourceTaskId;
+      if (sourceId == null || sourceId.isEmpty) continue;
 
-      final localProposal = locals
-          .where((p) => p.id == proposal.id)
-          .firstOrNull;
-      final newlyAccepted =
-          localProposal == null ||
-          localProposal.status != ProposalStatus.accepted;
-      final needle = _normalizeProposalTitle(proposal.taskTitle);
-
-      final openTasks =
-          await (_db.select(_db.personalTasks)..where(
-                (t) =>
-                    t.isCompleted.equals(false) &
-                    t.syncState.equals('deleted').not(),
-              ))
-              .get();
-
-      for (final task in openTasks) {
-        if (_normalizeProposalTitle(task.title) != needle) continue;
-        // On later syncs, only retry-delete tasks that predate acceptance so a
-        // brand-new same-title task is kept.
-        if (!newlyAccepted && task.createdAt.isAfter(proposal.updatedAt)) {
-          continue;
-        }
-        await (_db.update(_db.personalTasks)
-              ..where((t) => t.id.equals(task.id)))
-            .write(
-              PersonalTasksCompanion(
-                syncState: const Value('deleted'),
-                updatedAt: Value(DateTime.now().toUtc()),
-              ),
-            );
-      }
+      await (_db.update(_db.personalTasks)
+            ..where(
+              (t) =>
+                  t.id.equals(sourceId) &
+                  t.isCompleted.equals(false) &
+                  t.syncState.equals('deleted').not(),
+            ))
+          .write(
+            PersonalTasksCompanion(
+              syncState: const Value('deleted'),
+              updatedAt: Value(DateTime.now().toUtc()),
+            ),
+          );
     }
   }
 
-  static String _normalizeProposalTitle(String title) =>
-      title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-
-  PartnerProposal _proposalRowToProposal(PartnerProposalRow row) {
-    return PartnerProposal(
+  LinkMemberProposal _proposalRowToProposal(LinkMemberProposalRow row) {
+    return LinkMemberProposal(
       id: row.id,
       fromLinkId: row.fromLinkId,
       toMemberId: row.toMemberId,
@@ -847,10 +841,12 @@ class SyncOrchestrator {
       receivedAt: row.receivedAt,
       updatedAt: row.updatedAt,
       autoGenerated: row.autoGenerated,
+      sourceTaskId: row.sourceTaskId,
+      resultTaskId: row.resultTaskId,
     );
   }
 
-  Map<String, dynamic> _proposalToJson(PartnerProposal p) => {
+  Map<String, dynamic> _proposalToJson(LinkMemberProposal p) => {
     'id': p.id,
     'fromLinkId': p.fromLinkId,
     'toMemberId': p.toMemberId,
@@ -863,10 +859,12 @@ class SyncOrchestrator {
     'receivedAt': p.receivedAt.toIso8601String(),
     'updatedAt': p.updatedAt.toIso8601String(),
     'autoGenerated': p.autoGenerated,
+    'sourceTaskId': p.sourceTaskId,
+    'resultTaskId': p.resultTaskId,
   };
 
-  PartnerProposal _jsonToProposal(Map<String, dynamic> json) {
-    return PartnerProposal(
+  LinkMemberProposal _jsonToProposal(Map<String, dynamic> json) {
+    return LinkMemberProposal(
       id: json['id'] as String,
       fromLinkId: json['fromLinkId'] as String,
       toMemberId: json['toMemberId'] as String?,
@@ -881,15 +879,17 @@ class SyncOrchestrator {
       receivedAt: DateTime.parse(json['receivedAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       autoGenerated: json['autoGenerated'] as bool? ?? false,
+      sourceTaskId: json['sourceTaskId'] as String?,
+      resultTaskId: json['resultTaskId'] as String?,
     );
   }
 
-  List<PartnerProposal> _jsonListToProposals(List<Map<String, dynamic>> jsons) {
+  List<LinkMemberProposal> _jsonListToProposals(List<Map<String, dynamic>> jsons) {
     return jsons.map(_jsonToProposal).toList();
   }
 
-  PartnerProposalsCompanion _proposalToCompanion(PartnerProposal p) {
-    return PartnerProposalsCompanion(
+  LinkMemberProposalsCompanion _proposalToCompanion(LinkMemberProposal p) {
+    return LinkMemberProposalsCompanion(
       id: Value(p.id),
       fromLinkId: Value(p.fromLinkId),
       toMemberId: Value(p.toMemberId),
@@ -903,18 +903,21 @@ class SyncOrchestrator {
       updatedAt: Value(p.updatedAt),
       autoGenerated: Value(p.autoGenerated),
       syncState: const Value('clean'),
+      sourceTaskId: Value(p.sourceTaskId),
+      resultTaskId: Value(p.resultTaskId),
     );
   }
 
   /// LWW merge: remote wins if newer, local wins if older.
-  List<PartnerProposal> _mergeProposals(
-    List<PartnerProposal> local,
-    List<PartnerProposal> remote,
+  /// Preserves non-null task id links when the winning side lacks them.
+  List<LinkMemberProposal> _mergeProposals(
+    List<LinkMemberProposal> local,
+    List<LinkMemberProposal> remote,
   ) {
     final remoteById = {for (final p in remote) p.id: p};
     final localById = {for (final p in local) p.id: p};
 
-    final merged = <PartnerProposal>[];
+    final merged = <LinkMemberProposal>[];
 
     for (final id in {...remoteById.keys, ...localById.keys}) {
       final r = remoteById[id];
@@ -925,9 +928,19 @@ class SyncOrchestrator {
       } else if (l == null) {
         merged.add(r);
       } else if (!r.updatedAt.isBefore(l.updatedAt)) {
-        merged.add(r);
+        merged.add(
+          r.copyWith(
+            sourceTaskId: r.sourceTaskId ?? l.sourceTaskId,
+            resultTaskId: r.resultTaskId ?? l.resultTaskId,
+          ),
+        );
       } else {
-        merged.add(l);
+        merged.add(
+          l.copyWith(
+            sourceTaskId: l.sourceTaskId ?? r.sourceTaskId,
+            resultTaskId: l.resultTaskId ?? r.resultTaskId,
+          ),
+        );
       }
     }
     return merged;

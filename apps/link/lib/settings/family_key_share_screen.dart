@@ -162,7 +162,7 @@ class _FamilyKeyShareScreenState extends State<FamilyKeyShareScreen> {
                 FilledButton.icon(
                   onPressed: () => setState(() => _confirmed = true),
                   icon: const Icon(Icons.check),
-                  label: Text(l10n.familyKeyPartnerScanned),
+                  label: Text(l10n.familyKeyLinkMemberScanned),
                 )
               else
                 Row(

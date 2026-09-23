@@ -1,27 +1,27 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link/db/app_database.dart';
-import 'package:link/partner/services/partner_proposal_repository.dart';
+import 'package:link/family/proposals/link_member_proposal_repository.dart';
 import 'package:link/todo/models/enums.dart';
 import 'package:link/todo/services/todo_repository.dart';
 import '../../helpers/test_database.dart';
 
 // ---------------------------------------------------------------------------
-// Helper — inserts a minimal PartnerProposalRow directly via the DB companion.
+// Helper — inserts a minimal LinkMemberProposalRow directly via the DB companion.
 // ---------------------------------------------------------------------------
 Future<void> _insertProposal(
   AppDatabase db, {
   required String id,
-  String fromLinkId = 'partner-99',
+  String fromLinkId = 'link-99',
   String taskTitle = 'Test voorstel',
   String status = 'pending',
   String syncState = 'clean',
 }) async {
   final now = DateTime.now().toUtc();
   await db
-      .into(db.partnerProposals)
+      .into(db.linkMemberProposals)
       .insert(
-        PartnerProposalsCompanion.insert(
+        LinkMemberProposalsCompanion.insert(
           id: id,
           fromLinkId: fromLinkId,
           taskTitle: taskTitle,
@@ -34,21 +34,21 @@ Future<void> _insertProposal(
 }
 
 /// Reads the raw DB row for a proposal.
-Future<PartnerProposalRow?> _getRaw(AppDatabase db, String id) async {
+Future<LinkMemberProposalRow?> _getRaw(AppDatabase db, String id) async {
   return (db.select(
-    db.partnerProposals,
+    db.linkMemberProposals,
   )..where((t) => t.id.equals(id))).getSingleOrNull();
 }
 
 void main() {
   late AppDatabase db;
   late TodoRepository todoRepository;
-  late PartnerProposalRepository repo;
+  late LinkMemberProposalRepository repo;
 
   setUp(() {
     db = createTestDatabase();
     todoRepository = TodoRepository(db: db);
-    repo = PartnerProposalRepository(db: db, todoRepository: todoRepository);
+    repo = LinkMemberProposalRepository(db: db, todoRepository: todoRepository);
   });
 
   tearDown(() => db.close());
@@ -56,7 +56,7 @@ void main() {
   // --------------------------------------------------------------------------
   // watchPending
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.watchPending', () {
+  group('LinkMemberProposalRepository.watchPending', () {
     test('emits empty list when no proposals exist', () async {
       final proposals = await repo.watchPending().first;
       expect(proposals, isEmpty);
@@ -72,14 +72,14 @@ void main() {
       expect(proposals.first.id, equals('p1'));
     });
 
-    test('maps DB row to PartnerProposal correctly', () async {
+    test('maps DB row to LinkMemberProposal correctly', () async {
       final now = DateTime.now().toUtc();
       await db
-          .into(db.partnerProposals)
+          .into(db.linkMemberProposals)
           .insert(
-            PartnerProposalsCompanion.insert(
+            LinkMemberProposalsCompanion.insert(
               id: 'mapped-1',
-              fromLinkId: 'partner-42',
+              fromLinkId: 'link-42',
               taskTitle: 'Afwas doen',
               taskCategory: const Value('other'),
               taskPriority: const Value(2),
@@ -92,7 +92,7 @@ void main() {
       final proposals = await repo.watchPending().first;
       expect(proposals, hasLength(1));
       final p = proposals.first;
-      expect(p.fromLinkId, equals('partner-42'));
+      expect(p.fromLinkId, equals('link-42'));
       expect(p.taskTitle, equals('Afwas doen'));
       expect(p.taskPriority, equals(TaskPriority.medium));
       expect(p.status, equals(ProposalStatus.pending));
@@ -102,7 +102,7 @@ void main() {
   // --------------------------------------------------------------------------
   // watchAll
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.watchAll', () {
+  group('LinkMemberProposalRepository.watchAll', () {
     test('returns proposals with any status', () async {
       await _insertProposal(db, id: 'p1', status: 'pending');
       await _insertProposal(db, id: 'p2', status: 'accepted');
@@ -118,7 +118,7 @@ void main() {
   // --------------------------------------------------------------------------
   // watchPendingCount
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.watchPendingCount', () {
+  group('LinkMemberProposalRepository.watchPendingCount', () {
     test('returns 0 for empty DB', () async {
       expect(await repo.watchPendingCount().first, equals(0));
     });
@@ -135,7 +135,7 @@ void main() {
   // --------------------------------------------------------------------------
   // accept
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.accept', () {
+  group('LinkMemberProposalRepository.accept', () {
     test('sets status to accepted and syncState to dirty', () async {
       await _insertProposal(
         db,
@@ -155,7 +155,7 @@ void main() {
   // --------------------------------------------------------------------------
   // dismiss
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.dismiss', () {
+  group('LinkMemberProposalRepository.dismiss', () {
     test('sets status to dismissed and syncState to dirty', () async {
       await _insertProposal(
         db,
@@ -175,7 +175,7 @@ void main() {
   // --------------------------------------------------------------------------
   // delete
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.delete', () {
+  group('LinkMemberProposalRepository.delete', () {
     test('sets syncState to deleted without changing status', () async {
       await _insertProposal(
         db,
@@ -197,7 +197,7 @@ void main() {
   // --------------------------------------------------------------------------
   // reject
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.reject', () {
+  group('LinkMemberProposalRepository.reject', () {
     test('sets status to rejected and syncState to dirty', () async {
       await _insertProposal(
         db,
@@ -250,7 +250,7 @@ void main() {
   // --------------------------------------------------------------------------
   // watchOne
   // --------------------------------------------------------------------------
-  group('PartnerProposalRepository.watchOne', () {
+  group('LinkMemberProposalRepository.watchOne', () {
     test('emits null for unknown id', () async {
       final result = await repo.watchOne('unknown').first;
       expect(result, isNull);
@@ -262,6 +262,61 @@ void main() {
       final result = await repo.watchOne('p1').first;
       expect(result, isNotNull);
       expect(result!.taskTitle, equals('Ophalen kinderen'));
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // Same-title tasks must not inherit family-member chrome from old proposals
+  // --------------------------------------------------------------------------
+  group('LinkMemberProposalRepository task-id binding', () {
+    test('accepted chrome is keyed by resultTaskId, not title', () async {
+      await _insertProposal(
+        db,
+        id: 'p-old',
+        taskTitle: 'Test',
+        status: 'accepted',
+      );
+      await (db.update(db.linkMemberProposals)..where((p) => p.id.equals('p-old')))
+          .write(
+            const LinkMemberProposalsCompanion(
+              resultTaskId: Value('task-old'),
+            ),
+          );
+
+      final forOld = await repo
+          .watchAcceptedProposalForTask(taskId: 'task-old')
+          .first;
+      final forNew = await repo
+          .watchAcceptedProposalForTask(taskId: 'task-new')
+          .first;
+
+      expect(forOld?.id, 'p-old');
+      expect(forNew, isNull);
+    });
+
+    test('completing a task archives its linked proposal', () async {
+      final created = await todoRepository.createTask(title: 'Test');
+      await _insertProposal(
+        db,
+        id: 'p1',
+        taskTitle: 'Test',
+        status: 'accepted',
+      );
+      await (db.update(db.linkMemberProposals)..where((p) => p.id.equals('p1')))
+          .write(
+            LinkMemberProposalsCompanion(resultTaskId: Value(created.id)),
+          );
+
+      await todoRepository.completeTask(created.id);
+
+      final row = await _getRaw(db, 'p1');
+      expect(row?.syncState, 'deleted');
+
+      final later = await todoRepository.createTask(title: 'Test');
+      final chrome = await repo
+          .watchAcceptedProposalForTask(taskId: later.id)
+          .first;
+      expect(chrome, isNull);
     });
   });
 }

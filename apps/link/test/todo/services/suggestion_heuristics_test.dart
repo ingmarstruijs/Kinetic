@@ -2,16 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:link/todo/services/suggestion_heuristics.dart';
 
 void main() {
-  group('matchPartnerHint', () {
+  group('matchFamilyMemberHint', () {
     test('maps school keywords to a generic title', () {
-      final hint = matchPartnerHint(title: 'Afspraak GZA schoolarts');
+      final hint = matchFamilyMemberHint(title: 'Afspraak GZA schoolarts');
       expect(hint, isNotNull);
       expect(hint!.familyId, 'school');
-      expect(hint.partnerTitle, isNot(contains('GZA')));
+      expect(hint.familyMemberTitle, isNot(contains('GZA')));
     });
 
     test('does not match a title without keywords', () {
-      expect(matchPartnerHint(title: 'Ramen lappen'), isNull);
+      expect(matchFamilyMemberHint(title: 'Ramen lappen'), isNull);
     });
   });
 

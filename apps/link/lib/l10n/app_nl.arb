@@ -1,0 +1,1005 @@
+{
+  "@@locale": "nl",
+
+  "navTasks": "Taken",
+  "navNotes": "Notities",
+  "navSettings": "Instellingen",
+
+  "commonCancel": "Annuleren",
+  "commonSave": "Opslaan",
+  "commonSaving": "Opslaan…",
+  "commonDelete": "Verwijderen",
+  "commonOk": "OK",
+  "commonError": "Fout",
+  "commonImport": "Importeren",
+  "commonContinue": "Doorgaan",
+  "commonClose": "Sluiten",
+  "commonBack": "Terug",
+  "commonCopy": "Kopiëren",
+  "commonUnknown": "(onbekend)",
+
+  "themeLight": "Standaard",
+  "themeCalm": "Kalm",
+  "themeNight": "Nacht",
+  "themeLightDesc": "Helder blauw",
+  "themeCalmDesc": "Warm zand met terracotta accenten",
+  "themeNightDesc": "OLED zwart",
+  "themeChoose": "Thema kiezen",
+
+  "settingsTitle": "Instellingen",
+  "settingsSectionAppearance": "Uiterlijk",
+  "settingsTheme": "Thema",
+  "settingsSectionSync": "Synchronisatie",
+  "settingsWebDavConfigure": "WebDAV configureren",
+  "settingsWebDavConnected": "Verbonden",
+  "settingsWebDavConnectHint": "Verbind met een Nextcloud- of WebDAV-server",
+  "settingsSectionFamily": "Familie",
+  "settingsFamilyMember": "Gezinslid",
+  "settingsFamilyMembers": "Gezinsleden",
+  "settingsFamilyMemberLinked": "Gezinslid gekoppeld",
+  "settingsFamilyMemberLinkHint": "Koppel met een ander gezinslid",
+  "settingsKids": "Kinderen",
+  "settingsKidsParticipation": "Kindertaken op dit apparaat",
+  "settingsKidsParticipationSubtitle": "Uit = dit apparaat kan kindertaken niet zien, maken, toewijzen of goedkeuren",
+  "settingsKidsLinkHint": "Koppel de kinderenapp",
+  "settingsKidsEnrolledCount": "{count, plural, =1{1 kind gekoppeld} other{{count} kinderen gekoppeld}}",
+  "@settingsKidsEnrolledCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "settingsSectionVault": "Kluis",
+  "settingsVerifyPhrase": "Herstelzin controleren",
+  "settingsVerifyPhraseSubtitle": "Controleer of je de 12 woorden nog kent. We tonen ze niet.",
+  "settingsSectionBackup": "Back-up & Herstel",
+  "settingsExportBackup": "Back-up exporteren",
+  "settingsExportBackupSubtitle": "Versleuteld .kvault-bestand. De herstelzin zit er niet in.",
+  "settingsImportBackup": "Back-up importeren",
+  "settingsImportBackupSubtitle": "Herstel vanuit .kvault met je 12 woorden",
+
+  "notifServiceFailed": "Meldingenservice kon niet starten: {error}",
+  "@notifServiceFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "notifDisabledBanner": "Meldingen zijn uitgeschakeld. Zet ze aan in Instellingen om herinneringen te ontvangen.",
+  "notifExactAlarmBanner": "Precieze herinneringen zijn uitgeschakeld. Sta \"Alarmen & herinneringen\" toe voor exacte tijden.",
+
+  "familyKeyScanTitle": "Familiesleutel scannen",
+  "familyKeyScanHint": "Richt op de QR-code van het gezinslid",
+  "familyKeyEnterPhrase": "Zin invoeren",
+  "familyKeyFound": "Sleutel gevonden",
+  "familyKeyLinkMember": "Gezinslid",
+  "familyKeyServer": "Server",
+  "familyKeyFingerprint": "Vingerafdruk",
+  "familyKeyServerMismatch": "De server in de QR-code ({scanned}) komt niet overeen met jouw server ({current}). Weet je zeker dat je doorgaat?",
+  "@familyKeyServerMismatch": {
+    "placeholders": {
+      "scanned": {"type": "String"},
+      "current": {"type": "String"}
+    }
+  },
+  "familyKeyConfirmLinkMember": "Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.",
+  "familyKeyAlreadyPairedWarning": "Je hebt al een familiesleutel. Als je een nieuwe importeert, wordt data die al met de huidige sleutel is versleuteld onleesbaar totdat je opnieuw synchroniseert.",
+  "familyKeyEnterTitle": "Familiesleutel invoeren",
+  "familyKeyEnterSubtitle": "Vul hun 12 woorden in. Daarna zie je de vingerafdruk ter controle.",
+  "familyKeySaved": "Familiesleutel opgeslagen.",
+  "familyKeySaveError": "Fout bij opslaan: {error}",
+  "@familyKeySaveError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "familyKeyInvalidQr": "Ongeldige QR-code: {error}",
+  "@familyKeyInvalidQr": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "familyKeyShareTitle": "Familiesleutel delen",
+  "familyKeyShareLegacyBody": "Laat het gezinslid deze QR-code scannen. Deze familiesleutel is van vóór de herstelzin en heeft geen 12 woorden.",
+  "familyKeyShareBody": "Laat het gezinslid deze QR-code scannen, of de 12 woorden typen.",
+  "familyKeyShareNoPassword": "De code bevat geen WebDAV-wachtwoord. Controleer samen de vingerafdruk.",
+  "familyKeyShareNoEntropy": "Geen herstelzin-gegevens op dit apparaat. Maak een nieuwe familiesleutel.",
+  "familyKeyShareFingerprint": "Vingerafdruk  {fingerprint}",
+  "@familyKeyShareFingerprint": {
+    "placeholders": {
+      "fingerprint": {"type": "String"}
+    }
+  },
+  "familyKeyLinkMemberScanned": "Gezinslid heeft gescand",
+  "familyKeyShared": "Familiesleutel gedeeld",
+
+  "vaultWelcomeTitle": "Jouw kluis",
+  "vaultWelcomeBody": "Kinetic Link bewaart taken en notities met een herstelzin van 12 woorden. Schrijf die zin op papier en bewaar hem veilig. We slaan de woorden niet op dit apparaat op.",
+  "vaultNewVault": "Nieuwe kluis",
+  "vaultRestoreVault": "Kluis herstellen",
+  "vaultCreateVault": "Kluis aanmaken",
+  "vaultRecoveryPhrase": "Herstelzin",
+  "vaultConfirm": "Bevestigen",
+  "vaultWriteWords": "Schrijf deze 12 woorden op papier en bewaar ze veilig. Zonder deze zin kun je de kluis niet op een nieuw apparaat herstellen.",
+  "vaultPhraseCopied": "Herstelzin gekopieerd",
+  "vaultIWroteThemDown": "Ik heb ze opgeschreven",
+  "vaultQuizPrompt": "Vul de gevraagde woorden in om te bevestigen dat je de zin hebt bewaard.",
+  "vaultWordN": "Woord {n}",
+  "@vaultWordN": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "vaultBackToWords": "Terug naar de woorden",
+  "vaultQuizMismatch": "Niet alle woorden kloppen. Probeer opnieuw.",
+  "vaultCreateFailed": "Kon de kluis niet aanmaken: {error}",
+  "@vaultCreateFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "vaultCouldNotReadFile": "Kon het bestand niet lezen.",
+
+  "vaultRestoreTitle": "Kluis herstellen",
+  "vaultRestoreIntro": "Kies hoe je de kluis terugzet. De herstelzin is in beide gevallen dezelfde.",
+  "vaultRestoreFromFile": "Vanaf bestand",
+  "vaultRestoreFromWebDav": "Vanaf WebDAV",
+  "vaultRestoreFromWebDavSubtitle": "Server, inloggegevens en 12 woorden. Geen bestand nodig.",
+  "vaultRestoreFileTitle": "Herstellen vanaf bestand",
+  "vaultRestoreFileBody": "Vul je herstelzin in en kies daarna het .kvault-bestand.",
+  "vaultChooseFileAndRestore": "Bestand kiezen en herstellen",
+  "vaultNoVaultOnServer": "Geen kluis op deze server. Maak een nieuwe kluis of kies een andere server.",
+  "vaultPhraseMismatchServer": "Deze herstelzin hoort niet bij de kluis op deze server.",
+  "vaultRestoreWebDavTitle": "Herstellen vanaf WebDAV",
+  "vaultRestoreWebDavBody": "Log in op je server en vul dezelfde 12 woorden in als bij het aanmaken van de kluis.",
+  "vaultServerUrl": "Server-URL",
+  "vaultUsername": "Gebruikersnaam",
+  "vaultPassword": "Wachtwoord",
+  "vaultUnlock": "Kluis ontgrendelen",
+  "vaultPhraseFieldLabel": "Herstelzin (12 woorden)",
+
+  "vaultMigrateTitle": "Nieuwe herstelzin",
+  "vaultMigrateBody": "Je huidige sleutel is willekeurig (versie 0.2) en kan niet in 12 woorden. Taken en notities op dit apparaat blijven staan. We maken een nieuwe herstelzin. Bij de volgende sync worden persoonlijke bestanden opnieuw versleuteld. De familiesleutel blijft hetzelfde — gezinsleden en kinderen hoeven niet opnieuw te koppelen.",
+  "vaultMigrateActivate": "Nieuwe herstelzin activeren",
+  "vaultMigrateHeadline": "Schrijf deze nieuwe 12 woorden op. De oude sleutel werkt daarna niet meer voor WebDAV of een .kvault.",
+
+  "vaultRestoreFromFileSubtitle": "12 woorden + versleuteld .kvault-bestand. Geen internet nodig.",
+  "vaultBiometricsReason": "Toon de herstelzin op dit apparaat",
+  "vaultNoScreenLockTitle": "Geen schermvergrendeling",
+  "vaultNoScreenLockBody": "Dit apparaat heeft geen Face ID, vingerafdruk of pincode. Iedereen met toegang tot de app kan de woorden zien. Doorgaan?",
+  "vaultShowAnyway": "Toch tonen",
+  "vaultRevealWarning": "Schrijf de woorden opnieuw op papier als je de kopie kwijt bent. Laat dit scherm niet openstaan.",
+
+  "familyCreateTitle": "Familiesleutel",
+  "familyCreateWriteWords": "Schrijf deze 12 woorden op. Ze horen bij de familiesleutel die je deelt met gezinsleden. We slaan de woorden niet op.",
+  "familyCreateFailed": "Kon de familiesleutel niet aanmaken: {error}",
+  "@familyCreateFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "commonVerify": "Controleren",
+  "commonLeave": "Verlaten",
+
+  "relativeJustNow": "zojuist",
+  "relativeMinutesAgo": "{count} minuten geleden",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "relativeHoursAgo": "{count} uur geleden",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "relativeYesterday": "gisteren",
+  "relativeDaysAgo": "{count} dagen geleden",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "familyMemberVerifyTitle": "Familiesleutel controleren",
+  "familyMemberVerifyBody": "Vul de 12 woorden in. We tonen ze niet; we controleren alleen of ze kloppen.",
+  "familyMemberVerifyOk": "De familiesleutel klopt.",
+  "familyMemberVerifyMismatch": "Deze herstelzin hoort niet bij deze familiesleutel.",
+  "familyMemberRevealMissing": "Deze familiesleutel is van voor de herstelzin (0.2) of kwam binnen als ruwe sleutel. We kunnen de woorden niet tonen. Maak een nieuwe familiesleutel en laat gezinsleden en kinderen opnieuw koppelen.",
+  "familyMemberUnlinkTitle": "Familie verlaten?",
+  "familyMemberUnlinkBody": "Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.",
+  "familyMemberShareViaQr": "Familiesleutel delen via QR",
+  "familyMemberShareViaQrSubtitle": "Laat een gezinslid de QR-code scannen om samen te werken.",
+  "familyMemberScanKey": "Familiesleutel scannen",
+  "familyMemberScanKeySubtitle": "Scan de QR of typ hun 12 woorden.",
+  "familyMemberReshareKey": "Familiesleutel opnieuw delen",
+  "familyMemberReshareKeySubtitle": "Deel de sleutel met een nieuw apparaat van een gezinslid.",
+  "familyMemberVerifyPhrase": "Herstelzin controleren",
+  "familyMemberVerifyPhraseSubtitle": "Controleer of je de 12 woorden van de familiesleutel nog kent.",
+  "familyMemberShowKey": "Familiesleutel tonen",
+  "familyMemberShowKeySubtitle": "Toon de 12 woorden op dit apparaat (schermvergrendeling).",
+  "familyMemberUnlink": "Familie verlaten",
+  "familyMemberUnlinkSubtitle": "Verwijder de familiesleutel en gedeelde notities van dit apparaat.",
+  "familyMemberRemoveTooltip": "Uit familie verwijderen",
+  "familyMemberRemoveTitle": "{name} verwijderen?",
+  "@familyMemberRemoveTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "familyMemberRemoveBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.",
+  "@familyMemberRemoveBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "familyMemberRemovedFromFamily": "Je bent op een ander apparaat uit de familie verwijderd.",
+  "otherLinkMemberStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
+  "otherLinkMemberStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
+  "familyMemberLastSeen": "Laatst gezien {when}",
+  "@familyMemberLastSeen": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "familyMemberLastSeenWarning": "Waarschuwing: laatst gezien {when}",
+  "@familyMemberLastSeenWarning": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "familyMemberFingerprint": "Vingerafdruk {fingerprint}",
+  "@familyMemberFingerprint": {
+    "placeholders": {
+      "fingerprint": {"type": "String"}
+    }
+  },
+
+  "kidsLinkApp": "Kinderenapp koppelen",
+  "kidsLinkAppSubtitle": "Laat de kinderenapp de QR-code scannen.",
+  "kidsEnrolledSection": "GEKOPPELDE KINDEREN",
+  "kidsNoneEnrolled": "Nog geen kinderen gekoppeld.",
+  "kidsRemoveTooltip": "Verwijder uit familie",
+  "kidsRemoveTitle": "{name} verwijderen?",
+  "@kidsRemoveTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsRemoveBody": "{name} wordt uit de familielijst verwijderd. De kinderenapp kan daarna geen familietaken meer ontvangen tenzij opnieuw gekoppeld.",
+  "@kidsRemoveBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsEnrolledOn": "Gekoppeld op {date}",
+  "@kidsEnrolledOn": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "kidsLastSeen": "Voor het laatst gezien {when}",
+  "@kidsLastSeen": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "kidsLastSeenWarning": "Waarschuwing: voor het laatst gezien {when}",
+  "@kidsLastSeenWarning": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+
+  "kidsEnrollTitle": "Kinderenapp koppelen",
+  "kidsEnrollNameTitle": "Naam van het kind",
+  "kidsEnrollNameBody": "Voer de naam in van het kind dat je wilt koppelen.",
+  "kidsEnrollNameLabel": "Naam kind",
+  "kidsEnrollContinueToQr": "Doorgaan naar QR-code",
+  "kidsEnrollQrTitle": "QR-code voor {name}",
+  "@kidsEnrollQrTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsEnrollQrBody": "Open de kinderenapp op het toestel van {name} en scan deze code.",
+  "@kidsEnrollQrBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsEnrollWhatShared": "Wat wordt er gedeeld?",
+  "kidsEnrollWhatSharedBody": "Deze QR-code bevat de server, het account en de familiesleutel — niet het WebDAV-wachtwoord. Typ dat wachtwoord één keer op het kindertoestel. Deel de code alleen met de kinderenapp op een vertrouwd apparaat.",
+
+  "settingsLanguage": "Taal",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageDutch": "Nederlands",
+  "settingsLanguageChoose": "Taal kiezen",
+
+  "commonAdd": "Toevoegen",
+  "commonSend": "Sturen",
+  "commonRetry": "Opnieuw proberen",
+  "commonDismiss": "Afwijzen",
+  "commonCloseAction": "Sluiten",
+  "commonExporting": "Exporteren…",
+  "commonImporting": "Importeren…",
+  "commonNone": "Geen",
+  "commonEveryone": "Iedereen",
+  "commonTitle": "Titel",
+  "commonNotes": "Notities",
+  "commonContent": "Inhoud",
+  "commonLow": "Laag",
+  "commonMedium": "Middel",
+  "commonHigh": "Hoog",
+  "commonPrivate": "Privé",
+  "commonShared": "Gedeeld",
+  "commonKids": "Kinderen",
+  "commonFamilyMember": "Gezinslid",
+  "commonReminder": "Herinnering",
+  "commonTime": "Tijd",
+  "commonCategory": "Categorie",
+  "commonPriority": "Prioriteit",
+  "commonNoCategory": "Geen categorie",
+  "commonSaveError": "Fout bij opslaan: {error}",
+  "@commonSaveError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "commonDeleteError": "Fout bij verwijderen: {error}",
+  "@commonDeleteError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "relativeWeeksAgo": "{count} weken geleden",
+  "@relativeWeeksAgo": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "dateToday": "Vandaag",
+  "dateTomorrow": "Morgen",
+  "dateYesterday": "Gisteren",
+  "dateDaysOverdue": "{count}d te laat",
+  "@dateDaysOverdue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dateInDays": "Over {count} dagen",
+  "@dateInDays": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dateInHours": "{count, plural, =1{Over 1 uur} other{Over {count} uur}}",
+  "@dateInHours": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "dateTonightTime": "Vanavond {time}",
+  "@dateTonightTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateTodayTime": "Vandaag {time}",
+  "@dateTodayTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateYesterdayTime": "Gisteren {time}",
+  "@dateYesterdayTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateTomorrowTime": "Morgen {time}",
+  "@dateTomorrowTime": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "dateWeekdayMonday": "Maandag",
+  "dateWeekdayTuesday": "Dinsdag",
+  "dateWeekdayWednesday": "Woensdag",
+  "dateWeekdayThursday": "Donderdag",
+  "dateWeekdayFriday": "Vrijdag",
+  "dateWeekdaySaturday": "Zaterdag",
+  "dateWeekdaySunday": "Zondag",
+  "dateWeekdayShortMonday": "Ma",
+  "dateWeekdayShortTuesday": "Di",
+  "dateWeekdayShortWednesday": "Wo",
+  "dateWeekdayShortThursday": "Do",
+  "dateWeekdayShortFriday": "Vr",
+  "dateWeekdayShortSaturday": "Za",
+  "dateWeekdayShortSunday": "Zo",
+  "reminderWhyHabitTime": "Je deed deze taak {count}× op {weekday}",
+  "@reminderWhyHabitTime": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "weekday": {"type": "String"}
+    }
+  },
+  "reminderWhyHabitInterval": "Ongeveer elke {median} dagen, voor het laatst {daysSince} dagen geleden",
+  "@reminderWhyHabitInterval": {
+    "placeholders": {
+      "median": {"type": "int"},
+      "daysSince": {"type": "int"}
+    }
+  },
+  "reminderWhyKeyword": "Komt overeen met \"{keyword}\" in de titel",
+  "@reminderWhyKeyword": {
+    "placeholders": {
+      "keyword": {"type": "String"}
+    }
+  },
+  "reminderWhyCategorySchool": "Schooltaken worden meestal 's ochtends gepland",
+  "reminderWhyCategoryHousehold": "Huishoudelijke taken worden vaak in het weekend gepland",
+  "reminderWhyCategoryHealth": "Gezondheidstaken worden vaak 's ochtends herinnerd",
+  "reminderWhyCategoryAdmin": "Administratieve taken worden vaak overdag gepland",
+  "reminderWhyDefaultMorning": "Standaard herinnering in de ochtend",
+  "reminderWhyEvening": "Snelle herinnering vanavond",
+  "reminderWhyTomorrowEvening": "Herinnering morgenavond",
+  "reminderWhyQuick": "Snelle herinnering",
+  "dateMonthJan": "jan",
+  "dateMonthFeb": "feb",
+  "dateMonthMar": "mrt",
+  "dateMonthApr": "apr",
+  "dateMonthMay": "mei",
+  "dateMonthJun": "jun",
+  "dateMonthJul": "jul",
+  "dateMonthAug": "aug",
+  "dateMonthSep": "sep",
+  "dateMonthOct": "okt",
+  "dateMonthNov": "nov",
+  "dateMonthDec": "dec",
+
+  "connNotConnected": "Niet verbonden",
+  "connNotConnectedSince": "Niet verbonden sinds {when}",
+  "@connNotConnectedSince": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "connUnknownNoSync": "Verbinding onbekend (geen sync)",
+  "connStale": "Verbinding verouderd ({when})",
+  "@connStale": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "connConnected": "Verbonden",
+  "connConnectedSince": "Verbonden ({when})",
+  "@connConnectedSince": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+
+  "notifChannelName": "Taakherinneringen",
+  "notifChannelDesc": "Herinneringen voor taken en opdrachten",
+  "notifReminderTitle": "Herinnering",
+
+  "backupNoVault": "Geen kluis op dit apparaat.",
+  "backupSaved": "Back-up opgeslagen: {path}",
+  "@backupSaved": {
+    "placeholders": {
+      "path": {"type": "String"}
+    }
+  },
+  "backupExportError": "Fout bij exporteren: {error}",
+  "@backupExportError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "backupVerifyTitle": "Herstelzin controleren",
+  "backupVerifyBody": "Vul je 12 woorden in. We tonen de zin niet; we controleren alleen of hij klopt.",
+  "backupVerifyOk": "De herstelzin klopt.",
+  "backupVerifyMismatch": "Deze herstelzin hoort niet bij deze kluis.",
+  "backupRevealTitle": "Herstelzin",
+  "backupRevealMissing": "We kunnen de woorden op dit apparaat niet opnieuw tonen. Gebruik je papieren kopie, of herstel de kluis met de 12 woorden.",
+  "backupImportTitle": "Back-up importeren",
+  "backupImportBody": "Vul de 12 woorden in van de kluis die in het .kvault-bestand zit. Dit vervangt je huidige taken en notities.",
+  "backupCouldNotReadFile": "Kon het bestand niet lezen.",
+  "backupRestored": "Back-up succesvol hersteld.",
+  "backupInvalidFile": "Ongeldig back-upbestand: {error}",
+  "@backupInvalidFile": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "backupImportError": "Fout bij importeren: {error}",
+  "@backupImportError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "backupRestoring": "Back-up herstellen…",
+
+  "webdavSetupTitle": "WebDAV instellen",
+  "webdavUrlRequired": "Vul de server-URL in",
+  "webdavUsernameRequired": "Vul de gebruikersnaam in",
+  "webdavPasswordRequired": "Vul het wachtwoord in",
+  "webdavTestConnection": "Verbinding testen",
+  "webdavTestingConnection": "Verbinding testen…",
+  "webdavConnectionOk": "Verbinding geslaagd",
+  "webdavTestFirst": "Test de verbinding eerst voordat je opslaat.",
+  "webdavCreateVaultFirst": "Maak eerst een kluis voordat je WebDAV koppelt.",
+  "webdavPhraseMismatchServer": "Op deze server staat al een kluis die niet bij jouw herstelzin past.",
+  "webdavConfigSaved": "WebDAV-configuratie opgeslagen.",
+  "webdavSaveError": "Fout bij opslaan: {error}",
+  "@webdavSaveError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "webdavMigrationTitle": "Bestaande gegevens gevonden",
+  "webdavMigrationIntro": "Op de WebDAV-server staan al versleutelde bestanden:",
+  "webdavMigrationTaskFiles": "{count, plural, =1{  • 1 taakbestand} other{  • {count} taakbestanden}}",
+  "@webdavMigrationTaskFiles": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "webdavMigrationNoteFiles": "{count, plural, =1{  • 1 notitiebestand} other{  • {count} notitiebestanden}}",
+  "@webdavMigrationNoteFiles": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "webdavMigrationChoose": "Deze bestanden zijn versleuteld met een kluis. Kies hoe je verder wilt gaan:",
+  "webdavMigrationCleanOption": "1. Schone installatie — verwijder de oude bestanden op de server en begin opnieuw.",
+  "webdavMigrationImportOption": "2. Back-up importeren — selecteer een .kvault-bestand. De herstelzin van deze kluis ontsleutelt het bestand.",
+  "webdavMigrationClean": "Schone installatie",
+  "webdavMigrationImport": "Back-up importeren",
+  "webdavBackupRestoredSync": "Back-up hersteld. De app synchroniseert nu met de server.",
+  "webdavRestoreError": "Fout bij herstellen van back-up: {error}",
+  "@webdavRestoreError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "webdavMigrationCheckFailed": "Migratiecontrole mislukt: {error}",
+  "@webdavMigrationCheckFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "webdavFilesDeleted": "{count} bestanden verwijderd.",
+  "@webdavFilesDeleted": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "webdavCleanupError": "Fout bij opschonen: {error}",
+  "@webdavCleanupError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+
+  "tasksTitle": "Taken",
+  "tasksCompletedTooltip": "Voltooide taken",
+  "tasksSyncFailed": "Sync mislukt, tap om opnieuw te proberen.",
+  "tasksSyncing": "Synchroniseren",
+  "tasksForYou": "Voor jou",
+  "tasksForFamilyMember": "Voor {name}",
+  "@tasksForFamilyMember": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksFromFamilyMember": "Van {name}",
+  "@tasksFromFamilyMember": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksForFamily": "Voor familie",
+  "tasksFromFamily": "Van familie",
+  "familyMemberGenericName": "gezinslid",
+  "tasksAccept": "Accepteren",
+  "tasksXpResetTitle": "XP resetten voor {name}?",
+  "@tasksXpResetTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksXpResetBody": "Dit stelt de XP-teller terug naar 0. De opdrachten blijven bewaard.",
+  "tasksXpResetAction": "Resetten",
+  "tasksXpResetDone": "XP gereset voor {name}",
+  "@tasksXpResetDone": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksXpResetError": "Fout bij resetten: {error}",
+  "@tasksXpResetError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "tasksLoadKidsError": "Fout bij laden van kinderopdrachten",
+  "tasksNoKidsAssignments": "Geen opdrachten",
+  "tasksResetXp": "Reset XP",
+  "tasksDoneOn": "Gedaan op {day}/{month}",
+  "@tasksDoneOn": {
+    "placeholders": {
+      "day": {"type": "int"},
+      "month": {"type": "int"}
+    }
+  },
+  "tasksCompletedTitle": "Voltooide taken",
+  "tasksDeleteAll": "Verwijder alles",
+  "tasksDeleteCompletedTitle": "Voltooide taken verwijderen",
+  "tasksDeleteCompletedBody": "Weet je zeker dat je alle voltooide taken wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+  "tasksAllDone": "Alles klaar!",
+  "tasksNoOpenTasks": "Je hebt geen openstaande taken",
+  "tasksNoPersonalOpen": "Geen persoonlijke taken open",
+  "tasksNoCompleted": "Geen voltooide taken",
+  "tasksNoCompletedHint": "Voltooide taken verschijnen hier",
+  "tasksAssignment": "Opdracht",
+
+  "taskDeleteTitle": "Taak verwijderen?",
+  "taskDeleteBody": "\"{title}\" wordt definitief verwijderd. Dit kan niet ongedaan worden gemaakt.",
+  "@taskDeleteBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "taskForwardTitle": "Taak doorsturen",
+  "taskAssignmentCreated": "Opdracht aangemaakt ✓",
+  "taskNoConnectedFamily": "Geen verbonden gezinsleden of kinderen",
+  "taskStaleConnectionTitle": "Verbinding verouderd",
+  "taskStaleFamilyMemberBody": "Dit gezinslid is voor het laatst gezien {status}. Toch sturen?",
+  "@taskStaleFamilyMemberBody": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "taskStaleKidBody": "{name} is voor het laatst gezien {status}. Toch sturen?",
+  "@taskStaleKidBody": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "status": {"type": "String"}
+    }
+  },
+  "taskSendAnyway": "Toch sturen",
+  "familyMemberPickerTitle": "Naar welk gezinslid sturen?",
+  "taskSendToFamilyMemberTitle": "Stuur naar {name}?",
+  "@taskSendToFamilyMemberTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToFamilyMemberBody": "\"{title}\" wordt als voorstel naar {name} gestuurd en verdwijnt uit jouw lijst zodra zij/hij het accepteert.",
+  "@taskSendToFamilyMemberBody": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToKidTitle": "Stuur naar {name}?",
+  "@taskSendToKidTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToKidBody": "De taak verdwijnt uit jouw lijst zodra het kind hem afrondt.",
+  "taskSendToKidLead": "\"{title}\" wordt als opdracht naar {name} gestuurd.",
+  "@taskSendToKidLead": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "name": {"type": "String"}
+    }
+  },
+  "taskSendToEveryoneSubtitle": "Zichtbaar voor alle gekoppelde kinderen",
+  "taskSendToEveryoneBody": "Elk gekoppeld kind ziet deze opdracht. Hij verdwijnt uit jouw lijst zodra een kind hem afrondt.",
+  "taskXpReward": "XP beloning:",
+  "taskNameHint": "Taaknaam",
+  "taskAddTime": "Tijd toevoegen",
+  "taskAddCategory": "Categorie toevoegen",
+  "taskRepeat": "Herhalen",
+  "taskForward": "Doorsturen",
+  "taskAssignToLabel": "Toewijzen aan",
+  "taskAssignToMe": "Mij",
+  "taskRecurrenceNone": "Geen herhaling",
+  "taskRecurrenceDaily": "Dagelijks",
+  "taskRecurrenceWeekdays": "Werkdagen",
+  "taskRecurrenceWeekly": "Wekelijks",
+  "taskRecurrenceBiweekly": "Tweewekelijks",
+  "taskRecurrenceMonthly": "Maandelijks",
+
+  "notesTitle": "Notities",
+  "notesTabPrivate": "Privé",
+  "notesTabShared": "Gedeeld",
+  "notesNewTooltip": "Nieuwe notitie",
+  "notesLoadError": "Fout bij laden notities",
+  "notesEmptyShared": "Geen gedeelde notities",
+  "notesEmptyPrivate": "Geen privé notities",
+  "notesEmpty": "Geen notities",
+  "notesEmptySharedHint": "Notities gedeeld met gezinsleden verschijnen hier",
+  "notesEmptyPrivateHint": "Je privé notities verschijnen hier",
+  "notesEmptyHint": "Privé- en gedeelde notities verschijnen hier",
+  "notesSaved": "Notitie opgeslagen",
+  "notesLastModified": "Laatst gewijzigd",
+  "notesSharedBadge": "Gedeeld",
+  "notesTitleRequired": "Titel is verplicht",
+  "notesDeleteTitle": "Notitie verwijderen?",
+  "notesDeleteBody": "De notitie gaat naar de prullenbak. Je kunt hem daar terugzetten.",
+  "notesTrashTooltip": "Verwijderde notities",
+  "notesTrashTitle": "Verwijderde notities",
+  "notesNoTrash": "Geen verwijderde notities",
+  "notesNoTrashHint": "Verwijderde notities verschijnen hier",
+  "notesRestore": "Terugzetten",
+  "notesEmptyTrashTitle": "Prullenbak legen?",
+  "notesEmptyTrashBody": "Verwijderde notities worden definitief gewist. Dit kan niet ongedaan worden gemaakt.",
+  "notesSharedWithFamily": "Gedeeld met gezin",
+  "notesShareAllAdults": "Alle gezinsleden",
+  "notesSharePickAdults": "Kies wie deze notitie mag zien",
+  "notesShareAudienceHint": "Gedeeld met geselecteerde leden",
+  "notesSharedWithNames": "Met {names}",
+  "@notesSharedWithNames": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "notesHideContent": "Ontgrendelen vereisen",
+  "notesHideContentHint": "Openen vereist biometrie of apparaat-pincode",
+  "notesUnlockReason": "Ontgrendel deze notitie",
+  "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
+  "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om ontgrendelen te vereisen",
+  "notesBodyHint": "Schrijf een notitie…",
+  "notesMdBold": "Vet",
+  "notesMdItalic": "Cursief",
+  "notesMdHeading": "Kop",
+  "notesMdBullet": "Opsomming",
+  "notesMdCheckbox": "Checkbox",
+  "notesMdLink": "Link",
+  "notesUnsavedTitle": "Niet-opgeslagen wijzigingen",
+  "notesUnsavedBody": "Wil je je wijzigingen opslaan?",
+  "notesDiscard": "Verwerpen",
+  "notesLockedBadge": "Vergrendeld",
+
+  "suggestWebDavRequired": "Koppel eerst WebDAV om een voorstel te sturen.",
+  "suggestFamilyMemberSeesTitle": "Dit ziet {name}",
+  "@suggestFamilyMemberSeesTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "suggestFamilyMemberSeesGeneric": "Bewust algemeen — geen privé-titels of notities.",
+  "suggestFamilyMemberSeesFull": "Titel en eventuele notities van deze suggestie gaan mee.",
+  "suggestSend": "Versturen",
+  "suggestSent": "Voorstel naar {name} gestuurd",
+  "@suggestSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "suggestReasonHabit": "Gewoonte",
+  "suggestReasonFamilyMember": "Gezinsaanvulling",
+  "suggestReasonSeasonal": "Seizoensgebonden",
+  "suggestReasonLoadBalance": "Taakverdeling",
+  "suggestReasonStale": "Open taak",
+  "suggestReasonCalendar": "Kalender",
+  "suggestReasonCategorize": "Categorie",
+  "suggestCategorizeTitle": "{count} taken toevoegen aan {category}?",
+  "@suggestCategorizeTitle": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "category": {"type": "String"}
+    }
+  },
+  "suggestCategorizeExplanation": "{count} open taken hebben geen categorie.",
+  "@suggestCategorizeExplanation": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "suggestLoadBalanceTitleHousehold": "Kun jij deze week iets in huis oppakken?",
+  "suggestLoadBalanceTitleHealth": "Kun jij deze week iets rond zorg of gezondheid oppakken?",
+  "suggestLoadBalanceTitleAdmin": "Kun jij deze week iets administratiefs oppakken?",
+  "suggestLoadBalanceTitleSchool": "Kun jij deze week iets rond school oppakken?",
+  "suggestLoadBalanceTitleFinance": "Kun jij deze week iets rond financiën oppakken?",
+  "suggestLoadBalanceTitleOther": "Kun jij deze week iets oppakken?",
+  "suggestLoadBalanceExplanation": "Je hebt {count} open taken in {category}. De hint is bewust algemeen.",
+  "@suggestLoadBalanceExplanation": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "category": {"type": "String"}
+    }
+  },
+  "suggestLoadBalanceExplanationGeneric": "Je hebt meerdere open taken in {category}. De hint is bewust algemeen.",
+  "@suggestLoadBalanceExplanationGeneric": {
+    "placeholders": {
+      "category": {"type": "String"}
+    }
+  },
+  "suggestFamilyMemberTitleSchool": "Schoolrondje of opvang deze week?",
+  "suggestFamilyMemberExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.",
+  "suggestFamilyMemberTitleHousehold": "Kun jij deze week iets in huis oppakken?",
+  "suggestFamilyMemberExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.",
+  "suggestFamilyMemberTitleHealth": "Iets rond zorg of gezondheid oppakken?",
+  "suggestFamilyMemberExplanationHealth": "Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.",
+  "suggestFamilyMemberTitleSport": "Sporttas of training deze week?",
+  "suggestFamilyMemberExplanationSport": "Op basis van je taken lijkt sport een thema. Geen privédetails.",
+  "suggestFamilyMemberTitleAdmin": "Een administratieve klus deze week?",
+  "suggestFamilyMemberExplanationAdmin": "Er staat administratie open. De hint noemt geen concrete taak.",
+  "suggestCalendarTaxTitle": "Belastingaangifte controleren",
+  "suggestCalendarTaxExplanation": "Maart — tijd om de belastingaangifte te controleren.",
+  "suggestCalendarSchoolTitle": "Schoolspullen klaarzetten",
+  "suggestCalendarSchoolExplanation": "Augustus — schoolspullen klaarzetten voor het nieuwe jaar.",
+  "suggestCalendarChristmasTitle": "Kerst voorbereiden",
+  "suggestCalendarChristmasExplanation": "December — kerst voorbereiden.",
+  "suggestHabitRepeatExplanation": "Je deed \"{title}\" ongeveer elke {median} dagen. Vorige keer: {daysSince} dagen geleden.",
+  "@suggestHabitRepeatExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "median": {"type": "int"},
+      "daysSince": {"type": "int"}
+    }
+  },
+  "suggestHabitOnceExplanation": "Je deed \"{title}\" {daysSince} dagen geleden. Opnieuw inplannen?",
+  "@suggestHabitOnceExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "daysSince": {"type": "int"}
+    }
+  },
+  "suggestSeasonalExplanation": "Je hebt \"{title}\" vorig jaar in {month} afgerond.",
+  "@suggestSeasonalExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "suggestStaleExplanation": "\"{title}\" staat {days} dagen open zonder herinnering.",
+  "@suggestStaleExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "days": {"type": "int"}
+    }
+  },
+  "monthJanuary": "januari",
+  "monthFebruary": "februari",
+  "monthMarch": "maart",
+  "monthApril": "april",
+  "monthMay": "mei",
+  "monthJune": "juni",
+  "monthJuly": "juli",
+  "monthAugust": "augustus",
+  "monthSeptember": "september",
+  "monthOctober": "oktober",
+  "monthNovember": "november",
+  "monthDecember": "december",
+  "categoryHousehold": "Huishouden",
+  "categoryHealth": "Gezondheid",
+  "categoryAdmin": "Administratie",
+  "categorySchool": "School",
+  "categoryFinance": "Financiën",
+  "categoryOther": "Overig",
+
+  "categoryTitle": "Categorie",
+  "categoryNewHint": "Nieuwe categorie",
+  "categoryNewAction": "Nieuwe categorie…",
+  "categoryRename": "Categorie hernoemen",
+  "categoryRenameHint": "Categorienaam",
+
+  "suggestionsTitle": "Suggesties",
+  "suggestionsSubtitle": "Handige taken om vandaag te overwegen",
+  "suggestionsProposedByFamilyMember": "Voorgesteld door {name}",
+  "@suggestionsProposedByFamilyMember": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "tasksDecline": "Weigeren",
+  "kidsSectionTitle": "Kinderen",
+  "kidsAllFilter": "Alle kinderen",
+  "kidsOpenTasks": "{count, plural, =1{1 open taak} other{{count} open taken}}",
+  "@kidsOpenTasks": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kidsDeleteTaskTitle": "Kindertaak verwijderen?",
+  "kidsDeleteTaskBody": "\"{title}\" verdwijnt uit de kinderenapp.",
+  "@kidsDeleteTaskBody": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "kidsPendingVerification": "Wacht op bevestiging",
+  "kidsPendingExpandHint": "{count, plural, =1{1 wacht — klap open om te bevestigen} other{{count} wachten — klap open om te bevestigen}}",
+  "@kidsPendingExpandHint": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "kidsAcceptCompletion": "Accepteren",
+  "kidsRejectCompletion": "Terugsturen",
+  "kidsXpProgress": "{earned} / {target} XP",
+  "@kidsXpProgress": {
+    "placeholders": {
+      "earned": {"type": "int"},
+      "target": {"type": "int"}
+    }
+  },
+  "kidsXpTotal": "{xp} XP",
+  "@kidsXpTotal": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "kidsGoalSet": "Goal instellen",
+  "kidsGoalEdit": "Goal bewerken",
+  "kidsGoalRename": "Goal hernoemen",
+  "kidsGoalRemove": "Goal verwijderen",
+  "kidsGoalReset": "XP resetten",
+  "kidsGoalTitleLabel": "Goal",
+  "kidsGoalTitleHint": "bijv. Nieuwe fiets",
+  "kidsGoalTargetLabel": "XP nodig",
+  "kidsGoalSave": "Goal opslaan",
+  "kidsGoalRemoved": "Goal verwijderd",
+  "kidsGoalSaved": "Goal opgeslagen",
+  "kidsGoalResetTitle": "XP resetten voor {name}?",
+  "@kidsGoalResetTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsGoalResetBody": "XP gaat terug naar 0 en voltooide kindertaken verdwijnen. De goal-tekst en target blijven.",
+  "kidsGoalResetDone": "XP gereset voor {name}",
+  "@kidsGoalResetDone": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsCreateTask": "Taak maken",
+  "kidsCreateForEveryone": "Voor iedereen maken",
+  "kidsCreateForName": "Taak voor {name}",
+  "@kidsCreateForName": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "kidsCreateForEveryoneHint": "Taak voor iedereen",
+  "kidsXpAppliesToNamed": "Alleen voor {names}",
+  "@kidsXpAppliesToNamed": {
+    "placeholders": {
+      "names": {"type": "String"}
+    }
+  },
+  "kidsXpAppliesToEnabled": "Alleen voor kinderen met XP & goals aan",
+  "kidsXpAndGoals": "XP & goals",
+  "kidsXpAndGoalsSubtitle": "Toon XP-beloningen en goals voor dit kind",
+  "kidsOfflineBanner": "Offline — kindertaken synchroniseren als WebDAV terug is",
+  "kidsPendingSync": "Wacht op sync",
+  "tasksSyncOffline": "Offline — wijzigingen synchroniseren later",
+
+  "snoozeTitle": "Herinnering uitstellen",
+  "snooze10min": "10 minuten",
+  "snooze1hour": "1 uur",
+  "snooze3hours": "3 uur",
+  "snoozeTomorrowMorning": "Morgen 09:00",
+  "snoozeCustom": "Kies een tijd…",
+  "snoozeDone": "Herinnering uitgesteld",
+  "reminderDone": "Taak afgerond",
+  "noteReminderCleared": "Herinnering gewist",
+
+  "quickAddHint": "Nieuwe taak…",
+  "quickAddMoreOptions": "Meer opties",
+  "notesQuickAddHint": "Nieuwe notitie…",
+
+  "timeInvalid": "Voer een geldige tijd in (00:00 – 23:59).",
+  "timeOk": "OK"
+}

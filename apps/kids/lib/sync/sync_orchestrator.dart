@@ -7,10 +7,10 @@ import '../task/services/kids_task_repository.dart';
 
 /// KidsSyncOrchestrator — WebDAV sync for assigned tasks
 ///
-/// Pulls tasks assigned by parents and pushes local completion status updates.
+/// Pulls tasks assigned from the link app and pushes local completion status updates.
 ///
 /// Sync Flow:
-/// 1. Pull: from /kinetic/shared/tasks/ (parent-assigned tasks)
+/// 1. Pull: from /kinetic/shared/tasks/ (link-assigned tasks)
 /// 2. Merge: with local DB (Last-Write-Wins on updatedAt)
 /// 3. Push: dirty rows (completion status changes) back to same location
 /// 4. Clean: mark synced rows as clean, hard-delete tombstones
@@ -19,9 +19,19 @@ class KidsSyncOrchestrator {
   final KidsTaskRepository _repo;
   final SyncConfig _config;
 
-  /// The kid's own ID as assigned by the parent during enrollment.
+  /// The kid's own ID as assigned by the link app during enrollment.
   /// If empty, all shared tasks are accepted (backwards-compatible).
   final String _myKidId;
+
+  /// `xKineticVerifierLinkId` per task uid, remembered from the pull in this
+  /// sync cycle so pushing a completion does not strip the link member who must
+  /// verify it. Not persisted: the kids DB has no column for it, and the
+  /// property is re-read from the shared folder on every sync.
+  ///
+  /// The kids app never chooses a verifier itself — a mission without one
+  /// stays verifiable by any participating link member, which is why there is no
+  /// verifier picker in the kids UI.
+  final Map<String, String> _verifierByTaskId = {};
 
   KidsSyncOrchestrator({
     required AppDatabase db,
@@ -37,7 +47,7 @@ class KidsSyncOrchestrator {
        _config = config,
        _myKidId = myKidId;
 
-  /// Optional callback invoked when the parent sends a disconnect tombstone
+  /// Optional callback invoked when the link app sends a disconnect tombstone
   /// for this kid device.  The caller should clear the enrollment.
   final VoidCallback? onDisconnected;
 
@@ -48,7 +58,7 @@ class KidsSyncOrchestrator {
   /// Optional callback when the kid's goal document is pulled (or null if removed).
   final void Function(KidGoal? goal)? onGoalReceived;
 
-  /// Optional callback invoked for each new task received from the parent.
+  /// Optional callback invoked for each new task received from the link app.
   /// The caller can use this to show a local notification.
   final void Function(String taskTitle)? onNewTaskReceived;
 
@@ -62,21 +72,29 @@ class KidsSyncOrchestrator {
     final service = WebDavSyncService(client: client, config: _config);
 
     try {
-      // Pull parent-assigned tasks
-      await _pullRemoteTasks(service);
-      // Push local changes (completion status)
-      await _pushLocalChanges(service);
-      // Heartbeat: write presence so the parent can see this kid is active
-      await _pushPresence(service);
-      // Check if the parent has disconnected this kid
-      await _checkDisconnect(service);
-      // Pull XP reset timestamp set by the parent
-      await _pullXpReset(service);
-      // Pull goal for this kid (hero UI)
-      await _pullGoal(service);
+      await syncWithService(service);
     } finally {
       client.dispose();
     }
+  }
+
+  /// Runs the full sync pipeline against a pre-built [service].
+  ///
+  /// Exposed for integration testing — production code always uses [sync].
+  @visibleForTesting
+  Future<void> syncWithService(WebDavSyncService service) async {
+    // Pull link-assigned tasks
+    await _pullRemoteTasks(service);
+    // Push local changes (completion status)
+    await _pushLocalChanges(service);
+    // Heartbeat: write presence so the link app can see this kid is active
+    await _pushPresence(service);
+    // Check if the link app has disconnected this kid
+    await _checkDisconnect(service);
+    // Pull XP reset timestamp set by the link app
+    await _pullXpReset(service);
+    // Pull goal for this kid (hero UI)
+    await _pullGoal(service);
   }
 
   // ---------------------------------------------------------------------------
@@ -134,16 +152,16 @@ class KidsSyncOrchestrator {
     }
   }
 
-  /// Pull tasks from parent (from /kinetic/shared/tasks/)
+  /// Pull tasks from the link app (from /kinetic/shared/tasks/)
   Future<void> _pullRemoteTasks(WebDavSyncService service) async {
     final iCalTasks = await service.pullSharedTasks();
 
     final localList = await _db.select(_db.kidsTasks).get();
     final remoteIds = iCalTasks.map((t) => t.uid).toSet();
 
-    // Detect and remove tasks that were deleted on the parent's device.
+    // Detect and remove tasks that were deleted on the link device.
     // If a task exists locally but not on the server, and it's clean (not dirty),
-    // then it was deleted by the parent and should be removed locally too.
+    // then it was deleted in the link app and should be removed locally too.
     for (final local in localList) {
       if (local.syncState == 'clean' && !remoteIds.contains(local.id)) {
         await _repo.hardDelete(local.id);
@@ -153,6 +171,14 @@ class KidsSyncOrchestrator {
     if (iCalTasks.isEmpty) return;
 
     for (final ical in iCalTasks) {
+      final verifier = _extractCustomProperty(
+        ical.description,
+        'xKineticVerifierLinkId',
+      );
+      if (verifier != null && verifier.isNotEmpty) {
+        _verifierByTaskId[ical.uid] = verifier;
+      }
+
       // If the task targets a specific kid, skip it unless it's meant for this device.
       final targetKidId = _extractCustomProperty(
         ical.description,
@@ -172,7 +198,7 @@ class KidsSyncOrchestrator {
           .firstOrNull;
 
       if (existing == null) {
-        // New from parent → insert and notify
+        // New from the link app → insert and notify
         await _repo.upsertTask(remoteTask);
         onNewTaskReceived?.call(remoteTask.title);
       } else if (existing.syncState == 'dirty') {
@@ -232,8 +258,8 @@ class KidsSyncOrchestrator {
     final done = ical.status == ICalTaskStatus.completed;
     return KidsTask(
       id: ical.uid,
-      parentId:
-          _extractCustomProperty(ical.description, 'xKineticParentId') ?? '',
+      linkTaskId:
+          _extractCustomProperty(ical.description, 'xKineticLinkTaskId') ?? '',
       title: ical.summary,
       notes: _extractBasicDescription(ical.description),
       category: _parseCategory(
@@ -268,9 +294,10 @@ class KidsSyncOrchestrator {
       summary: row.title,
       description: _buildDescription(
         row.notes,
-        parentId: row.parentId,
+        linkTaskId: row.linkTaskId,
         category: row.category,
         xpReward: row.xpReward,
+        verifierLinkId: _verifierByTaskId[row.id],
       ),
       status: status,
       priority: _priorityToInt(row.priority),
@@ -300,15 +327,19 @@ class KidsSyncOrchestrator {
   /// Build description with custom X-properties
   String _buildDescription(
     String? notes, {
-    required String parentId,
+    required String linkTaskId,
     required String category,
     required int xpReward,
+    String? verifierLinkId,
   }) {
     final baseNotes = notes ?? '';
     final targetPart = _myKidId.isNotEmpty
         ? ';xKineticTargetKidId:$_myKidId'
         : '';
-    return '$baseNotes;xKineticParentId:$parentId;xKineticCategory:$category;xKineticXpReward:$xpReward$targetPart';
+    final verifierPart = verifierLinkId != null && verifierLinkId.isNotEmpty
+        ? ';xKineticVerifierLinkId:$verifierLinkId'
+        : '';
+    return '$baseNotes;xKineticLinkTaskId:$linkTaskId;xKineticCategory:$category;xKineticXpReward:$xpReward$targetPart$verifierPart';
   }
 
   /// Parse category from string

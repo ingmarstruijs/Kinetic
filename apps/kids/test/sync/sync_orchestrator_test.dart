@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
@@ -23,7 +23,7 @@ void main() {
         serverUrl: 'https://example.com/dav',
         username: 'testuser',
         password: 'testpass',
-        parentId: '',
+        linkId: '',
         personalKeyBytes: Uint8List(32),
       );
 
@@ -48,7 +48,7 @@ void main() {
           uid: 'task-abc',
           summary: 'Kamer opruimen',
           description:
-              'Speelgoed opruimen;xKineticParentId:parent-1;xKineticCategory:household;xKineticXpReward:15',
+              'Speelgoed opruimen;xKineticLinkTaskId:link-1;xKineticCategory:household;xKineticXpReward:15',
           status: ICalTaskStatus.needsAction,
           priority: 5,
           createdAt: now,
@@ -62,7 +62,7 @@ void main() {
 
         expect(task.id, 'task-abc');
         expect(task.title, 'Kamer opruimen');
-        expect(task.parentId, 'parent-1');
+        expect(task.linkTaskId, 'link-1');
         expect(task.notes, 'Speelgoed opruimen');
         expect(task.category, TaskCategory.household);
         expect(task.xpReward, 15);
@@ -75,7 +75,7 @@ void main() {
           uid: 'task-done',
           summary: 'Done Task',
           description:
-              ';xKineticParentId:p1;xKineticCategory:other;xKineticXpReward:10',
+              ';xKineticLinkTaskId:p1;xKineticCategory:other;xKineticXpReward:10',
           status: ICalTaskStatus.completed,
           priority: 5,
           createdAt: now,
@@ -96,7 +96,7 @@ void main() {
           uid: 'task-pending',
           summary: 'Pending Task',
           description:
-              ';xKineticParentId:p1;xKineticCategory:other;xKineticXpReward:10',
+              ';xKineticLinkTaskId:p1;xKineticCategory:other;xKineticXpReward:10',
           status: ICalTaskStatus.inProcess,
           priority: 5,
           createdAt: now,
@@ -117,7 +117,7 @@ void main() {
           uid: 'task-1',
           summary: 'Task',
           description:
-              ';xKineticParentId:p1;xKineticCategory:nonexistent;xKineticXpReward:10',
+              ';xKineticLinkTaskId:p1;xKineticCategory:nonexistent;xKineticXpReward:10',
           status: ICalTaskStatus.needsAction,
           priority: 5,
           createdAt: now,
@@ -136,7 +136,7 @@ void main() {
         final ical = ICalTask(
           uid: 'task-1',
           summary: 'Task',
-          description: ';xKineticParentId:p1;xKineticCategory:other',
+          description: ';xKineticLinkTaskId:p1;xKineticCategory:other',
           status: ICalTaskStatus.needsAction,
           priority: 5,
           createdAt: now,
@@ -160,7 +160,7 @@ void main() {
           uid: 'p',
           summary: 'T',
           description:
-              ';xKineticParentId:x;xKineticCategory:other;xKineticXpReward:10',
+              ';xKineticLinkTaskId:x;xKineticCategory:other;xKineticXpReward:10',
           status: ICalTaskStatus.needsAction,
           priority: priority,
           createdAt: now,
@@ -208,7 +208,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'row-1',
-            parentId: 'parent-1',
+            linkTaskId: 'link-1',
             title: 'Test task',
             notes: 'Some notes',
             category: TaskCategory.school,
@@ -230,12 +230,12 @@ void main() {
         expect(ical.summary, 'Test task');
       });
 
-      test('encodes parentId and category in description', () async {
+      test('encodes linkTaskId and category in description', () async {
         final now = DateTime.now().toUtc();
         await repository.upsertTask(
           KidsTask(
             id: 'row-2',
-            parentId: 'parent-42',
+            linkTaskId: 'link-42',
             title: 'Task',
             notes: null,
             category: TaskCategory.health,
@@ -253,7 +253,7 @@ void main() {
         final rows = await repository.getAllRows();
 
         final ical = orchestrator.taskRowToICal(rows.first);
-        expect(ical.description, contains('xKineticParentId:parent-42'));
+        expect(ical.description, contains('xKineticLinkTaskId:link-42'));
         expect(ical.description, contains('xKineticCategory:health'));
         expect(ical.description, contains('xKineticXpReward:10'));
         expect(ical.description, contains('xKineticTargetKidId:kid-jim'));
@@ -264,7 +264,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'row-3',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Done',
             notes: null,
             category: TaskCategory.other,
@@ -290,7 +290,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'row-pending',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Pending',
             notes: null,
             category: TaskCategory.other,
@@ -323,7 +323,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'task-lww',
-            parentId: 'p1',
+            linkTaskId: 'p1',
             title: 'Old Title',
             notes: null,
             category: TaskCategory.household,
@@ -341,7 +341,7 @@ void main() {
 
         final remoteNewer = KidsTask(
           id: 'task-lww',
-          parentId: 'p1',
+          linkTaskId: 'p1',
           title: 'New Title',
           notes: null,
           category: TaskCategory.school,
@@ -373,7 +373,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'task-local-wins',
-            parentId: 'p1',
+            linkTaskId: 'p1',
             title: 'Local Title',
             notes: null,
             category: TaskCategory.household,
@@ -391,7 +391,7 @@ void main() {
 
         final remoteOlder = KidsTask(
           id: 'task-local-wins',
-          parentId: 'p1',
+          linkTaskId: 'p1',
           title: 'Remote Title',
           notes: null,
           category: TaskCategory.household,
@@ -429,7 +429,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'task-del',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'To Delete',
             notes: null,
             category: TaskCategory.other,
@@ -458,7 +458,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'keep',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Keep',
             notes: null,
             category: TaskCategory.other,
@@ -476,7 +476,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'delete-me',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Delete',
             notes: null,
             category: TaskCategory.other,
@@ -504,7 +504,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'hard-del',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Hard Delete',
             notes: null,
             category: TaskCategory.other,
@@ -535,7 +535,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'task-dirty',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Task',
             notes: null,
             category: TaskCategory.other,
@@ -565,7 +565,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'task-sync',
-            parentId: 'p',
+            linkTaskId: 'p',
             title: 'Task',
             notes: null,
             category: TaskCategory.other,

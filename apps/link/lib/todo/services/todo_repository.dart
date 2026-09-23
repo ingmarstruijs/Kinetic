@@ -1,0 +1,935 @@
+import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../notifications/notification_service.dart';
+import '../../notifications/reminder_action.dart';
+
+import '../../db/app_database.dart';
+import '../../family/proposals/link_member_proposal.dart';
+import '../models/enums.dart';
+import '../models/personal_task.dart';
+import 'category_classifier.dart';
+
+// ---------------------------------------------------------------------------
+// TodoRepository
+//
+// All read methods return Streams so the UI rebuilds automatically when
+// the database changes.  Write methods are fire-and-forget futures.
+// ---------------------------------------------------------------------------
+
+class TodoRepository {
+  final AppDatabase _db;
+  final CategoryClassifier _classifier;
+  final NotificationService? _notifications;
+  final void Function()? onWrite;
+
+  TodoRepository({
+    required AppDatabase db,
+    CategoryClassifier? classifier,
+    NotificationService? notifications,
+    this.onWrite,
+  }) : _db = db,
+       _classifier = classifier ?? categoryClassifier,
+       _notifications = notifications;
+
+  // ── Lists ──────────────────────────────────────────────────────────────────
+
+  Stream<List<PersonalList>> watchLists() {
+    return (_db.select(_db.personalLists)
+          ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+        .watch()
+        .map((rows) => rows.map(_listFromRow).toList());
+  }
+
+  Future<PersonalList> createList({
+    required String name,
+    int colorValue = 0xFF44BBA4,
+    int iconCodePoint = 0xe156,
+    bool isPrivateDefault = false,
+  }) async {
+    final list = PersonalList.create(
+      name: name,
+      colorValue: colorValue,
+      iconCodePoint: iconCodePoint,
+      isPrivateDefault: isPrivateDefault,
+    );
+    await _db.into(_db.personalLists).insert(_listToCompanion(list));
+    return list;
+  }
+
+  Future<void> updateList(PersonalList list) async {
+    await (_db.update(
+      _db.personalLists,
+    )..where((t) => t.id.equals(list.id))).write(_listToCompanion(list));
+  }
+
+  Future<void> deleteList(String listId) async {
+    // Move tasks in this list to inbox before deleting.
+    await (_db.update(_db.personalTasks)..where((t) => t.listId.equals(listId)))
+        .write(const PersonalTasksCompanion(listId: Value(null)));
+    await (_db.delete(
+      _db.personalLists,
+    )..where((t) => t.id.equals(listId))).go();
+  }
+
+  // ── Tasks ──────────────────────────────────────────────────────────────────
+
+  /// All incomplete tasks, ordered by sort_order then created_at.
+  Stream<List<PersonalTask>> watchAllTasks() {
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.priority),
+            (t) => OrderingTerm.asc(t.sortOrder),
+            (t) => OrderingTerm.asc(t.createdAt),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// All incomplete tasks, ordered by custom category (nulls first), sortOrder, then created_at.
+  Stream<List<PersonalTask>> watchOpenTasks() {
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.syncState.equals('deleted').not() &
+                t.kidsTaskId.isNull(),
+          )
+          ..orderBy([
+            // Uncategorized (null) sorts before named categories
+            (t) => OrderingTerm(
+              expression: t.customCategory.isNull(),
+              mode: OrderingMode.desc,
+            ),
+            (t) => OrderingTerm.asc(t.customCategory),
+            (t) => OrderingTerm.asc(t.sortOrder),
+            (t) => OrderingTerm.desc(t.priority),
+            (t) => OrderingTerm.asc(t.dueDate.isNull()),
+            (t) => OrderingTerm.asc(t.dueDate),
+            (t) => OrderingTerm.asc(t.createdAt),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// Tasks due today or overdue (incomplete only).
+  Stream<List<PersonalTask>> watchTodayTasks() {
+    final today = DateTime.now().toLocal();
+    final endOfToday = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      23,
+      59,
+      59,
+    ).toUtc();
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.dueDate.isSmallerOrEqualValue(endOfToday) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.priority),
+            (t) => OrderingTerm.asc(t.dueDate),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// Tasks with a due date in the future (incomplete only).
+  Stream<List<PersonalTask>> watchScheduledTasks() {
+    final today = DateTime.now().toLocal();
+    final startOfTomorrow = DateTime(
+      today.year,
+      today.month,
+      today.day + 1,
+    ).toUtc();
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.dueDate.isBiggerOrEqualValue(startOfTomorrow) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.priority),
+            (t) => OrderingTerm.asc(t.dueDate),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// Flagged incomplete tasks.
+  Stream<List<PersonalTask>> watchFlaggedTasks() {
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.isFlagged.equals(true) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.priority),
+            (t) => OrderingTerm.asc(t.sortOrder),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// Completed tasks (for showing completed section).
+  Stream<List<PersonalTask>> watchCompletedTasks() {
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.isCompleted.equals(true) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.completedAt)]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  /// Permanently removes all completed tasks (bulk cleanup).
+  Future<void> deleteCompletedTasks() async {
+    // Soft-delete so the sync orchestrator can remove them from WebDAV.
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.isCompleted.equals(true))).write(
+      PersonalTasksCompanion(
+        syncState: const Value('deleted'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  /// Tasks belonging to a specific list.
+  Stream<List<PersonalTask>> watchTasksInList(String listId) {
+    return (_db.select(_db.personalTasks)
+          ..where(
+            (t) =>
+                t.listId.equals(listId) &
+                t.isCompleted.equals(false) &
+                t.syncState.equals('deleted').not(),
+          )
+          ..orderBy([
+            (t) => OrderingTerm.asc(t.sortOrder),
+            (t) => OrderingTerm.asc(t.createdAt),
+          ]))
+        .watch()
+        .map((rows) => rows.map(_taskFromRow).toList());
+  }
+
+  Future<PersonalTask> createTask({
+    required String title,
+    String? listId,
+    String? notes,
+    TaskPriority priority = TaskPriority.none,
+    DateTime? dueDate,
+    bool isAllDay = true,
+    String? recurrenceRule,
+    bool isFlagged = false,
+    bool? isPrivate,
+    TaskCategory? category,
+    String? customCategory,
+    DateTime? remindAt,
+  }) async {
+    final autoCategory = category ?? _classifier.classify(title, notes: notes);
+
+    // Inherit list privacy default when not explicitly set.
+    bool taskIsPrivate = isPrivate ?? false;
+    if (isPrivate == null && listId != null) {
+      final row = await (_db.select(
+        _db.personalLists,
+      )..where((t) => t.id.equals(listId))).getSingleOrNull();
+      if (row != null) taskIsPrivate = row.isPrivateDefault;
+    }
+
+    final task = PersonalTask.create(
+      title: title,
+      listId: listId,
+      notes: notes,
+      priority: priority,
+      dueDate: dueDate,
+      isAllDay: isAllDay,
+      recurrenceRule: recurrenceRule,
+      isFlagged: isFlagged,
+      isPrivate: taskIsPrivate,
+      category: autoCategory,
+      customCategory: customCategory,
+      remindAt: remindAt,
+    );
+    await _db.into(_db.personalTasks).insert(_taskToCompanion(task));
+    await _scheduleReminderFor(task);
+    onWrite?.call();
+    return task;
+  }
+
+  Future<void> updateTask(PersonalTask task) async {
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(task.id))).write(_taskToCompanion(task));
+    // Cancel old reminder, then schedule the (possibly new) one.
+    await _notifications?.cancelReminder(_notifId(task.id));
+    await _scheduleReminderFor(task);
+    onWrite?.call();
+  }
+
+  /// Sets a due date + reminder on an open task. Prefers [taskId] when set;
+  /// otherwise matches the first open task whose title equals [title].
+  Future<bool> applyReminderToOpenTask({
+    required String title,
+    required DateTime dueDate,
+    String? taskId,
+  }) async {
+    final open = await watchOpenTasks().first;
+    PersonalTask? match;
+    if (taskId != null && taskId.isNotEmpty) {
+      for (final t in open) {
+        if (t.id == taskId) {
+          match = t;
+          break;
+        }
+      }
+    }
+    if (match == null) {
+      final needle = title.trim().toLowerCase();
+      for (final t in open) {
+        if (t.title.trim().toLowerCase() == needle) {
+          match = t;
+          break;
+        }
+      }
+    }
+    if (match == null) return false;
+    await updateTask(
+      match.copyWith(dueDate: dueDate, isAllDay: false, remindAt: dueDate),
+    );
+    return true;
+  }
+
+  /// Assign [category] to open tasks in [taskIds] that still have none.
+  Future<void> applyCustomCategoryToTasks({
+    required List<String> taskIds,
+    required String category,
+  }) async {
+    if (taskIds.isEmpty || category.trim().isEmpty) return;
+    final open = await watchOpenTasks().first;
+    final byId = {for (final t in open) t.id: t};
+    for (final id in taskIds) {
+      final task = byId[id];
+      if (task == null || task.customCategory != null) continue;
+      await updateTaskCustomCategory(id, category);
+    }
+  }
+
+  Future<void> completeTask(String taskId) async {
+    // Check if the task has a recurrence rule — if so, advance due date instead.
+    final row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).getSingleOrNull();
+    if (row != null && row.recurrenceRule != null && row.dueDate != null) {
+      final nextDue = _nextOccurrence(row.recurrenceRule!, row.dueDate!);
+      await (_db.update(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(taskId))).write(
+        PersonalTasksCompanion(
+          dueDate: Value(nextDue),
+          updatedAt: Value(DateTime.now().toUtc()),
+          syncState: const Value('dirty'),
+        ),
+      );
+      onWrite?.call();
+      return;
+    }
+
+    // If this task was sent to kids (has a kidsTaskId), mark it for deletion
+    // so it's removed from the shared folder and the kids' view when sync runs.
+    if (row != null && row.kidsTaskId != null) {
+      await (_db.update(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(taskId))).write(
+        PersonalTasksCompanion(
+          syncState: const Value('deleted'),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+      await _archiveProposalsForTask(taskId);
+      onWrite?.call();
+      return;
+    }
+
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        isCompleted: const Value(true),
+        completedAt: Value(DateTime.now().toUtc()),
+        updatedAt: Value(DateTime.now().toUtc()),
+        syncState: const Value('dirty'),
+      ),
+    );
+    await _archiveProposalsForTask(taskId);
+    await _notifications?.cancelReminder(_notifId(taskId));
+    onWrite?.call();
+  }
+
+  /// Soft-delete family-member proposals linked to [taskId] so they stop matching
+  /// future same-title tasks via leftover accepted/outgoing rows.
+  Future<void> _archiveProposalsForTask(String taskId) async {
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.linkMemberProposals)..where(
+          (p) =>
+              (p.sourceTaskId.equals(taskId) | p.resultTaskId.equals(taskId)) &
+              p.syncState.equals('deleted').not(),
+        ))
+        .write(
+          LinkMemberProposalsCompanion(
+            syncState: const Value('deleted'),
+            updatedAt: Value(now),
+          ),
+        );
+  }
+
+  /// Compute the next occurrence date for a given RRULE and current due date.
+  static DateTime _nextOccurrence(String rrule, DateTime currentDue) {
+    final parts = Map.fromEntries(
+      rrule.split(';').map((p) {
+        final kv = p.split('=');
+        return MapEntry(kv[0], kv.length > 1 ? kv[1] : '');
+      }),
+    );
+    final freq = parts['FREQ'] ?? '';
+    final interval = int.tryParse(parts['INTERVAL'] ?? '') ?? 1;
+    final byDay = parts['BYDAY']?.split(',') ?? <String>[];
+
+    final base = currentDue.toLocal();
+
+    switch (freq) {
+      case 'DAILY':
+        if (byDay.isNotEmpty) {
+          // Weekdays only (MO,TU,WE,TH,FR)
+          var next = base.add(const Duration(days: 1));
+          while (next.weekday == DateTime.saturday ||
+              next.weekday == DateTime.sunday) {
+            next = next.add(const Duration(days: 1));
+          }
+          return next.toUtc();
+        }
+        return base.add(Duration(days: interval)).toUtc();
+      case 'WEEKLY':
+        return base.add(Duration(days: 7 * interval)).toUtc();
+      case 'MONTHLY':
+        final nextMonth = base.month + interval;
+        final yearOffset = (nextMonth - 1) ~/ 12;
+        final month = ((nextMonth - 1) % 12) + 1;
+        final year = base.year + yearOffset;
+        // Clamp day to valid range for the target month
+        final lastDay = DateTime(year, month + 1, 0).day;
+        final day = base.day.clamp(1, lastDay);
+        return DateTime(year, month, day, base.hour, base.minute).toUtc();
+      case 'YEARLY':
+        return DateTime(
+          base.year + interval,
+          base.month,
+          base.day,
+          base.hour,
+          base.minute,
+        ).toUtc();
+      default:
+        return base.add(const Duration(days: 1)).toUtc();
+    }
+  }
+
+  Future<void> uncompleteTask(String taskId) async {
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        isCompleted: const Value(false),
+        completedAt: const Value(null),
+        updatedAt: Value(DateTime.now().toUtc()),
+        syncState: const Value('dirty'),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  Future<void> toggleFlag(String taskId, {required bool flagged}) async {
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        isFlagged: Value(flagged),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  Future<void> togglePrivate(String taskId, {required bool isPrivate}) async {
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        isPrivate: Value(isPrivate),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    await _notifications?.cancelReminder(_notifId(taskId));
+    // Delete subtasks immediately (they are not tracked separately on WebDAV).
+    await (_db.delete(
+      _db.personalSubtasks,
+    )..where((t) => t.taskId.equals(taskId))).go();
+    // Soft-delete the task so the sync orchestrator can remove it from WebDAV.
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        syncState: const Value('deleted'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _archiveProposalsForTask(taskId);
+    onWrite?.call();
+  }
+
+  Future<void> updateTaskCustomCategory(String taskId, String? category) async {
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        customCategory: Value(category),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  Future<void> renameCustomCategory({
+    required String from,
+    required String to,
+  }) async {
+    final label = to.trim();
+    if (from == label) return;
+    final open = await watchOpenTasks().first;
+    for (final task in open) {
+      if (task.customCategory == from) {
+        await updateTaskCustomCategory(task.id, label.isEmpty ? null : label);
+      }
+    }
+  }
+
+  Future<PersonalTask?> getTask(String id) async {
+    final row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    return row == null ? null : _taskFromRow(row);
+  }
+
+  Future<void> snoozeReminder(String taskId, DateTime until) async {
+    final task = await getTask(taskId);
+    if (task == null || task.isCompleted) return;
+    await updateTask(task.copyWith(remindAt: until.toUtc()));
+  }
+
+  /// Mark a task as delegated to the kids app. Sets [kidsTaskId] to a new UUID
+  /// and marks the task dirty so it gets pushed to the shared tasks folder.
+  /// Optional [targetKidId] limits the task to a specific enrolled kid.
+  /// [xpReward] sets the XP the child earns on completion (default 10).
+  /// [verifierLinkId] records the link member who assigned it, so only that member
+  /// is offered the accept/reject buttons; null = any participating link member.
+  Future<void> sendToKids(
+    String taskId, {
+    String? targetKidId,
+    int xpReward = 10,
+    String? verifierLinkId,
+  }) async {
+    final kidsId = const Uuid().v4();
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(taskId))).write(
+      PersonalTasksCompanion(
+        kidsTaskId: Value(kidsId),
+        targetKidId: Value(targetKidId),
+        verifierLinkId: Value(verifierLinkId),
+        xpReward: Value(xpReward),
+        syncState: const Value('dirty'),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  /// Local kids-assigned tasks projected as shared [ICalTask]s for offline UI.
+  Future<List<ICalTask>> loadLocalKidsTasksAsShared() async {
+    final rows =
+        await (_db.select(_db.personalTasks)..where(
+              (t) =>
+                  t.kidsTaskId.isNotNull() & t.syncState.equals('deleted').not(),
+            ))
+            .get();
+    return [
+      for (final row in rows)
+        if (row.kidsTaskId != null)
+          ICalTask(
+            uid: row.kidsTaskId!,
+            summary: row.title,
+            description: _kidsDescriptionFromRow(row),
+            status: row.isCompleted
+                ? ICalTaskStatus.completed
+                : ICalTaskStatus.needsAction,
+            priority: switch (row.priority) {
+              3 => 1,
+              2 => 5,
+              1 => 9,
+              _ => 0,
+            },
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            dueAt: row.dueDate,
+          ),
+    ];
+  }
+
+  String _kidsDescriptionFromRow(PersonalTaskRow row) {
+    final baseNotes = row.notes ?? '';
+    final targetKidPart = row.targetKidId != null
+        ? ';xKineticTargetKidId:${row.targetKidId}'
+        : '';
+    final verifierPart = row.verifierLinkId != null
+        ? ';xKineticVerifierLinkId:${row.verifierLinkId}'
+        : '';
+    return '$baseNotes;xKineticLinkTaskId:${row.id};xKineticCategory:${row.category};xKineticXpReward:${row.xpReward}$targetKidPart$verifierPart';
+  }
+
+  /// Mark the link task linked to [kidsTaskId] as completed after acceptance.
+  Future<void> completeByKidsTaskId(String kidsTaskId) async {
+    final row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
+    if (row == null || row.isCompleted) return;
+    final now = DateTime.now().toUtc();
+    await (_db.update(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(row.id))).write(
+      PersonalTasksCompanion(
+        isCompleted: const Value(true),
+        completedAt: Value(now),
+        updatedAt: Value(now),
+        syncState: const Value('dirty'),
+      ),
+    );
+    onWrite?.call();
+  }
+
+  /// Tombstone the link task linked to a kids assignment so sync does not
+  /// re-push it after the shared file is deleted.
+  Future<void> removeKidsAssignment({
+    required String kidsTaskId,
+    String? linkTaskId,
+  }) async {
+    var row = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
+    if (row == null && linkTaskId != null && linkTaskId.isNotEmpty) {
+      row = await (_db.select(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(linkTaskId))).getSingleOrNull();
+    }
+    if (row == null || row.syncState == 'deleted') return;
+    await deleteTask(row.id);
+  }
+
+  /// Batch-update the customCategory and sortOrder for a list of tasks in one
+  /// transaction. Used after drag-and-drop reordering.
+  Future<void> batchUpdateCategoryAndOrder(
+    List<({String id, String? category, int sortOrder})> updates,
+  ) async {
+    await _db.transaction(() async {
+      for (final u in updates) {
+        await (_db.update(
+          _db.personalTasks,
+        )..where((t) => t.id.equals(u.id))).write(
+          PersonalTasksCompanion(
+            customCategory: Value(u.category),
+            sortOrder: Value(u.sortOrder),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+      }
+    });
+    onWrite?.call();
+  }
+
+  /// Stream of distinct, sorted category names from open tasks.
+  Stream<List<String>> watchTaskCategories() {
+    return watchOpenTasks().map(
+      (tasks) =>
+          tasks
+              .map((t) => t.customCategory)
+              .whereType<String>()
+              .toSet()
+              .toList()
+            ..sort(),
+    );
+  }
+
+  // ── Subtasks ───────────────────────────────────────────────────────────────
+
+  Stream<List<PersonalSubtask>> watchSubtasks(String taskId) {
+    return (_db.select(_db.personalSubtasks)
+          ..where((t) => t.taskId.equals(taskId))
+          ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+        .watch()
+        .map((rows) => rows.map(_subtaskFromRow).toList());
+  }
+
+  Future<PersonalSubtask> addSubtask({
+    required String taskId,
+    required String title,
+    int sortOrder = 0,
+  }) async {
+    final sub = PersonalSubtask.create(
+      taskId: taskId,
+      title: title,
+      sortOrder: sortOrder,
+    );
+    await _db
+        .into(_db.personalSubtasks)
+        .insert(
+          PersonalSubtasksCompanion.insert(
+            id: sub.id,
+            taskId: sub.taskId,
+            title: sub.title,
+            isCompleted: Value(sub.isCompleted),
+            sortOrder: Value(sub.sortOrder),
+          ),
+        );
+    return sub;
+  }
+
+  Future<void> toggleSubtask(
+    String subtaskId, {
+    required bool completed,
+  }) async {
+    await (_db.update(_db.personalSubtasks)
+          ..where((t) => t.id.equals(subtaskId)))
+        .write(PersonalSubtasksCompanion(isCompleted: Value(completed)));
+  }
+
+  Future<void> deleteSubtask(String subtaskId) async {
+    await (_db.delete(
+      _db.personalSubtasks,
+    )..where((t) => t.id.equals(subtaskId))).go();
+  }
+
+  // ── Family-member proposals ──────────────────────────────────────────────────────
+
+  Stream<List<LinkMemberProposal>> watchPendingProposals() {
+    return (_db.select(_db.linkMemberProposals)
+          ..where((t) => t.status.equals('pending'))
+          ..orderBy([(t) => OrderingTerm.desc(t.receivedAt)]))
+        .watch()
+        .map((rows) => rows.map(_proposalFromRow).toList());
+  }
+
+  Future<void> saveProposal(LinkMemberProposal proposal) async {
+    await _db
+        .into(_db.linkMemberProposals)
+        .insertOnConflictUpdate(
+          LinkMemberProposalsCompanion.insert(
+            id: proposal.id,
+            fromLinkId: proposal.fromLinkId,
+            toMemberId: Value(proposal.toMemberId),
+            taskTitle: proposal.taskTitle,
+            taskNotes: Value(proposal.taskNotes),
+            taskCategory: Value(proposal.taskCategory),
+            taskPriority: Value(proposal.taskPriority.index),
+            taskDueDate: Value(proposal.taskDueDate),
+            status: Value(proposal.status.name),
+            receivedAt: proposal.receivedAt,
+            updatedAt: proposal.updatedAt,
+          ),
+        );
+  }
+
+  Future<void> updateProposalStatus(
+    String proposalId,
+    ProposalStatus status,
+  ) async {
+    await (_db.update(
+      _db.linkMemberProposals,
+    )..where((t) => t.id.equals(proposalId))).write(
+      LinkMemberProposalsCompanion(
+        status: Value(status.name),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  // ── Load analysis support ──────────────────────────────────────────────────
+
+  /// Returns all non-private, non-completed tasks eligible for proposal.
+  Future<List<PersonalTask>> proposalCandidates() async {
+    final now = DateTime.now().toUtc();
+    final urgentCutoff = now.add(const Duration(hours: 24));
+    final rows =
+        await (_db.select(_db.personalTasks)..where(
+              (t) =>
+                  t.isCompleted.equals(false) &
+                  t.isPrivate.equals(false) &
+                  // Exclude tasks due within 24h — too urgent to reassign.
+                  (t.dueDate.isNull() |
+                      t.dueDate.isBiggerOrEqualValue(urgentCutoff)),
+            ))
+            .get();
+    return rows.map(_taskFromRow).toList();
+  }
+
+  // ── Mapping helpers ────────────────────────────────────────────────────────
+
+  PersonalList _listFromRow(PersonalListRow r) => PersonalList(
+    id: r.id,
+    name: r.name,
+    colorValue: r.colorValue,
+    iconCodePoint: r.iconCodePoint,
+    isPrivateDefault: r.isPrivateDefault,
+    position: r.position,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  );
+
+  PersonalListsCompanion _listToCompanion(PersonalList l) =>
+      PersonalListsCompanion(
+        id: Value(l.id),
+        name: Value(l.name),
+        colorValue: Value(l.colorValue),
+        iconCodePoint: Value(l.iconCodePoint),
+        isPrivateDefault: Value(l.isPrivateDefault),
+        position: Value(l.position),
+        createdAt: Value(l.createdAt),
+        updatedAt: Value(l.updatedAt),
+      );
+
+  // ── Notification helpers ───────────────────────────────────────────────────
+
+  int _notifId(String taskId) => taskId.hashCode.abs();
+
+  /// Re-schedule notifications for all non-completed tasks that have a future
+  /// reminder. Call after restoring a backup on a new install.
+  Future<void> rescheduleAllReminders() async {
+    final rows = await (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.isCompleted.equals(false))).get();
+    for (final row in rows) {
+      final task = _taskFromRow(row);
+      await _scheduleReminderFor(task);
+    }
+  }
+
+  Future<void> _scheduleReminderFor(PersonalTask task) async {
+    final notif = _notifications;
+    if (notif == null) return;
+    // Never schedule reminders for completed tasks.
+    if (task.isCompleted) return;
+    // Use explicit remindAt if set; otherwise fall back to timed due date.
+    final at = task.remindAt ?? (task.isAllDay ? null : task.dueDate);
+    if (at == null) return;
+    if (at.isBefore(DateTime.now())) return;
+    try {
+      await notif.scheduleReminder(
+        id: _notifId(task.id),
+        title: 'Reminder',
+        body: task.title,
+        at: at,
+        payload: ReminderPayload.task(task.id).encode(),
+      );
+    } catch (_) {
+      // Best-effort: notification scheduling errors should not fail task operations.
+    }
+  }
+
+  PersonalTask _taskFromRow(PersonalTaskRow r) => PersonalTask.fromRow(r);
+
+  PersonalTasksCompanion _taskToCompanion(PersonalTask t) =>
+      PersonalTasksCompanion(
+        id: Value(t.id),
+        listId: Value(t.listId),
+        title: Value(t.title),
+        notes: Value(t.notes),
+        priority: Value(t.priority.index),
+        dueDate: Value(t.dueDate),
+        isAllDay: Value(t.isAllDay),
+        recurrenceRule: Value(t.recurrenceRule),
+        isCompleted: Value(t.isCompleted),
+        completedAt: Value(t.completedAt),
+        isFlagged: Value(t.isFlagged),
+        isPrivate: Value(t.isPrivate),
+        kidsTaskId: Value(t.kidsTaskId),
+        category: Value(t.category.name),
+        customCategory: Value(t.customCategory),
+        targetKidId: Value(t.targetKidId),
+        verifierLinkId: Value(t.verifierLinkId),
+        xpReward: Value(t.xpReward),
+        remindAt: Value(t.remindAt),
+        sortOrder: Value(t.sortOrder),
+        createdAt: Value(t.createdAt),
+        updatedAt: Value(t.updatedAt),
+        syncState: const Value('dirty'),
+      );
+
+  PersonalSubtask _subtaskFromRow(PersonalSubtaskRow r) => PersonalSubtask(
+    id: r.id,
+    taskId: r.taskId,
+    title: r.title,
+    isCompleted: r.isCompleted,
+    sortOrder: r.sortOrder,
+  );
+
+  LinkMemberProposal _proposalFromRow(LinkMemberProposalRow r) => LinkMemberProposal(
+    id: r.id,
+    fromLinkId: r.fromLinkId,
+    toMemberId: r.toMemberId,
+    taskTitle: r.taskTitle,
+    taskNotes: r.taskNotes,
+    taskCategory: r.taskCategory,
+    taskPriority: TaskPriority.values[r.taskPriority],
+    taskDueDate: r.taskDueDate,
+    status: ProposalStatus.values.byName(r.status),
+    receivedAt: r.receivedAt,
+    updatedAt: r.updatedAt,
+    autoGenerated: r.autoGenerated,
+  );
+
+  // ── Testing helpers ────────────────────────────────────────────────────────
+
+  /// Returns the raw DB row for a task, including syncState.  For tests only.
+  @visibleForTesting
+  Future<PersonalTaskRow?> debugGetRawTask(String id) {
+    return (_db.select(
+      _db.personalTasks,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Marks a task as synced (syncState='clean').  For tests only.
+  @visibleForTesting
+  Future<void> debugMarkClean(String id) async {
+    await (_db.update(_db.personalTasks)..where((t) => t.id.equals(id))).write(
+      const PersonalTasksCompanion(syncState: Value('clean')),
+    );
+  }
+}

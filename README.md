@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="brand/logo-parent.svg" alt="Kinetic Link" width="88" height="88" />
+  <img src="brand/logo-link.svg" alt="Kinetic Link" width="88" height="88" />
   &nbsp;&nbsp;
   <img src="brand/logo-kids.svg" alt="Kinetic Kids" width="88" height="88" />
 </p>
@@ -8,11 +8,11 @@
 
 <p align="center">
   <strong>Tasks. Notes. Family.</strong><br>
-  Local-first family task management — encrypted on your device, optional WebDAV sync.
+  Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
 </p>
 
 <p align="center">
-  <em>Kinetic Link</em> (parent) · <em>Kinetic Kids</em> (chores)
+  <em>Kinetic Link</em> · <em>Kinetic Kids</em>
 </p>
 
 <p align="center">
@@ -21,35 +21,44 @@
 
 ---
 
-Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Manage personal tasks and notes locally, coordinate with your co-parent via proposals, assign chores to kids with XP rewards, and optionally sync everything to your own WebDAV server.
+Kinetic Link helps families run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: family-member proposals, kids assignments, shared notes, presence, and multi-device sync.
 
 Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, iCal, WebDAV client).
 
 ## Features
 
+### Always available (local / vault)
+
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
-- **Partner coordination** — QR pairing, encrypted task proposals, accept/decline flow; partner-targeted suggestions require an explicit **Send to partner** action after a **What your partner sees** preview (nothing is auto-sent)
-- **Kids tasks** — assign to one child or **Everyone** (all enrolled kids); configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
-- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); personal or shared with partner; optional **hide content** (list shows title only; open requires device biometrics/PIN)
-- **AI suggestions** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history, privacy-preserving partner hints) with human-readable explanations
+- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN)
+- **AI suggestions (for you)** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history) with human-readable explanations
 - **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
-- **Connection-aware send** — partner and kids listed individually with WebDAV presence status before forwarding
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
-- **WebDAV sync** — optional; bring your own server, no vendor backend
-- **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words, from a file **or** from WebDAV
+- **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words from a file (WebDAV restore also needs a configured server)
+
+### Requires WebDAV
+
+Family features are **not** available offline-only. Configure WebDAV in **Settings** first; then pairing, proposals, kids, and shared data use that server.
+
+- **WebDAV sync** — bring your own server, no vendor backend
+- **Family coordination** — QR pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
+- **Kids tasks** — assign to one child or **Everyone**; configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
+- **Shared notes** — share notes with other link members (needs pairing)
+- **Connection-aware send** — family members listed with WebDAV presence status before forwarding
+- **Family-member / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
 
 ## Apps
 
 | App | Platforms | Description |
 |---|---|---|
-| [`apps/parent`](apps/parent) | Android, iOS | Task manager, partner proposals, notes, kids overview, WebDAV config |
-| [`apps/kids`](apps/kids) | Android | Assigned tasks synced from parent; children mark complete and earn XP |
+| [`apps/link`](apps/link) | Android, iOS | Task manager, family-member proposals, notes, kids overview, WebDAV config |
+| [`apps/kids`](apps/kids) | Android | Assigned tasks synced from Kinetic Link; children mark complete and earn XP |
 
 ## Tech Stack
 
 | Layer | Choice |
 |---|---|
-| Apps | Flutter (parent + kids) |
+| Apps | Flutter (Kinetic Link + Kinetic Kids) |
 | Local DB | Drift (SQLite) |
 | Crypto & sync | `packages/webdav` — AES-256-GCM, iCal, WebDAV client |
 | Monorepo | Melos |
@@ -61,15 +70,15 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 dart pub global activate melos
 melos bootstrap
 melos run test        # run all tests
-cd apps/parent && flutter run
+cd apps/link && flutter run
 ```
 
-No server required — the app works fully offline. Configure WebDAV in **Settings** to enable sync and family pairing.
+No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (family linking, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need a WebDAV connection in **Settings**.
 
 ### Build a release APK
 
 ```bash
-cd apps/parent   # or apps/kids
+cd apps/link   # or apps/kids
 flutter build apk --release
 ```
 
@@ -79,44 +88,46 @@ PRs and pushes to `main`/`develop` run analyze + tests ([`.github/workflows/ci.y
 
 Both apps ship **English** and **Dutch** UI via Flutter `gen-l10n` (ARB files under `apps/*/lib/l10n`). English is the template locale; Dutch lives in `app_nl.arb`. After editing ARB files, run `flutter gen-l10n` (or `flutter pub get`) in the app directory.
 
-Tasks/notes suggestion copy in the parent app is still being migrated; nav, settings, vault, family pairing, and the kids app are localized.
+Tasks/notes suggestion copy in the link app is still being migrated; nav, settings, vault, family pairing, and the kids app are localized.
 
 ## Family Setup
 
-### Partner pairing
+**Prerequisite:** WebDAV configured and working in Kinetic Link. Without it there is no shared folder, no pairing, and no kids sync — Family settings stay inactive for those flows.
 
-1. **Settings → Family → Partner** → share QR (12 family words + entropy QR)
-2. Partner scans **or** types the 12 words and confirms the fingerprint
+### Family linking
+
+1. **Settings → Family → Family members** → share QR (12 family words + entropy QR)
+2. The other family member scans **or** types the 12 words and confirms the fingerprint
 3. Proposals sync automatically via WebDAV
 
 ### Kids enrollment
 
 1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
 2. Child device scans the QR and types the WebDAV password once
-3. Parent forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
+3. Kinetic Link forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
 
-Ship parent **and** kids at the same minor version when enrollment/QR formats change.
+Ship Kinetic Link **and** Kinetic Kids at the same minor version when enrollment/QR formats change.
 
-The **Family** screen shows **Proposals** and **Kids** tabs only when a partner is paired or kids are enrolled. Shared notes require partner pairing.
+The **Family** screen shows family-member / kids tools only when WebDAV is set up; proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking.
 
 ## AI Suggestion Engine
 
-A fully offline, heuristic-based engine surfaces task suggestions in the parent **Tasks** screen. No API calls — runs entirely on-device.
+A fully offline, heuristic-based engine surfaces task suggestions in the Kinetic Link **Tasks** screen. No API calls — runs entirely on-device.
 
 An empty run does **not** start the 24-hour throttle, so creating tasks can surface hints on the next open. After at least one suggestion is created, that path waits 24 hours.
 
-| Detector | Trigger | Target | What the partner sees |
+| Detector | Trigger | Target | What the family member sees |
 |---|---|---|---|
 | **Habit** | Same non-recurring title completed ≥ 2× and the median interval is overdue, **or** one completion of a strong keyword (e.g. Dutch `boodschappen` / groceries) after ≥ 14 days | You | — |
 | **Calendar** | Month-based prompts with no history required (Dutch examples: `belasting` in March, `schoolspullen` in August, `kerst` in December) | You | — |
 | **Stale** | Open task older than 7 days with no due date or reminder | You (sets a reminder on the existing task) | — |
 | **Seasonal** | Task completed in the same calendar month in a prior year | You | — |
-| **Partner complement** | Keywords in **your** open tasks (including private) | Partner suggestion | A **generic** template only — never the private title or notes |
-| **Load balance** | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5) | Partner suggestion | A generic “can you pick something up in [category]?” line |
+| **Family complement** | Keywords in **your** open tasks (including private) | Family-member suggestion | A **generic** template only — never the private title or notes |
+| **Load balance** | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5) | Family-member suggestion | A generic “can you pick something up in [category]?” line |
 
-Partner hints are capped at one per keyword-family per 14 days. **Send to partner** always shows **What your partner sees** before anything is sent. Nothing is auto-sent.
+Family-member hints are capped at one per keyword-family per 14 days. **Send to family member** always shows **What your family member sees** before anything is sent. Nothing is auto-sent.
 
-Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For partner** / **From partner**). See [`apps/parent/docs/SMART_FEATURES.md`](apps/parent/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
+Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For family member** / **From family member**). See [`apps/link/docs/SMART_FEATURES.md`](apps/link/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
 
 ## Encryption
 
@@ -126,7 +137,7 @@ Suggestions appear in a banner on the **Private** tab and in structured sections
 | **Family key** | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault). |
 | **Kid UUID** | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone** |
 
-On first launch the parent app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
+On first launch the link app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
 
 Export never includes the mnemonic, the raw key, or the WebDAV password. Settings can **verify** the phrase without showing the words, or **show** them after Face ID / fingerprint / PIN.
 
@@ -134,9 +145,9 @@ Export never includes the mnemonic, the raw key, or the WebDAV password. Setting
 
 A random 32-byte AES key cannot be turned into a BIP-39 mnemonic. On first 0.3 launch the app detects a stored personal key without `kinetic_vault_ready` and asks for a **new** 12-word phrase. Local SQLite stays. Personal tasks/notes are marked dirty so the next WebDAV sync re-encrypts them; `vault.meta` is rewritten. Remote blobs that are never overwritten stay undecryptable (pull already skips MAC failures).
 
-The **family key is not rotated** (that would break partner and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
+The **family key is not rotated** (that would break family members and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
 
-A one-time **Legacy backup (.kbak2)** path on the welcome screen restores the 0.2 file (plaintext key in JSON) and then uses the same rotate-to-mnemonic flow. New backups are `.kvault` only.
+Backups are **`.kvault` only**. Legacy `.kbak2` files are no longer accepted.
 
 ## Releases
 
@@ -151,7 +162,7 @@ git push origin v0.2.0
 This creates **two separate releases**:
 
 - `v0.2.0-kids` — `kinetic-kids-0.2.0.apk`
-- `v0.2.0-parent` — `kinetic-parent-0.2.0.apk`
+- `v0.2.0-link` — `kinetic-link-0.2.0.apk`
 
 Each release includes a `sha256.txt` checksum file.
 
@@ -162,13 +173,13 @@ Each release includes a `sha256.txt` checksum file.
 `sha256sum` outputs a continuous lowercase hex string. This matches the value in `sha256.txt` and in the release notes.
 
 ```bash
-echo "<digest>  kinetic-parent-0.2.0.apk" | sha256sum --check
+echo "<digest>  kinetic-link-0.2.0.apk" | sha256sum --check
 ```
 
 Or manually compare:
 
 ```bash
-sha256sum kinetic-parent-0.2.0.apk
+sha256sum kinetic-link-0.2.0.apk
 # compare with the digest listed in sha256.txt
 ```
 
@@ -179,6 +190,6 @@ AppVerifier shows the SHA-256 fingerprint of the **signing certificate** in `AA:
 The certificate fingerprint is listed in the GitHub Release notes under **Certificate Fingerprint (AppVerifier)**.
 
 ```bash
-keytool -printcert -jarfile kinetic-parent-0.2.0.apk
+keytool -printcert -jarfile kinetic-link-0.2.0.apk
 # look for the SHA256: line — format is AA:BB:CC:DD:...
 ```

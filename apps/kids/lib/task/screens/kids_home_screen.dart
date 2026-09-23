@@ -256,7 +256,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                           ],
                           if (pendingTasks.isNotEmpty) ...[
                             Text(
-                              l10n.waitingForParent,
+                              l10n.waitingForLink,
                               style: Theme.of(context)
                                   .textTheme
                                   .titleMedium
@@ -418,7 +418,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  l10n.awaitingParentConfirm,
+                  l10n.awaitingLinkConfirm,
                   style: TextStyle(
                     color: scheme.tertiary,
                     fontWeight: FontWeight.w600,

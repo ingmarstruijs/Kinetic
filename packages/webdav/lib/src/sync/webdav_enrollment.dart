@@ -100,7 +100,7 @@ class WebDavEnrollment {
   /// Generates fresh personal and family keys for a new account.
   ///
   /// Both keys are randomly generated and independent of the WebDAV password.
-  /// The family key must be explicitly shared with other parents via
+  /// The family key must be explicitly shared with other link devices via
   /// [KineticEncryption.exportFamilyKeyJson] / [KineticEncryption.importFamilyKeyJson].
   static ({Uint8List personalKey, Uint8List familyKey}) generateKeys() {
     final personalKey = KineticEncryption.generatePersonalKey();
@@ -144,7 +144,7 @@ class WebDavEnrollment {
       serverUrl: serverUrl,
       username: username,
       password: password,
-      parentId: '',
+      linkId: '',
       personalKeyBytes: keys.personalKey,
       familyKeyBytes: keys.familyKey,
     );

@@ -28,7 +28,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task1 = KidsTask(
         id: '1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task 1',
         notes: 'Notes 1',
         category: TaskCategory.household,
@@ -45,7 +45,7 @@ void main() {
 
       final task2 = KidsTask(
         id: '2',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task 2',
         notes: 'Notes 2',
         category: TaskCategory.school,
@@ -75,7 +75,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final completedTask = KidsTask(
         id: '1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Completed',
         notes: '',
         category: TaskCategory.household,
@@ -92,7 +92,7 @@ void main() {
 
       final pendingTask = KidsTask(
         id: '2',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Pending',
         notes: '',
         category: TaskCategory.school,
@@ -119,7 +119,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task123',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Test Task',
         notes: 'Test notes',
         category: TaskCategory.household,
@@ -145,7 +145,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task',
         notes: '',
         category: TaskCategory.household,
@@ -174,7 +174,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task',
         notes: '',
         category: TaskCategory.household,
@@ -204,7 +204,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task',
         notes: '',
         category: TaskCategory.household,
@@ -234,7 +234,7 @@ void main() {
       await repository.upsertTask(
         KidsTask(
           id: 'open',
-          parentId: 'p',
+          linkTaskId: 'p',
           title: 'Open',
           notes: '',
           category: TaskCategory.household,
@@ -250,7 +250,7 @@ void main() {
       await repository.upsertTask(
         KidsTask(
           id: 'pending',
-          parentId: 'p',
+          linkTaskId: 'p',
           title: 'Pending',
           notes: '',
           category: TaskCategory.household,
@@ -267,7 +267,7 @@ void main() {
       await repository.upsertTask(
         KidsTask(
           id: 'done',
-          parentId: 'p',
+          linkTaskId: 'p',
           title: 'Done',
           notes: '',
           category: TaskCategory.household,
@@ -289,7 +289,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task',
         notes: '',
         category: TaskCategory.household,
@@ -315,7 +315,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final task = KidsTask(
         id: 'task1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Task',
         notes: '',
         category: TaskCategory.household,
@@ -341,7 +341,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final dirtyTask = KidsTask(
         id: '1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Dirty',
         notes: '',
         category: TaskCategory.household,
@@ -358,7 +358,7 @@ void main() {
 
       final cleanTask = KidsTask(
         id: '2',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Clean',
         notes: '',
         category: TaskCategory.school,
@@ -385,7 +385,7 @@ void main() {
       final now = DateTime.now().toUtc();
       final deletedTask = KidsTask(
         id: '1',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Deleted',
         notes: '',
         category: TaskCategory.household,
@@ -402,7 +402,7 @@ void main() {
 
       final cleanTask = KidsTask(
         id: '2',
-        parentId: 'parent1',
+        linkTaskId: 'parent1',
         title: 'Clean',
         notes: '',
         category: TaskCategory.school,

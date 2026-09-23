@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanQrInstructions.
   ///
   /// In en, this message translates to:
-  /// **'Open your parent\'s Kinetic app, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.'**
+  /// **'Open Kinetic Link, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.'**
   String get scanQrInstructions;
 
   /// No description provided for @invalidQrCode.
@@ -167,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @enterWebDavPassword.
   ///
   /// In en, this message translates to:
-  /// **'Enter your parent\'s WebDAV password. It is not in the QR code.'**
+  /// **'Enter the WebDAV password from Kinetic Link. It is not in the QR code.'**
   String get enterWebDavPassword;
 
   /// No description provided for @webDavPassword.
@@ -224,11 +224,11 @@ abstract class AppLocalizations {
   /// **'To do'**
   String get stillToDo;
 
-  /// No description provided for @waitingForParent.
+  /// No description provided for @waitingForLink.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for parent'**
-  String get waitingForParent;
+  /// **'Waiting for Link'**
+  String get waitingForLink;
 
   /// No description provided for @completed.
   ///
@@ -395,7 +395,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationChannelDescription.
   ///
   /// In en, this message translates to:
-  /// **'Notifications for new tasks from your parent.'**
+  /// **'Notifications for new tasks from Link.'**
   String get notificationChannelDescription;
 
   /// No description provided for @newTaskNotificationTitle.
@@ -485,7 +485,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmCompleteBody.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you are finished? We will send a confirmation request to your parent.'**
+  /// **'Are you sure you are finished? We will send a confirmation request to Link.'**
   String get confirmCompleteBody;
 
   /// No description provided for @confirmCompleteAction.
@@ -494,11 +494,11 @@ abstract class AppLocalizations {
   /// **'Yes, I\'m done'**
   String get confirmCompleteAction;
 
-  /// No description provided for @awaitingParentConfirm.
+  /// No description provided for @awaitingLinkConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for your parent to confirm'**
-  String get awaitingParentConfirm;
+  /// **'Waiting for Link to confirm'**
+  String get awaitingLinkConfirm;
 
   /// No description provided for @cleanUpCompleted.
   ///

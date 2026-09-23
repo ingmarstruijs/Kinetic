@@ -48,7 +48,7 @@ class KidsTaskRepository {
     );
   }
 
-  /// Apply parent accept from sync (local is already COMPLETED on wire).
+  /// Apply link-app accept from sync (local is already COMPLETED on wire).
   Future<void> applyAccepted(String taskId, DateTime completedAt) async {
     await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
       KidsTasksCompanion(
@@ -62,7 +62,7 @@ class KidsTaskRepository {
     );
   }
 
-  /// Apply parent reject / reopen from sync.
+  /// Apply link-app reject / reopen from sync.
   Future<void> applyOpen(String taskId, {required bool dirty}) async {
     await (_db.update(_db.kidsTasks)..where((t) => t.id.equals(taskId))).write(
       KidsTasksCompanion(
@@ -155,7 +155,7 @@ class KidsTaskRepository {
   KidsTask _taskFromRow(KidsTaskRow row) {
     return KidsTask(
       id: row.id,
-      parentId: row.parentId,
+      linkTaskId: row.linkTaskId,
       title: row.title,
       notes: row.notes,
       category: TaskCategory.values.firstWhere(
@@ -179,7 +179,7 @@ class KidsTaskRepository {
   KidsTasksCompanion _taskToCompanion(KidsTask task) {
     return KidsTasksCompanion(
       id: Value(task.id),
-      parentId: Value(task.parentId),
+      linkTaskId: Value(task.linkTaskId),
       title: Value(task.title),
       notes: Value(task.notes),
       category: Value(task.category.name),

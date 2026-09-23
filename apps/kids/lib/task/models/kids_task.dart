@@ -1,26 +1,26 @@
-/// Task category — matches parent app TaskCategory
+/// Task category — matches link app TaskCategory
 enum TaskCategory { household, school, health, shopping, entertainment, other }
 
-/// Task priority — matches parent app TaskPriority
+/// Task priority — matches link app TaskPriority
 enum TaskPriority { low, normal, high, urgent }
 
-/// KidsTask — a task assigned by a parent to this child
+/// KidsTask — a task assigned by Link to this child
 ///
-/// Mirrors PersonalTask from parent app but: read-only for most fields
-/// (assigned by parent), editable only for completion / verification status.
+/// Mirrors PersonalTask from link app but: read-only for most fields
+/// (assigned from the link app), editable only for completion / verification status.
 class KidsTask {
   final String id;
-  final String parentId;
+  final String linkTaskId;
   final String title;
   final String? notes;
   final TaskCategory category;
   final TaskPriority priority;
   final DateTime? dueDate;
 
-  /// True only after the parent accepted completion (XP counts).
+  /// True only after the link app accepted completion (XP counts).
   final bool isCompleted;
 
-  /// True while waiting for parent accept/reject.
+  /// True while waiting for link-app accept/reject.
   final bool awaitingVerification;
 
   final DateTime? completedAt;
@@ -36,7 +36,7 @@ class KidsTask {
 
   const KidsTask({
     required this.id,
-    required this.parentId,
+    required this.linkTaskId,
     required this.title,
     this.notes,
     required this.category,
@@ -55,7 +55,7 @@ class KidsTask {
 
   bool get isOpen => !isCompleted && !awaitingVerification;
 
-  /// Request completion — pending parent verification (does not award XP yet).
+  /// Request completion — pending link-app verification (does not award XP yet).
   KidsTask requestComplete() => copyWith(
         isCompleted: false,
         awaitingVerification: true,
@@ -65,7 +65,7 @@ class KidsTask {
         updatedAt: DateTime.now().toUtc(),
       );
 
-  /// Parent accepted — XP-eligible.
+  /// Link accepted — XP-eligible.
   KidsTask markAccepted() => copyWith(
         isCompleted: true,
         awaitingVerification: false,
@@ -75,7 +75,7 @@ class KidsTask {
         updatedAt: DateTime.now().toUtc(),
       );
 
-  /// Parent rejected or reset to open.
+  /// Link app rejected or reset to open.
   KidsTask markOpen() => copyWith(
         isCompleted: false,
         awaitingVerification: false,
@@ -87,7 +87,7 @@ class KidsTask {
 
   KidsTask copyWith({
     String? id,
-    String? parentId,
+    String? linkTaskId,
     String? title,
     String? notes,
     TaskCategory? category,
@@ -105,7 +105,7 @@ class KidsTask {
   }) {
     return KidsTask(
       id: id ?? this.id,
-      parentId: parentId ?? this.parentId,
+      linkTaskId: linkTaskId ?? this.linkTaskId,
       title: title ?? this.title,
       notes: notes ?? this.notes,
       category: category ?? this.category,

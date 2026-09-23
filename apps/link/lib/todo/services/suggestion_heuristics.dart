@@ -1,0 +1,235 @@
+import '../models/ai_suggestion.dart';
+import '../models/enums.dart';
+
+/// Calendar prompts that fire in a given month without needing last-year
+/// history. [skipIfTitleContains] suppresses the prompt when an open task
+/// already covers the same theme. [id] is a stable dismiss key.
+class CalendarPrompt {
+  final String id;
+  final List<int> months;
+  final String title;
+  final List<String> skipIfTitleContains;
+  final String explanation;
+
+  const CalendarPrompt({
+    required this.id,
+    required this.months,
+    required this.title,
+    required this.skipIfTitleContains,
+    required this.explanation,
+  });
+
+  String get dedupeKey => 'calendar:$id';
+}
+
+/// Generic family-member hint. Never includes the source task title or notes.
+class FamilyMemberHintTemplate {
+  final String familyId;
+  final List<String> keywords;
+  final Set<TaskCategory> categories;
+  final String familyMemberTitle;
+  final String explanation;
+
+  const FamilyMemberHintTemplate({
+    required this.familyId,
+    required this.keywords,
+    required this.categories,
+    required this.familyMemberTitle,
+    required this.explanation,
+  });
+}
+
+const calendarPrompts = <CalendarPrompt>[
+  CalendarPrompt(
+    id: 'tax-return',
+    months: [3],
+    title: 'Check tax return',
+    skipIfTitleContains: ['belasting', 'aangifte', 'tax', 'return'],
+    explanation: 'March — time to check the tax return.',
+  ),
+  CalendarPrompt(
+    id: 'school-supplies',
+    months: [8],
+    title: 'Prepare school supplies',
+    skipIfTitleContains: ['schoolspul', 'schooltas', 'etui', 'school supplies'],
+    explanation: 'August — prepare school supplies for the new year.',
+  ),
+  CalendarPrompt(
+    id: 'christmas',
+    months: [12],
+    title: 'Prepare for Christmas',
+    skipIfTitleContains: ['kerst', 'cadeau', 'christmas', 'gift'],
+    explanation: 'December — prepare for Christmas.',
+  ),
+];
+
+const familyMemberHintTemplates = <FamilyMemberHintTemplate>[
+  FamilyMemberHintTemplate(
+    familyId: 'school',
+    keywords: [
+      'school',
+      'huiswerk',
+      'juf',
+      'meester',
+      'opvang',
+      'gymspullen',
+      'schooltas',
+      'ouderavond',
+      'homework',
+    ],
+    categories: {TaskCategory.school},
+    familyMemberTitle: 'School run or childcare this week?',
+    explanation:
+        'Based on your tasks (without private details), school looks like a '
+        'theme this week. Your family member sees this.',
+  ),
+  FamilyMemberHintTemplate(
+    familyId: 'household',
+    keywords: [
+      'boodschappen',
+      'wasgoed',
+      'stofzuigen',
+      'afwas',
+      'schoonmaak',
+      'opruimen',
+      'groceries',
+      'laundry',
+    ],
+    categories: {TaskCategory.household},
+    familyMemberTitle: 'Can you pick up something around the house this week?',
+    explanation:
+        'You have several household tasks open. The suggestion is intentionally generic.',
+  ),
+  FamilyMemberHintTemplate(
+    familyId: 'health',
+    keywords: [
+      'dokter',
+      'huisarts',
+      'tandarts',
+      'medicijn',
+      'apotheek',
+      'fysio',
+      'doctor',
+      'dentist',
+    ],
+    categories: {TaskCategory.health},
+    familyMemberTitle: 'Something around care or health to pick up?',
+    explanation:
+        'Something around care is going on. Your family member only sees this generic question.',
+  ),
+  FamilyMemberHintTemplate(
+    familyId: 'sport',
+    keywords: ['sport', 'training', 'sporttas', 'wedstrijd'],
+    categories: {},
+    familyMemberTitle: 'Sports bag or training this week?',
+    explanation:
+        'Based on your tasks, sport looks like a theme. No private details.',
+  ),
+  FamilyMemberHintTemplate(
+    familyId: 'admin',
+    keywords: [
+      'belasting',
+      'gemeente',
+      'formulier',
+      'verzekering',
+      'paspoort',
+      'tax',
+      'insurance',
+    ],
+    categories: {TaskCategory.admin, TaskCategory.finance},
+    familyMemberTitle: 'An admin chore this week?',
+    explanation:
+        'There is admin work open. The suggestion does not name a concrete task.',
+  ),
+];
+
+const strongHabitKeywords = <String>[
+  'boodschappen',
+  'wasgoed',
+  'wassen',
+  'stofzuigen',
+  'afwas',
+  'groceries',
+  'laundry',
+  'afval',
+];
+
+String normalizeSuggestionText(String s) => s
+    .trim()
+    .toLowerCase()
+    .replaceAll(RegExp(r'[^a-z0-9\u00c0-\u024f]'), ' ')
+    .replaceAll(RegExp(r'\s+'), ' ')
+    .trim();
+
+bool containsAnyKeyword(String haystack, List<String> keywords) {
+  final n = normalizeSuggestionText(haystack);
+  return keywords.any((k) => n.contains(k));
+}
+
+bool isStrongHabitTitle(String title) =>
+    containsAnyKeyword(title, strongHabitKeywords);
+
+List<CalendarPrompt> calendarPromptsForMonth(int month) =>
+    calendarPrompts.where((p) => p.months.contains(month)).toList();
+
+/// First matching family-member template based on keywords in title/notes.
+/// Category-only matching is intentionally omitted — volume-by-category is
+/// handled by the load-balance detector so a single private task does not
+/// leak a theme unless a keyword hits.
+FamilyMemberHintTemplate? matchFamilyMemberHint({required String title, String? notes}) {
+  final corpus = '$title ${notes ?? ''}';
+  for (final t in familyMemberHintTemplates) {
+    if (containsAnyKeyword(corpus, t.keywords)) return t;
+  }
+  return null;
+}
+
+String loadBalanceTitle(String categoryName) => switch (categoryName) {
+  'household' => 'Can you pick up something around the house this week?',
+  'health' => 'Can you pick up something around care or health this week?',
+  'admin' => 'Can you pick up something in admin this week?',
+  'school' => 'Can you pick up something around school this week?',
+  'finance' => 'Can you pick up something in finances this week?',
+  _ => 'Can you pick something up this week?',
+};
+
+String categoryLabel(String category) => switch (category) {
+  'household' => 'Household',
+  'health' => 'Health',
+  'admin' => 'Admin',
+  'school' => 'School',
+  'finance' => 'Finance',
+  _ => 'Other',
+};
+
+/// English + Dutch names that map onto a [TaskCategory], used to reuse an
+/// existing custom category instead of inventing a parallel label.
+List<String> categoryNameAliases(String categoryName) => switch (categoryName) {
+  'household' => const ['household', 'huishouden', 'huis'],
+  'health' => const ['health', 'gezondheid', 'zorg'],
+  'admin' => const ['admin', 'administratie'],
+  'school' => const ['school'],
+  'finance' => const ['finance', 'financien', 'financiën'],
+  _ => [categoryName],
+};
+
+/// Prefer an existing custom category whose name matches [categoryName].
+String resolveCategoryLabel(String categoryName, List<String> existing) {
+  final aliases = categoryNameAliases(
+    categoryName,
+  ).map((a) => a.toLowerCase()).toSet();
+  for (final e in existing) {
+    if (aliases.contains(e.trim().toLowerCase())) return e;
+  }
+  return categoryLabel(categoryName);
+}
+
+String suggestionDedupeKey({
+  required SuggestionReason reason,
+  required String title,
+  String? extra,
+}) {
+  final base = '${reason.name}:${normalizeSuggestionText(title)}';
+  if (extra == null || extra.isEmpty) return base;
+  return '$base:$extra';
+}

@@ -29,7 +29,7 @@ class KineticEncryption {
   /// Generates a cryptographically random 32-byte family key.
   ///
   /// The returned key must be explicitly shared with every family member
-  /// (e.g. via [exportFamilyKeyJson] / [importFamilyKeyJson]).  Each parent
+  /// (e.g. via [exportFamilyKeyJson] / [importFamilyKeyJson]).  Each Link family member
   /// has their own WebDAV credentials; the family key is the *only* thing
   /// they need to share.
   static Uint8List generateFamilyKey() {
@@ -165,13 +165,13 @@ class KineticEncryption {
   // ---------------------------------------------------------------------------
 
   /// Serialises [familyKey] to a JSON string suitable for sharing with a
-  /// partner parent.
+  /// other Link family member.
   ///
   /// Format:
   /// ```json
   /// {
   ///   "version": 1,
-  ///   "usernameHint": "<username of the exporting parent>",
+  ///   "usernameHint": "<username of the exporting Link device>",
   ///   "familyKey": "<base64-encoded 32 bytes>"
   /// }
   /// ```
@@ -211,7 +211,7 @@ class KineticEncryption {
   }
 
   // ---------------------------------------------------------------------------
-  // Family key QR payload (for partner sharing)
+  // Family key QR payload (for family linking)
   // ---------------------------------------------------------------------------
 
   /// Serialises [familyKey] to a compact JSON string suitable for encoding

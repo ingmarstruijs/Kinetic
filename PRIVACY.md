@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-20
 
-Kinetic Link (parent app `net.moonbaseone.kinetic.parent` and kids app `net.moonbaseone.kinetic.kids`) is local-first software. There is no Kinetic cloud account and no telemetry.
+Kinetic Link (`net.moonbaseone.kinetic.link`) and Kinetic Kids (`net.moonbaseone.kinetic.kids`) are local-first software. There is no Kinetic cloud account and no telemetry.
 
 ## Data we collect
 
@@ -29,7 +29,7 @@ We never receive your WebDAV password, recovery phrase, or decrypted content.
 
 ## Camera
 
-Camera access is used only to scan QR codes for partner pairing or kids enrollment. Images are not uploaded or stored by Kinetic.
+Camera access is used only to scan QR codes for family linking or kids enrollment. Images are not uploaded or stored by Kinetic.
 
 ## Notifications
 

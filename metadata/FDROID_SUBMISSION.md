@@ -17,15 +17,15 @@ f-droid.org requires a merge request against
    GitHub Releases are created only for tags whose commit is already on `main`.
 3. Confirm Flutter **3.44.1** builds both APKs locally:
    ```bash
-   ./tool/fdroid_build.sh parent
+   ./tool/fdroid_build.sh link
    ./tool/fdroid_build.sh kids
    ```
 4. Phone screenshots live under
    `metadata/*/en-US/images/phoneScreenshots/` (`01.png`, `02.png`, …).
 5. Copy into an fdroiddata fork:
-   - `metadata/net.moonbaseone.kinetic.parent.yml`
+   - `metadata/net.moonbaseone.kinetic.link.yml`
    - `metadata/net.moonbaseone.kinetic.kids.yml`
-   - `metadata/net.moonbaseone.kinetic.parent/en-US/` (screenshots + icon)
+   - `metadata/net.moonbaseone.kinetic.link/en-US/` (screenshots + icon)
    - `metadata/net.moonbaseone.kinetic.kids/en-US/` (screenshots + icon)
 6. Open one GitLab MR (or two) against `fdroid/fdroiddata` `master`.
 

@@ -7,7 +7,7 @@ void main() {
       final now = DateTime.utc(2025, 6, 1, 12, 0, 0);
       final info = PresenceInfo(
         deviceId: 'device-123',
-        deviceType: 'parent',
+        deviceType: 'link',
         displayName: 'Alice',
         lastSeen: now,
       );
@@ -15,7 +15,7 @@ void main() {
       final decoded = PresenceInfo.fromJson(info.toJson());
 
       expect(decoded.deviceId, equals('device-123'));
-      expect(decoded.deviceType, equals('parent'));
+      expect(decoded.deviceType, equals('link'));
       expect(decoded.displayName, equals('Alice'));
       expect(decoded.lastSeen.toUtc(), equals(now));
     });
@@ -25,11 +25,11 @@ void main() {
       expect(result, isNull);
     });
 
-    test('deviceType distinguishes parent from kid', () {
-      final parent = PresenceInfo(
+    test('deviceType distinguishes link from kid', () {
+      final link = PresenceInfo(
         deviceId: 'p1',
-        deviceType: 'parent',
-        displayName: 'Parent',
+        deviceType: 'link',
+        displayName: 'Link',
         lastSeen: DateTime.now().toUtc(),
       );
       final kid = PresenceInfo(
@@ -39,7 +39,7 @@ void main() {
         lastSeen: DateTime.now().toUtc(),
       );
 
-      expect(parent.deviceType, equals('parent'));
+      expect(link.deviceType, equals('link'));
       expect(kid.deviceType, equals('kid'));
     });
   });

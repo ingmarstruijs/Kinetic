@@ -21,7 +21,7 @@
 
 ---
 
-Kinetic Link helps parents run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: partner proposals, kids assignments, shared notes, presence, and multi-device sync.
+Kinetic Link helps families run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: family-member proposals, kids assignments, shared notes, presence, and multi-device sync.
 
 Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, iCal, WebDAV client).
 
@@ -41,17 +41,17 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 Family features are **not** available offline-only. Configure WebDAV in **Settings** first; then pairing, proposals, kids, and shared data use that server.
 
 - **WebDAV sync** — bring your own server, no vendor backend
-- **Partner coordination** — QR pairing, encrypted task proposals, accept/decline flow; partner-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
+- **Family coordination** — QR pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
 - **Kids tasks** — assign to one child or **Everyone**; configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
 - **Shared notes** — share notes with other link members (needs pairing)
 - **Connection-aware send** — family members listed with WebDAV presence status before forwarding
-- **Partner / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
+- **Family-member / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
 
 ## Apps
 
 | App | Platforms | Description |
 |---|---|---|
-| [`apps/link`](apps/link) | Android, iOS | Task manager, partner proposals, notes, kids overview, WebDAV config |
+| [`apps/link`](apps/link) | Android, iOS | Task manager, family-member proposals, notes, kids overview, WebDAV config |
 | [`apps/kids`](apps/kids) | Android | Assigned tasks synced from Kinetic Link; children mark complete and earn XP |
 
 ## Tech Stack
@@ -73,7 +73,7 @@ melos run test        # run all tests
 cd apps/link && flutter run
 ```
 
-No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (partner pairing, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need a WebDAV connection in **Settings**.
+No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (family linking, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need a WebDAV connection in **Settings**.
 
 ### Build a release APK
 
@@ -94,10 +94,10 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 **Prerequisite:** WebDAV configured and working in Kinetic Link. Without it there is no shared folder, no pairing, and no kids sync — Family settings stay inactive for those flows.
 
-### Partner pairing
+### Family linking
 
-1. **Settings → Family → Partner** → share QR (12 family words + entropy QR)
-2. Partner scans **or** types the 12 words and confirms the fingerprint
+1. **Settings → Family → Family members** → share QR (12 family words + entropy QR)
+2. The other family member scans **or** types the 12 words and confirms the fingerprint
 3. Proposals sync automatically via WebDAV
 
 ### Kids enrollment
@@ -108,7 +108,7 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 Ship Kinetic Link **and** Kinetic Kids at the same minor version when enrollment/QR formats change.
 
-The **Family** screen shows partner/kids tools only when WebDAV is set up; proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require partner pairing.
+The **Family** screen shows family-member / kids tools only when WebDAV is set up; proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking.
 
 ## AI Suggestion Engine
 
@@ -116,18 +116,18 @@ A fully offline, heuristic-based engine surfaces task suggestions in the Kinetic
 
 An empty run does **not** start the 24-hour throttle, so creating tasks can surface hints on the next open. After at least one suggestion is created, that path waits 24 hours.
 
-| Detector | Trigger | Target | What the partner sees |
+| Detector | Trigger | Target | What the family member sees |
 |---|---|---|---|
 | **Habit** | Same non-recurring title completed ≥ 2× and the median interval is overdue, **or** one completion of a strong keyword (e.g. Dutch `boodschappen` / groceries) after ≥ 14 days | You | — |
 | **Calendar** | Month-based prompts with no history required (Dutch examples: `belasting` in March, `schoolspullen` in August, `kerst` in December) | You | — |
 | **Stale** | Open task older than 7 days with no due date or reminder | You (sets a reminder on the existing task) | — |
 | **Seasonal** | Task completed in the same calendar month in a prior year | You | — |
-| **Partner complement** | Keywords in **your** open tasks (including private) | Partner suggestion | A **generic** template only — never the private title or notes |
-| **Load balance** | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5) | Partner suggestion | A generic “can you pick something up in [category]?” line |
+| **Family complement** | Keywords in **your** open tasks (including private) | Family-member suggestion | A **generic** template only — never the private title or notes |
+| **Load balance** | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5) | Family-member suggestion | A generic “can you pick something up in [category]?” line |
 
-Partner hints are capped at one per keyword-family per 14 days. **Send to partner** always shows **What your partner sees** before anything is sent. Nothing is auto-sent.
+Family-member hints are capped at one per keyword-family per 14 days. **Send to family member** always shows **What your family member sees** before anything is sent. Nothing is auto-sent.
 
-Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For partner** / **From partner**). See [`apps/link/docs/SMART_FEATURES.md`](apps/link/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
+Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For family member** / **From family member**). See [`apps/link/docs/SMART_FEATURES.md`](apps/link/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
 
 ## Encryption
 
@@ -145,7 +145,7 @@ Export never includes the mnemonic, the raw key, or the WebDAV password. Setting
 
 A random 32-byte AES key cannot be turned into a BIP-39 mnemonic. On first 0.3 launch the app detects a stored personal key without `kinetic_vault_ready` and asks for a **new** 12-word phrase. Local SQLite stays. Personal tasks/notes are marked dirty so the next WebDAV sync re-encrypts them; `vault.meta` is rewritten. Remote blobs that are never overwritten stay undecryptable (pull already skips MAC failures).
 
-The **family key is not rotated** (that would break partner and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
+The **family key is not rotated** (that would break family members and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
 
 Backups are **`.kvault` only**. Legacy `.kbak2` files are no longer accepted.
 

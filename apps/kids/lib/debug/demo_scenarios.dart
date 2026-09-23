@@ -44,8 +44,8 @@ const kidsDemoScenarioCatalog = <KidsDemoScenarioInfo>[
   ),
   KidsDemoScenarioInfo(
     id: KidsDemoScenario.waiting,
-    titleEn: 'Awaiting parent/caregiver',
-    titleNl: 'Wacht op ouder/verzorger',
+    titleEn: 'Awaiting Link',
+    titleNl: 'Wacht op Link',
     subtitleEn: 'Open chores plus pending verification',
     subtitleNl: 'Open klusjes plus wachtend op bevestiging',
   ),

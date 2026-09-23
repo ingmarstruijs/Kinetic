@@ -10,7 +10,7 @@ Kinetic is already more than a todo app with sync: it is a **local-first family 
 
 Family features sit behind Settings + vault + QR + kids WebDAV password. That is the largest conversion drop-off.
 
-- Guided **Start family** wizard: WebDAV → vault → partner → kids
+- Guided **Start family** wizard: WebDAV → vault → family members → kids
 - Less friction on kids enrollment (password-on-child is a heavy UX hit)
 - First success moment: shared task / note / kid assignment
 
@@ -18,9 +18,9 @@ Without this, newer work (notes WYSIWYG, roster remove, kids visibility) stays u
 
 ## 2. Kids as a core product, not a plugin
 
-Kids + parent verify is the differentiator vs generic todo apps.
+Kids + Link verify is the differentiator vs generic todo apps.
 
-- Deeper XP/goals, routines, parent week overview
+- Deeper XP/goals, routines, Link week overview
 - **Kids on iOS** (today Android-only) for Apple households
 - Offline / local cache for kids where possible (today strongly online-dependent)
 
@@ -28,7 +28,7 @@ Kids + parent verify is the differentiator vs generic todo apps.
 
 Heuristics, proposals, and presence already exist. Shared **load metrics** are sketched on the wire (`/kinetic/shared/load/…`) but not fully driven from the apps.
 
-- Push/pull load metrics and surface them in Suggestions / Tasks (“partner has a lot open”)
+- Push/pull load metrics and surface them in Suggestions / Tasks (“a family member has a lot open”)
 - Stronger EN/NL heuristics (detectors are still NL-heavy)
 - Templates: shopping, weekly menu, holiday checklists as note↔task bridges
 

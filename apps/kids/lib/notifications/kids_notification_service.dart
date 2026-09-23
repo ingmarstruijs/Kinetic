@@ -5,7 +5,7 @@ import '../l10n/generated/app_localizations.dart';
 
 /// Minimal notification service for the kids app.
 ///
-/// Shows a notification when the parent sends a new task.
+/// Shows a notification when Link sends a new task.
 class KidsNotificationService {
   static const _kChannelId = 'kinetic_kids_tasks';
 

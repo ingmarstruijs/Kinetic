@@ -48,7 +48,7 @@ void main() {
           uid: 'task-abc',
           summary: 'Kamer opruimen',
           description:
-              'Speelgoed opruimen;xKineticLinkTaskId:parent-1;xKineticCategory:household;xKineticXpReward:15',
+              'Speelgoed opruimen;xKineticLinkTaskId:link-1;xKineticCategory:household;xKineticXpReward:15',
           status: ICalTaskStatus.needsAction,
           priority: 5,
           createdAt: now,
@@ -62,7 +62,7 @@ void main() {
 
         expect(task.id, 'task-abc');
         expect(task.title, 'Kamer opruimen');
-        expect(task.linkTaskId, 'parent-1');
+        expect(task.linkTaskId, 'link-1');
         expect(task.notes, 'Speelgoed opruimen');
         expect(task.category, TaskCategory.household);
         expect(task.xpReward, 15);
@@ -208,7 +208,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'row-1',
-            linkTaskId: 'parent-1',
+            linkTaskId: 'link-1',
             title: 'Test task',
             notes: 'Some notes',
             category: TaskCategory.school,
@@ -235,7 +235,7 @@ void main() {
         await repository.upsertTask(
           KidsTask(
             id: 'row-2',
-            linkTaskId: 'parent-42',
+            linkTaskId: 'link-42',
             title: 'Task',
             notes: null,
             category: TaskCategory.health,
@@ -253,7 +253,7 @@ void main() {
         final rows = await repository.getAllRows();
 
         final ical = orchestrator.taskRowToICal(rows.first);
-        expect(ical.description, contains('xKineticLinkTaskId:parent-42'));
+        expect(ical.description, contains('xKineticLinkTaskId:link-42'));
         expect(ical.description, contains('xKineticCategory:health'));
         expect(ical.description, contains('xKineticXpReward:10'));
         expect(ical.description, contains('xKineticTargetKidId:kid-jim'));

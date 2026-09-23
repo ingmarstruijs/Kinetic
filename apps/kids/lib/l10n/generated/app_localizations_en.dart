@@ -29,7 +29,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanQrInstructions =>
-      'Open your parent/caregiver\'s Kinetic app, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.';
+      'Open Kinetic Link, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.';
 
   @override
   String invalidQrCode(Object error) {
@@ -48,7 +48,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterWebDavPassword =>
-      'Enter your parent/caregiver\'s WebDAV password. It is not in the QR code.';
+      'Enter the WebDAV password from Kinetic Link. It is not in the QR code.';
 
   @override
   String get webDavPassword => 'WebDAV password';
@@ -80,7 +80,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stillToDo => 'To do';
 
   @override
-  String get waitingForParent => 'Waiting for parent/caregiver';
+  String get waitingForLink => 'Waiting for Link';
 
   @override
   String get completed => 'Completed';
@@ -167,7 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationChannelDescription =>
-      'Notifications for new tasks from your parent/caregiver.';
+      'Notifications for new tasks from Link.';
 
   @override
   String get newTaskNotificationTitle => 'New task';
@@ -217,14 +217,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmCompleteBody =>
-      'Are you sure you are finished? We will send a confirmation request to your parent/caregiver.';
+      'Are you sure you are finished? We will send a confirmation request to Link.';
 
   @override
   String get confirmCompleteAction => 'Yes, I\'m done';
 
   @override
-  String get awaitingParentConfirm =>
-      'Waiting for your parent/caregiver to confirm';
+  String get awaitingLinkConfirm => 'Waiting for Link to confirm';
 
   @override
   String get cleanUpCompleted => 'Clean up';

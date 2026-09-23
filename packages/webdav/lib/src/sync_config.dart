@@ -16,7 +16,7 @@ class SyncConfig {
 
   /// Stable UUID identifying this link device/account.
   /// Generated once on first setup and stored in secure storage.
-  /// Used as [PartnerProposal.fromLinkId] when proposing tasks.
+  /// Used as [LinkMemberProposal.fromLinkId] when proposing tasks.
   final String linkId;
 
   /// 32-byte AES-256-GCM key for personal (private) data.

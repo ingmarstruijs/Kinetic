@@ -4,7 +4,7 @@ enum TaskCategory { household, school, health, shopping, entertainment, other }
 /// Task priority — matches link app TaskPriority
 enum TaskPriority { low, normal, high, urgent }
 
-/// KidsTask — a task assigned by a parent to this child
+/// KidsTask — a task assigned by Link to this child
 ///
 /// Mirrors PersonalTask from link app but: read-only for most fields
 /// (assigned from the link app), editable only for completion / verification status.
@@ -65,7 +65,7 @@ class KidsTask {
         updatedAt: DateTime.now().toUtc(),
       );
 
-  /// Parent accepted — XP-eligible.
+  /// Link accepted — XP-eligible.
   KidsTask markAccepted() => copyWith(
         isCompleted: true,
         awaitingVerification: false,

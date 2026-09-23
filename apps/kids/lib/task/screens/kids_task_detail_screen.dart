@@ -91,7 +91,7 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
                               ),
                               if (pending)
                                 Text(
-                                  l10n.awaitingParentConfirm,
+                                  l10n.awaitingLinkConfirm,
                                   style: TextStyle(
                                     color: scheme.tertiary,
                                     fontSize: 12,

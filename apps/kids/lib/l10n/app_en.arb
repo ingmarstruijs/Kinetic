@@ -6,7 +6,7 @@
   "leave": "Leave",
   "linkFamilyTitle": "Link family",
   "scanQrCode": "Scan the QR code",
-  "scanQrInstructions": "Open your parent/caregiver's Kinetic app, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.",
+  "scanQrInstructions": "Open Kinetic Link, go to Settings → Family → Link kids app, scan the QR code, then enter the WebDAV password.",
   "invalidQrCode": "Invalid QR code: {error}",
   "@invalidQrCode": {
     "placeholders": {
@@ -18,7 +18,7 @@
   "qrCodeFoundConfirm": "QR code found. Link this device to the family?",
   "account": "Account",
   "server": "Server",
-  "enterWebDavPassword": "Enter your parent/caregiver's WebDAV password. It is not in the QR code.",
+  "enterWebDavPassword": "Enter the WebDAV password from Kinetic Link. It is not in the QR code.",
   "webDavPassword": "WebDAV password",
   "link": "Link",
   "myTasks": "My Tasks",
@@ -35,7 +35,7 @@
   "allDone": "All done!",
   "noTasksRightNow": "No tasks right now.",
   "stillToDo": "To do",
-  "waitingForParent": "Waiting for parent/caregiver",
+  "waitingForLink": "Waiting for Link",
   "completed": "Completed",
   "priorityUrgent": "Urgent",
   "priorityHigh": "High",
@@ -70,7 +70,7 @@
   "categoryEntertainment": "Entertainment",
   "categoryOther": "Other",
   "notificationChannelName": "Tasks",
-  "notificationChannelDescription": "Notifications for new tasks from your parent/caregiver.",
+  "notificationChannelDescription": "Notifications for new tasks from Link.",
   "newTaskNotificationTitle": "New task",
   "chooseLanguage": "Choose language",
   "languageEnglish": "English",
@@ -96,8 +96,8 @@
     }
   },
   "confirmCompleteTitle": "Are you done?",
-  "confirmCompleteBody": "Are you sure you are finished? We will send a confirmation request to your parent/caregiver.",
+  "confirmCompleteBody": "Are you sure you are finished? We will send a confirmation request to Link.",
   "confirmCompleteAction": "Yes, I'm done",
-  "awaitingParentConfirm": "Waiting for your parent/caregiver to confirm",
+  "awaitingLinkConfirm": "Waiting for Link to confirm",
   "cleanUpCompleted": "Clean up"
 }

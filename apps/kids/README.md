@@ -8,8 +8,8 @@ Kinetic Link themes, reminder picker, notes list, and the suggestion engine do *
 
 ## Setup
 
-1. Parent generates enrollment QR in Settings → Family → Kids → "Link kids app"
-2. Parent shows QR to child
+1. Kinetic Link generates enrollment QR in Settings → Family → Kids → "Link kids app"
+2. Show the QR to the child
 3. Child opens Kinetic Kids app → scans QR → types the WebDAV password
 4. Kid device is enrolled with:
    - WebDAV credentials (server, username, password typed on device)

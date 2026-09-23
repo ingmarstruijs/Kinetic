@@ -20,7 +20,7 @@ Tasks and notes store metadata in escaped iCal DESCRIPTION field:
 
 ## QR Payload Formats
 
-### Partner Sharing (FamilyKeyShareScreen)
+### Family Key Sharing (FamilyKeyShareScreen)
 ```javascript
 {
   "v": 2,
@@ -31,7 +31,7 @@ Tasks and notes store metadata in escaped iCal DESCRIPTION field:
 }
 ```
 
-The partner payload does **not** include the WebDAV password. Each link device keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Partners can also type the words instead of scanning.
+The family-key payload does **not** include the WebDAV password. Each link device keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Family members can also type the words instead of scanning.
 
 ### Kids Enrollment (KidsEnrollmentQrScreen)
 ```javascript
@@ -58,7 +58,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `SyncConfig`: Holds WebDAV credentials and encryption keys (personal/family)
 - `SecureKeyValueStore`: Abstract base for secure storage implementations
 - `PersonalTask` / `PersonalNote`: Domain models
-- `PartnerProposal`: Domain model for family-member proposals
+- `LinkMemberProposal`: Domain model for family-member proposals
 - `KidsTask`: Domain model for child-assigned tasks
 - `KidGoal`: Per-kid XP goal document under `/kinetic/shared/goals/{kidId}.json`
 
@@ -106,8 +106,8 @@ kinetic_webdav_password           — WebDAV password
 kinetic_vault_ready              — '1' after personal vault create/restore
 kinetic_webdav_family_key         — Family AES key (base64, optional)
 kinetic_webdav_family_entropy     — 16-byte BIP-39 entropy for family QR (optional)
-kinetic_webdav_link_id          — Parent ID (optional)
-kinetic_partner_paired            — '1' if partner is paired, '0' otherwise
+kinetic_webdav_link_id          — Link device ID (optional)
+kinetic_has_other_link_members            — '1' if another link member is linked, '0' otherwise
 kinetic_enrolled_kids             — JSON list of enrolled kids (Kinetic Link)
 kinetic_kid_id                    — This device's child UUID (kids only)
 ```
@@ -133,7 +133,7 @@ Remote files (`.ics`, proposal JSON, presence) are AES-256-GCM. Local SQLite is 
 ### Kid-Specific Filtering
 - Each kids device stores its unique `kinetic_kid_id` UUID during enrollment
 - On sync pull, tasks with `xKineticTargetKidId != myKidId` and `xKineticTargetKidId != null` are filtered out
-- Parent can target tasks to specific kids by setting `targetKidId` in the DB column
+- Link can target tasks to specific kids by setting `targetKidId` in the DB column
 
 ## Backup Format
 

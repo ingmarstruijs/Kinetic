@@ -29,7 +29,7 @@ We never receive your WebDAV password, recovery phrase, or decrypted content.
 
 ## Camera
 
-Camera access is used only to scan QR codes for partner pairing or kids enrollment. Images are not uploaded or stored by Kinetic.
+Camera access is used only to scan QR codes for family linking or kids enrollment. Images are not uploaded or stored by Kinetic.
 
 ## Notifications
 

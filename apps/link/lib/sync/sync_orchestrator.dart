@@ -11,6 +11,10 @@ import '../todo/models/enums.dart';
 import '../todo/models/personal_note.dart';
 import 'webdav_config_repository.dart';
 
+/// True when this device's [myId] appears in disconnect tombstone device ids.
+bool disconnectIncludesSelf(String myId, List<String> disconnectedIds) =>
+    myId.isNotEmpty && disconnectedIds.contains(myId);
+
 /// Drives a full sync cycle against the WebDAV server.
 ///
 /// Call [sync] in the background (e.g. on app resume or a timer).
@@ -55,12 +59,13 @@ class SyncOrchestrator {
     );
     final service = WebDavSyncService(client: client, config: _config);
     try {
+      // Disconnects before roster so a kicked device does not re-add itself.
+      await _processDisconnects(service);
       await _syncTasks(service);
       await _syncNotes(service);
       await _syncProposals(service);
       await _syncRoster(service);
       await _pushPresence(service);
-      await _processDisconnects(service);
     } finally {
       client.dispose();
     }
@@ -71,12 +76,12 @@ class SyncOrchestrator {
   /// Exposed for integration testing — production code always uses [sync].
   @visibleForTesting
   Future<void> syncWithService(WebDavSyncService service) async {
+    await _processDisconnects(service);
     await _syncTasks(service);
     await _syncNotes(service);
     await _syncProposals(service);
     await _syncRoster(service);
     await _pushPresence(service);
-    await _processDisconnects(service);
   }
 
   // ---------------------------------------------------------------------------
@@ -130,6 +135,9 @@ class SyncOrchestrator {
   Future<void> _syncRoster(WebDavSyncService service) async {
     final configRepo = _configRepo;
     if (_config.familyKeyBytes == null || configRepo == null) return;
+    // Skip if this device was just kicked (family key cleared mid-sync).
+    final liveKey = await configRepo.loadFamilyKey();
+    if (liveKey == null) return;
     final myId =
         _config.linkId.isNotEmpty ? _config.linkId : _config.username;
     if (myId.isEmpty) return;
@@ -238,6 +246,48 @@ class SyncOrchestrator {
       try {
         await service.deletePresence(myId);
       } catch (_) {}
+    } finally {
+      client.dispose();
+    }
+  }
+
+  /// Writes a disconnect tombstone for [memberId] and removes them from the
+  /// shared roster. Call when a Link user removes another family member.
+  Future<void> removeLinkMember(String memberId) async {
+    if (_config.familyKeyBytes == null || memberId.isEmpty) return;
+    final myId =
+        _config.linkId.isNotEmpty ? _config.linkId : _config.username;
+    if (memberId == myId) return;
+
+    final client = WebDavClient(
+      baseUrl: _config.baseUrl,
+      username: _config.username,
+      password: _config.password,
+    );
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      await service.pushDisconnect(
+        DisconnectTombstone(
+          deviceId: memberId,
+          deviceType: 'link',
+          disconnectedAt: DateTime.now().toUtc(),
+        ),
+      );
+      try {
+        await service.deletePresence(memberId);
+      } catch (_) {}
+
+      final configRepo = _configRepo;
+      if (configRepo != null) {
+        var roster =
+            await configRepo.loadCachedRoster() ?? FamilyRoster.empty();
+        roster = roster.withoutMember(memberId);
+        try {
+          await service.pushRoster(roster);
+        } catch (_) {}
+        await configRepo.saveCachedRoster(roster);
+        onRosterUpdated?.call(roster);
+      }
     } finally {
       client.dispose();
     }

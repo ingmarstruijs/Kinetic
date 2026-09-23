@@ -63,8 +63,7 @@ dependencies:
   flutter_timezone: 5.1.0
   timezone: ^0.9.4
 
-  # Markdown rendering for note previews
-  flutter_markdown: ^0.7.0
+  # Markdown codec for Quill note editor (storage format)
   markdown: ^7.3.0
 
   # QR code display and scanning for partner key sharing
@@ -75,6 +74,8 @@ dependencies:
 
   # File picker for database export/import
   file_picker: ^8.0.0
+  flutter_quill: ^11.6.0
+  markdown_quill: ^4.3.0
 
 dev_dependencies:
   flutter_test:

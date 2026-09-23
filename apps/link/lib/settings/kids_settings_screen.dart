@@ -17,6 +17,9 @@ import 'models/enrolled_kid.dart';
 // Manages kids enrollment: shows a QR for the kids app to scan, lists
 // enrolled kids and allows removing them.
 //
+// Kids-task visibility on this device is controlled from Settings → Family
+// (kidsParticipation), not here.
+//
 // Available as soon as WebDAV is configured — no partner pairing required.
 // Without a family vault the parent first writes down 12 words.
 // ---------------------------------------------------------------------------
@@ -40,8 +43,6 @@ class KidsSettingsScreen extends StatefulWidget {
 class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
   List<EnrolledKid> _enrolledKids = [];
   Map<String, PresenceInfo> _presenceByKidId = {};
-  bool _kidsParticipation = true;
-  bool _participationLoaded = false;
 
   @override
   void initState() {
@@ -49,7 +50,6 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
     DemoSession.instance.addListener(_onDemoChanged);
     _loadData();
     _loadPresence();
-    _loadParticipation();
   }
 
   @override
@@ -63,21 +63,6 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
     if (DemoSession.instance.active) {
       setState(() => _enrolledKids = List.of(DemoSession.instance.kids));
     }
-  }
-
-  Future<void> _loadParticipation() async {
-    final enabled = await widget.configRepo.loadKidsParticipation();
-    if (!mounted) return;
-    setState(() {
-      _kidsParticipation = enabled;
-      _participationLoaded = true;
-    });
-  }
-
-  Future<void> _setParticipation(bool enabled) async {
-    setState(() => _kidsParticipation = enabled);
-    await widget.configRepo.saveKidsParticipation(enabled);
-    widget.onConfigSaved?.call();
   }
 
   Future<void> _loadData() async {
@@ -109,7 +94,6 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
   }
 
   Future<void> _enrollKid() async {
-    if (!_kidsParticipation) return;
     var familyKey = await widget.configRepo.loadFamilyKey();
     if (familyKey == null) {
       if (!mounted) return;
@@ -142,7 +126,6 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
   }
 
   Future<void> _confirmRemoveKid(EnrolledKid kid) async {
-    if (!_kidsParticipation) return;
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -175,7 +158,6 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
   }
 
   Future<void> _toggleXp(EnrolledKid kid) async {
-    if (!_kidsParticipation) return;
     final updated = kid.copyWith(xpEnabled: !kid.xpEnabled);
     if (DemoSession.instance.active) {
       DemoSession.instance.updateKid(updated);
@@ -236,89 +218,67 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
       body: ListView(
         children: [
           const SizedBox(height: 8),
-          if (_participationLoaded)
-            SwitchListTile(
-              secondary: Icon(
-                Icons.child_care_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(l10n.settingsKidsParticipation),
-              subtitle: Text(l10n.settingsKidsParticipationSubtitle),
-              value: _kidsParticipation,
-              onChanged: _setParticipation,
+          ListTile(
+            leading: Icon(
+              Icons.qr_code_2_outlined,
+              color: Theme.of(context).colorScheme.primary,
             ),
-          if (_kidsParticipation) ...[
-            ListTile(
-              leading: Icon(
-                Icons.qr_code_2_outlined,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(l10n.kidsLinkApp),
-              subtitle: Text(l10n.kidsLinkAppSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _enrollKid,
-            ),
-            if (_enrolledKids.isNotEmpty) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                child: Text(
-                  l10n.kidsEnrolledSection,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ),
-              for (final kid in _enrolledKids)
-                ListTile(
-                  leading: Icon(
-                    Icons.face,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: Text(kid.name),
-                  subtitle: _buildKidSubtitle(context, kid),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          kid.xpEnabled
-                              ? Icons.star
-                              : Icons.star_border_outlined,
-                          color: kid.xpEnabled
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.outline,
-                        ),
-                        tooltip: l10n.kidsXpAndGoals,
-                        onPressed: () => _toggleXp(kid),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.person_remove_outlined,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                        tooltip: l10n.kidsRemoveTooltip,
-                        onPressed: () => _confirmRemoveKid(kid),
-                      ),
-                    ],
-                  ),
-                ),
-            ] else
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                child: Text(
-                  l10n.kidsNoneEnrolled,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ] else if (_participationLoaded)
+            title: Text(l10n.kidsLinkApp),
+            subtitle: Text(l10n.kidsLinkAppSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _enrollKid,
+          ),
+          if (_enrolledKids.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
               child: Text(
-                l10n.settingsKidsParticipationSubtitle,
+                l10n.kidsEnrolledSection,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+            for (final kid in _enrolledKids)
+              ListTile(
+                leading: Icon(
+                  Icons.face,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(kid.name),
+                subtitle: _buildKidSubtitle(context, kid),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        kid.xpEnabled
+                            ? Icons.star
+                            : Icons.star_border_outlined,
+                        color: kid.xpEnabled
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline,
+                      ),
+                      tooltip: l10n.kidsXpAndGoals,
+                      onPressed: () => _toggleXp(kid),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.person_remove_outlined,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      tooltip: l10n.kidsRemoveTooltip,
+                      onPressed: () => _confirmRemoveKid(kid),
+                    ),
+                  ],
+                ),
+              ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Text(
+                l10n.kidsNoneEnrolled,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

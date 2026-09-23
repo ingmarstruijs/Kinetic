@@ -56,6 +56,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   SyncConfig? _config;
   bool _partnerPaired = false;
   int _enrolledKidsCount = 0;
+  bool _kidsParticipation = true;
+  bool _kidsParticipationLoaded = false;
 
   @override
   void initState() {
@@ -67,13 +69,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final config = await widget.configRepo.load();
     final paired = await widget.configRepo.isPartnerPaired();
     final kids = await widget.configRepo.loadEnrolledKids();
+    final kidsParticipation = await widget.configRepo.loadKidsParticipation();
     if (mounted) {
       setState(() {
         _config = config;
         _partnerPaired = paired;
         _enrolledKidsCount = kids.length;
+        _kidsParticipation = kidsParticipation;
+        _kidsParticipationLoaded = true;
       });
     }
+  }
+
+  Future<void> _setKidsParticipation(bool enabled) async {
+    setState(() => _kidsParticipation = enabled);
+    await widget.configRepo.saveKidsParticipation(enabled);
+    widget.onConfigSaved?.call();
   }
 
   int get _displayKidsCount {
@@ -154,6 +165,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   if (isConnected || DemoSession.instance.active) ...[
                     _SectionHeader(label: l10n.settingsSectionFamily),
+                    if (_kidsParticipationLoaded && _displayKidsCount > 0)
+                      SwitchListTile(
+                        secondary: Icon(
+                          Icons.child_care_outlined,
+                          color: iconColor,
+                        ),
+                        title: Text(l10n.settingsKidsParticipation),
+                        subtitle: Text(
+                          l10n.settingsKidsParticipationSubtitle,
+                        ),
+                        value: _kidsParticipation,
+                        onChanged: _setKidsParticipation,
+                      ),
                     ListTile(
                       leading: Icon(Icons.people_outline, color: iconColor),
                       title: Text(l10n.settingsFamilyMembers),

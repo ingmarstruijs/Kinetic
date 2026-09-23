@@ -69,6 +69,23 @@ void main() {
     expect(next.kids.single.id, 'k1');
   });
 
+  test('withoutMember removes link and kid by id', () {
+    final roster = FamilyRoster(
+      linkMembers: [
+        member('1', name: 'Alice', updatedAt: t1),
+        member('2', name: 'Bob', updatedAt: t1),
+      ],
+      kids: [kid('k1', name: 'Mees', updatedAt: t1)],
+      updatedAt: t1,
+    );
+    final next = roster.withoutMember('2');
+    expect(next.linkMembers.map((e) => e.id).toSet(), {'1'});
+    expect(next.kids.single.id, 'k1');
+    final noKid = roster.withoutMember('k1');
+    expect(noKid.kids, isEmpty);
+    expect(noKid.linkMembers.length, 2);
+  });
+
   test('participatingLinkMembers filters kidsParticipation', () {
     final roster = FamilyRoster(
       linkMembers: [

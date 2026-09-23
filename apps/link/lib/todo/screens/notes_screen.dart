@@ -9,6 +9,7 @@ import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
 import '../widgets/category_sheet.dart';
+import '../widgets/note_quick_add_bar.dart';
 import 'note_editor_screen.dart';
 
 /// Screen that displays all notes in a scrollable list with create/edit/delete.
@@ -93,59 +94,75 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppHeader(
-          title: AppLocalizations.of(context).notesTitle,
-          centerTitle: false,
+    final scheme = Theme.of(context).colorScheme;
+    return Theme(
+      data: Theme.of(context).copyWith(
+        bottomSheetTheme: BottomSheetThemeData(
+          backgroundColor: scheme.surface,
+          elevation: 0,
+          modalBackgroundColor: scheme.surface,
+          modalElevation: 1,
         ),
-        centerTitle: false,
-        actions: [
-          if (widget.syncStatus != null)
-            ValueListenableBuilder<SyncStatus>(
-              valueListenable: widget.syncStatus!,
-              builder: (context, status, _) => switch (status) {
-                SyncStatus.syncing => const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-                SyncStatus.error => IconButton(
-                  onPressed: widget.onSyncRetry,
-                  tooltip: AppLocalizations.of(context).tasksSyncOffline,
-                  icon: Icon(
-                    Icons.cloud_off_outlined,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-                SyncStatus.idle => IconButton(
-                  onPressed: widget.onSyncRetry,
-                  tooltip: AppLocalizations.of(context).tasksSyncing,
-                  icon: const Icon(Icons.cloud_done_outlined),
-                ),
-              },
-            ),
-          IconButton(
-            icon: const Icon(Icons.delete_outlined),
-            tooltip: AppLocalizations.of(context).notesTrashTooltip,
-            onPressed: () => _showTrashSheet(context),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: AppHeader(
+            title: AppLocalizations.of(context).notesTitle,
+            centerTitle: false,
           ),
-        ],
-      ),
-      body: _NotesListBody(
-        repo: widget.repo,
-        partnerPaired: widget.partnerPaired,
-        myLinkId: widget.myLinkId,
-        otherLinkMembers: widget.otherLinkMembers,
-        onEditNote: (note) => _openEditor(note: note),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openEditor(),
-        tooltip: AppLocalizations.of(context).notesNewTooltip,
-        child: const Icon(Icons.add),
+          centerTitle: false,
+          actions: [
+            if (widget.syncStatus != null)
+              ValueListenableBuilder<SyncStatus>(
+                valueListenable: widget.syncStatus!,
+                builder: (context, status, _) => switch (status) {
+                  SyncStatus.syncing => const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                  SyncStatus.error => IconButton(
+                    onPressed: widget.onSyncRetry,
+                    tooltip: AppLocalizations.of(context).tasksSyncOffline,
+                    icon: Icon(
+                      Icons.cloud_off_outlined,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  SyncStatus.idle => IconButton(
+                    onPressed: widget.onSyncRetry,
+                    tooltip: AppLocalizations.of(context).tasksSyncing,
+                    icon: const Icon(Icons.cloud_done_outlined),
+                  ),
+                },
+              ),
+            IconButton(
+              icon: const Icon(Icons.delete_outlined),
+              tooltip: AppLocalizations.of(context).notesTrashTooltip,
+              onPressed: () => _showTrashSheet(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: AppLocalizations.of(context).notesNewTooltip,
+              onPressed: () => _openEditor(),
+            ),
+          ],
+        ),
+        body: _NotesListBody(
+          repo: widget.repo,
+          partnerPaired: widget.partnerPaired,
+          myLinkId: widget.myLinkId,
+          otherLinkMembers: widget.otherLinkMembers,
+          onEditNote: (note) => _openEditor(note: note),
+        ),
+        bottomSheet: NoteQuickAddBar(
+          repo: widget.repo,
+          hasFamilyKey: widget.partnerPaired,
+          otherLinkMembers: widget.otherLinkMembers,
+        ),
       ),
     );
   }
@@ -211,12 +228,18 @@ class _NotesListBody extends StatelessWidget {
         if (notes.isEmpty) {
           final scheme = Theme.of(context).colorScheme;
           final l10n = AppLocalizations.of(context);
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+            child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Icon(
+                    Icons.sticky_note_2_outlined,
+                    size: 56,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     l10n.notesEmpty,
                     textAlign: TextAlign.center,

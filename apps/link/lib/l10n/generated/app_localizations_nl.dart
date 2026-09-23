@@ -512,6 +512,23 @@ class AppLocalizationsNl extends AppLocalizations {
       'Verwijder de familiesleutel en gedeelde notities van dit apparaat.';
 
   @override
+  String get partnerRemoveMemberTooltip => 'Uit familie verwijderen';
+
+  @override
+  String partnerRemoveMemberTitle(String name) {
+    return '$name verwijderen?';
+  }
+
+  @override
+  String partnerRemoveMemberBody(String name) {
+    return '$name wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.';
+  }
+
+  @override
+  String get partnerRemovedFromFamily =>
+      'Je bent op een ander apparaat uit de familie verwijderd.';
+
+  @override
   String get partnerStatusPaired =>
       'Gezinslid gekoppeld — familiesleutel aanwezig';
 
@@ -1405,23 +1422,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Zet een schermvergrendeling aan om ontgrendelen te vereisen';
 
   @override
-  String get notesEditMarkdown => 'Bewerken';
-
-  @override
-  String get notesPreviewMarkdown => 'Voorbeeld';
-
-  @override
-  String get notesMarkdownHint => 'Schrijf markdown…';
-
-  @override
-  String get notesMarkdownHelpTooltip => 'Markdown-hulp';
-
-  @override
-  String get notesMarkdownHelpTitle => 'Markdown-snelkoppelingen';
-
-  @override
-  String get notesMarkdownHelpBody =>
-      '# Kop\n## Subkop\n\n**vet** en *cursief*\n\n- Opsomming\n1. Genummerde lijst\n\n- [ ] Checkbox\n- [x] Klaar\n\n[Linktekst](https://voorbeeld.nl)\n\n> Citaat\n\n`inline code`';
+  String get notesBodyHint => 'Schrijf een notitie…';
 
   @override
   String get notesMdBold => 'Vet';
@@ -1881,6 +1882,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get quickAddMoreOptions => 'Meer opties';
+
+  @override
+  String get notesQuickAddHint => 'Nieuwe notitie…';
 
   @override
   String get timeInvalid => 'Voer een geldige tijd in (00:00 – 23:59).';

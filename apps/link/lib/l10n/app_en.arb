@@ -221,6 +221,20 @@
   "partnerShowKeySubtitle": "Show the 12 words on this device (screen lock).",
   "partnerUnlink": "Leave family",
   "partnerUnlinkSubtitle": "Remove the family key and shared notes from this device.",
+  "partnerRemoveMemberTooltip": "Remove from family",
+  "partnerRemoveMemberTitle": "Remove {name}?",
+  "@partnerRemoveMemberTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "partnerRemoveMemberBody": "{name} will be removed from this family's roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.",
+  "@partnerRemoveMemberBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "partnerRemovedFromFamily": "You were removed from the family on another device.",
   "partnerStatusPaired": "Family member linked — family key present",
   "partnerStatusUnpaired": "Family member not linked — scan or share the QR code to link",
   "partnerLastSeen": "Last seen {when}",
@@ -743,12 +757,7 @@
   "notesUnlockReason": "Unlock this note",
   "notesUnlockFailed": "Could not unlock the note",
   "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to require unlock",
-  "notesEditMarkdown": "Edit",
-  "notesPreviewMarkdown": "Preview",
-  "notesMarkdownHint": "Write markdown…",
-  "notesMarkdownHelpTooltip": "Markdown help",
-  "notesMarkdownHelpTitle": "Markdown shortcuts",
-  "notesMarkdownHelpBody": "# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`",
+  "notesBodyHint": "Write a note…",
   "notesMdBold": "Bold",
   "notesMdItalic": "Italic",
   "notesMdHeading": "Heading",
@@ -989,6 +998,7 @@
 
   "quickAddHint": "New task…",
   "quickAddMoreOptions": "More options",
+  "notesQuickAddHint": "New note…",
 
   "timeInvalid": "Enter a valid time (00:00 – 23:59).",
   "timeOk": "OK"

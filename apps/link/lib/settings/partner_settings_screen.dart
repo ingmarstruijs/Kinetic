@@ -221,6 +221,40 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _confirmRemoveMember(FamilyLinkMember member) async {
+    final l10n = AppLocalizations.of(context);
+    final name = member.displayName.isEmpty
+        ? l10n.partnerGenericName
+        : member.displayName;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.partnerRemoveMemberTitle(name)),
+        content: Text(l10n.partnerRemoveMemberBody(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await widget.syncOrchestrator?.removeLinkMember(member.id);
+    } catch (_) {}
+    await _loadConfig();
+    await _loadPresence();
+    if (mounted) widget.onConfigSaved?.call();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -292,6 +326,14 @@ class _PartnerSettingsScreenState extends State<PartnerSettingsScreen> {
                         : member.displayName,
                   ),
                   subtitle: Text(_presenceSubtitleFor(l10n, member.id)),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.person_remove_outlined,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    tooltip: l10n.partnerRemoveMemberTooltip,
+                    onPressed: () => _confirmRemoveMember(member),
+                  ),
                 ),
             ],
             if (!paired) ...[

@@ -113,10 +113,19 @@ class AppDatabase extends _$AppDatabase {
         }
       }
       if (from < 19) {
-        await m.addColumn(personalNotes, personalNotes.updatedByLinkId);
+        // Idempotent: createTable(personalNotes) on older upgrade paths already
+        // materializes the current schema, which includes this column.
+        if (!await _columnExists('personal_notes', 'updated_by_link_id')) {
+          await m.addColumn(personalNotes, personalNotes.updatedByLinkId);
+        }
       }
     },
   );
+
+  Future<bool> _columnExists(String table, String column) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return rows.any((row) => row.read<String>('name') == column);
+  }
 
   /// Encrypted on-disk SQLite (SQLite3MultipleCiphers) in documents.
   static QueryExecutor _openConnection() {

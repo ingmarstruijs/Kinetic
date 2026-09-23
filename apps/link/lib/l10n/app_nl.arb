@@ -221,6 +221,20 @@
   "partnerShowKeySubtitle": "Toon de 12 woorden op dit apparaat (schermvergrendeling).",
   "partnerUnlink": "Familie verlaten",
   "partnerUnlinkSubtitle": "Verwijder de familiesleutel en gedeelde notities van dit apparaat.",
+  "partnerRemoveMemberTooltip": "Uit familie verwijderen",
+  "partnerRemoveMemberTitle": "{name} verwijderen?",
+  "@partnerRemoveMemberTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "partnerRemoveMemberBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.",
+  "@partnerRemoveMemberBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "partnerRemovedFromFamily": "Je bent op een ander apparaat uit de familie verwijderd.",
   "partnerStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
   "partnerStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
   "partnerLastSeen": "Laatst gezien {when}",
@@ -743,12 +757,7 @@
   "notesUnlockReason": "Ontgrendel deze notitie",
   "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
   "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om ontgrendelen te vereisen",
-  "notesEditMarkdown": "Bewerken",
-  "notesPreviewMarkdown": "Voorbeeld",
-  "notesMarkdownHint": "Schrijf markdown…",
-  "notesMarkdownHelpTooltip": "Markdown-hulp",
-  "notesMarkdownHelpTitle": "Markdown-snelkoppelingen",
-  "notesMarkdownHelpBody": "# Kop\n## Subkop\n\n**vet** en *cursief*\n\n- Opsomming\n1. Genummerde lijst\n\n- [ ] Checkbox\n- [x] Klaar\n\n[Linktekst](https://voorbeeld.nl)\n\n> Citaat\n\n`inline code`",
+  "notesBodyHint": "Schrijf een notitie…",
   "notesMdBold": "Vet",
   "notesMdItalic": "Cursief",
   "notesMdHeading": "Kop",
@@ -989,6 +998,7 @@
 
   "quickAddHint": "Nieuwe taak…",
   "quickAddMoreOptions": "Meer opties",
+  "notesQuickAddHint": "Nieuwe notitie…",
 
   "timeInvalid": "Voer een geldige tijd in (00:00 – 23:59).",
   "timeOk": "OK"

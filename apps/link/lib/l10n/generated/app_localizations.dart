@@ -968,6 +968,30 @@ abstract class AppLocalizations {
   /// **'Remove the family key and shared notes from this device.'**
   String get partnerUnlinkSubtitle;
 
+  /// No description provided for @partnerRemoveMemberTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from family'**
+  String get partnerRemoveMemberTooltip;
+
+  /// No description provided for @partnerRemoveMemberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String partnerRemoveMemberTitle(String name);
+
+  /// No description provided for @partnerRemoveMemberBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.'**
+  String partnerRemoveMemberBody(String name);
+
+  /// No description provided for @partnerRemovedFromFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'You were removed from the family on another device.'**
+  String get partnerRemovedFromFamily;
+
   /// No description provided for @partnerStatusPaired.
   ///
   /// In en, this message translates to:
@@ -2456,41 +2480,11 @@ abstract class AppLocalizations {
   /// **'Turn on a screen lock on this device to require unlock'**
   String get notesHideNeedsDeviceLock;
 
-  /// No description provided for @notesEditMarkdown.
+  /// No description provided for @notesBodyHint.
   ///
   /// In en, this message translates to:
-  /// **'Edit'**
-  String get notesEditMarkdown;
-
-  /// No description provided for @notesPreviewMarkdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview'**
-  String get notesPreviewMarkdown;
-
-  /// No description provided for @notesMarkdownHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Write markdown…'**
-  String get notesMarkdownHint;
-
-  /// No description provided for @notesMarkdownHelpTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Markdown help'**
-  String get notesMarkdownHelpTooltip;
-
-  /// No description provided for @notesMarkdownHelpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Markdown shortcuts'**
-  String get notesMarkdownHelpTitle;
-
-  /// No description provided for @notesMarkdownHelpBody.
-  ///
-  /// In en, this message translates to:
-  /// **'# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`'**
-  String get notesMarkdownHelpBody;
+  /// **'Write a note…'**
+  String get notesBodyHint;
 
   /// No description provided for @notesMdBold.
   ///
@@ -3253,6 +3247,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More options'**
   String get quickAddMoreOptions;
+
+  /// No description provided for @notesQuickAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New note…'**
+  String get notesQuickAddHint;
 
   /// No description provided for @timeInvalid.
   ///

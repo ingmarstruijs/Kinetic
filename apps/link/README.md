@@ -164,9 +164,10 @@ Every sync cycle each device writes an encrypted **presence file** to `/kinetic/
 When a device explicitly leaves the family, it writes an encrypted **tombstone** to `/kinetic/shared/disconnect/{deviceId}.json` (family key) containing `deviceId`, `deviceType`, and `disconnectedAt`.
 
 - **Link device leaves** (`_leaveFamily`): writes a link-device tombstone + deletes own presence file.
+- **Link member removed** (`removeLinkMember`): another Link device writes a tombstone for the target id, updates the shared roster, and deletes their presence. On sync, the target clears its family key (same local cleanup as leave).
 - **Kid removed** (`_confirmRemoveKid`): Kinetic Link writes a kid tombstone + deletes that kid's presence file.
 - **Kids app**: on each sync, checks for its own tombstone; if found, invokes `onDisconnected` callback so the app can prompt the user.
-- **link app**: on each sync, `_processDisconnects` reads all tombstones, invokes `onDisconnectsDetected`, then deletes the tombstone files it processed.
+- **link app**: on each sync, `_processDisconnects` runs before roster sync, reads all tombstones, invokes `onDisconnectsDetected` (self-id → leave cleanup), then deletes the tombstone files it processed.
 
 ## Conditional UI
 
@@ -174,10 +175,10 @@ Without WebDAV, Tasks stays a personal list (plus local “for you” suggestion
 
 **Kids panel** on Tasks is only visible when:
 
-- This Link device has **Kids tasks on this device** enabled (Settings → Kids)
+- This Link device has **Kids tasks on this device** enabled (Settings → Family)
 - At least one child is enrolled (`enrolledKidsCount > 0`)
 - WebDAV config and sync are available so assignments can be loaded
 
-With participation off, this device cannot see the kids panel, assign to kids, enroll/remove kids, or verify completions. Other Link members keep their own setting; the roster stores each member’s `kidsParticipation` flag.
+With participation off, this device cannot see the kids panel, assign to kids, or verify completions. Enrollment (Settings → Kids) stays available. Other Link members keep their own setting; the roster stores each member’s `kidsParticipation` flag.
 
 **Suggestions panel** on Tasks is hidden when there are no pending self suggestions, partner-targeted hints, or incoming proposals.

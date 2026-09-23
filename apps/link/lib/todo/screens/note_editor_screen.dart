@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:markdown/markdown.dart' as md;
+import 'package:flutter_quill/flutter_quill.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_themes.dart';
@@ -11,6 +10,7 @@ import '../services/note_repository.dart';
 import '../widgets/category_sheet.dart';
 import '../widgets/detail_meta_row.dart';
 import '../widgets/hour_first_time_picker.dart';
+import '../widgets/note_markdown_codec.dart';
 
 /// Fullscreen editor for creating or editing a note.
 class NoteEditorScreen extends StatefulWidget {
@@ -18,6 +18,9 @@ class NoteEditorScreen extends StatefulWidget {
   final PersonalNote? note;
   final bool hasFamilyKey;
   final bool initialIsShared;
+
+  /// Prefill for a new note (ignored when [note] is set).
+  final String? initialTitle;
 
   /// Other link members in the family roster (for selective share).
   final List<({String id, String name})> otherLinkMembers;
@@ -28,6 +31,7 @@ class NoteEditorScreen extends StatefulWidget {
     this.note,
     this.hasFamilyKey = false,
     this.initialIsShared = false,
+    this.initialTitle,
     this.otherLinkMembers = const [],
   });
 
@@ -37,38 +41,51 @@ class NoteEditorScreen extends StatefulWidget {
 
 class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late final TextEditingController _titleCtrl;
-  late final TextEditingController _bodyCtrl;
+  late final QuillController _quillCtrl;
+  late final FocusNode _editorFocus;
+  late final ScrollController _editorScroll;
+  late final String _baselineBody;
   late bool _isShared;
   late bool _isContentHidden;
   late DateTime? _remindAt;
   String? _category;
+
   /// null = all link members when shared; non-null = selected subset.
   List<String>? _sharedMemberIds;
   bool _saving = false;
-  bool _previewMarkdown = false;
   bool _allowPop = false;
 
   @override
   void initState() {
     super.initState();
     final note = widget.note;
-    _titleCtrl = TextEditingController(text: note?.title ?? '');
-    _bodyCtrl = TextEditingController(text: note?.body ?? '');
+    _titleCtrl = TextEditingController(
+      text: note?.title ?? widget.initialTitle ?? '',
+    );
+    _quillCtrl = QuillController(
+      document: NoteMarkdownCodec.documentFromMarkdown(note?.body ?? ''),
+      selection: const TextSelection.collapsed(offset: 0),
+    );
+    _baselineBody = NoteMarkdownCodec.markdownFromDocument(_quillCtrl.document);
+    _editorFocus = FocusNode();
+    _editorScroll = ScrollController();
     _isShared = note?.isShared ?? widget.initialIsShared;
     _sharedMemberIds = note?.sharedMemberIds;
     _isContentHidden = note?.isContentHidden ?? false;
     _remindAt = note?.remindAt;
     _category = note?.category;
     _titleCtrl.addListener(_onFieldsChanged);
-    _bodyCtrl.addListener(_onFieldsChanged);
+    _quillCtrl.addListener(_onFieldsChanged);
   }
 
   @override
   void dispose() {
     _titleCtrl.removeListener(_onFieldsChanged);
-    _bodyCtrl.removeListener(_onFieldsChanged);
+    _quillCtrl.removeListener(_onFieldsChanged);
     _titleCtrl.dispose();
-    _bodyCtrl.dispose();
+    _quillCtrl.dispose();
+    _editorFocus.dispose();
+    _editorScroll.dispose();
     super.dispose();
   }
 
@@ -76,18 +93,21 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     if (mounted) setState(() {});
   }
 
+  String get _bodyMarkdown =>
+      NoteMarkdownCodec.markdownFromDocument(_quillCtrl.document);
+
   bool get _isDirty {
     final note = widget.note;
     if (note == null) {
       return _titleCtrl.text.trim().isNotEmpty ||
-          _bodyCtrl.text.isNotEmpty ||
+          _bodyMarkdown.isNotEmpty ||
           _isShared != widget.initialIsShared ||
           _isContentHidden ||
           _remindAt != null ||
           _category != null;
     }
     return _titleCtrl.text.trim() != note.title ||
-        _bodyCtrl.text != note.body ||
+        _bodyMarkdown != _baselineBody ||
         _isShared != note.isShared ||
         !_sameIdList(_sharedMemberIds, note.sharedMemberIds) ||
         _isContentHidden != note.isContentHidden ||
@@ -118,15 +138,15 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         content: Text(l10n.notesUnsavedBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(_UnsavedAction.discard),
-            child: Text(l10n.notesDiscard),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(_UnsavedAction.cancel),
+            onPressed: () => Navigator.pop(ctx, _UnsavedAction.cancel),
             child: Text(l10n.commonCancel),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _UnsavedAction.discard),
+            child: Text(l10n.notesDiscard),
+          ),
           FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(_UnsavedAction.save),
+            onPressed: () => Navigator.pop(ctx, _UnsavedAction.save),
             child: Text(l10n.commonSave),
           ),
         ],
@@ -135,7 +155,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   }
 
   Future<void> _onPopInvoked(bool didPop, Object? result) async {
-    if (didPop) return;
+    if (didPop || _allowPop) return;
     if (!_isDirty) {
       await _popAllowed();
       return;
@@ -181,11 +201,12 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     try {
       final note = widget.note;
       late final PersonalNote savedNote;
+      final body = _bodyMarkdown;
 
       if (note != null) {
         final updatedNote = note.copyWith(
           title: _titleCtrl.text.trim(),
-          body: _bodyCtrl.text,
+          body: body,
           isShared: _isShared,
           sharedMemberIds: _isShared ? _sharedMemberIds : null,
           clearSharedMemberIds:
@@ -203,7 +224,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       } else {
         savedNote = await widget.repo.insert(
           title: _titleCtrl.text.trim(),
-          body: _bodyCtrl.text,
+          body: body,
           isShared: _isShared,
           sharedMemberIds: _isShared ? _sharedMemberIds : null,
           isContentHidden: _isContentHidden,
@@ -268,178 +289,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     });
   }
 
-  void _showMarkdownHelp() {
-    final l10n = AppLocalizations.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        final scheme = Theme.of(ctx).colorScheme;
-        final tt = Theme.of(ctx).textTheme;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.notesMarkdownHelpTitle,
-                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SelectableText(
-                    l10n.notesMarkdownHelpBody,
-                    style: tt.bodyMedium?.copyWith(
-                      fontFamily: 'monospace',
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _wrapSelection(String before, String after, {String placeholder = ''}) {
-    final text = _bodyCtrl.text;
-    final sel = _bodyCtrl.selection;
-    final start = sel.isValid ? sel.start : text.length;
-    final end = sel.isValid ? sel.end : text.length;
-    final selected = text.substring(start, end);
-    final inner = selected.isEmpty ? placeholder : selected;
-    final inserted = '$before$inner$after';
-    final newText = text.replaceRange(start, end, inserted);
-    final cursorStart = start + before.length;
-    final cursorEnd = cursorStart + inner.length;
-    _bodyCtrl.value = TextEditingValue(
-      text: newText,
-      selection: selected.isEmpty && placeholder.isNotEmpty
-          ? TextSelection(baseOffset: cursorStart, extentOffset: cursorEnd)
-          : TextSelection.collapsed(offset: cursorEnd + after.length),
-    );
-  }
-
-  void _insertLink() {
-    final l10n = AppLocalizations.of(context);
-    final text = _bodyCtrl.text;
-    final sel = _bodyCtrl.selection;
-    final start = sel.isValid ? sel.start : text.length;
-    final end = sel.isValid ? sel.end : text.length;
-    final selected = text.substring(start, end);
-    final label = selected.isEmpty ? l10n.notesMdLink : selected;
-    const url = 'url';
-    final inserted = '[$label]($url)';
-    final newText = text.replaceRange(start, end, inserted);
-    final urlStart = start + 1 + label.length + 2; // after "]("
-    _bodyCtrl.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection(
-        baseOffset: urlStart,
-        extentOffset: urlStart + url.length,
-      ),
-    );
-  }
-
-  void _prefixCurrentLine(String prefix) {
-    final text = _bodyCtrl.text;
-    final sel = _bodyCtrl.selection;
-    final offset = sel.isValid
-        ? sel.baseOffset.clamp(0, text.length).toInt()
-        : text.length;
-    final lineStart = offset == 0 ? 0 : text.lastIndexOf('\n', offset - 1) + 1;
-    final lineEndIndex = text.indexOf('\n', offset);
-    final lineEnd = lineEndIndex == -1 ? text.length : lineEndIndex;
-    final line = text.substring(lineStart, lineEnd);
-
-    final String nextLine;
-    final int delta;
-    if (line.startsWith(prefix)) {
-      nextLine = line.substring(prefix.length);
-      delta = -prefix.length;
-    } else {
-      nextLine = '$prefix$line';
-      delta = prefix.length;
-    }
-
-    final newText = text.replaceRange(lineStart, lineEnd, nextLine);
-    final cursor = (offset + delta).clamp(0, newText.length).toInt();
-    _bodyCtrl.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: cursor),
-    );
-  }
-
-  static final _listLinePattern = RegExp(
-    r'^(\s*)(- \[ \]\s|- \[[xX]\]\s|[*+-]\s|\d+\.\s)(.*)$',
-  );
-
-  bool _applyingListContinue = false;
-
-  /// Continues bullet/checkbox/numbered lists on Enter; empty item exits the list.
-  void _onBodyChanged(String value) {
-    if (_applyingListContinue) return;
-    final sel = _bodyCtrl.selection;
-    if (!sel.isValid || !sel.isCollapsed) return;
-    final offset = sel.baseOffset;
-    if (offset < 1 || value[offset - 1] != '\n') return;
-
-    final lineBreak = offset - 1;
-    final lineStart =
-        lineBreak == 0 ? 0 : value.lastIndexOf('\n', lineBreak - 1) + 1;
-    final prevLine = value.substring(lineStart, lineBreak);
-    final match = _listLinePattern.firstMatch(prevLine);
-    if (match == null) return;
-
-    final indent = match.group(1)!;
-    final marker = match.group(2)!;
-    final content = match.group(3)!;
-
-    _applyingListContinue = true;
-    try {
-      if (content.trim().isEmpty) {
-        // Exit list: drop the empty marker line.
-        final newText = value.substring(0, lineStart) + value.substring(offset);
-        _bodyCtrl.value = TextEditingValue(
-          text: newText,
-          selection: TextSelection.collapsed(offset: lineStart),
-        );
-        return;
-      }
-
-      final nextPrefix = '$indent${_nextListMarker(marker)}';
-      final newText =
-          value.substring(0, offset) + nextPrefix + value.substring(offset);
-      _bodyCtrl.value = TextEditingValue(
-        text: newText,
-        selection: TextSelection.collapsed(offset: offset + nextPrefix.length),
-      );
-    } finally {
-      _applyingListContinue = false;
-    }
-  }
-
-  String _nextListMarker(String marker) {
-    if (marker.startsWith('- [') || marker.startsWith('* [')) {
-      return '- [ ] ';
-    }
-    final numbered = RegExp(r'^(\d+)\.\s$').firstMatch(marker);
-    if (numbered != null) {
-      final n = int.parse(numbered.group(1)!) + 1;
-      return '$n. ';
-    }
-    return marker;
-  }
-
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -481,6 +330,36 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     return formatClockTime(dt, AppLocalizations.of(context));
   }
 
+  static const _toolbarConfig = QuillSimpleToolbarConfig(
+    multiRowsDisplay: false,
+    showFontFamily: false,
+    showFontSize: false,
+    showSmallButton: false,
+    showUnderLineButton: false,
+    showLineHeightButton: false,
+    showStrikeThrough: false,
+    showInlineCode: false,
+    showColorButton: false,
+    showBackgroundColorButton: false,
+    showClearFormat: false,
+    showAlignmentButtons: false,
+    showHeaderStyle: true,
+    showListNumbers: false,
+    showListBullets: true,
+    showListCheck: true,
+    showCodeBlock: false,
+    showQuote: false,
+    showIndent: false,
+    showLink: true,
+    showUndo: true,
+    showRedo: true,
+    showSearchButton: false,
+    showSubscript: false,
+    showSuperscript: false,
+    showDividers: false,
+    headerStyleType: HeaderStyleType.buttons,
+  );
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
@@ -491,242 +370,179 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       canPop: _allowPop || !_isDirty,
       onPopInvokedWithResult: _onPopInvoked,
       child: Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.note == null ? l10n.notesNewTooltip : l10n.notesTitle,
-        ),
-        actions: [
-          if (widget.note != null)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              color: scheme.error,
-              tooltip: l10n.commonDelete,
-              onPressed: _saving ? null : _confirmDelete,
-            ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton(
-              onPressed: _saving ? null : _save,
-              child: Text(
-                widget.note == null ? l10n.commonAdd : l10n.commonSave,
-              ),
-            ),
+        appBar: AppBar(
+          title: Text(
+            widget.note == null ? l10n.notesNewTooltip : l10n.notesTitle,
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          actions: [
+            if (widget.note != null)
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                color: scheme.error,
+                tooltip: l10n.commonDelete,
+                onPressed: _saving ? null : _confirmDelete,
+              ),
+            const SizedBox(width: 8),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: TextField(
-                controller: _titleCtrl,
-                autofocus: widget.note == null,
-                style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  hintText: l10n.commonTitle,
-                  hintStyle: tt.headlineSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  border: InputBorder.none,
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton(
+                onPressed: _saving ? null : _save,
+                child: Text(
+                  widget.note == null ? l10n.commonAdd : l10n.commonSave,
                 ),
-                textCapitalization: TextCapitalization.sentences,
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 4, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: SegmentedButton<bool>(
-                      segments: [
-                        ButtonSegment(
-                          value: false,
-                          label: Text(l10n.notesEditMarkdown),
-                          icon: const Icon(Icons.edit_outlined, size: 18),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: TextField(
+                  controller: _titleCtrl,
+                  autofocus: widget.note == null,
+                  style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    hintText: l10n.commonTitle,
+                    hintStyle: tt.headlineSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+              ),
+              QuillSimpleToolbar(
+                controller: _quillCtrl,
+                config: _toolbarConfig,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: QuillEditor.basic(
+                    controller: _quillCtrl,
+                    focusNode: _editorFocus,
+                    scrollController: _editorScroll,
+                    config: QuillEditorConfig(
+                      placeholder: l10n.notesBodyHint,
+                      padding: EdgeInsets.zero,
+                      autoFocus: false,
+                      expands: true,
+                      customStyles: DefaultStyles(
+                        paragraph: DefaultTextBlockStyle(
+                          tt.bodyLarge?.copyWith(height: 1.45) ??
+                              const TextStyle(fontSize: 16, height: 1.45),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
                         ),
-                        ButtonSegment(
-                          value: true,
-                          label: Text(l10n.notesPreviewMarkdown),
-                          icon: const Icon(Icons.visibility_outlined, size: 18),
+                        placeHolder: DefaultTextBlockStyle(
+                          tt.bodyLarge?.copyWith(
+                                height: 1.45,
+                                color: scheme.onSurfaceVariant,
+                              ) ??
+                              TextStyle(
+                                fontSize: 16,
+                                height: 1.45,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                          HorizontalSpacing.zero,
+                          VerticalSpacing.zero,
+                          VerticalSpacing.zero,
+                          null,
                         ),
-                      ],
-                      selected: {_previewMarkdown},
-                      onSelectionChanged: (s) =>
-                          setState(() => _previewMarkdown = s.first),
+                      ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.help_outline),
-                    tooltip: l10n.notesMarkdownHelpTooltip,
-                    onPressed: _showMarkdownHelp,
-                  ),
-                ],
+                ),
               ),
-            ),
-            if (!_previewMarkdown)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
-                child: Row(
+              const Divider(height: 1),
+              DetailMetaRow(
+                icon: Icons.alarm_outlined,
+                label: l10n.commonReminder,
+                active: _remindAt != null,
+                onTap: _pickReminder,
+                titleWidget: _remindAt != null
+                    ? Text(
+                        '${_formatDateOnly(_remindAt!.toLocal())} · '
+                        '${_formatTimeOnly(_remindAt!.toLocal())}',
+                        style: tt.bodyMedium?.copyWith(color: scheme.primary),
+                      )
+                    : null,
+                trailing: _remindAt != null
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 16),
+                        onPressed: () => setState(() => _remindAt = null),
+                      )
+                    : null,
+              ),
+              DetailMetaRow(
+                icon: Icons.label_outline,
+                label: _category ?? l10n.taskAddCategory,
+                active: _category != null,
+                onTap: _pickCategory,
+                trailing: _category != null
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 16),
+                        onPressed: () => setState(() => _category = null),
+                      )
+                    : null,
+              ),
+              if (widget.hasFamilyKey)
+                DetailMetaRow(
+                  icon: Icons.people_outline,
+                  label: _shareLabel(l10n),
+                  active: _isShared,
+                  onTap: () => _toggleShare(l10n),
+                  trailing: Switch(
+                    value: _isShared,
+                    onChanged: (v) async {
+                      if (v) {
+                        await _enableShare(l10n);
+                      } else {
+                        setState(() {
+                          _isShared = false;
+                          _sharedMemberIds = null;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              DetailMetaRow(
+                icon: Icons.lock_outline,
+                label: l10n.notesHideContent,
+                active: _isContentHidden,
+                onTap: () => _setContentHidden(!_isContentHidden),
+                titleWidget: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MarkdownQuickButton(
-                      icon: Icons.format_bold,
-                      tooltip: l10n.notesMdBold,
-                      onPressed: () =>
-                          _wrapSelection('**', '**', placeholder: l10n.notesMdBold),
+                    Text(
+                      l10n.notesHideContent,
+                      style: tt.bodyMedium?.copyWith(
+                        color: _isContentHidden ? scheme.primary : null,
+                      ),
                     ),
-                    _MarkdownQuickButton(
-                      icon: Icons.format_italic,
-                      tooltip: l10n.notesMdItalic,
-                      onPressed: () =>
-                          _wrapSelection('*', '*', placeholder: l10n.notesMdItalic),
-                    ),
-                    _MarkdownQuickButton(
-                      icon: Icons.title,
-                      tooltip: l10n.notesMdHeading,
-                      onPressed: () => _prefixCurrentLine('## '),
-                    ),
-                    _MarkdownQuickButton(
-                      icon: Icons.format_list_bulleted,
-                      tooltip: l10n.notesMdBullet,
-                      onPressed: () => _prefixCurrentLine('- '),
-                    ),
-                    _MarkdownQuickButton(
-                      icon: Icons.check_box_outlined,
-                      tooltip: l10n.notesMdCheckbox,
-                      onPressed: () => _prefixCurrentLine('- [ ] '),
-                    ),
-                    _MarkdownQuickButton(
-                      icon: Icons.link,
-                      tooltip: l10n.notesMdLink,
-                      onPressed: _insertLink,
+                    Text(
+                      l10n.notesHideContentHint,
+                      style: tt.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
-              ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                child: _previewMarkdown
-                    ? (_bodyCtrl.text.trim().isEmpty
-                          ? Text(
-                              l10n.notesMarkdownHint,
-                              style: tt.bodyLarge?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            )
-                          : Markdown(
-                              data: _bodyCtrl.text,
-                              padding: EdgeInsets.zero,
-                              selectable: true,
-                              extensionSet: md.ExtensionSet.gitHubFlavored,
-                            ))
-                    : TextField(
-                        controller: _bodyCtrl,
-                        style: tt.bodyLarge?.copyWith(height: 1.45),
-                        decoration: InputDecoration(
-                          hintText: l10n.notesMarkdownHint,
-                          hintStyle: tt.bodyLarge?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                        textCapitalization: TextCapitalization.sentences,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        expands: true,
-                        textAlignVertical: TextAlignVertical.top,
-                        onChanged: _onBodyChanged,
-                      ),
-              ),
-            ),
-            const Divider(height: 1),
-            DetailMetaRow(
-              icon: Icons.alarm_outlined,
-              label: l10n.commonReminder,
-              active: _remindAt != null,
-              onTap: _pickReminder,
-              titleWidget: _remindAt != null
-                  ? Text(
-                      '${_formatDateOnly(_remindAt!.toLocal())} · '
-                      '${_formatTimeOnly(_remindAt!.toLocal())}',
-                      style: tt.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.primary),
-                    )
-                  : null,
-              trailing: _remindAt != null
-                  ? IconButton(
-                      icon: const Icon(Icons.close, size: 16),
-                      onPressed: () => setState(() => _remindAt = null),
-                    )
-                  : null,
-            ),
-            DetailMetaRow(
-              icon: Icons.label_outline,
-              label: _category ?? l10n.taskAddCategory,
-              active: _category != null,
-              onTap: _pickCategory,
-              trailing: _category != null
-                  ? IconButton(
-                      icon: const Icon(Icons.close, size: 16),
-                      onPressed: () => setState(() => _category = null),
-                    )
-                  : null,
-            ),
-            if (widget.hasFamilyKey)
-              DetailMetaRow(
-                icon: Icons.people_outline,
-                label: _shareLabel(l10n),
-                active: _isShared,
-                onTap: () => _toggleShare(l10n),
                 trailing: Switch(
-                  value: _isShared,
-                  onChanged: (v) async {
-                    if (v) {
-                      await _enableShare(l10n);
-                    } else {
-                      setState(() {
-                        _isShared = false;
-                        _sharedMemberIds = null;
-                      });
-                    }
-                  },
+                  value: _isContentHidden,
+                  onChanged: _setContentHidden,
                 ),
               ),
-            DetailMetaRow(
-              icon: Icons.lock_outline,
-              label: l10n.notesHideContent,
-              active: _isContentHidden,
-              onTap: () => _setContentHidden(!_isContentHidden),
-              titleWidget: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.notesHideContent,
-                    style: tt.bodyMedium?.copyWith(
-                      color: _isContentHidden ? Theme.of(context).colorScheme.primary : null,
-                    ),
-                  ),
-                  Text(
-                    l10n.notesHideContentHint,
-                    style: tt.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              trailing: Switch(
-                value: _isContentHidden,
-                onChanged: _setContentHidden,
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-          ],
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -823,25 +639,3 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 }
 
 enum _UnsavedAction { save, discard, cancel }
-
-class _MarkdownQuickButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  const _MarkdownQuickButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, size: 22),
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      onPressed: onPressed,
-    );
-  }
-}

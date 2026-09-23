@@ -512,6 +512,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Remove the family key and shared notes from this device.';
 
   @override
+  String get partnerRemoveMemberTooltip => 'Remove from family';
+
+  @override
+  String partnerRemoveMemberTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String partnerRemoveMemberBody(String name) {
+    return '$name will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.';
+  }
+
+  @override
+  String get partnerRemovedFromFamily =>
+      'You were removed from the family on another device.';
+
+  @override
   String get partnerStatusPaired => 'Family member linked — family key present';
 
   @override
@@ -1402,23 +1419,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn on a screen lock on this device to require unlock';
 
   @override
-  String get notesEditMarkdown => 'Edit';
-
-  @override
-  String get notesPreviewMarkdown => 'Preview';
-
-  @override
-  String get notesMarkdownHint => 'Write markdown…';
-
-  @override
-  String get notesMarkdownHelpTooltip => 'Markdown help';
-
-  @override
-  String get notesMarkdownHelpTitle => 'Markdown shortcuts';
-
-  @override
-  String get notesMarkdownHelpBody =>
-      '# Heading\n## Subheading\n\n**bold** and *italic*\n\n- Bullet list\n1. Numbered list\n\n- [ ] Checkbox\n- [x] Done\n\n[Link text](https://example.com)\n\n> Quote\n\n`inline code`';
+  String get notesBodyHint => 'Write a note…';
 
   @override
   String get notesMdBold => 'Bold';
@@ -1877,6 +1878,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddMoreOptions => 'More options';
+
+  @override
+  String get notesQuickAddHint => 'New note…';
 
   @override
   String get timeInvalid => 'Enter a valid time (00:00 – 23:59).';

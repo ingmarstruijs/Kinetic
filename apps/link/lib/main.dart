@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import 'db/app_database.dart';
@@ -70,7 +71,10 @@ class KineticLinkApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               theme: buildTheme(theme),
               locale: locale,
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: const [
+                ...AppLocalizations.localizationsDelegates,
+                FlutterQuillLocalizations.delegate,
+              ],
               supportedLocales: AppLocalizations.supportedLocales,
               home: VaultGate(
                 db: db,
@@ -329,10 +333,32 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   /// Updates the partner-paired and enrolled-kids notifiers so the UI reacts
   /// immediately without requiring the user to navigate away and back.
   Future<void> _handleDisconnects(List<String> disconnectedIds) async {
+    final myId = _syncOrchestrator?.linkId ?? '';
+    if (disconnectIncludesSelf(myId, disconnectedIds)) {
+      await _applyRemoteFamilyRemoval();
+      return;
+    }
+
     final isPaired = await _webDavConfig.isPartnerPaired();
     final kids = await _webDavConfig.loadEnrolledKids();
     partnerPaired.value = isPaired;
     enrolledKidsCount.value = kids.length;
+  }
+
+  /// Called when this device's link id appears in a disconnect tombstone
+  /// (another member removed us from the family).
+  Future<void> _applyRemoteFamilyRemoval() async {
+    await (widget.db.delete(
+      widget.db.personalNotes,
+    )..where((n) => n.isShared.equals(true))).go();
+    await widget.db.delete(widget.db.partnerProposals).go();
+    await _webDavConfig.clearFamilyKey();
+    await _initSync();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.partnerRemovedFromFamily)),
+    );
   }
 
   /// Trigger a sync whenever the app returns to the foreground.

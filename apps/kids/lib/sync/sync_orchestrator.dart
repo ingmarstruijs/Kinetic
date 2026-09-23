@@ -72,21 +72,29 @@ class KidsSyncOrchestrator {
     final service = WebDavSyncService(client: client, config: _config);
 
     try {
-      // Pull link-assigned tasks
-      await _pullRemoteTasks(service);
-      // Push local changes (completion status)
-      await _pushLocalChanges(service);
-      // Heartbeat: write presence so the link app can see this kid is active
-      await _pushPresence(service);
-      // Check if the link app has disconnected this kid
-      await _checkDisconnect(service);
-      // Pull XP reset timestamp set by the link app
-      await _pullXpReset(service);
-      // Pull goal for this kid (hero UI)
-      await _pullGoal(service);
+      await syncWithService(service);
     } finally {
       client.dispose();
     }
+  }
+
+  /// Runs the full sync pipeline against a pre-built [service].
+  ///
+  /// Exposed for integration testing — production code always uses [sync].
+  @visibleForTesting
+  Future<void> syncWithService(WebDavSyncService service) async {
+    // Pull link-assigned tasks
+    await _pullRemoteTasks(service);
+    // Push local changes (completion status)
+    await _pushLocalChanges(service);
+    // Heartbeat: write presence so the link app can see this kid is active
+    await _pushPresence(service);
+    // Check if the link app has disconnected this kid
+    await _checkDisconnect(service);
+    // Pull XP reset timestamp set by the link app
+    await _pullXpReset(service);
+    // Pull goal for this kid (hero UI)
+    await _pullGoal(service);
   }
 
   // ---------------------------------------------------------------------------

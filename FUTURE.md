@@ -1,74 +1,69 @@
 # Future directions
 
-Kinetic is already more than a todo app with sync: it is a **local-first family protocol** (encrypted WebDAV, roster, kids loop, notes). Expansion should deepen that protocol — not add a Kinetic cloud, accounts, or generic SaaS features.
+Kinetic is a **local-first family protocol** (encrypted WebDAV, roster, kids loop, notes) — not a SaaS todo app.
 
-**Constraints to keep:** no Kinetic account, no telemetry, BYO WebDAV. That is the sharpest product position.
+**Keep:** no Kinetic account, no telemetry, BYO WebDAV.
 
 ---
 
-## 1. Setup as a product (highest ROI)
+## Near term
 
-Family features sit behind Settings + vault + QR + kids WebDAV password. That is the largest conversion drop-off.
+Practical product steps on the current two apps (Link + Kids). Ship these before chasing platform leaps.
 
-- Guided **Start family** wizard: WebDAV → vault → family members → kids
-- Less friction on kids enrollment (password-on-child is a heavy UX hit)
+### Setup & trust
+- Guided **Start family** wizard: WebDAV → vault → members → kids
+- Lighter kids enrollment (password-on-child is a heavy drop-off)
 - First success moment: shared task / note / kid assignment
+- Sync status UI — surface errors and conflict/recovery (many failures are silent)
+- Family key rotation after removing a member (roster remove alone is not enough)
 
-Without this, newer work (notes WYSIWYG, roster remove, kids visibility) stays underused.
+### Kids
+- Deeper XP, goals, routines; Link week overview
+- Kids on **iOS**
+- Offline / local cache so kids are less WebDAV-dependent
 
-## 2. Kids as a core product, not a plugin
+### Household smarts (on-device)
+- Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
+- Stronger EN/NL heuristics (detectors still NL-heavy)
+- Templates: shopping, weekly menu, holiday checklists
 
-Kids + Link verify is the differentiator vs generic todo apps.
-
-- Deeper XP/goals, routines, Link week overview
-- **Kids on iOS** (today Android-only) for Apple households
-- Offline / local cache for kids where possible (today strongly online-dependent)
-
-## 3. Household intelligence without cloud AI
-
-Heuristics, proposals, and presence already exist. Shared **load metrics** are sketched on the wire (`/kinetic/shared/load/…`) but not fully driven from the apps.
-
-- Push/pull load metrics and surface them in Suggestions / Tasks (“a family member has a lot open”)
-- Stronger EN/NL heuristics (detectors are still NL-heavy)
-- Templates: shopping, weekly menu, holiday checklists as note↔task bridges
-
-Privacy-friendly “AI” here means on-device product value, not a buzzword.
-
-## 4. Notes as a shared knowledge layer
-
-Tasks and kids are strong; notes can make the tagline (“Tasks. Notes. Family.”) real.
-
+### Notes
 - Shared templates and checklists
 - Note ↔ task linking
-- Clear privacy UX: what “require unlock” means vs what actually syncs
+- Clearer unlock vs sync privacy UX
 
-## Parallel: trust and distribution
-
-- **Sync transparency** — surface errors and conflict/recovery state (many failures are silent today)
-- **F-Droid / reproducible builds** — metadata playbook already exists; fits privacy-conscious parents
-- **Family key rotation** — needed for full exclusion after removing a member (today roster remove does not rotate the shared key)
+### Distribution
+- F-Droid / reproducible builds (metadata playbook already exists)
 
 ---
 
-## What not to do first
+## Next level
 
-- Kinetic-owned cloud or accounts (breaks the story)
-- Generic chat or calendar clones
-- Heavy multi-tenant / org features before setup and kids are deep
-- Cloud LLM “AI” that undermines the privacy position
+Bigger bets that change how people *use* Kinetic — still without a Kinetic cloud.
+
+### Kinetic Link Web (phone bridge)
+Desktop/browser client that pairs to a phone Link session — **WhatsApp Web style**. Phone holds vault keys and WebDAV credentials; the browser is a thin encrypted UI over a local relay (QR + short-lived session), not a second full vault. Closes the “I want a big screen without retyping 12 words” gap while keeping keys on the phone.
+
+### Shared family surfaces beyond phone lists
+A wall / tablet / TV **family board**: who’s online, open kids tasks, shared notes — read-mostly from WebDAV + presence. Same protocol, new form factor (kitchen counter, not another personal inbox).
+
+### Protocol costs and federation
+Make the wire more than “files in a folder”: conflict-aware versioning, cheaper incremental sync, optional multi-server / guest access for babysitters without full family key. Kinetic as a **family sync protocol** others could implement — not only our Flutter clients.
+
+### Kids as a game loop, not a task dump
+Streaks, seasonal challenges, collaborative family quests (everyone completes → shared reward), parent “verify” as a social beat. Differentiator vs “chore checklist with XP sticker.”
+
+### Ambient presence and load, not chat
+No generic messenger. Instead: rich presence, load balance, “who’s drowning this week,” soft handoffs of proposals — household awareness without becoming Signal-with-todos.
+
+### Cross-device continuity without accounts
+Link Web + second phone + tablet all as **sessions on one vault**, not separate Kinetic identities. Session revoke from the primary phone. Closest thing to multi-device SaaS UX while staying local-first.
 
 ---
 
-## Suggested order (6–12 months)
+## Do not chase first
 
-1. **Setup wizard + sync status** — makes everything more usable  
-2. **Kids depth (+ iOS)** — product moat  
-3. **Load metrics + smart household** — unique value on existing infra  
-4. **Shared notes templates / note↔task** — breadth  
-5. **F-Droid + key rotation** — trust and maturity  
-
----
-
-## Strategic read
-
-Treat Kinetic as a **family sync OS** with two clients (Link + Kids). Recent work (WYSIWYG notes, family management, kids visibility) is foundation. The large leap is removing **setup friction**, deepening **Kids**, and turning existing shared-folder primitives (roster, presence, load, proposals) into visible household features.
+- Kinetic-owned cloud or accounts
+- Generic chat / calendar clones
+- Org / multi-tenant features before setup and kids are deep
+- Cloud LLM “AI” that undercuts the privacy story

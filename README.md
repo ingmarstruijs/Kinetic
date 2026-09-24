@@ -1,23 +1,13 @@
-<p align="center">
-  <img src="brand/logo-link.svg" alt="Kinetic Link" width="88" height="88" />
-  &nbsp;&nbsp;
-  <img src="brand/logo-kids.svg" alt="Kinetic Kids" width="88" height="88" />
-</p>
+![Kinetic Link](brand/logo-link.svg)    ![Kinetic Kids](brand/logo-kids.svg)
 
-<h1 align="center">Kinetic Link</h1>
+# Kinetic Link
 
-<p align="center">
-  <strong>Tasks. Notes. Family.</strong><br>
-  Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
-</p>
+**Tasks. Notes. Family.**  
+Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
 
-<p align="center">
-  <em>Kinetic Link</em> · <em>Kinetic Kids</em>
-</p>
+*Kinetic Link* · *Kinetic Kids*
 
-<p align="center">
-  Flutter · AES-256-GCM · Offline-first · No account · No telemetry
-</p>
+Flutter · AES-256-GCM · Offline-first · No account · No telemetry
 
 ---
 
@@ -27,6 +17,8 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 
 ## Features
 
+
+
 ### Always available (local / vault)
 
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
@@ -35,6 +27,8 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 - **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
 - **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words from a file (WebDAV restore also needs a configured server)
+
+
 
 ### Requires WebDAV
 
@@ -47,22 +41,32 @@ Family features are **not** available offline-only. Configure WebDAV in **Settin
 - **Connection-aware send** — family members listed with WebDAV presence status before forwarding
 - **Family-member / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
 
+
+
 ## Apps
 
-| App | Platforms | Description |
-|---|---|---|
-| [`apps/link`](apps/link) | Android, iOS | Task manager, family-member proposals, notes, kids overview, WebDAV config |
-| [`apps/kids`](apps/kids) | Android | Assigned tasks synced from Kinetic Link; children mark complete and earn XP |
+
+| App                      | Platforms    | Description                                                                 |
+| ------------------------ | ------------ | --------------------------------------------------------------------------- |
+| `[apps/link](apps/link)` | Android, iOS | Task manager, family-member proposals, notes, kids overview, WebDAV config  |
+| `[apps/kids](apps/kids)` | Android      | Assigned tasks synced from Kinetic Link; children mark complete and earn XP |
+
+
+
 
 ## Tech Stack
 
-| Layer | Choice |
-|---|---|
-| Apps | Flutter (Kinetic Link + Kinetic Kids) |
-| Local DB | Drift (SQLite) |
+
+| Layer         | Choice                                               |
+| ------------- | ---------------------------------------------------- |
+| Apps          | Flutter (Kinetic Link + Kinetic Kids)                |
+| Local DB      | Drift (SQLite)                                       |
 | Crypto & sync | `packages/webdav` — AES-256-GCM, iCal, WebDAV client |
-| Monorepo | Melos |
-| Tests | `flutter test` per package |
+| Monorepo      | Melos                                                |
+| Tests         | `flutter test` per package                           |
+
+
+
 
 ## Getting Started
 
@@ -82,7 +86,7 @@ cd apps/link   # or apps/kids
 flutter build apk --release
 ```
 
-PRs and pushes to `main`/`develop` run analyze + tests ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)). CI builds and signs both APKs on push to `main`/`develop`, on any `v*` tag, or via workflow dispatch ([`.github/workflows/build-release.yml`](.github/workflows/build-release.yml)). GitHub Releases are published only when that tag’s commit is already on `main`.
+PRs and pushes to `main`/`develop` run analyze + tests (`[.github/workflows/ci.yml](.github/workflows/ci.yml)`). CI builds and signs both APKs on push to `main`/`develop`, on any `v*` tag, or via workflow dispatch (`[.github/workflows/build-release.yml](.github/workflows/build-release.yml)`). GitHub Releases are published only when that tag’s commit is already on `main`.
 
 ## Localization
 
@@ -100,6 +104,8 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 2. The other family member scans **or** types the 12 words and confirms the fingerprint
 3. Proposals sync automatically via WebDAV
 
+
+
 ### Kids enrollment
 
 1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
@@ -116,80 +122,88 @@ A fully offline, heuristic-based engine surfaces task suggestions in the Kinetic
 
 An empty run does **not** start the 24-hour throttle, so creating tasks can surface hints on the next open. After at least one suggestion is created, that path waits 24 hours.
 
-| Detector | Trigger | Target | What the family member sees |
-|---|---|---|---|
-| **Habit** | Same non-recurring title completed ≥ 2× and the median interval is overdue, **or** one completion of a strong keyword (e.g. Dutch `boodschappen` / groceries) after ≥ 14 days | You | — |
-| **Calendar** | Month-based prompts with no history required (Dutch examples: `belasting` in March, `schoolspullen` in August, `kerst` in December) | You | — |
-| **Stale** | Open task older than 7 days with no due date or reminder | You (sets a reminder on the existing task) | — |
-| **Seasonal** | Task completed in the same calendar month in a prior year | You | — |
-| **Family complement** | Keywords in **your** open tasks (including private) | Family-member suggestion | A **generic** template only — never the private title or notes |
-| **Load balance** | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5) | Family-member suggestion | A generic “can you pick something up in [category]?” line |
+
+| Detector              | Trigger                                                                                                                                                                       | Target                                     | What the family member sees                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
+| **Habit**             | Same non-recurring title completed ≥ 2× and the median interval is overdue, **or** one completion of a strong keyword (e.g. Dutch `boodschappen` / groceries) after ≥ 14 days | You                                        | —                                                              |
+| **Calendar**          | Month-based prompts with no history required (Dutch examples: `belasting` in March, `schoolspullen` in August, `kerst` in December)                                           | You                                        | —                                                              |
+| **Stale**             | Open task older than 7 days with no due date or reminder                                                                                                                      | You (sets a reminder on the existing task) | —                                                              |
+| **Seasonal**          | Task completed in the same calendar month in a prior year                                                                                                                     | You                                        | —                                                              |
+| **Family complement** | Keywords in **your** open tasks (including private)                                                                                                                           | Family-member suggestion                   | A **generic** template only — never the private title or notes |
+| **Load balance**      | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5)                                                                                                     | Family-member suggestion                   | A generic “can you pick something up in [category]?” line      |
+
 
 Family-member hints are capped at one per keyword-family per 14 days. **Send to family member** always shows **What your family member sees** before anything is sent. Nothing is auto-sent.
 
-Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For family member** / **From family member**). See [`apps/link/docs/SMART_FEATURES.md`](apps/link/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
+Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For family member** / **From family member**). See `[apps/link/docs/SMART_FEATURES.md](apps/link/docs/SMART_FEATURES.md)` for reminder chips and send-sheet details.
 
 ## Encryption
 
-| Key | Scope |
-|---|---|
+
+| Key                | Scope                                                                                                                                                                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Personal vault** | 12 English BIP-39 words → PBKDF2 seed → 32-byte AES-256-GCM key. Encrypts personal tasks, notes, `.kvault` backups, and `vault.meta`. 16-byte entropy may be stored on-device so Settings can show the words again behind the device lock. Paper remains the only off-device backup. |
-| **Family key** | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault). |
-| **Kid UUID** | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone** |
+| **Family key**     | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault).          |
+| **Kid UUID**       | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone**                                                                                                                                                                                 |
+
 
 On first launch the link app asks **New vault** or **Restore vault**. Restore is either a `.kvault` file plus the 12 words (offline) **or** WebDAV login plus the same 12 words (no file). After reinstall, the same phrase unlocks the server copy via `/kinetic/{user}/vault.meta`.
 
 Export never includes the mnemonic, the raw key, or the WebDAV password. Settings can **verify** the phrase without showing the words, or **show** them after Face ID / fingerprint / PIN.
 
-### Upgrade from 0.2.x
-
-A random 32-byte AES key cannot be turned into a BIP-39 mnemonic. On first 0.3 launch the app detects a stored personal key without `kinetic_vault_ready` and asks for a **new** 12-word phrase. Local SQLite stays. Personal tasks/notes are marked dirty so the next WebDAV sync re-encrypts them; `vault.meta` is rewritten. Remote blobs that are never overwritten stay undecryptable (pull already skips MAC failures).
-
-The **family key is not rotated** (that would break family members and kids). Old random family keys keep working; they have no words until you explicitly create a new family vault and re-enroll.
-
-Backups are **`.kvault` only**. Legacy `.kbak2` files are no longer accepted.
-
 ## Releases
 
-Merge the version bump to `main` first, then tag that commit. A `v*` tag on a branch that is not yet on `main` builds APKs but does **not** publish GitHub Releases.
+`main` is **protected**: no direct pushes. Ship a version bump through a pull request (`release/x.y.z`), wait for required CI (`analyze-and-test`), merge to `main`, then tag **that** merge commit. A `v`* tag whose commit is not on `main` builds APKs but does **not** publish GitHub Releases.
 
 ```bash
+# 1. Version bump PR (pubspecs + F-Droid metadata), merge to main
+git checkout -b release/0.3.9
+# bump apps/link + apps/kids to e.g. 0.3.9+8; update metadata/*.yml
+git push -u origin HEAD
+gh pr create --base main --title "Bump Kinetic to 0.3.9"
+
+# 2. After the PR is merged:
 git checkout main && git pull
-git tag -a v0.2.0 -m "Kinetic 0.2.0"
-git push origin v0.2.0
+git tag -a v0.3.9 -m "Kinetic 0.3.9"
+git push origin v0.3.9
 ```
 
 This creates **two separate releases**:
 
-- `v0.2.0-kids` — `kinetic-kids-0.2.0.apk`
-- `v0.2.0-link` — `kinetic-link-0.2.0.apk`
+- `v0.3.9-kids` — `kinetic-kids-0.3.9.apk`
+- `v0.3.9-link` — `kinetic-link-0.3.9.apk`
 
 Each release includes a `sha256.txt` checksum file.
 
 ### Verifying release APKs
+
+
 
 #### 1. APK file integrity (SHA-256 file hash)
 
 `sha256sum` outputs a continuous lowercase hex string. This matches the value in `sha256.txt` and in the release notes.
 
 ```bash
-echo "<digest>  kinetic-link-0.2.0.apk" | sha256sum --check
+echo "<digest>  kinetic-link-0.3.9.apk" | sha256sum --check
 ```
 
 Or manually compare:
 
 ```bash
-sha256sum kinetic-link-0.2.0.apk
+sha256sum kinetic-link-0.3.9.apk
 # compare with the digest listed in sha256.txt
 ```
 
-#### 2. Signing certificate fingerprint (AppVerifier format)
+
+
+#### 2. Signing certificate fingerprint
 
 AppVerifier shows the SHA-256 fingerprint of the **signing certificate** in `AA:BB:CC:DD:...` format (uppercase colon-separated pairs). This differs from the APK file hash above.
 
-The certificate fingerprint is listed in the GitHub Release notes under **Certificate Fingerprint (AppVerifier)**.
+The certificate fingerprint is listed in the GitHub Release notes under **Certificate Fingerprint.**
 
 ```bash
-keytool -printcert -jarfile kinetic-link-0.2.0.apk
+keytool -printcert -jarfile kinetic-link-0.3.9.apk
 # look for the SHA256: line — format is AA:BB:CC:DD:...
 ```
+

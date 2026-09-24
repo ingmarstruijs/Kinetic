@@ -4,37 +4,19 @@ Kinetic is a **local-first family protocol** (encrypted WebDAV, roster, kids loo
 
 **Keep:** no Kinetic account, no telemetry, BYO WebDAV.
 
-Roadmap below is the single source of priority. Phase 1 is in flight on `feature/near-term-and-link-web`.
+Roadmap below is the single source of priority. Phase 1 shipped on `main`. **Phase 2 + 3** are in flight on `feature/phase-2-and-3`.
 
 ---
 
-## Phase 1 — Setup, sync trust, tap-to-link
+## Phase 1 — Setup, sync trust, tap-to-link — **shipped**
 
-Ship first: make family setup usable and pairing feel modern without a Kinetic cloud.
-
-### Sync status
-- Richer sync model: phase + last user-facing error + last success time
-- Tap sync icon → status / error / Retry; Settings shows sync health
-- Kids: visible syncing / error (not silent)
-
-### Start-family wizard
-- Guided flow: WebDAV → create/join family → invite member → enroll kid → first success (shared task or note) — **shipped** (Settings → Family → Start family; section hidden without WebDAV)
-- Same WebDAV base URL required for the whole family; QR/BLE URL mismatch blocked — **shipped**
-- Day-1 family nudge (Ignore / Remind 7d / Start) + post-save peer-folder “Link now” — **shipped**
-- Turn off WebDAV sync (clears family/kids linkage on device; keeps vault) — **shipped**
-- Clearer kids WebDAV-password step beside QR (password stays out of QR)
-
-### Tap-to-link (Nearby / BLE)
-- Hold phones close to share family key or kids enrollment — **same payloads as QR**, over BLE
-- Host advertises, guest scans (RSSI), host confirms, then import as after QR
-- QR remains fallback
-- Not NFC P2P (broken cross-platform)
-
-**Done when:** wizard works end-to-end; sync errors are visible and retryable; two Links can pair via BLE; QR still works.
+Family setup usable without a Kinetic cloud: sync status, Start-family wizard, same-server WebDAV rules, peer join prompts, turn-off sync, BLE tap-to-link (QR fallback).
 
 ---
 
 ## Phase 2 — Kids depth + trust
+
+Ship next: make kids enrollment and ongoing kids loops trustworthy on more devices.
 
 - Lighter kids enrollment (password UX, orphan kid-id)
 - Kids on **iOS** + offline / local cache
@@ -42,14 +24,20 @@ Ship first: make family setup usable and pairing feel modern without a Kinetic c
 - **Family key rotation** after removing a member
 - F-Droid / reproducible builds ship
 
+**Done when:** kids enroll and sync reliably on Android + iOS; Link can rotate family key after a kick; F-Droid path is clear.
+
 ---
 
 ## Phase 3 — Household smarts + notes
 
+Ship alongside / right after Phase 2 depth: suggestions and notes that feel intentional, not noisy.
+
 - Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
-- Stronger EN/NL heuristics (e.g. stop short keywords like `test` matching Health → bogus “Add N tasks to Health?”)
+- Stronger EN/NL heuristics (e.g. stop short keywords like `test` matching Health → bogus categorize prompts)
 - Shared note templates, note ↔ task linking, clearer unlock vs sync privacy UX
 - Ambient presence and load — household awareness **without** becoming chat
+
+**Done when:** categorize/load-balance suggestions are trustworthy; notes have a clear shared/privacy story; load metrics feed the UI.
 
 ---
 
@@ -67,6 +55,6 @@ Ship first: make family setup usable and pairing feel modern without a Kinetic c
 
 - Kinetic-owned cloud or accounts
 - Generic chat / calendar clones
-- Org / multi-tenant features before Phase 1–2 are deep
+- Org / multi-tenant features before Phase 2–3 are deep
 - Cloud LLM “AI” that undercuts the privacy story
 - NFC phone-to-phone P2P

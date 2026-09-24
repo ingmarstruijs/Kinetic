@@ -1962,6 +1962,32 @@ class $PersonalNotesTable extends PersonalNotes
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isLocalOnlyMeta = const VerificationMeta(
+    'isLocalOnly',
+  );
+  @override
+  late final GeneratedColumn<bool> isLocalOnly = GeneratedColumn<bool>(
+    'is_local_only',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_local_only" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _linkedTaskIdsMeta = const VerificationMeta(
+    'linkedTaskIds',
+  );
+  @override
+  late final GeneratedColumn<String> linkedTaskIds = GeneratedColumn<String>(
+    'linked_task_ids',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _webdavEtagMeta = const VerificationMeta(
     'webdavEtag',
   );
@@ -2040,6 +2066,8 @@ class $PersonalNotesTable extends PersonalNotes
     category,
     sortOrder,
     isContentHidden,
+    isLocalOnly,
+    linkedTaskIds,
     webdavEtag,
     syncState,
     createdAt,
@@ -2117,6 +2145,24 @@ class $PersonalNotesTable extends PersonalNotes
         isContentHidden.isAcceptableOrUnknown(
           data['is_content_hidden']!,
           _isContentHiddenMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_local_only')) {
+      context.handle(
+        _isLocalOnlyMeta,
+        isLocalOnly.isAcceptableOrUnknown(
+          data['is_local_only']!,
+          _isLocalOnlyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('linked_task_ids')) {
+      context.handle(
+        _linkedTaskIdsMeta,
+        linkedTaskIds.isAcceptableOrUnknown(
+          data['linked_task_ids']!,
+          _linkedTaskIdsMeta,
         ),
       );
     }
@@ -2208,6 +2254,14 @@ class $PersonalNotesTable extends PersonalNotes
         DriftSqlType.bool,
         data['${effectivePrefix}is_content_hidden'],
       )!,
+      isLocalOnly: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_local_only'],
+      )!,
+      linkedTaskIds: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}linked_task_ids'],
+      ),
       webdavEtag: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}webdav_etag'],
@@ -2256,8 +2310,15 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
   final int sortOrder;
 
   /// When true, body is hidden in the notes list and opening requires
-  /// device biometrics / PIN (local privacy flag, not synced).
+  /// device biometrics / PIN. Local-only flag (not synced); note body still
+  /// syncs via WebDAV unless [isLocalOnly] is true.
   final bool isContentHidden;
+
+  /// When true, this note never leaves the device (no WebDAV PUT). Local-only.
+  final bool isLocalOnly;
+
+  /// JSON list of [PersonalTasks.id] linked to this note (synced when not local-only).
+  final String? linkedTaskIds;
   final String? webdavEtag;
   final String syncState;
   final DateTime createdAt;
@@ -2278,6 +2339,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     this.category,
     required this.sortOrder,
     required this.isContentHidden,
+    required this.isLocalOnly,
+    this.linkedTaskIds,
     this.webdavEtag,
     required this.syncState,
     required this.createdAt,
@@ -2303,6 +2366,10 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     }
     map['sort_order'] = Variable<int>(sortOrder);
     map['is_content_hidden'] = Variable<bool>(isContentHidden);
+    map['is_local_only'] = Variable<bool>(isLocalOnly);
+    if (!nullToAbsent || linkedTaskIds != null) {
+      map['linked_task_ids'] = Variable<String>(linkedTaskIds);
+    }
     if (!nullToAbsent || webdavEtag != null) {
       map['webdav_etag'] = Variable<String>(webdavEtag);
     }
@@ -2335,6 +2402,10 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           : Value(category),
       sortOrder: Value(sortOrder),
       isContentHidden: Value(isContentHidden),
+      isLocalOnly: Value(isLocalOnly),
+      linkedTaskIds: linkedTaskIds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(linkedTaskIds),
       webdavEtag: webdavEtag == null && nullToAbsent
           ? const Value.absent()
           : Value(webdavEtag),
@@ -2365,6 +2436,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       category: serializer.fromJson<String?>(json['category']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isContentHidden: serializer.fromJson<bool>(json['isContentHidden']),
+      isLocalOnly: serializer.fromJson<bool>(json['isLocalOnly']),
+      linkedTaskIds: serializer.fromJson<String?>(json['linkedTaskIds']),
       webdavEtag: serializer.fromJson<String?>(json['webdavEtag']),
       syncState: serializer.fromJson<String>(json['syncState']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2386,6 +2459,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       'category': serializer.toJson<String?>(category),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'isContentHidden': serializer.toJson<bool>(isContentHidden),
+      'isLocalOnly': serializer.toJson<bool>(isLocalOnly),
+      'linkedTaskIds': serializer.toJson<String?>(linkedTaskIds),
       'webdavEtag': serializer.toJson<String?>(webdavEtag),
       'syncState': serializer.toJson<String>(syncState),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2405,6 +2480,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     Value<String?> category = const Value.absent(),
     int? sortOrder,
     bool? isContentHidden,
+    bool? isLocalOnly,
+    Value<String?> linkedTaskIds = const Value.absent(),
     Value<String?> webdavEtag = const Value.absent(),
     String? syncState,
     DateTime? createdAt,
@@ -2423,6 +2500,10 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     category: category.present ? category.value : this.category,
     sortOrder: sortOrder ?? this.sortOrder,
     isContentHidden: isContentHidden ?? this.isContentHidden,
+    isLocalOnly: isLocalOnly ?? this.isLocalOnly,
+    linkedTaskIds: linkedTaskIds.present
+        ? linkedTaskIds.value
+        : this.linkedTaskIds,
     webdavEtag: webdavEtag.present ? webdavEtag.value : this.webdavEtag,
     syncState: syncState ?? this.syncState,
     createdAt: createdAt ?? this.createdAt,
@@ -2447,6 +2528,12 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
       isContentHidden: data.isContentHidden.present
           ? data.isContentHidden.value
           : this.isContentHidden,
+      isLocalOnly: data.isLocalOnly.present
+          ? data.isLocalOnly.value
+          : this.isLocalOnly,
+      linkedTaskIds: data.linkedTaskIds.present
+          ? data.linkedTaskIds.value
+          : this.linkedTaskIds,
       webdavEtag: data.webdavEtag.present
           ? data.webdavEtag.value
           : this.webdavEtag,
@@ -2472,6 +2559,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           ..write('category: $category, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isContentHidden: $isContentHidden, ')
+          ..write('isLocalOnly: $isLocalOnly, ')
+          ..write('linkedTaskIds: $linkedTaskIds, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
@@ -2493,6 +2582,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
     category,
     sortOrder,
     isContentHidden,
+    isLocalOnly,
+    linkedTaskIds,
     webdavEtag,
     syncState,
     createdAt,
@@ -2513,6 +2604,8 @@ class PersonalNoteRow extends DataClass implements Insertable<PersonalNoteRow> {
           other.category == this.category &&
           other.sortOrder == this.sortOrder &&
           other.isContentHidden == this.isContentHidden &&
+          other.isLocalOnly == this.isLocalOnly &&
+          other.linkedTaskIds == this.linkedTaskIds &&
           other.webdavEtag == this.webdavEtag &&
           other.syncState == this.syncState &&
           other.createdAt == this.createdAt &&
@@ -2531,6 +2624,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
   final Value<String?> category;
   final Value<int> sortOrder;
   final Value<bool> isContentHidden;
+  final Value<bool> isLocalOnly;
+  final Value<String?> linkedTaskIds;
   final Value<String?> webdavEtag;
   final Value<String> syncState;
   final Value<DateTime> createdAt;
@@ -2548,6 +2643,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.category = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isContentHidden = const Value.absent(),
+    this.isLocalOnly = const Value.absent(),
+    this.linkedTaskIds = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     this.syncState = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2566,6 +2663,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     this.category = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isContentHidden = const Value.absent(),
+    this.isLocalOnly = const Value.absent(),
+    this.linkedTaskIds = const Value.absent(),
     this.webdavEtag = const Value.absent(),
     this.syncState = const Value.absent(),
     required DateTime createdAt,
@@ -2587,6 +2686,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Expression<String>? category,
     Expression<int>? sortOrder,
     Expression<bool>? isContentHidden,
+    Expression<bool>? isLocalOnly,
+    Expression<String>? linkedTaskIds,
     Expression<String>? webdavEtag,
     Expression<String>? syncState,
     Expression<DateTime>? createdAt,
@@ -2605,6 +2706,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       if (category != null) 'category': category,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (isContentHidden != null) 'is_content_hidden': isContentHidden,
+      if (isLocalOnly != null) 'is_local_only': isLocalOnly,
+      if (linkedTaskIds != null) 'linked_task_ids': linkedTaskIds,
       if (webdavEtag != null) 'webdav_etag': webdavEtag,
       if (syncState != null) 'sync_state': syncState,
       if (createdAt != null) 'created_at': createdAt,
@@ -2625,6 +2728,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     Value<String?>? category,
     Value<int>? sortOrder,
     Value<bool>? isContentHidden,
+    Value<bool>? isLocalOnly,
+    Value<String?>? linkedTaskIds,
     Value<String?>? webdavEtag,
     Value<String>? syncState,
     Value<DateTime>? createdAt,
@@ -2643,6 +2748,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
       category: category ?? this.category,
       sortOrder: sortOrder ?? this.sortOrder,
       isContentHidden: isContentHidden ?? this.isContentHidden,
+      isLocalOnly: isLocalOnly ?? this.isLocalOnly,
+      linkedTaskIds: linkedTaskIds ?? this.linkedTaskIds,
       webdavEtag: webdavEtag ?? this.webdavEtag,
       syncState: syncState ?? this.syncState,
       createdAt: createdAt ?? this.createdAt,
@@ -2683,6 +2790,12 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
     if (isContentHidden.present) {
       map['is_content_hidden'] = Variable<bool>(isContentHidden.value);
     }
+    if (isLocalOnly.present) {
+      map['is_local_only'] = Variable<bool>(isLocalOnly.value);
+    }
+    if (linkedTaskIds.present) {
+      map['linked_task_ids'] = Variable<String>(linkedTaskIds.value);
+    }
     if (webdavEtag.present) {
       map['webdav_etag'] = Variable<String>(webdavEtag.value);
     }
@@ -2719,6 +2832,8 @@ class PersonalNotesCompanion extends UpdateCompanion<PersonalNoteRow> {
           ..write('category: $category, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isContentHidden: $isContentHidden, ')
+          ..write('isLocalOnly: $isLocalOnly, ')
+          ..write('linkedTaskIds: $linkedTaskIds, ')
           ..write('webdavEtag: $webdavEtag, ')
           ..write('syncState: $syncState, ')
           ..write('createdAt: $createdAt, ')
@@ -6908,6 +7023,8 @@ typedef $$PersonalNotesTableCreateCompanionBuilder =
       Value<String?> category,
       Value<int> sortOrder,
       Value<bool> isContentHidden,
+      Value<bool> isLocalOnly,
+      Value<String?> linkedTaskIds,
       Value<String?> webdavEtag,
       Value<String> syncState,
       required DateTime createdAt,
@@ -6927,6 +7044,8 @@ typedef $$PersonalNotesTableUpdateCompanionBuilder =
       Value<String?> category,
       Value<int> sortOrder,
       Value<bool> isContentHidden,
+      Value<bool> isLocalOnly,
+      Value<String?> linkedTaskIds,
       Value<String?> webdavEtag,
       Value<String> syncState,
       Value<DateTime> createdAt,
@@ -6987,6 +7106,16 @@ class $$PersonalNotesTableFilterComposer
 
   ColumnFilters<bool> get isContentHidden => $composableBuilder(
     column: $table.isContentHidden,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isLocalOnly => $composableBuilder(
+    column: $table.isLocalOnly,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get linkedTaskIds => $composableBuilder(
+    column: $table.linkedTaskIds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7075,6 +7204,16 @@ class $$PersonalNotesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get isLocalOnly => $composableBuilder(
+    column: $table.isLocalOnly,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get linkedTaskIds => $composableBuilder(
+    column: $table.linkedTaskIds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get webdavEtag => $composableBuilder(
     column: $table.webdavEtag,
     builder: (column) => ColumnOrderings(column),
@@ -7146,6 +7285,16 @@ class $$PersonalNotesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get isLocalOnly => $composableBuilder(
+    column: $table.isLocalOnly,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get linkedTaskIds => $composableBuilder(
+    column: $table.linkedTaskIds,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get webdavEtag => $composableBuilder(
     column: $table.webdavEtag,
     builder: (column) => column,
@@ -7209,6 +7358,8 @@ class $$PersonalNotesTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isContentHidden = const Value.absent(),
+                Value<bool> isLocalOnly = const Value.absent(),
+                Value<String?> linkedTaskIds = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -7226,6 +7377,8 @@ class $$PersonalNotesTableTableManager
                 category: category,
                 sortOrder: sortOrder,
                 isContentHidden: isContentHidden,
+                isLocalOnly: isLocalOnly,
+                linkedTaskIds: linkedTaskIds,
                 webdavEtag: webdavEtag,
                 syncState: syncState,
                 createdAt: createdAt,
@@ -7245,6 +7398,8 @@ class $$PersonalNotesTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isContentHidden = const Value.absent(),
+                Value<bool> isLocalOnly = const Value.absent(),
+                Value<String?> linkedTaskIds = const Value.absent(),
                 Value<String?> webdavEtag = const Value.absent(),
                 Value<String> syncState = const Value.absent(),
                 required DateTime createdAt,
@@ -7262,6 +7417,8 @@ class $$PersonalNotesTableTableManager
                 category: category,
                 sortOrder: sortOrder,
                 isContentHidden: isContentHidden,
+                isLocalOnly: isLocalOnly,
+                linkedTaskIds: linkedTaskIds,
                 webdavEtag: webdavEtag,
                 syncState: syncState,
                 createdAt: createdAt,

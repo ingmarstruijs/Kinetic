@@ -62,7 +62,11 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 ### Tasks
 - `xpReward` (integer, default 10): XP the child earns when completing a task sent via "Send to kids". Configurable per task before sending.
 - `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. When **null**, the assignment is for **Everyone** — each kids device shows it (`xKineticTargetKidId` missing or empty). When set, only that child's UUID matches.
-- `isContentHidden` (notes, local): When true, opening the note requires device unlock. Not synced to WebDAV; the body still syncs as usual. List rows never show body preview.
+### Notes
+- `isContentHidden` (local): Biometric/PIN gate for opening the note and hiding list previews. **Not synced.** The note body still uploads via WebDAV unless the note is local-only.
+- `isLocalOnly` (local): When true, the note is **never pushed** to WebDAV (title, body, and links stay on this device). Trash/delete does not write a server tombstone.
+- `linkedTaskIds` (JSON): Cross-links to personal tasks; synced as `X-KINETIC-LINK-TASK-IDS` on VJOURNAL when the note is not local-only.
+- **Templates**: Built-in personal stubs (meeting, shopping, journal) create a new local note; not stored on WebDAV as shared templates.
 
 ### Security
 - **Personal vault**: 12 BIP-39 words → derived AES key stored on-device. The words and BIP-39 entropy are **not** stored; paper from onboarding is the only recovery. Settings can verify a typed phrase against the derived key.

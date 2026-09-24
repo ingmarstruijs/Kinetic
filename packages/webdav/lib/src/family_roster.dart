@@ -65,8 +65,10 @@ class FamilyRoster {
     final kidById = {for (final k in kids) k.id: k};
     for (final k in localKids) {
       final existing = kidById[k.id];
-      if (existing == null || !k.updatedAt.isBefore(existing.updatedAt)) {
+      if (existing == null) {
         kidById[k.id] = k;
+      } else {
+        kidById[k.id] = FamilyKidMember.mergePreferActive(existing, k);
       }
     }
     return FamilyRoster(
@@ -99,8 +101,10 @@ class FamilyRoster {
     final kids = <String, FamilyKidMember>{};
     for (final kid in [...a.kids, ...b.kids]) {
       final existing = kids[kid.id];
-      if (existing == null || !kid.updatedAt.isBefore(existing.updatedAt)) {
+      if (existing == null) {
         kids[kid.id] = kid;
+      } else {
+        kids[kid.id] = FamilyKidMember.mergePreferActive(existing, kid);
       }
     }
     final updatedAt =
@@ -184,12 +188,16 @@ class FamilyKidMember {
   final bool xpEnabled;
   final DateTime updatedAt;
 
+  /// False until first kids-device presence (or parent confirm).
+  final bool isActive;
+
   const FamilyKidMember({
     required this.id,
     required this.name,
     required this.enrolledAt,
     this.xpEnabled = true,
     required this.updatedAt,
+    this.isActive = true,
   });
 
   Map<String, dynamic> toJson() => {
@@ -198,6 +206,7 @@ class FamilyKidMember {
         'enrolledAt': enrolledAt.toUtc().toIso8601String(),
         'xpEnabled': xpEnabled,
         'updatedAt': updatedAt.toUtc().toIso8601String(),
+        'isActive': isActive,
       };
 
   factory FamilyKidMember.fromJson(Map<String, dynamic> json) {
@@ -211,6 +220,8 @@ class FamilyKidMember {
       enrolledAt: enrolled,
       xpEnabled: json['xpEnabled'] as bool? ?? true,
       updatedAt: updated,
+      // Legacy roster rows without the field were already linked.
+      isActive: json['isActive'] as bool? ?? true,
     );
   }
 
@@ -220,6 +231,7 @@ class FamilyKidMember {
     DateTime? enrolledAt,
     bool? xpEnabled,
     DateTime? updatedAt,
+    bool? isActive,
   }) =>
       FamilyKidMember(
         id: id ?? this.id,
@@ -227,5 +239,15 @@ class FamilyKidMember {
         enrolledAt: enrolledAt ?? this.enrolledAt,
         xpEnabled: xpEnabled ?? this.xpEnabled,
         updatedAt: updatedAt ?? this.updatedAt,
+        isActive: isActive ?? this.isActive,
       );
+
+  /// LWW on [updatedAt], but [isActive] sticks once true on either side.
+  static FamilyKidMember mergePreferActive(
+    FamilyKidMember a,
+    FamilyKidMember b,
+  ) {
+    final newer = !a.updatedAt.isBefore(b.updatedAt) ? a : b;
+    return newer.copyWith(isActive: a.isActive || b.isActive);
+  }
 }

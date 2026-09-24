@@ -338,7 +338,7 @@ class TodoRepository {
       _db.personalTasks,
     )..where((t) => t.id.equals(taskId))).getSingleOrNull();
     if (row != null && row.recurrenceRule != null && row.dueDate != null) {
-      final nextDue = _nextOccurrence(row.recurrenceRule!, row.dueDate!);
+      final nextDue = nextOccurrence(row.recurrenceRule!, row.dueDate!);
       await (_db.update(
         _db.personalTasks,
       )..where((t) => t.id.equals(taskId))).write(
@@ -401,7 +401,7 @@ class TodoRepository {
   }
 
   /// Compute the next occurrence date for a given RRULE and current due date.
-  static DateTime _nextOccurrence(String rrule, DateTime currentDue) {
+  static DateTime nextOccurrence(String rrule, DateTime currentDue) {
     final parts = Map.fromEntries(
       rrule.split(';').map((p) {
         final kv = p.split('=');
@@ -601,6 +601,7 @@ class TodoRepository {
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
             dueAt: row.dueDate,
+            rrule: row.recurrenceRule,
           ),
     ];
   }
@@ -616,13 +617,32 @@ class TodoRepository {
     return '$baseNotes;xKineticLinkTaskId:${row.id};xKineticCategory:${row.category};xKineticXpReward:${row.xpReward}$targetKidPart$verifierPart';
   }
 
-  /// Mark the link task linked to [kidsTaskId] as completed after acceptance.
-  Future<void> completeByKidsTaskId(String kidsTaskId) async {
+  /// Mark the link task linked to [kidsTaskId] as completed after acceptance,
+  /// or roll a recurring kids mission to its next due date.
+  ///
+  /// Returns `true` when the mission repeats and was advanced instead of closed.
+  Future<bool> completeByKidsTaskId(String kidsTaskId) async {
     final row = await (_db.select(
       _db.personalTasks,
     )..where((t) => t.kidsTaskId.equals(kidsTaskId))).getSingleOrNull();
-    if (row == null || row.isCompleted) return;
+    if (row == null || row.isCompleted) return false;
     final now = DateTime.now().toUtc();
+    if (row.recurrenceRule != null && row.dueDate != null) {
+      final nextDue = nextOccurrence(row.recurrenceRule!, row.dueDate!);
+      await (_db.update(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(row.id))).write(
+        PersonalTasksCompanion(
+          dueDate: Value(nextDue),
+          isCompleted: const Value(false),
+          completedAt: const Value(null),
+          updatedAt: Value(now),
+          syncState: const Value('dirty'),
+        ),
+      );
+      onWrite?.call();
+      return true;
+    }
     await (_db.update(
       _db.personalTasks,
     )..where((t) => t.id.equals(row.id))).write(
@@ -634,6 +654,7 @@ class TodoRepository {
       ),
     );
     onWrite?.call();
+    return false;
   }
 
   /// Tombstone the link task linked to a kids assignment so sync does not

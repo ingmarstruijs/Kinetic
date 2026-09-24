@@ -88,7 +88,7 @@ void main() {
 
       test('classifies with notes included', () {
         expect(
-          classifier.classify('urgent task', notes: 'with taxation impact'),
+          classifier.classify('urgent task', notes: 'tax return due'),
           equals(TaskCategory.admin),
         );
       });
@@ -171,6 +171,37 @@ void main() {
       });
     });
 
+    group('False positives — short / substring traps', () {
+      test('"Test1" / "Test2" are not Health', () {
+        expect(classifier.classify('Test1'), equals(TaskCategory.other));
+        expect(classifier.classify('Test2'), equals(TaskCategory.other));
+        expect(classifier.classify('Test3'), equals(TaskCategory.other));
+      });
+
+      test('"unit test" is not Health', () {
+        expect(classifier.classify('unit test'), equals(TaskCategory.other));
+      });
+
+      test('"contest" is not Health', () {
+        expect(classifier.classify('contest entry'), equals(TaskCategory.other));
+      });
+
+      test('"blood test" is Health', () {
+        expect(classifier.classify('blood test'), equals(TaskCategory.health));
+      });
+
+      test('"callback" is not Admin from call', () {
+        expect(classifier.classify('callback later'), equals(TaskCategory.other));
+      });
+
+      test('"pay the invoice" is Finance', () {
+        expect(
+          classifier.classify('pay the invoice'),
+          equals(TaskCategory.finance),
+        );
+      });
+    });
+
     group('Edge cases', () {
       test('handles whitespace normalization', () {
         expect(
@@ -179,7 +210,7 @@ void main() {
         );
       });
 
-      test('matches partial words in title', () {
+      test('matches whole word cleaning', () {
         expect(
           classifier.classify('cleaning supplies needed'),
           equals(TaskCategory.household),

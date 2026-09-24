@@ -9,6 +9,7 @@ import '../family/proposals/link_member_proposal.dart';
 import '../settings/models/enrolled_kid.dart';
 import '../todo/models/enums.dart';
 import '../todo/models/personal_note.dart';
+import '../todo/services/todo_repository.dart';
 import 'webdav_config_repository.dart';
 
 /// True when this device's [myId] appears in disconnect tombstone device ids.
@@ -65,6 +66,8 @@ class SyncOrchestrator {
       await _syncNotes(service);
       await _syncProposals(service);
       await _syncRoster(service);
+      await _activateKidsFromPresence(service);
+      await _pushLoadMetrics(service);
       await _pushPresence(service);
     } finally {
       client.dispose();
@@ -81,6 +84,8 @@ class SyncOrchestrator {
     await _syncNotes(service);
     await _syncProposals(service);
     await _syncRoster(service);
+    await _activateKidsFromPresence(service);
+    await _pushLoadMetrics(service);
     await _pushPresence(service);
   }
 
@@ -128,6 +133,58 @@ class SyncOrchestrator {
     }
   }
 
+  /// Pulls coarse load metrics for other family link devices (excludes self).
+  Future<List<LoadMetrics>> pullLoadMetrics() async {
+    if (_config.familyKeyBytes == null) return [];
+    final client = WebDavClient(
+      baseUrl: _config.baseUrl,
+      username: _config.username,
+      password: _config.password,
+    );
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      final myId = _selfDeviceId;
+      final all = await service.pullLoadMetrics();
+      return all.where((m) => m.linkId != myId).toList();
+    } finally {
+      client.dispose();
+    }
+  }
+
+  String get _selfDeviceId =>
+      _config.linkId.isNotEmpty ? _config.linkId : _config.username;
+
+  Future<void> _pushLoadMetrics(WebDavSyncService service) async {
+    if (_config.familyKeyBytes == null) return;
+    final linkId = _selfDeviceId;
+    if (linkId.isEmpty) return;
+
+    try {
+      final openRows = await (_db.select(_db.personalTasks)..where(
+            (t) =>
+                t.isCompleted.equals(false) &
+                t.syncState.equals('deleted').not(),
+          ))
+          .get();
+
+      final openByCategory = <String, int>{};
+      for (final row in openRows) {
+        openByCategory[row.category] =
+            (openByCategory[row.category] ?? 0) + 1;
+      }
+
+      await service.pushLoadMetrics(
+        LoadMetrics(
+          linkId: linkId,
+          openByCategory: openByCategory,
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    } catch (_) {
+      // Non-critical — skip if server is unreachable.
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Family roster
   // ---------------------------------------------------------------------------
@@ -146,6 +203,7 @@ class SyncOrchestrator {
       final remote = await service.pullRoster() ?? FamilyRoster.empty();
       final localCached =
           await configRepo.loadCachedRoster() ?? FamilyRoster.empty();
+      final purgedDraftIds = await configRepo.purgeStaleDraftKids();
       final kids = await configRepo.loadEnrolledKids();
       final kidsParticipation = await configRepo.loadKidsParticipation();
       final now = DateTime.now().toUtc();
@@ -168,12 +226,48 @@ class SyncOrchestrator {
         localKids: kids.map((k) => k.toFamilyKidMember()).toList(),
       );
 
+      // Drop only drafts this device just soft-purged — keep peer drafts so
+      // other Links still see "waiting for device" kids.
+      if (purgedDraftIds.isNotEmpty) {
+        final purged = purgedDraftIds.toSet();
+        merged = merged.copyWith(
+          kids: merged.kids.where((k) => !purged.contains(k.id)).toList(),
+          updatedAt: now,
+        );
+      }
+
       await service.pushRoster(merged);
       await configRepo.saveCachedRoster(merged);
       await configRepo.restoreEnrolledKids(
         merged.kids.map(EnrolledKid.fromFamilyKidMember).toList(),
       );
       onRosterUpdated?.call(merged);
+    } catch (_) {
+      // Non-critical — retry next cycle.
+    }
+  }
+
+  /// Promotes draft kids to active when their device has sent presence.
+  Future<void> _activateKidsFromPresence(WebDavSyncService service) async {
+    final configRepo = _configRepo;
+    if (_config.familyKeyBytes == null || configRepo == null) return;
+    try {
+      final presence = await service.pullPresence();
+      final presentKidIds = presence
+          .where((p) => p.deviceType == 'kid')
+          .map((p) => p.deviceId)
+          .toSet();
+      if (presentKidIds.isEmpty) return;
+
+      var changed = false;
+      for (final kidId in presentKidIds) {
+        final updated = await configRepo.activateEnrolledKid(kidId);
+        if (updated != null) changed = true;
+      }
+      if (!changed) return;
+
+      // Re-push roster so peers see active status promptly.
+      await _syncRoster(service);
     } catch (_) {
       // Non-critical — retry next cycle.
     }
@@ -429,31 +523,8 @@ class SyncOrchestrator {
             ))
             .get();
     for (final row in rows) {
-      final baseNotes = row.notes ?? '';
-      final targetKidPart = row.targetKidId != null
-          ? ';xKineticTargetKidId:${row.targetKidId}'
-          : '';
-      final verifierPart = row.verifierLinkId != null
-          ? ';xKineticVerifierLinkId:${row.verifierLinkId}'
-          : '';
-      final description =
-          '$baseNotes;xKineticLinkTaskId:${row.id};xKineticCategory:${row.category};xKineticXpReward:${row.xpReward}$targetKidPart$verifierPart';
       final remote = sharedByUid[row.kidsTaskId!];
-      final status = row.isCompleted
-          ? ICalTaskStatus.completed
-          : (remote?.status == ICalTaskStatus.inProcess
-              ? ICalTaskStatus.inProcess
-              : ICalTaskStatus.needsAction);
-      final kidsTask = ICalTask(
-        uid: row.kidsTaskId!,
-        summary: row.title,
-        description: description,
-        status: status,
-        priority: _driftPriorityToICal(row.priority),
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
-        dueAt: row.dueDate,
-      );
+      final kidsTask = _sharedKidsTaskFromRow(row, remote: remote);
       try {
         await service.pushSharedTask(kidsTask);
         await (_db.update(_db.personalTasks)..where((t) => t.id.equals(row.id)))
@@ -474,17 +545,50 @@ class SyncOrchestrator {
     final service = WebDavSyncService(client: client, config: _config);
     try {
       final now = DateTime.now().toUtc();
+      final linked =
+          await (_db.select(_db.personalTasks)..where(
+                (t) => t.kidsTaskId.equals(sharedTask.uid),
+              ))
+              .getSingleOrNull();
+      final recurring = linked != null &&
+          linked.recurrenceRule != null &&
+          linked.dueDate != null;
+      if (recurring) {
+        final nextDue = TodoRepository.nextOccurrence(
+          linked.recurrenceRule!,
+          linked.dueDate!,
+        );
+        await (_db.update(
+          _db.personalTasks,
+        )..where((t) => t.id.equals(linked.id))).write(
+          PersonalTasksCompanion(
+            dueDate: Value(nextDue),
+            isCompleted: const Value(false),
+            completedAt: const Value(null),
+            updatedAt: Value(now),
+            syncState: const Value('dirty'),
+          ),
+        );
+        final updated = linked.copyWith(
+          dueDate: Value(nextDue),
+          isCompleted: false,
+          completedAt: const Value(null),
+          updatedAt: now,
+        );
+        await service.pushSharedTask(
+          _sharedKidsTaskFromRow(
+            updated,
+            statusOverride: ICalTaskStatus.needsAction,
+          ),
+        );
+        return;
+      }
       await service.pushSharedTask(
         sharedTask.copyWith(
           status: ICalTaskStatus.completed,
           updatedAt: now,
         ),
       );
-      final linked =
-          await (_db.select(_db.personalTasks)..where(
-                (t) => t.kidsTaskId.equals(sharedTask.uid),
-              ))
-              .getSingleOrNull();
       if (linked != null) {
         await (_db.update(
           _db.personalTasks,
@@ -511,15 +615,63 @@ class SyncOrchestrator {
     );
     final service = WebDavSyncService(client: client, config: _config);
     try {
-      await service.pushSharedTask(
-        sharedTask.copyWith(
-          status: ICalTaskStatus.needsAction,
-          updatedAt: DateTime.now().toUtc(),
-        ),
-      );
+      final linked =
+          await (_db.select(_db.personalTasks)..where(
+                (t) => t.kidsTaskId.equals(sharedTask.uid),
+              ))
+              .getSingleOrNull();
+      if (linked != null) {
+        await service.pushSharedTask(
+          _sharedKidsTaskFromRow(
+            linked,
+            remote: sharedTask,
+            statusOverride: ICalTaskStatus.needsAction,
+          ),
+        );
+      } else {
+        await service.pushSharedTask(
+          sharedTask.copyWith(
+            status: ICalTaskStatus.needsAction,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
+      }
     } finally {
       client.dispose();
     }
+  }
+
+  static ICalTask _sharedKidsTaskFromRow(
+    PersonalTaskRow row, {
+    ICalTask? remote,
+    ICalTaskStatus? statusOverride,
+  }) {
+    final baseNotes = row.notes ?? '';
+    final targetKidPart = row.targetKidId != null
+        ? ';xKineticTargetKidId:${row.targetKidId}'
+        : '';
+    final verifierPart = row.verifierLinkId != null
+        ? ';xKineticVerifierLinkId:${row.verifierLinkId}'
+        : '';
+    final description =
+        '$baseNotes;xKineticLinkTaskId:${row.id};xKineticCategory:${row.category};xKineticXpReward:${row.xpReward}$targetKidPart$verifierPart';
+    final status = statusOverride ??
+        (row.isCompleted
+            ? ICalTaskStatus.completed
+            : (remote?.status == ICalTaskStatus.inProcess
+                ? ICalTaskStatus.inProcess
+                : ICalTaskStatus.needsAction));
+    return ICalTask(
+      uid: row.kidsTaskId!,
+      summary: row.title,
+      description: description,
+      status: status,
+      priority: _driftPriorityToICal(row.priority),
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      dueAt: row.dueDate,
+      rrule: row.recurrenceRule ?? remote?.rrule,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -533,6 +685,14 @@ class SyncOrchestrator {
     )..where((t) => t.syncState.equals('dirty'))).get();
 
     for (final row in dirtyRows) {
+      if (row.isLocalOnly) {
+        await (_db.update(
+          _db.personalNotes,
+        )..where((t) => t.id.equals(row.id))).write(
+          const PersonalNotesCompanion(syncState: Value('clean')),
+        );
+        continue;
+      }
       final icalNote = _rowToICalNote(row);
       try {
         // Push to the correct folder based on current isShared value
@@ -568,7 +728,9 @@ class SyncOrchestrator {
 
     for (final row in deletedRows) {
       try {
-        await service.deleteNote(row.id, isShared: row.isShared);
+        if (!row.isLocalOnly) {
+          await service.deleteNote(row.id, isShared: row.isShared);
+        }
         await (_db.delete(
           _db.personalNotes,
         )..where((t) => t.id.equals(row.id))).go();
@@ -622,6 +784,7 @@ class SyncOrchestrator {
         }
       }
       final existing = localList.where((r) => r.id == note.uid).firstOrNull;
+      if (existing?.isLocalOnly == true) continue;
       if (existing == null) {
         // New from server — insert.
         if (kDebugMode) {
@@ -658,6 +821,7 @@ class SyncOrchestrator {
       description: row.body,
       isShared: row.isShared,
       sharedMemberIds: PersonalNote.decodeSharedMemberIds(row.sharedMemberIds),
+      linkedTaskIds: PersonalNote.decodeLinkedTaskIds(row.linkedTaskIds),
       updatedByLinkId: row.updatedByLinkId,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -677,6 +841,11 @@ class SyncOrchestrator {
       isShared: Value(note.isShared),
       sharedMemberIds: Value(
         members == null || members.isEmpty ? null : jsonEncode(members),
+      ),
+      linkedTaskIds: Value(
+        note.linkedTaskIds == null || note.linkedTaskIds!.isEmpty
+            ? null
+            : jsonEncode(note.linkedTaskIds),
       ),
       updatedByLinkId: Value(note.updatedByLinkId),
       createdAt: Value(note.createdAt),

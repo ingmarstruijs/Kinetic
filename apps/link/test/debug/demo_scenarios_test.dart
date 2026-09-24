@@ -51,8 +51,17 @@ void main() {
       expect(inbox, hasLength(2));
       expect(DemoSession.instance.active, isTrue);
       expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
-      expect(DemoSession.instance.kids, hasLength(2));
+      expect(DemoSession.instance.kids, hasLength(3));
+      expect(
+        DemoSession.instance.kids.where((k) => !k.isActive),
+        hasLength(1),
+      );
+      expect(DemoSession.instance.loadMetrics, isNotEmpty);
       expect(DemoSession.instance.kidTasks, isNotEmpty);
+      expect(
+        DemoSession.instance.kidTasks.any((t) => t.rrule != null),
+        isTrue,
+      );
       expect(DemoSession.instance.roster, isNotNull);
       expect(
         DemoSession.instance.roster!.otherLinkMembers(DemoSession.linkId),
@@ -109,13 +118,17 @@ void main() {
     await loader.apply(DemoScenario.family, dutch: false);
 
     expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
-    expect(DemoSession.instance.kids, hasLength(2));
+    expect(DemoSession.instance.kids, hasLength(3));
+    expect(DemoSession.instance.kids.any((k) => !k.isActive), isTrue);
+    expect(DemoSession.instance.loadMetrics, isNotEmpty);
     expect(DemoSession.instance.otherLinkMembers, hasLength(2));
+    final notes = await NoteRepository(db: db).watchAll().first;
+    expect(notes.any((n) => n.isLocalOnly), isTrue);
+    expect(notes.any((n) => n.isContentHidden), isTrue);
     expect(
-      DemoSession.instance.otherLinkMembers.map((m) => m.name),
-      ['Alex', 'Sam'],
+      notes.any((n) => (n.linkedTaskIds ?? const []).isNotEmpty),
+      isTrue,
     );
-    expect(await NoteRepository(db: db).watchAll().first, isNotEmpty);
     expect(
       await LinkMemberProposalRepository(
         db: db,
@@ -125,7 +138,7 @@ void main() {
     );
   });
 
-  test('notes scenario enables family overlay for shared notes', () async {
+  test('notes scenario seeds privacy variants and family overlay', () async {
     final db = createTestDatabase();
     addTearDown(() async {
       DemoSession.instance.clear();
@@ -145,9 +158,36 @@ void main() {
     final notes = await NoteRepository(db: db).watchAll().first;
     expect(notes, isNotEmpty);
     expect(notes.any((n) => n.isShared), isTrue);
+    expect(notes.any((n) => n.isLocalOnly), isTrue);
+    expect(notes.any((n) => n.isContentHidden), isTrue);
+    expect(
+      notes.any((n) => (n.linkedTaskIds ?? const []).isNotEmpty),
+      isTrue,
+    );
     expect(DemoSession.instance.active, isTrue);
     expect(DemoSession.instance.hasOtherLinkMembers, isTrue);
     expect(DemoSession.instance.otherLinkMembers, isNotEmpty);
+  });
+
+  test('suggestions scenario seeds ambient load metrics', () async {
+    final db = createTestDatabase();
+    addTearDown(() async {
+      DemoSession.instance.clear();
+      await db.close();
+    });
+    final todoRepo = TodoRepository(db: db);
+    final loader = DemoScenarioLoader(
+      db: db,
+      todoRepo: todoRepo,
+      noteRepo: NoteRepository(db: db),
+      suggestionRepo: AiSuggestionRepository(db),
+      proposalRepo: LinkMemberProposalRepository(db: db, todoRepository: todoRepo),
+    );
+
+    await loader.apply(DemoScenario.suggestions, dutch: false);
+    expect(DemoSession.instance.loadMetrics, isNotEmpty);
+    expect(DemoSession.instance.presence, isNotEmpty);
+    expect(await todoRepo.watchAllTasks().first, isNotEmpty);
   });
 
   test('accept and reject update overlay kid tasks', () {

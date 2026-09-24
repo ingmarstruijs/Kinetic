@@ -7,20 +7,24 @@ import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../reminder_time.dart';
 import '../services/note_repository.dart';
+import '../services/todo_repository.dart';
 import '../widgets/category_sheet.dart';
 import '../widgets/detail_meta_row.dart';
 import '../widgets/hour_first_time_picker.dart';
 import '../widgets/note_markdown_codec.dart';
+import '../widgets/note_task_link_picker.dart';
 
 /// Fullscreen editor for creating or editing a note.
 class NoteEditorScreen extends StatefulWidget {
   final NoteRepository repo;
+  final TodoRepository? todoRepo;
   final PersonalNote? note;
   final bool hasFamilyKey;
   final bool initialIsShared;
 
   /// Prefill for a new note (ignored when [note] is set).
   final String? initialTitle;
+  final String? initialBody;
 
   /// Other link members in the family roster (for selective share).
   final List<({String id, String name})> otherLinkMembers;
@@ -28,10 +32,12 @@ class NoteEditorScreen extends StatefulWidget {
   const NoteEditorScreen({
     super.key,
     required this.repo,
+    this.todoRepo,
     this.note,
     this.hasFamilyKey = false,
     this.initialIsShared = false,
     this.initialTitle,
+    this.initialBody,
     this.otherLinkMembers = const [],
   });
 
@@ -47,8 +53,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late final String _baselineBody;
   late bool _isShared;
   late bool _isContentHidden;
+  late bool _isLocalOnly;
   late DateTime? _remindAt;
   String? _category;
+  List<String>? _linkedTaskIds;
+  Map<String, String> _linkedTaskTitles = {};
 
   /// null = all link members when shared; non-null = selected subset.
   List<String>? _sharedMemberIds;
@@ -63,7 +72,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       text: note?.title ?? widget.initialTitle ?? '',
     );
     _quillCtrl = QuillController(
-      document: NoteMarkdownCodec.documentFromMarkdown(note?.body ?? ''),
+      document: NoteMarkdownCodec.documentFromMarkdown(
+        note?.body ?? widget.initialBody ?? '',
+      ),
       selection: const TextSelection.collapsed(offset: 0),
     );
     _baselineBody = NoteMarkdownCodec.markdownFromDocument(_quillCtrl.document);
@@ -72,10 +83,21 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _isShared = note?.isShared ?? widget.initialIsShared;
     _sharedMemberIds = note?.sharedMemberIds;
     _isContentHidden = note?.isContentHidden ?? false;
+    _isLocalOnly = note?.isLocalOnly ?? false;
     _remindAt = note?.remindAt;
     _category = note?.category;
+    _linkedTaskIds = note?.linkedTaskIds;
     _titleCtrl.addListener(_onFieldsChanged);
     _quillCtrl.addListener(_onFieldsChanged);
+    _loadLinkedTaskTitles();
+  }
+
+  Future<void> _loadLinkedTaskTitles() async {
+    final todoRepo = widget.todoRepo;
+    final ids = _linkedTaskIds;
+    if (todoRepo == null || ids == null || ids.isEmpty) return;
+    final titles = await linkedTaskTitles(todoRepo, ids);
+    if (mounted) setState(() => _linkedTaskTitles = titles);
   }
 
   @override
@@ -103,14 +125,18 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           _bodyMarkdown.isNotEmpty ||
           _isShared != widget.initialIsShared ||
           _isContentHidden ||
+          _isLocalOnly ||
           _remindAt != null ||
-          _category != null;
+          _category != null ||
+          (_linkedTaskIds != null && _linkedTaskIds!.isNotEmpty);
     }
     return _titleCtrl.text.trim() != note.title ||
         _bodyMarkdown != _baselineBody ||
         _isShared != note.isShared ||
         !_sameIdList(_sharedMemberIds, note.sharedMemberIds) ||
         _isContentHidden != note.isContentHidden ||
+        _isLocalOnly != note.isLocalOnly ||
+        !_sameIdList(_linkedTaskIds, note.linkedTaskIds) ||
         _remindAt != note.remindAt ||
         _category != note.category;
   }
@@ -214,6 +240,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               _sharedMemberIds == null ||
               _sharedMemberIds!.isEmpty,
           isContentHidden: _isContentHidden,
+          isLocalOnly: _isLocalOnly,
+          linkedTaskIds: _linkedTaskIds,
+          clearLinkedTaskIds:
+              _linkedTaskIds == null || _linkedTaskIds!.isEmpty,
           remindAt: _remindAt,
           clearRemindAt: _remindAt == null,
           category: _category,
@@ -228,6 +258,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           isShared: _isShared,
           sharedMemberIds: _isShared ? _sharedMemberIds : null,
           isContentHidden: _isContentHidden,
+          isLocalOnly: _isLocalOnly,
+          linkedTaskIds: _linkedTaskIds,
           remindAt: _remindAt,
           category: _category,
         );
@@ -492,7 +524,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                       )
                     : null,
               ),
-              if (widget.hasFamilyKey)
+              if (widget.hasFamilyKey && !_isLocalOnly)
                 DetailMetaRow(
                   icon: Icons.people_outline,
                   label: _shareLabel(l10n),
@@ -512,6 +544,70 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     },
                   ),
                 ),
+              if (widget.todoRepo != null)
+                DetailMetaRow(
+                  icon: Icons.task_alt_outlined,
+                  label: l10n.notesLinkedTasks,
+                  active: _linkedTaskIds != null && _linkedTaskIds!.isNotEmpty,
+                  onTap: _pickLinkedTasks,
+                  titleWidget: _linkedTaskIds != null &&
+                          _linkedTaskIds!.isNotEmpty
+                      ? Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            for (final id in _linkedTaskIds!)
+                              Chip(
+                                label: Text(
+                                  _linkedTaskTitles[id] ?? id,
+                                  style: tt.labelSmall,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                onDeleted: () {
+                                  setState(() {
+                                    _linkedTaskIds = _linkedTaskIds!
+                                        .where((x) => x != id)
+                                        .toList();
+                                    if (_linkedTaskIds!.isEmpty) {
+                                      _linkedTaskIds = null;
+                                    }
+                                    _linkedTaskTitles.remove(id);
+                                  });
+                                },
+                              ),
+                          ],
+                        )
+                      : null,
+                ),
+              DetailMetaRow(
+                icon: Icons.phonelink_lock_outlined,
+                label: l10n.notesLocalOnly,
+                active: _isLocalOnly,
+                onTap: () => _setLocalOnly(!_isLocalOnly),
+                titleWidget: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.notesLocalOnly,
+                      style: tt.bodyMedium?.copyWith(
+                        color: _isLocalOnly ? scheme.primary : null,
+                      ),
+                    ),
+                    Text(
+                      l10n.notesLocalOnlyHint,
+                      style: tt.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: Switch(
+                  value: _isLocalOnly,
+                  onChanged: _setLocalOnly,
+                ),
+              ),
               DetailMetaRow(
                 icon: Icons.lock_outline,
                 label: l10n.notesHideContent,
@@ -545,6 +641,31 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ),
       ),
     );
+  }
+
+  void _setLocalOnly(bool value) {
+    setState(() {
+      _isLocalOnly = value;
+      if (value) {
+        _isShared = false;
+        _sharedMemberIds = null;
+      }
+    });
+  }
+
+  Future<void> _pickLinkedTasks() async {
+    final todoRepo = widget.todoRepo;
+    if (todoRepo == null) return;
+    final result = await showNoteTaskLinkPicker(
+      context: context,
+      todoRepo: todoRepo,
+      alreadyLinked: {...?_linkedTaskIds},
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      _linkedTaskIds = result.isEmpty ? null : result;
+    });
+    await _loadLinkedTaskTitles();
   }
 
   String _shareLabel(AppLocalizations l10n) {

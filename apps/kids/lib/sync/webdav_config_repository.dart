@@ -12,6 +12,7 @@ const _kPassword = 'kinetic_webdav_password';
 const _kPersonalKey = 'kinetic_webdav_personal_key';
 const _kFamilyKey = 'kinetic_webdav_family_key';
 const _kKidId = 'kinetic_kid_id';
+const _kLastSyncAt = 'kinetic_kids_last_sync_at';
 
 /// Loads [SyncConfig] from [SecureKeyValueStore].
 ///
@@ -85,6 +86,19 @@ class WebDavConfigRepository {
   /// Returns the kid's own ID as assigned by the link app during enrollment.
   Future<String?> loadKidId() => _store.read(key: _kKidId);
 
+  /// Last successful sync timestamp, or null if never synced.
+  Future<DateTime?> loadLastSyncAt() async {
+    final raw = await _store.read(key: _kLastSyncAt);
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  /// Records a successful sync time (UTC ISO-8601).
+  Future<void> saveLastSyncAt(DateTime at) => _store.write(
+        key: _kLastSyncAt,
+        value: at.toUtc().toIso8601String(),
+      );
+
   /// Removes all enrollment credentials, returning the app to unenrolled state.
   Future<void> clearEnrollment() async {
     await _store.delete(key: _kServerUrl);
@@ -93,6 +107,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kPersonalKey);
     await _store.delete(key: _kFamilyKey);
     await _store.delete(key: _kKidId);
+    await _store.delete(key: _kLastSyncAt);
   }
 
   Future<String> _generateAndStorePersonalKey() async {

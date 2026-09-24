@@ -6,7 +6,7 @@ import '../task/models/kids_task.dart';
 import '../task/services/kids_task_repository.dart';
 import 'demo_session.dart';
 
-enum KidsDemoScenario { empty, chores, waiting, goal, full }
+enum KidsDemoScenario { empty, chores, waiting, offlineQueued, goal, full }
 
 class KidsDemoScenarioInfo {
   final KidsDemoScenario id;
@@ -50,6 +50,13 @@ const kidsDemoScenarioCatalog = <KidsDemoScenarioInfo>[
     subtitleNl: 'Open klusjes plus wachtend op bevestiging',
   ),
   KidsDemoScenarioInfo(
+    id: KidsDemoScenario.offlineQueued,
+    titleEn: 'Offline queue',
+    titleNl: 'Offline wachtrij',
+    subtitleEn: 'Completed locally — dirty rows waiting to sync',
+    subtitleNl: 'Lokaal afgerond — dirty rijen wachten op sync',
+  ),
+  KidsDemoScenarioInfo(
     id: KidsDemoScenario.goal,
     titleEn: 'XP goal',
     titleNl: 'XP-doel',
@@ -60,8 +67,8 @@ const kidsDemoScenarioCatalog = <KidsDemoScenarioInfo>[
     id: KidsDemoScenario.full,
     titleEn: 'Full house',
     titleNl: 'Vol huis',
-    subtitleEn: 'Open, waiting, done, and a goal together',
-    subtitleNl: 'Open, wachtend, klaar en een doel samen',
+    subtitleEn: 'Open, waiting, queued, done, and a goal',
+    subtitleNl: 'Open, wachtend, queue, klaar en een doel',
   ),
 ];
 
@@ -92,12 +99,16 @@ class KidsDemoScenarioLoader {
       case KidsDemoScenario.waiting:
         await _seedChores(dutch);
         await _seedWaiting(dutch);
+      case KidsDemoScenario.offlineQueued:
+        await _seedChores(dutch);
+        await _seedQueuedOffline(dutch);
       case KidsDemoScenario.goal:
         await _seedChores(dutch, includeCompleted: true);
         goal = _demoGoal(dutch);
       case KidsDemoScenario.full:
         await _seedChores(dutch, includeCompleted: true);
         await _seedWaiting(dutch);
+        await _seedQueuedOffline(dutch);
         goal = _demoGoal(dutch, targetXp: 50);
     }
 
@@ -130,6 +141,7 @@ class KidsDemoScenarioLoader {
       int xp = 10,
       TaskCategory category = TaskCategory.household,
       TaskPriority priority = TaskPriority.normal,
+      String syncState = 'clean',
     }) {
       final created = DateTime.now().toUtc();
       return repo.upsertTask(
@@ -144,7 +156,7 @@ class KidsDemoScenarioLoader {
           awaitingVerification: awaiting,
           completedAt: done ? created : null,
           xpReward: xp,
-          syncState: 'clean',
+          syncState: syncState,
           createdAt: created,
           updatedAt: created,
         ),
@@ -185,6 +197,42 @@ class KidsDemoScenarioLoader {
         dueDate: created,
         awaitingVerification: true,
         xpReward: 10,
+        syncState: 'dirty',
+        createdAt: created,
+        updatedAt: created,
+      ),
+    );
+  }
+
+  /// Kid finished chores while offline — dirty rows queue until sync succeeds.
+  Future<void> _seedQueuedOffline(bool dutch) async {
+    final repo = KidsTaskRepository(db: _db);
+    final created = DateTime.now().toUtc();
+    await repo.upsertTask(
+      KidsTask(
+        id: const Uuid().v4(),
+        linkTaskId: KidsDemoSession.linkTaskId,
+        title: dutch ? 'Afval buiten (offline)' : 'Take out trash (offline)',
+        category: TaskCategory.household,
+        priority: TaskPriority.normal,
+        dueDate: created,
+        awaitingVerification: true,
+        xpReward: 10,
+        syncState: 'dirty',
+        createdAt: created,
+        updatedAt: created,
+      ),
+    );
+    await repo.upsertTask(
+      KidsTask(
+        id: const Uuid().v4(),
+        linkTaskId: KidsDemoSession.linkTaskId,
+        title: dutch ? 'Rugzak pakken (offline)' : 'Pack backpack (offline)',
+        category: TaskCategory.school,
+        priority: TaskPriority.high,
+        dueDate: created,
+        awaitingVerification: true,
+        xpReward: 15,
         syncState: 'dirty',
         createdAt: created,
         updatedAt: created,

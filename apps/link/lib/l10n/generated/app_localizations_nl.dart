@@ -537,12 +537,77 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String familyMemberRemoveBody(String name) {
-    return '$name wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.';
+    return '$name wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. De familiesleutel verandert niet automatisch — daarna kun je de wizard voor een nieuwe sleutel starten zodat zij geen nieuwe gedeelde data kunnen lezen.';
   }
 
   @override
   String get familyMemberRemovedFromFamily =>
       'Je bent op een ander apparaat uit de familie verwijderd.';
+
+  @override
+  String get familyKeyRotationOfferTitle => 'Nieuwe familiesleutel maken?';
+
+  @override
+  String get familyKeyRotationOfferBody =>
+      'Iemand verwijderen verandert de familiesleutel niet. Maak een nieuwe sleutel en deel die met iedereen die mag blijven, zodat de verwijderde persoon geen nieuwe gedeelde data kan lezen.';
+
+  @override
+  String get familyKeyRotationOfferNow => 'Wizard starten';
+
+  @override
+  String get familyKeyRotationOfferLater => 'Niet nu';
+
+  @override
+  String get familyKeyRotationTitle => 'Nieuwe familiesleutel';
+
+  @override
+  String get familyKeyRotationIntroTitle => 'Familiesleutel roteren';
+
+  @override
+  String get familyKeyRotationIntroBody =>
+      'Je noteert een nieuwe familiesleutel van 12 woorden. Gedeelde data op WebDAV wordt opnieuw versleuteld. Overgebleven gezinsleden en kinderen moeten een nieuwe QR scannen.';
+
+  @override
+  String get familyKeyRotationStart => 'Nieuwe sleutel maken';
+
+  @override
+  String get familyKeyRotationReencryptTitle =>
+      'Gedeelde data opnieuw versleutelen…';
+
+  @override
+  String get familyKeyRotationReencryptPreparing => 'Gedeelde mappen scannen…';
+
+  @override
+  String familyKeyRotationReencryptProgress(int done, int total) {
+    return '$done van $total bestanden';
+  }
+
+  @override
+  String get familyKeyRotationShareLinkTitle => 'Delen met gezinsleden';
+
+  @override
+  String get familyKeyRotationShareLinkBody =>
+      'Elke volwassene met Kinetic Link moet deze QR scannen of tap-to-link gebruiken. De oude sleutel opent geen nieuwe gedeelde data meer.';
+
+  @override
+  String get familyKeyRotationShareLinkButton => 'Familie-QR tonen';
+
+  @override
+  String get familyKeyRotationShareLinkSkip => 'Nu overslaan';
+
+  @override
+  String get familyKeyRotationShareKidsTitle => 'Kinderen opnieuw inschrijven';
+
+  @override
+  String get familyKeyRotationShareKidsBody =>
+      'Elk kinderapparaat heeft een nieuwe inschrijf-QR nodig met de bijgewerkte familiesleutel.';
+
+  @override
+  String get familyKeyRotationDoneTitle => 'Familiesleutel bijgewerkt';
+
+  @override
+  String get familyKeyRotationDoneBody =>
+      'Dit apparaat gebruikt de nieuwe sleutel. Zorg dat elk gezinslid en kind de nieuwe QR heeft gescand wanneer je klaar bent.';
 
   @override
   String get otherLinkMemberStatusPaired =>
@@ -639,6 +704,22 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get kidsEnrollWhatSharedBody =>
       'Deze QR-code bevat de server, het account en de familiesleutel — niet het WebDAV-wachtwoord. Typ dat wachtwoord één keer op het kindertoestel. Deel de code alleen met de kinderenapp op een vertrouwd apparaat.';
+
+  @override
+  String get kidsEnrollWaitingDevice =>
+      'Wachten tot het kindertoestel verbindt…';
+
+  @override
+  String get kidsEnrollKeepWaiting => 'Klaar — blijf wachten op toestel';
+
+  @override
+  String get kidsWaitingForDevice => 'Wachten op toestel';
+
+  @override
+  String get kidsMarkActive => 'Markeer als gekoppeld';
+
+  @override
+  String get kidsDraftSection => 'WACHT OP KOPPELING';
 
   @override
   String get settingsLanguage => 'Taal';
@@ -933,6 +1014,14 @@ class AppLocalizationsNl extends AppLocalizations {
   String connConnectedSince(String when) {
     return 'Verbonden ($when)';
   }
+
+  @override
+  String tasksAmbientLoadOpen(int count) {
+    return '$count openstaand';
+  }
+
+  @override
+  String get tasksAmbientLoadUnknown => '—';
 
   @override
   String get notifChannelName => 'Taakherinneringen';
@@ -1646,7 +1735,51 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesHideContentHint =>
-      'Openen vereist biometrie of apparaat-pincode';
+      'Verbergt voorvertoningen en vraagt biometrie of pincode bij openen. De inhoud sync nog via WebDAV, tenzij ‘Alleen op dit apparaat’ aan staat.';
+
+  @override
+  String get notesLocalOnly => 'Alleen op dit apparaat';
+
+  @override
+  String get notesLocalOnlyHint =>
+      'Titel en inhoud worden nooit naar WebDAV geüpload. Delen met gezin kan niet.';
+
+  @override
+  String get notesLocalOnlyBadge => 'Dit apparaat';
+
+  @override
+  String get notesLinkedTasks => 'Gekoppelde taken';
+
+  @override
+  String get notesLinkTask => 'Taken koppelen';
+
+  @override
+  String get notesLinkTaskEmpty => 'Geen open taken om te koppelen';
+
+  @override
+  String get notesFromTemplate => 'Nieuw van sjabloon';
+
+  @override
+  String get notesTemplateMeeting => 'Vergadernotities';
+
+  @override
+  String get notesTemplateMeetingBody =>
+      '## Aanwezigen\n\n## Agenda\n- \n\n## Acties\n- ';
+
+  @override
+  String get notesTemplateShopping => 'Boodschappenlijst';
+
+  @override
+  String get notesTemplateShoppingBody => '- \n- \n- ';
+
+  @override
+  String get notesTemplateJournal => 'Dagboek';
+
+  @override
+  String get notesTemplateJournalBody => '## Vandaag\n\n## Dankbaar voor\n- ';
+
+  @override
+  String get taskLinkedNotes => 'Gekoppelde notities';
 
   @override
   String get notesUnlockReason => 'Ontgrendel deze notitie';
@@ -2078,6 +2211,17 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get kidsXpAndGoalsSubtitle =>
       'Toon XP-beloningen en goals voor dit kind';
+
+  @override
+  String get kidsWeekOverviewTitle => 'Deze week';
+
+  @override
+  String get kidsWeekOverviewLegend => 'Te doen · klaar';
+
+  @override
+  String kidsWeekDayA11y(String weekday, int due, int done) {
+    return '$weekday, $due te doen, $done klaar';
+  }
 
   @override
   String get kidsOfflineBanner =>

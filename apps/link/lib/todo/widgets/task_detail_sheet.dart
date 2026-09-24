@@ -10,10 +10,14 @@ import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../todo/models/enums.dart';
+import '../../todo/models/personal_note.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/reminder_time.dart';
 import '../../todo/services/reminder_proposal_engine.dart';
+import '../../todo/screens/note_editor_screen.dart';
+import '../../todo/services/note_repository.dart';
 import '../../todo/services/todo_repository.dart';
+import '../../vault/vault_biometrics.dart';
 import 'category_sheet.dart';
 import 'detail_meta_row.dart';
 import 'hour_first_time_picker.dart';
@@ -28,6 +32,7 @@ import 'hour_first_time_picker.dart';
 class TaskDetailSheet extends StatefulWidget {
   final PersonalTask? task;
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
@@ -64,6 +69,7 @@ class TaskDetailSheet extends StatefulWidget {
   const TaskDetailSheet({
     super.key,
     required this.repo,
+    this.noteRepo,
     this.task,
     this.proposalRepo,
     this.myLinkId,
@@ -147,6 +153,31 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
     _chipDebounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) _refreshReminderChips();
     });
+  }
+
+  Future<void> _openLinkedNote(PersonalNote note) async {
+    final noteRepo = widget.noteRepo;
+    if (noteRepo == null) return;
+    final l10n = AppLocalizations.of(context);
+    if (note.isContentHidden) {
+      final unlocked = await VaultBiometrics.authenticate(
+        reason: l10n.notesUnlockReason,
+      );
+      if (!mounted) return;
+      if (unlocked != true) return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => NoteEditorScreen(
+          repo: noteRepo,
+          todoRepo: widget.repo,
+          note: note,
+          hasFamilyKey: widget.hasFamilyKey,
+          otherLinkMembers: widget.otherLinkMembers,
+        ),
+      ),
+    );
   }
 
   Future<void> _loadCompletedTasks() async {
@@ -675,6 +706,43 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                 maxLines: null,
               ),
             ),
+            if (widget.task != null && widget.noteRepo != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: StreamBuilder(
+                  stream: widget.noteRepo!.watchNotesLinkedToTask(
+                    widget.task!.id,
+                  ),
+                  builder: (context, snap) {
+                    final linked = snap.data ?? const [];
+                    if (linked.isEmpty) return const SizedBox.shrink();
+                    final l10n = AppLocalizations.of(context);
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.taskLinkedNotes,
+                          style: tt.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            for (final note in linked)
+                              ActionChip(
+                                label: Text(note.title),
+                                onPressed: () => _openLinkedNote(note),
+                              ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
 
             const Divider(height: 16),
 

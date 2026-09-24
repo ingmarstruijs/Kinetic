@@ -10,6 +10,11 @@ abstract class CategoryClassifier {
 }
 
 class KeywordCategoryClassifier implements CategoryClassifier {
+  /// Keywords shorter than this must match as whole words only.
+  /// Bare tokens like `test` / `run` / `call` / `id` / `pay` / `bin`
+  /// previously over-matched (e.g. "Test1" → Health).
+  static const _shortKeywordMaxLen = 3;
+
   static const _rules = <TaskCategory, List<String>>{
     TaskCategory.household: [
       // English
@@ -38,7 +43,6 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'mow',
       'rubbish',
       'trash',
-      'bin',
       'recycle',
       'ikea',
       'furniture',
@@ -78,7 +82,7 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'ophangen',
     ],
     TaskCategory.health: [
-      // English
+      // English — no bare "test"/"run"/"blood" (too short / ambiguous)
       'doctor',
       'dentist',
       'hospital',
@@ -91,13 +95,13 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'therapy',
       'exercise',
       'gym',
-      'run',
       'running',
       'yoga',
       'checkup',
+      'check-up',
       'vaccine',
-      'blood',
-      'test',
+      'blood test',
+      'bloodwork',
       'optician',
       'glasses',
       // Dutch
@@ -113,7 +117,6 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'fysiotherapie',
       'therapie',
       'sporten',
-      'sporten',
       'hardlopen',
       'controle',
       'vaccinatie',
@@ -124,12 +127,12 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'specialist',
     ],
     TaskCategory.admin: [
-      // English
+      // English — no bare "call"/"id"/"form" as substring traps
       'email',
-      'call',
       'phone',
       'letter',
       'form',
+      'forms',
       'document',
       'sign',
       'contract',
@@ -142,12 +145,13 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'driving',
       'licence',
       'license',
-      'id',
       'council',
       'government',
       'tax',
+      'taxes',
       'return',
       'accountant',
+      'phone call',
       // Dutch
       'bellen',
       'mailen',
@@ -191,8 +195,7 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'drop off',
       'nursery',
       'daycare',
-      'sport',
-      'kit',
+      'sport kit',
       // Dutch
       'huiswerk',
       'leraar',
@@ -215,12 +218,13 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'rapport',
     ],
     TaskCategory.finance: [
-      // English
+      // English — avoid bare "pay"/"bill" substring issues via word match
       'bank',
       'payment',
       'pay',
       'invoice',
       'bill',
+      'bills',
       'transfer',
       'mortgage',
       'rent',
@@ -248,12 +252,44 @@ class KeywordCategoryClassifier implements CategoryClassifier {
       'pensioen',
       'begroting',
       'kosten',
-      'bon',
       'terugbetaling',
       'abonnement',
       'boete',
     ],
   };
+
+  /// Whole-word / phrase match. Multi-word keywords match as substrings
+  /// with word boundaries on the ends; short tokens never match inside
+  /// longer words (e.g. `test` will not match `Test1` or `contest`).
+  static bool matchesKeyword(String corpus, String keyword) {
+    final k = keyword.toLowerCase().trim();
+    if (k.isEmpty) return false;
+    final c = corpus.toLowerCase();
+
+    if (k.contains(' ')) {
+      // Phrase: require non-letter boundaries around the whole phrase.
+      final escaped = RegExp.escape(k);
+      return RegExp(
+        '(^|[^a-z0-9])$escaped(\$|[^a-z0-9])',
+        caseSensitive: false,
+      ).hasMatch(c);
+    }
+
+    // Single token: always whole-word (letters/digits).
+    final escaped = RegExp.escape(k);
+    if (!RegExp(
+      '(^|[^a-z0-9])$escaped(\$|[^a-z0-9])',
+      caseSensitive: false,
+    ).hasMatch(c)) {
+      return false;
+    }
+    // Extra guard: reject ultra-short tokens unless they are standalone
+    // (already enforced by the regex above). Length note for docs/tests.
+    if (k.length <= _shortKeywordMaxLen) {
+      return true; // whole-word already required
+    }
+    return true;
+  }
 
   @override
   TaskCategory classify(String title, {String? notes}) {
@@ -261,7 +297,7 @@ class KeywordCategoryClassifier implements CategoryClassifier {
 
     for (final entry in _rules.entries) {
       for (final keyword in entry.value) {
-        if (corpus.contains(keyword)) return entry.key;
+        if (matchesKeyword(corpus, keyword)) return entry.key;
       }
     }
     return TaskCategory.other;

@@ -13,7 +13,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaveFamilyMessage =>
-      'The link with the family will be removed. Your local tasks will be kept.';
+      'The link with the family will be removed. Tasks and XP on this device will be cleared.';
 
   @override
   String get cancel => 'Cancel';
@@ -233,4 +233,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cleanUpCompleted => 'Clean up';
+
+  @override
+  String get checkingConnection => 'Checking connection…';
+
+  @override
+  String get connectionErrorAuth =>
+      'Wrong password or username. Check the WebDAV password from Kinetic Link.';
+
+  @override
+  String get connectionErrorNoWebDav =>
+      'This server does not appear to support WebDAV.';
+
+  @override
+  String get connectionErrorTimeout =>
+      'Connection timed out. Check your network and try again.';
+
+  @override
+  String get connectionErrorUnreachable =>
+      'Server unreachable. Check the address and your network.';
+
+  @override
+  String connectionErrorGeneric(String error) {
+    return 'Could not connect: $error';
+  }
+
+  @override
+  String get enrollBlockedOffline =>
+      'You need an internet connection to link with the family.';
+
+  @override
+  String lastSynced(String when) {
+    return 'Last synced $when';
+  }
+
+  @override
+  String get neverSynced => 'Not synced yet';
+
+  @override
+  String queuedCompletions(int count) {
+    return '$count waiting to sync';
+  }
+
+  @override
+  String get retrySync => 'Retry sync';
 }

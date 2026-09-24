@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/ble_tap_sheets.dart';
 import '../sync/webdav_config_repository.dart';
+import 'models/enrolled_kid.dart';
 
 // ---------------------------------------------------------------------------
 // KidsEnrollmentQrScreen
@@ -12,8 +13,9 @@ import '../sync/webdav_config_repository.dart';
 // Two-step screen:
 //   1. User enters the child's name.
 //   2. QR code is shown; child scans it to enroll.
-// The child is registered in [configRepo] so Settings and the Tasks kids
-// panel can list and manage enrolled children.
+// The child is registered as a *draft* until the kids device sends presence
+// (or the parent confirms). Cancelling the QR screen removes the draft so
+// ghost kids are not left behind.
 // ---------------------------------------------------------------------------
 
 class KidsEnrollmentQrScreen extends StatefulWidget {
@@ -21,11 +23,16 @@ class KidsEnrollmentQrScreen extends StatefulWidget {
   final WebDavConfigRepository? configRepo;
   final VoidCallback? onKidRegistered;
 
+  /// When set, skips name entry and shows a re-enrollment QR for this kid
+  /// (e.g. after family key rotation).
+  final EnrolledKid? existingKid;
+
   const KidsEnrollmentQrScreen({
     super.key,
     required this.config,
     this.configRepo,
     this.onKidRegistered,
+    this.existingKid,
   });
 
   @override
@@ -37,6 +44,18 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
   String? _registeredName;
   String? _registeredKidId;
   bool _saving = false;
+  bool _committed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final kid = widget.existingKid;
+    if (kid != null) {
+      _registeredName = kid.name;
+      _registeredKidId = kid.id;
+      _committed = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -50,6 +69,15 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
     widget.config.username,
     kidId: _registeredKidId!,
   );
+
+  Future<void> _discardDraftIfNeeded() async {
+    if (_committed) return;
+    final kidId = _registeredKidId;
+    final repo = widget.configRepo;
+    if (kidId == null || repo == null) return;
+    await repo.removeEnrolledKid(kidId);
+    widget.onKidRegistered?.call();
+  }
 
   Future<void> _registerAndShowQr() async {
     final name = _nameCtrl.text.trim();
@@ -70,20 +98,43 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
     }
   }
 
+  Future<void> _doneWaiting() async {
+    _committed = true;
+    if (mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.kidsEnrollTitle), centerTitle: false),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _registeredName == null
-              ? _buildNameStep(context, scheme, tt, l10n)
-              : _buildQrStep(context, scheme, tt, l10n),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        await _discardDraftIfNeeded();
+        if (context.mounted) Navigator.of(context).pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.kidsEnrollTitle),
+          centerTitle: false,
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () async {
+              await _discardDraftIfNeeded();
+              if (context.mounted) Navigator.of(context).pop();
+            },
+          ),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _registeredName == null
+                ? _buildNameStep(context, scheme, tt, l10n)
+                : _buildQrStep(context, scheme, tt, l10n),
+          ),
         ),
       ),
     );
@@ -156,7 +207,16 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
           style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 12),
+        Text(
+          l10n.kidsEnrollWaitingDevice,
+          style: tt.bodySmall?.copyWith(
+            color: scheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
         Center(
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -203,20 +263,31 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
           icon: const Icon(Icons.bluetooth_searching),
           label: Text(l10n.bleShareTitle),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
+        FilledButton(
+          onPressed: _doneWaiting,
+          child: Text(l10n.kidsEnrollKeepWaiting),
+        ),
+        const SizedBox(height: 24),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary.withAlpha(15),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).colorScheme.primary.withAlpha(60)),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withAlpha(60),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: Theme.of(context).colorScheme.primary),
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l10n.kidsEnrollWhatShared,

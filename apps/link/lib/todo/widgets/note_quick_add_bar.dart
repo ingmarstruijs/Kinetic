@@ -4,6 +4,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../models/personal_note.dart';
 import '../screens/note_editor_screen.dart';
 import '../services/note_repository.dart';
+import '../services/todo_repository.dart';
 
 /// Persistent text field at the bottom of the notes list.
 ///
@@ -11,12 +12,14 @@ import '../services/note_repository.dart';
 /// The expand icon opens the full note editor for more options.
 class NoteQuickAddBar extends StatefulWidget {
   final NoteRepository repo;
+  final TodoRepository? todoRepo;
   final bool hasFamilyKey;
   final List<({String id, String name})> otherLinkMembers;
 
   const NoteQuickAddBar({
     super.key,
     required this.repo,
+    this.todoRepo,
     this.hasFamilyKey = false,
     this.otherLinkMembers = const [],
   });
@@ -59,6 +62,7 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
         fullscreenDialog: true,
         builder: (_) => NoteEditorScreen(
           repo: widget.repo,
+          todoRepo: widget.todoRepo,
           initialTitle: title.isEmpty ? null : title,
           hasFamilyKey: widget.hasFamilyKey,
           otherLinkMembers: widget.otherLinkMembers,

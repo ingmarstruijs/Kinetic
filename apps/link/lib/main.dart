@@ -301,6 +301,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       suggestionRepo: _aiSuggestionRepository,
       todoRepo: _todoRepository,
       proposalRepo: isPaired ? _proposalRepository : null,
+      pullLoadMetrics: _syncOrchestrator?.pullLoadMetrics,
       myLinkId: config?.linkId,
     );
     unawaited(_aiSuggestionEngine!.runIfDue());
@@ -491,6 +492,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                     final screens = <Widget>[
                       TasksScreen(
                         repo: _todoRepository,
+                        noteRepo: _noteRepository,
                         settingsRepo: widget.settingsRepo,
                         proposalRepo: paired ? _proposalRepository : null,
                         suggestionRepo: _aiSuggestionRepository,
@@ -512,6 +514,9 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         pullPresence: demo.active
                             ? () async => demo.presence
                             : _syncOrchestrator?.pullPresence,
+                        pullLoadMetrics: demo.active
+                            ? () async => demo.loadMetrics
+                            : _syncOrchestrator?.pullLoadMetrics,
                         pullSharedTasks: demo.active && demo.kids.isNotEmpty
                             ? () async => demo.kidTasks
                             : null,
@@ -543,6 +548,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                       ),
                       NotesScreen(
                         repo: _noteRepository,
+                        todoRepo: _todoRepository,
                         settingsRepo: widget.settingsRepo,
                         onSyncRetry: _triggerSync,
                         syncStatus: hasWebDav ? syncStatus : null,

@@ -24,6 +24,9 @@ class ICalNote {
   /// Optional reminder timestamp → maps to VALARM + TRIGGER.
   final DateTime? remindAt;
 
+  /// Linked [PersonalTasks] ids (Kinetic Link); synced via X-KINETIC-LINK-TASK-IDS.
+  final List<String>? linkedTaskIds;
+
   const ICalNote({
     required this.uid,
     required this.summary,
@@ -34,6 +37,7 @@ class ICalNote {
     required this.createdAt,
     required this.updatedAt,
     this.remindAt,
+    this.linkedTaskIds,
   });
 
   ICalNote copyWith({
@@ -48,6 +52,8 @@ class ICalNote {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? remindAt,
+    List<String>? linkedTaskIds,
+    bool clearLinkedTaskIds = false,
   }) {
     return ICalNote(
       uid: uid ?? this.uid,
@@ -63,6 +69,9 @@ class ICalNote {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       remindAt: remindAt ?? this.remindAt,
+      linkedTaskIds: clearLinkedTaskIds
+          ? null
+          : (linkedTaskIds ?? this.linkedTaskIds),
     );
   }
 

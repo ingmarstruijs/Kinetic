@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
   "leaveFamilyTitle": "Leave family?",
-  "leaveFamilyMessage": "The link with the family will be removed. Your local tasks will be kept.",
+  "leaveFamilyMessage": "The link with the family will be removed. Tasks and XP on this device will be cleared.",
   "cancel": "Cancel",
   "leave": "Leave",
   "linkFamilyTitle": "Link family",
@@ -101,5 +101,37 @@
   "confirmCompleteBody": "Are you sure you are finished? We will send a confirmation request to Link.",
   "confirmCompleteAction": "Yes, I'm done",
   "awaitingLinkConfirm": "Waiting for Link to confirm",
-  "cleanUpCompleted": "Clean up"
+  "cleanUpCompleted": "Clean up",
+  "checkingConnection": "Checking connection…",
+  "connectionErrorAuth": "Wrong password or username. Check the WebDAV password from Kinetic Link.",
+  "connectionErrorNoWebDav": "This server does not appear to support WebDAV.",
+  "connectionErrorTimeout": "Connection timed out. Check your network and try again.",
+  "connectionErrorUnreachable": "Server unreachable. Check the address and your network.",
+  "connectionErrorGeneric": "Could not connect: {error}",
+  "@connectionErrorGeneric": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "enrollBlockedOffline": "You need an internet connection to link with the family.",
+  "lastSynced": "Last synced {when}",
+  "@lastSynced": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "neverSynced": "Not synced yet",
+  "queuedCompletions": "{count} waiting to sync",
+  "@queuedCompletions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "retrySync": "Retry sync"
 }

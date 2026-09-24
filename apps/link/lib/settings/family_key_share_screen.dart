@@ -5,6 +5,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../sync/ble_tap_sheets.dart';
 import '../sync/webdav_config_repository.dart';
 
 /// Shows a family-pairing QR that carries 16-byte BIP-39 entropy (no password).
@@ -158,6 +159,22 @@ class _FamilyKeyShareScreenState extends State<FamilyKeyShareScreen> {
                   ),
                 ),
               const Spacer(),
+              if (qr != null)
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final ok = await showBleTapShareSheet(
+                      context,
+                      displayName: widget.config.username,
+                      payloadProvider: () => qr,
+                    );
+                    if (ok == true && mounted) {
+                      setState(() => _confirmed = true);
+                    }
+                  },
+                  icon: const Icon(Icons.bluetooth_searching),
+                  label: Text(l10n.bleShareTitle),
+                ),
+              const SizedBox(height: 12),
               if (!_confirmed)
                 FilledButton.icon(
                   onPressed: () => setState(() => _confirmed = true),

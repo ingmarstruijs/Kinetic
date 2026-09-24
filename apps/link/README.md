@@ -7,24 +7,29 @@ Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally 
 | Screen | Description |
 |---|---|
 | **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **With WebDAV + family:** forward tasks to a link member, one kid, or **Everyone**; collapsible **suggestions** (self, family-targeted, incoming proposals) and **kids** section (assignments, XP, goals). Reminder notifications offer **Done** and **Snooze**. Task row icons: person+ = accepted family proposal. |
-| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). Local private notes always; **Shared** section and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). |
-| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **WebDAV** config and connection test unlock sync. **Family** (family-member QR, kids enrollment, presence) is only useful once WebDAV is connected. Debug builds also have **UI scenarios** for screenshots and manual QA. |
+| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). List grouped by **category** (same order as tasks). Local private notes always; **Shared** and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). |
+| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **Sync → Configure WebDAV** (connection test, save, **Turn off WebDAV sync**). **Family** section appears only when WebDAV is connected: **Start family** link (until a family key exists), family members, kids. Debug builds also have **UI scenarios** for screenshots and manual QA. |
 
 ## Family Setup
 
-**Requires WebDAV.** Pairing, proposals, kids enrollment, and shared folders all go through your server. Configure WebDAV in Settings before using Family.
+**Requires WebDAV on the same base URL for every device in the family.** Logins may differ; shared data is under `/kinetic/shared/`. The Family section (and **Start family**) is hidden until WebDAV is connected. Turning sync off clears family/kids linkage on this device but keeps the personal vault and private local data.
+
+### Start-family guide & prompts
+- **Start family** (next to the Family section title) → guided wizard; gone after a family key exists
+- ~1 day after WebDAV without a family → optional nudge: Ignore / Remind in 7 days / Start guide
+- After WebDAV save, if the folder already has other Kinetic users or shared family markers → **Link now** jumps straight to QR / BLE / phrase import (one invite joins the whole family, even if several usernames are listed)
 
 ### Family Member Linking
-1. Settings → Family → Family members → "Share family key via QR"
-2. Write down the 12 family words (quiz), then show the QR (entropy only)
-3. The other family member scans **or** types the same 12 words and checks the fingerprint
+1. Settings → Family → Family members → share family key via QR or tap-to-link (BLE)
+2. Write down the 12 family words (quiz), then show the QR (entropy only) or advertise over BLE
+3. The other family member scans, uses BLE, **or** types the same 12 words and checks the fingerprint — invite server URL must match their WebDAV URL
 4. Linking activated; `family.key.enc` is stored in the personal WebDAV folder
 
 ### Kids Enrollment
 Each child device enrolls independently:
 1. Settings → Family → Kids → "Link kids app"
 2. Generate QR with family key + unique kid UUID (no WebDAV password)
-3. Child device scans QR and types the WebDAV password once
+3. Child device scans QR and types the WebDAV password once (same server)
 4. Child receives tasks targeted to their UUID (or Everyone tasks with no target id)
 5. Enrollment count shown in Settings
 
@@ -44,7 +49,11 @@ Legacy ids `sand` → `calm`, and `dusk` / `dark` → `night`.
 
 First launch is a **vault gate**: create a 12-word BIP-39 phrase (with a 3-word quiz) or restore from a `.kvault` file **or** from WebDAV with the same phrase.
 
-When enabling WebDAV later, the app uses the already-unlocked vault key. It writes `/kinetic/{user}/vault.meta` if missing, or checks that the canary decrypts. A mismatch means that server already has a different vault.
+When enabling WebDAV later (**Settings → Sync → Configure WebDAV**), the app uses the already-unlocked vault key. It writes `/kinetic/{user}/vault.meta` if missing, or checks that the canary decrypts. A mismatch means that server already has a different vault. Connection test reports wrong password, missing WebDAV, or unreachable separately.
+
+**Same base URL for the family.** Personal data: `/kinetic/{username}/`; shared: `/kinetic/shared/`. Joining via QR/BLE fails if the invite URL does not match this device’s configured server.
+
+**Turn off WebDAV sync** on the same setup screen stops sync and clears family/kids linkage on this device; the personal vault and private local data remain.
 
 The personal key is **derived from the 12 words**, not from the WebDAV password. Export is always `.kvault` (encrypted, no key, no WebDAV password).
 
@@ -170,7 +179,7 @@ When a device explicitly leaves the family, it writes an encrypted **tombstone**
 
 ## Conditional UI
 
-Without WebDAV, Tasks stays a personal list (plus local “for you” suggestions). Family-member send, kids panel, incoming proposals, and shared notes only appear after WebDAV is connected and family is set up.
+Without WebDAV, Tasks stays a personal list (plus local “for you” suggestions). The **Family** settings section is not shown. Family-member send, kids panel, incoming proposals, and shared notes only appear after WebDAV is connected and family is set up.
 
 **Kids panel** on Tasks is only visible when:
 

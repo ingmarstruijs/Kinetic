@@ -3,10 +3,10 @@ import '../../l10n/generated/app_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../debug/demo_session.dart';
-import '../../main.dart';
 import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../settings/settings_repository.dart';
+import '../../sync/sync_status.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_header.dart';
 import '../../todo/models/personal_task.dart';
@@ -15,6 +15,7 @@ import '../../todo/services/todo_repository.dart';
 import '../../todo/widgets/kids_panel.dart';
 import '../../todo/widgets/quick_add_bar.dart';
 import '../../todo/widgets/suggestions_panel.dart';
+import '../../todo/widgets/category_sheet.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
 import '../../todo/widgets/task_tile.dart';
 
@@ -24,7 +25,7 @@ class TasksScreen extends StatefulWidget {
   final LinkMemberProposalRepository? proposalRepo;
   final AiSuggestionRepository? suggestionRepo;
   final String? myLinkId;
-  final ValueNotifier<SyncStatus>? syncStatus;
+  final ValueNotifier<SyncStatusInfo>? syncStatus;
   final bool hasFamilyKey;
   final bool hasOtherLinkMembers;
   final List<({String id, String name})> otherLinkMembers;
@@ -191,11 +192,11 @@ class _TasksScreenState extends State<TasksScreen> {
           centerTitle: false,
           actions: [
             if (widget.syncStatus != null)
-              ValueListenableBuilder<SyncStatus>(
+              ValueListenableBuilder<SyncStatusInfo>(
                 valueListenable: widget.syncStatus!,
-                builder: (context, status, _) => _SyncIcon(
-                  status: status,
-                  onSyncPressed: widget.onSyncRetry,
+                builder: (context, info, _) => SyncStatusIcon(
+                  info: info,
+                  onRetry: widget.onSyncRetry ?? () {},
                 ),
               ),
             IconButton(
@@ -295,40 +296,6 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 }
 
-class _SyncIcon extends StatelessWidget {
-  final SyncStatus status;
-  final VoidCallback? onSyncPressed;
-
-  const _SyncIcon({required this.status, this.onSyncPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (status) {
-      SyncStatus.syncing => const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12),
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-      SyncStatus.error => IconButton(
-        onPressed: onSyncPressed,
-        tooltip: AppLocalizations.of(context).tasksSyncOffline,
-        icon: Icon(
-          Icons.cloud_off_outlined,
-          color: Theme.of(context).colorScheme.error,
-        ),
-      ),
-      SyncStatus.idle => IconButton(
-        onPressed: onSyncPressed,
-        tooltip: AppLocalizations.of(context).tasksSyncing,
-        icon: const Icon(Icons.cloud_done_outlined),
-      ),
-    };
-  }
-}
-
 sealed class _ListItem {}
 
 class _HeaderItem extends _ListItem {
@@ -407,33 +374,14 @@ class _TasksBodyState extends State<_TasksBody> {
 
   Future<void> _renameCategory(String? category) async {
     if (category == null || category.isEmpty) return;
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController(text: category);
-    final next = await showDialog<String>(
+    // Wait until the PopupMenu route has finished closing.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final next = await showRenameCategoryDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.categoryRename),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(hintText: l10n.categoryRenameHint),
-          textCapitalization: TextCapitalization.sentences,
-          onSubmitted: (value) => Navigator.pop(ctx, value.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(l10n.commonSave),
-          ),
-        ],
-      ),
+      currentName: category,
     );
-    controller.dispose();
-    if (next == null || next.isEmpty || next == category) return;
+    if (next == null || next.isEmpty || next == category || !mounted) return;
     await widget.repo.renameCustomCategory(from: category, to: next);
     final updated = [for (final c in _categoryOrder) c == category ? next : c];
     setState(() => _categoryOrder = updated);

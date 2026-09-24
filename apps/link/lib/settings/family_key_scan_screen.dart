@@ -5,6 +5,7 @@ import 'package:kinetic_qr_scanner/kinetic_qr_scanner.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../sync/ble_tap_sheets.dart';
 import '../sync/webdav_config_repository.dart';
 import '../vault/widgets/mnemonic_phrase_field.dart';
 
@@ -70,6 +71,7 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
+    final errorColor = Theme.of(context).colorScheme.error;
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -77,8 +79,10 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
         title: Row(
           children: [
             Icon(
-              urlMatches ? Icons.check_circle_outline : Icons.warning_amber,
-              color: urlMatches ? Theme.of(context).colorScheme.primary : Colors.orange,
+              urlMatches ? Icons.check_circle_outline : Icons.block,
+              color: urlMatches
+                  ? Theme.of(context).colorScheme.primary
+                  : errorColor,
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -115,18 +119,14 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withAlpha(30),
+                  color: errorColor.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withAlpha(100)),
+                  border: Border.all(color: errorColor.withAlpha(100)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.warning_amber,
-                      color: Colors.orange,
-                      size: 18,
-                    ),
+                    Icon(Icons.block, color: errorColor, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -149,7 +149,7 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
                 ),
               ),
             ],
-            if (alreadyPaired) ...[
+            if (urlMatches && alreadyPaired) ...[
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -176,21 +176,29 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.commonImport),
-          ),
+          if (!urlMatches)
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.commonOk),
+            )
+          else ...[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.commonImport),
+            ),
+          ],
         ],
       ),
     );
 
     if (!mounted) return;
 
-    if (confirmed == true) {
+    // Same WebDAV server is required for family sync — never import on mismatch.
+    if (confirmed == true && urlMatches) {
       await _importKey(payload.familyKey, entropy: payload.entropy);
     } else {
       setState(() => _processing = false);
@@ -278,6 +286,21 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
         title: Text(l10n.familyKeyScanTitle),
         centerTitle: false,
         actions: [
+          IconButton(
+            tooltip: l10n.bleJoinTitle,
+            onPressed: _processing
+                ? null
+                : () async {
+                    await showBleTapJoinSheet(
+                      context,
+                      displayName: widget.currentConfig.username,
+                      onPayload: (raw) async {
+                        await _handlePayload(raw);
+                      },
+                    );
+                  },
+            icon: const Icon(Icons.bluetooth_searching),
+          ),
           TextButton(
             onPressed: _processing ? null : _importFromPhrase,
             child: Text(l10n.familyKeyEnterPhrase),

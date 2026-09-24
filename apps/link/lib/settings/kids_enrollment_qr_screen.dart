@@ -3,6 +3,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../sync/ble_tap_sheets.dart';
 import '../sync/webdav_config_repository.dart';
 
 // ---------------------------------------------------------------------------
@@ -185,6 +186,22 @@ class _KidsEnrollmentQrScreenState extends State<KidsEnrollmentQrScreen> {
               ),
             ),
           ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.wizardKidsPasswordHint,
+          style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: () => showBleTapShareSheet(
+            context,
+            displayName: widget.config.username,
+            payloadProvider: () => _qrPayload,
+          ),
+          icon: const Icon(Icons.bluetooth_searching),
+          label: Text(l10n.bleShareTitle),
         ),
         const SizedBox(height: 32),
         Container(

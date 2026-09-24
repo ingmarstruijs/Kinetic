@@ -33,6 +33,11 @@
   "settingsWebDavConfigure": "Configure WebDAV",
   "settingsWebDavConnected": "Connected",
   "settingsWebDavConnectHint": "Connect to a Nextcloud or WebDAV server",
+  "settingsWebDavTurnOff": "Turn off WebDAV sync",
+  "settingsWebDavTurnOffTitle": "Turn off WebDAV sync?",
+  "settingsWebDavTurnOffBody": "Sync with the server stops. You also lose family linking, shared notes, kids tasks, and multi-device sync. Your private tasks and notes stay on this device. The recovery phrase still unlocks your local vault.",
+  "settingsWebDavTurnOffConfirm": "Turn off",
+  "settingsWebDavTurnedOff": "WebDAV sync turned off.",
   "settingsSectionFamily": "Family",
   "settingsFamilyMember": "Family member",
   "settingsFamilyMembers": "Family members",
@@ -55,7 +60,7 @@
   "settingsExportBackup": "Export backup",
   "settingsExportBackupSubtitle": "Encrypted .kvault file. The recovery phrase is not included.",
   "settingsImportBackup": "Import backup",
-  "settingsImportBackupSubtitle": "Restore from .kvault with your 12 words",
+  "settingsImportBackupSubtitle": "Replaces all data on this phone",
 
   "notifServiceFailed": "Notification service failed to start: {error}",
   "@notifServiceFailed": {
@@ -73,7 +78,7 @@
   "familyKeyLinkMember": "Family member",
   "familyKeyServer": "Server",
   "familyKeyFingerprint": "Fingerprint",
-  "familyKeyServerMismatch": "The server in the QR code ({scanned}) does not match your server ({current}). Are you sure you want to continue?",
+  "familyKeyServerMismatch": "The server in the invite ({scanned}) does not match your WebDAV server ({current}). Family sync only works when everyone uses the same server — linking is blocked.",
   "@familyKeyServerMismatch": {
     "placeholders": {
       "scanned": {"type": "String"},
@@ -507,7 +512,12 @@
   "backupRevealTitle": "Recovery phrase",
   "backupRevealMissing": "We cannot show the words again on this device. Use your paper copy, or restore the vault with the 12 words.",
   "backupImportTitle": "Import backup",
-  "backupImportBody": "Enter the 12 words of the vault inside the .kvault file. This replaces your current tasks and notes.",
+  "backupImportBody": "Enter the 12 words for this .kvault file.",
+  "backupImportOtherVaultBody": "This backup uses a different vault. Enter its 12 words.",
+  "backupImportOverwriteTitle": "Replace all data?",
+  "backupImportOverwriteBody": "This deletes everything on this phone and puts the backup in its place. Newer data on this device is lost.",
+  "backupImportOverwriteConfirm": "Replace",
+  "backupImportWrongPhrase": "Wrong recovery phrase for this backup.",
   "backupCouldNotReadFile": "Could not read the file.",
   "backupRestored": "Backup restored successfully.",
   "backupInvalidFile": "Invalid backup file: {error}",
@@ -531,6 +541,10 @@
   "webdavTestConnection": "Test connection",
   "webdavTestingConnection": "Testing connection…",
   "webdavConnectionOk": "Connection succeeded",
+  "webdavErrorAuth": "Wrong username or password.",
+  "webdavErrorNoWebDav": "This server does not appear to support WebDAV. Check the URL (for Nextcloud often …/remote.php/dav).",
+  "webdavErrorTimeout": "Connection timed out. Check the server URL and your network.",
+  "webdavErrorUnreachable": "Could not reach the server. Check the URL and your network.",
   "webdavTestFirst": "Test the connection before saving.",
   "webdavCreateVaultFirst": "Create a vault before linking WebDAV.",
   "webdavPhraseMismatchServer": "This server already has a vault that does not match your recovery phrase.",
@@ -557,7 +571,7 @@
   },
   "webdavMigrationChoose": "These files are encrypted with a vault. Choose how to continue:",
   "webdavMigrationCleanOption": "1. Clean install — remove the old files on the server and start fresh.",
-  "webdavMigrationImportOption": "2. Import backup — select a .kvault file. This vault's recovery phrase unlocks the file.",
+  "webdavMigrationImportOption": "2. Import backup — replaces all data on this phone with a .kvault file.",
   "webdavMigrationClean": "Clean install",
   "webdavMigrationImport": "Import backup",
   "webdavBackupRestoredSync": "Backup restored. The app will now sync with the server.",
@@ -590,6 +604,86 @@
   "tasksCompletedTooltip": "Completed tasks",
   "tasksSyncFailed": "Sync failed, tap to retry.",
   "tasksSyncing": "Syncing",
+  "syncStatusTitle": "Sync status",
+  "syncStatusIdle": "Up to date",
+  "syncStatusSyncing": "Syncing…",
+  "syncStatusError": "Sync failed",
+  "syncStatusRetry": "Retry sync",
+  "syncStatusNeverSynced": "Not synced yet",
+  "syncStatusLastSuccess": "Last success: {when}",
+  "@syncStatusLastSuccess": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "syncErrorTimeout": "Sync timed out. Check your connection and try again.",
+  "syncErrorAuth": "WebDAV login failed. Check username and password.",
+  "syncErrorNetwork": "Could not reach the server. Check your connection.",
+  "syncErrorGeneric": "Sync failed. Try again or check WebDAV settings.",
+  "settingsSyncHealthIdle": "Synced",
+  "settingsSyncHealthSyncing": "Syncing…",
+  "settingsSyncHealthError": "Sync error — tap for details",
+  "settingsSyncHealthNever": "Not synced yet",
+  "settingsStartFamily": "Start family",
+  "settingsStartFamilyHint": "Guided setup: WebDAV, members, and kids",
+  "familySetupPromptTitle": "Set up your family?",
+  "familySetupPromptBody": "WebDAV sync is on, but you have not linked a family yet. Shared notes, kids tasks, and multi-device family sync need a family key.",
+  "familySetupPromptIgnore": "Ignore",
+  "familySetupPromptRemind": "Remind in {days} days",
+  "@familySetupPromptRemind": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "familySetupPromptStart": "Start guide",
+  "webdavJoinFamilyTitle": "Join family?",
+  "webdavJoinFamilyBody": "Someone is already using Kinetic on this folder.",
+  "webdavJoinFamilyMembersOne": "{name} is already here.",
+  "@webdavJoinFamilyMembersOne": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "webdavJoinFamilyMembersMany": "Already here:",
+  "@webdavJoinFamilyMembersMany": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "webdavJoinFamilySharedOnly": "Family data found.",
+  "webdavJoinFamilyLink": "Link now",
+  "webdavJoinFamilyLater": "Not now",
+  "webdavFamilyRestored": "Family key restored from this server.",
+  "wizardTitle": "Start family",
+  "wizardStepWebDav": "Connect WebDAV",
+  "wizardStepFamily": "Create or join family",
+  "wizardStepInvite": "Invite a family member",
+  "wizardStepKids": "Enroll a kid",
+  "wizardStepDone": "You're set",
+  "wizardSkip": "Skip",
+  "wizardNext": "Continue",
+  "wizardDone": "Done",
+  "wizardInviteHint": "Share your family key with QR or hold phones close (tap to link).",
+  "wizardKidsPasswordHint": "The child still needs the WebDAV password — it is not in the QR. Share it separately.",
+  "wizardFirstSuccessHint": "Try a shared note or assign a kid task to see sync in action.",
+  "wizardOpenTasks": "Go to tasks",
+  "bleShareTitle": "Tap to share",
+  "bleJoinTitle": "Tap to join",
+  "bleSearching": "Looking for a nearby Kinetic phone…",
+  "bleAdvertising": "Ready — hold the other phone close",
+  "bleConfirmTitle": "Allow link?",
+  "bleConfirmBody": "{name} wants to join your family.",
+  "@bleConfirmBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "bleConfirmAllow": "Allow",
+  "bleConfirmDeny": "Deny",
+  "bleSuccess": "Linked successfully",
+  "bleFailed": "Could not link over Bluetooth. Try QR instead.",
+  "bleUnavailable": "Bluetooth is unavailable. Use QR code instead.",
+  "bleTimeout": "No nearby phone found. Move closer or use QR.",
   "tasksForYou": "For you",
   "tasksForFamilyMember": "For {name}",
   "@tasksForFamilyMember": {
@@ -792,14 +886,14 @@
   "suggestReasonStale": "Open task",
   "suggestReasonCalendar": "Calendar",
   "suggestReasonCategorize": "Category",
-  "suggestCategorizeTitle": "Add {count} tasks to {category}?",
+  "suggestCategorizeTitle": "Set category {category} on {count} tasks?",
   "@suggestCategorizeTitle": {
     "placeholders": {
       "count": {"type": "int"},
       "category": {"type": "String"}
     }
   },
-  "suggestCategorizeExplanation": "{count} open tasks have no category.",
+  "suggestCategorizeExplanation": "These open tasks have no category yet. Accept only sets the label.",
   "@suggestCategorizeExplanation": {
     "placeholders": {
       "count": {"type": "int"}

@@ -190,6 +190,21 @@ class NoteRepository {
     onWrite?.call();
   }
 
+  /// Renames [from] to [to] on every note that uses that category label.
+  Future<void> renameNoteCategory({
+    required String from,
+    required String to,
+  }) async {
+    final label = to.trim();
+    if (from == label) return;
+    final notes = await watchAll().first;
+    for (final note in notes) {
+      if (note.category == from) {
+        await updateNoteCategory(note.id, label.isEmpty ? null : label);
+      }
+    }
+  }
+
   /// Batch-update category and sortOrder for notes after drag-and-drop reordering.
   Future<void> batchUpdateCategoryAndOrder(
     List<({String id, String? category, int sortOrder})> updates,

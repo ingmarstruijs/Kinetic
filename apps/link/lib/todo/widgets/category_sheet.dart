@@ -147,3 +147,83 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
     );
   }
 }
+
+/// Rename dialog that owns its [TextEditingController] so dispose is safe
+/// after the route pops (avoids InheritedWidget `_dependents.isEmpty` crashes).
+Future<String?> showRenameCategoryDialog({
+  required BuildContext context,
+  required String currentName,
+}) {
+  final l10n = AppLocalizations.of(context);
+  return showDialog<String>(
+    context: context,
+    builder: (ctx) => _RenameCategoryDialog(
+      initial: currentName,
+      title: l10n.categoryRename,
+      hint: l10n.categoryRenameHint,
+      cancelLabel: l10n.commonCancel,
+      saveLabel: l10n.commonSave,
+    ),
+  );
+}
+
+class _RenameCategoryDialog extends StatefulWidget {
+  final String initial;
+  final String title;
+  final String hint;
+  final String cancelLabel;
+  final String saveLabel;
+
+  const _RenameCategoryDialog({
+    required this.initial,
+    required this.title,
+    required this.hint,
+    required this.cancelLabel,
+    required this.saveLabel,
+  });
+
+  @override
+  State<_RenameCategoryDialog> createState() => _RenameCategoryDialogState();
+}
+
+class _RenameCategoryDialogState extends State<_RenameCategoryDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.pop(context, _controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: InputDecoration(hintText: widget.hint),
+        textCapitalization: TextCapitalization.sentences,
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(widget.cancelLabel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(widget.saveLabel),
+        ),
+      ],
+    );
+  }
+}

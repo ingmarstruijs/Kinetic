@@ -262,6 +262,7 @@ class PersonalTask {
     bool clearDueDate = false,
     bool? isAllDay,
     String? recurrenceRule,
+    bool clearRecurrenceRule = false,
     bool? isCompleted,
     DateTime? completedAt,
     bool? isFlagged,
@@ -286,7 +287,9 @@ class PersonalTask {
       priority: priority ?? this.priority,
       dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
       isAllDay: isAllDay ?? this.isAllDay,
-      recurrenceRule: recurrenceRule ?? this.recurrenceRule,
+      recurrenceRule: clearRecurrenceRule
+          ? null
+          : (recurrenceRule ?? this.recurrenceRule),
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
       isFlagged: isFlagged ?? this.isFlagged,

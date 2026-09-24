@@ -1,10 +1,17 @@
 # Kinetic WebDAV
 
-Shared sync, crypto, and serialization logic for Kinetic Link.
+Shared sync, crypto, and serialization logic for Kinetic Link and Kinetic Kids.
+
+## Family / server model
+
+One Kinetic family lives on **one WebDAV base URL**. Personal trees are `/kinetic/{username}/`; shared trees are `/kinetic/shared/`. Logins may differ per person; the **server URL must match** for every Link and Kids device. Family QR / BLE invites include `url` — Link rejects a join when that URL does not match the device’s configured WebDAV URL. Manual 12-word entry has no URL; the matching server must already be configured.
+
+Empty collections and non-`.ics` noise are ignored when detecting “existing data” during migration / first connect (PROPFIND is parsed per `<response>` block).
 
 ## Features
 
-- **WebDAV client**: HTTP operations (PROPFIND, PUT, GET, DELETE) for file sync
+- **WebDAV client**: HTTP operations (PROPFIND, PUT, GET, DELETE) for file sync; `probeConnection()` distinguishes `ok` / `authFailed` / `noWebDav` / `unreachable`
+- **Folder probe**: `KineticFolderProbe` lists other `/kinetic/{user}/` folders and checks shared roster/presence so Link can offer a fast family join after save
 - **iCal serialization**: Parse and serialize tasks/notes as `.ics` files (RFC 5545) with custom properties
 - **AES-256-GCM encryption**: End-to-end encryption of remote `.ics` / JSON with a random 32-byte key (PBKDF2 exists only as a legacy family-key helper)
 - **Secure storage**: Hardware-backed secure storage abstraction
@@ -31,7 +38,7 @@ Tasks and notes store metadata in escaped iCal DESCRIPTION field:
 }
 ```
 
-The family-key payload does **not** include the WebDAV password. Each link device keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Family members can also type the words instead of scanning.
+The family-key payload does **not** include the WebDAV password. Each link device keeps their own WebDAV login. The scanner reconstructs the 12-word mnemonic from `ent` and derives the same 32-byte AES key. Family members can also type the words instead of scanning. The invite `url` must match the joiner’s configured WebDAV base URL (hard block on mismatch for QR / BLE).
 
 ### Kids Enrollment (KidsEnrollmentQrScreen)
 ```javascript
@@ -61,6 +68,8 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `LinkMemberProposal`: Domain model for family-member proposals
 - `KidsTask`: Domain model for child-assigned tasks
 - `KidGoal`: Per-kid XP goal document under `/kinetic/shared/goals/{kidId}.json`
+- `KineticFolderProbe` / `KineticFolderProbeResult`: Discover peer Kinetic folders / shared family markers on a server
+- `WebDavConnectionStatus`: Result of `probeConnection()` (`ok`, `authFailed`, `noWebDav`, `unreachable`)
 
 ### Key Methods
 
@@ -83,10 +92,15 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `sealCanary` / `openCanary` / `KineticVaultRemote.probe` / `ensureMeta`
 
 **WebDavClient**:
-- `propfind(path)` → `List<WebDavEntry>` for a collection (direct children only)
+- `propfind(path)` → `List<WebDavEntry>` for a collection (direct children only); empty dirs are collections, not “files”
+- `probeConnection()` → `WebDavConnectionStatus` via authenticated Depth-0 PROPFIND (auth vs no WebDAV vs unreachable)
+- `supportsWebDav()` → `true` when `probeConnection()` is `ok`
 - `put(path, bytes)` → Upload file; optional `etag` for conditional PUT
 - `get(path)` → Download raw bytes
 - `delete(path)` → Delete file (404 treated as success)
+
+**KineticFolderProbe**:
+- `probe(client, username)` → other user folders under `/kinetic/` plus shared roster/presence flags (`suggestsExistingFamily`)
 
 **SyncConfig**:
 - Stores `serverUrl`, `username`, `password`, `linkId`
@@ -110,7 +124,12 @@ kinetic_webdav_link_id          — Link device ID (optional)
 kinetic_has_other_link_members            — '1' if another link member is linked, '0' otherwise
 kinetic_enrolled_kids             — JSON list of enrolled kids (Kinetic Link)
 kinetic_kid_id                    — This device's child UUID (kids only)
+kinetic_family_setup_eligible_at  — ISO time when day-1 family nudge becomes eligible (Link)
+kinetic_family_setup_prompt_skipped — '1' after Ignore on the family nudge (Link)
+kinetic_family_setup_prompt_snoozed_until — ISO time until Remind-in-7-days expires (Link)
 ```
+
+`disconnectWebDav` (Link) clears server URL / username / password and family/kids linkage keys, and resets the family-setup prompt keys. It does **not** wipe the personal vault key.
 
 ## Encryption Architecture
 
@@ -186,7 +205,8 @@ flutter test
 Tests cover:
 - Encryption/decryption round-trips
 - iCal serialization/parsing
-- WebDAV client with mocked HTTP
+- WebDAV client with mocked HTTP (`probeConnection` auth / ok paths, PROPFIND response-block parsing)
+- `KineticFolderProbe` peer / shared-marker detection
 - Random key generation vs legacy `deriveFamilyKey`
 - BIP-39 mnemonic checksum, seed prefix, `.kvault` wrap/unwrap, `vault.meta` probe
 

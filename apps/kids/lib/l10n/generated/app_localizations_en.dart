@@ -63,6 +63,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sync => 'Sync';
 
   @override
+  String get syncFailed => 'Sync failed — tap to retry';
+
+  @override
+  String get syncOk => 'Synced';
+
+  @override
   String get leaveFamily => 'Leave family';
 
   @override

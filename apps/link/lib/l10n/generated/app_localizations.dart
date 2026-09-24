@@ -272,6 +272,36 @@ abstract class AppLocalizations {
   /// **'Connect to a Nextcloud or WebDAV server'**
   String get settingsWebDavConnectHint;
 
+  /// No description provided for @settingsWebDavTurnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off WebDAV sync'**
+  String get settingsWebDavTurnOff;
+
+  /// No description provided for @settingsWebDavTurnOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off WebDAV sync?'**
+  String get settingsWebDavTurnOffTitle;
+
+  /// No description provided for @settingsWebDavTurnOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with the server stops. You also lose family linking, shared notes, kids tasks, and multi-device sync. Your private tasks and notes stay on this device. The recovery phrase still unlocks your local vault.'**
+  String get settingsWebDavTurnOffBody;
+
+  /// No description provided for @settingsWebDavTurnOffConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off'**
+  String get settingsWebDavTurnOffConfirm;
+
+  /// No description provided for @settingsWebDavTurnedOff.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV sync turned off.'**
+  String get settingsWebDavTurnedOff;
+
   /// No description provided for @settingsSectionFamily.
   ///
   /// In en, this message translates to:
@@ -377,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsImportBackupSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Restore from .kvault with your 12 words'**
+  /// **'Replaces all data on this phone'**
   String get settingsImportBackupSubtitle;
 
   /// No description provided for @notifServiceFailed.
@@ -443,7 +473,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyServerMismatch.
   ///
   /// In en, this message translates to:
-  /// **'The server in the QR code ({scanned}) does not match your server ({current}). Are you sure you want to continue?'**
+  /// **'The server in the invite ({scanned}) does not match your WebDAV server ({current}). Family sync only works when everyone uses the same server — linking is blocked.'**
   String familyKeyServerMismatch(String scanned, String current);
 
   /// No description provided for @familyKeyConfirmLinkMember.
@@ -1721,8 +1751,38 @@ abstract class AppLocalizations {
   /// No description provided for @backupImportBody.
   ///
   /// In en, this message translates to:
-  /// **'Enter the 12 words of the vault inside the .kvault file. This replaces your current tasks and notes.'**
+  /// **'Enter the 12 words for this .kvault file.'**
   String get backupImportBody;
+
+  /// No description provided for @backupImportOtherVaultBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup uses a different vault. Enter its 12 words.'**
+  String get backupImportOtherVaultBody;
+
+  /// No description provided for @backupImportOverwriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all data?'**
+  String get backupImportOverwriteTitle;
+
+  /// No description provided for @backupImportOverwriteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This deletes everything on this phone and puts the backup in its place. Newer data on this device is lost.'**
+  String get backupImportOverwriteBody;
+
+  /// No description provided for @backupImportOverwriteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get backupImportOverwriteConfirm;
+
+  /// No description provided for @backupImportWrongPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong recovery phrase for this backup.'**
+  String get backupImportWrongPhrase;
 
   /// No description provided for @backupCouldNotReadFile.
   ///
@@ -1796,6 +1856,30 @@ abstract class AppLocalizations {
   /// **'Connection succeeded'**
   String get webdavConnectionOk;
 
+  /// No description provided for @webdavErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong username or password.'**
+  String get webdavErrorAuth;
+
+  /// No description provided for @webdavErrorNoWebDav.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not appear to support WebDAV. Check the URL (for Nextcloud often …/remote.php/dav).'**
+  String get webdavErrorNoWebDav;
+
+  /// No description provided for @webdavErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out. Check the server URL and your network.'**
+  String get webdavErrorTimeout;
+
+  /// No description provided for @webdavErrorUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check the URL and your network.'**
+  String get webdavErrorUnreachable;
+
   /// No description provided for @webdavTestFirst.
   ///
   /// In en, this message translates to:
@@ -1865,7 +1949,7 @@ abstract class AppLocalizations {
   /// No description provided for @webdavMigrationImportOption.
   ///
   /// In en, this message translates to:
-  /// **'2. Import backup — select a .kvault file. This vault\'s recovery phrase unlocks the file.'**
+  /// **'2. Import backup — replaces all data on this phone with a .kvault file.'**
   String get webdavMigrationImportOption;
 
   /// No description provided for @webdavMigrationClean.
@@ -1933,6 +2017,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Syncing'**
   String get tasksSyncing;
+
+  /// No description provided for @syncStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync status'**
+  String get syncStatusTitle;
+
+  /// No description provided for @syncStatusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date'**
+  String get syncStatusIdle;
+
+  /// No description provided for @syncStatusSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncStatusSyncing;
+
+  /// No description provided for @syncStatusError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get syncStatusError;
+
+  /// No description provided for @syncStatusRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get syncStatusRetry;
+
+  /// No description provided for @syncStatusNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get syncStatusNeverSynced;
+
+  /// No description provided for @syncStatusLastSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Last success: {when}'**
+  String syncStatusLastSuccess(String when);
+
+  /// No description provided for @syncErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync timed out. Check your connection and try again.'**
+  String get syncErrorTimeout;
+
+  /// No description provided for @syncErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV login failed. Check username and password.'**
+  String get syncErrorAuth;
+
+  /// No description provided for @syncErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check your connection.'**
+  String get syncErrorNetwork;
+
+  /// No description provided for @syncErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Try again or check WebDAV settings.'**
+  String get syncErrorGeneric;
+
+  /// No description provided for @settingsSyncHealthIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get settingsSyncHealthIdle;
+
+  /// No description provided for @settingsSyncHealthSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get settingsSyncHealthSyncing;
+
+  /// No description provided for @settingsSyncHealthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync error — tap for details'**
+  String get settingsSyncHealthError;
+
+  /// No description provided for @settingsSyncHealthNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get settingsSyncHealthNever;
+
+  /// No description provided for @settingsStartFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Start family'**
+  String get settingsStartFamily;
+
+  /// No description provided for @settingsStartFamilyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Guided setup: WebDAV, members, and kids'**
+  String get settingsStartFamilyHint;
+
+  /// No description provided for @familySetupPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your family?'**
+  String get familySetupPromptTitle;
+
+  /// No description provided for @familySetupPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'WebDAV sync is on, but you have not linked a family yet. Shared notes, kids tasks, and multi-device family sync need a family key.'**
+  String get familySetupPromptBody;
+
+  /// No description provided for @familySetupPromptIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get familySetupPromptIgnore;
+
+  /// No description provided for @familySetupPromptRemind.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind in {days} days'**
+  String familySetupPromptRemind(int days);
+
+  /// No description provided for @familySetupPromptStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start guide'**
+  String get familySetupPromptStart;
+
+  /// No description provided for @webdavJoinFamilyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join family?'**
+  String get webdavJoinFamilyTitle;
+
+  /// No description provided for @webdavJoinFamilyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone is already using Kinetic on this folder.'**
+  String get webdavJoinFamilyBody;
+
+  /// No description provided for @webdavJoinFamilyMembersOne.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is already here.'**
+  String webdavJoinFamilyMembersOne(String name);
+
+  /// No description provided for @webdavJoinFamilyMembersMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Already here:'**
+  String webdavJoinFamilyMembersMany(int count);
+
+  /// No description provided for @webdavJoinFamilySharedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Family data found.'**
+  String get webdavJoinFamilySharedOnly;
+
+  /// No description provided for @webdavJoinFamilyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link now'**
+  String get webdavJoinFamilyLink;
+
+  /// No description provided for @webdavJoinFamilyLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get webdavJoinFamilyLater;
+
+  /// No description provided for @webdavFamilyRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Family key restored from this server.'**
+  String get webdavFamilyRestored;
+
+  /// No description provided for @wizardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start family'**
+  String get wizardTitle;
+
+  /// No description provided for @wizardStepWebDav.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect WebDAV'**
+  String get wizardStepWebDav;
+
+  /// No description provided for @wizardStepFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Create or join family'**
+  String get wizardStepFamily;
+
+  /// No description provided for @wizardStepInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a family member'**
+  String get wizardStepInvite;
+
+  /// No description provided for @wizardStepKids.
+  ///
+  /// In en, this message translates to:
+  /// **'Enroll a kid'**
+  String get wizardStepKids;
+
+  /// No description provided for @wizardStepDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re set'**
+  String get wizardStepDone;
+
+  /// No description provided for @wizardSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get wizardSkip;
+
+  /// No description provided for @wizardNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get wizardNext;
+
+  /// No description provided for @wizardDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get wizardDone;
+
+  /// No description provided for @wizardInviteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your family key with QR or hold phones close (tap to link).'**
+  String get wizardInviteHint;
+
+  /// No description provided for @wizardKidsPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The child still needs the WebDAV password — it is not in the QR. Share it separately.'**
+  String get wizardKidsPasswordHint;
+
+  /// No description provided for @wizardFirstSuccessHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a shared note or assign a kid task to see sync in action.'**
+  String get wizardFirstSuccessHint;
+
+  /// No description provided for @wizardOpenTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to tasks'**
+  String get wizardOpenTasks;
+
+  /// No description provided for @bleShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to share'**
+  String get bleShareTitle;
+
+  /// No description provided for @bleJoinTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to join'**
+  String get bleJoinTitle;
+
+  /// No description provided for @bleSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for a nearby Kinetic phone…'**
+  String get bleSearching;
+
+  /// No description provided for @bleAdvertising.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready — hold the other phone close'**
+  String get bleAdvertising;
+
+  /// No description provided for @bleConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow link?'**
+  String get bleConfirmTitle;
+
+  /// No description provided for @bleConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wants to join your family.'**
+  String bleConfirmBody(String name);
+
+  /// No description provided for @bleConfirmAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get bleConfirmAllow;
+
+  /// No description provided for @bleConfirmDeny.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get bleConfirmDeny;
+
+  /// No description provided for @bleSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked successfully'**
+  String get bleSuccess;
+
+  /// No description provided for @bleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not link over Bluetooth. Try QR instead.'**
+  String get bleFailed;
+
+  /// No description provided for @bleUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth is unavailable. Use QR code instead.'**
+  String get bleUnavailable;
+
+  /// No description provided for @bleTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby phone found. Move closer or use QR.'**
+  String get bleTimeout;
 
   /// No description provided for @tasksForYou.
   ///
@@ -2627,13 +3041,13 @@ abstract class AppLocalizations {
   /// No description provided for @suggestCategorizeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Add {count} tasks to {category}?'**
+  /// **'Set category {category} on {count} tasks?'**
   String suggestCategorizeTitle(int count, String category);
 
   /// No description provided for @suggestCategorizeExplanation.
   ///
   /// In en, this message translates to:
-  /// **'{count} open tasks have no category.'**
+  /// **'These open tasks have no category yet. Accept only sets the label.'**
   String suggestCategorizeExplanation(int count);
 
   /// No description provided for @suggestLoadBalanceTitleHousehold.

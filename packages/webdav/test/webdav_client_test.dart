@@ -19,7 +19,8 @@ void main() {
     client = WebDavClient(
       baseUrl: 'https://dav.example.com',
       username: 'alice',
-      password: 's3cret',
+      // ggignore: mocked HTTP, not a real login
+      password: 'test-password',
       httpClient: mockHttp,
     );
   });
@@ -38,7 +39,7 @@ void main() {
       mockHttp.get(any, headers: captureAnyNamed('headers')),
     ).captured.single as Map<String, String>;
 
-    final expected = base64Encode(utf8.encode('alice:s3cret'));
+    final expected = base64Encode(utf8.encode('alice:test-password'));
     expect(captured['Authorization'], equals('Basic $expected'));
   });
 
@@ -66,6 +67,33 @@ void main() {
       expect(e.statusCode, 404);
       expect(e.isNotFound, isTrue);
     }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Connection probe
+  // ---------------------------------------------------------------------------
+
+  test('probeConnection returns authFailed on 401', () async {
+    when(mockHttp.send(any)).thenAnswer((invocation) async {
+      final request = invocation.positionalArguments[0] as http.BaseRequest;
+      expect(request.method, 'PROPFIND');
+      return http.StreamedResponse(Stream.value([]), 401);
+    });
+
+    expect(
+      await client.probeConnection(),
+      WebDavConnectionStatus.authFailed,
+    );
+  });
+
+  test('probeConnection returns ok on 207', () async {
+    when(mockHttp.send(any)).thenAnswer((invocation) async {
+      final request = invocation.positionalArguments[0] as http.BaseRequest;
+      expect(request.method, 'PROPFIND');
+      return http.StreamedResponse(Stream.value([]), 207);
+    });
+
+    expect(await client.probeConnection(), WebDavConnectionStatus.ok);
   });
 
   // ---------------------------------------------------------------------------
@@ -129,6 +157,110 @@ void main() {
     });
 
     await expectLater(client.mkcol('/kinetic/shared/xp-reset'), completes);
+  });
+
+  // ---------------------------------------------------------------------------
+  // PROPFIND parsing
+  // ---------------------------------------------------------------------------
+
+  group('parsePropfind', () {
+    test('marks empty collection self-entry as collection', () {
+      // Minimal Nextcloud-style Depth:1 response for an empty folder.
+      const xml = '''
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+  <d:response>
+    <d:href>/remote.php/dav/files/sandy/kinetic/sandy/tasks/</d:href>
+    <d:propstat>
+      <d:prop>
+        <d:resourcetype><d:collection/></d:resourcetype>
+        <d:getetag>&quot;abc&quot;</d:getetag>
+      </d:prop>
+      <d:status>HTTP/1.1 200 OK</d:status>
+    </d:propstat>
+  </d:response>
+</d:multistatus>
+''';
+      final entries = WebDavClient.parsePropfind(xml);
+      expect(entries, hasLength(1));
+      expect(entries.single.isCollection, isTrue);
+      expect(entries.single.href, contains('/tasks/'));
+    });
+
+    test('distinguishes collection from .ics child', () {
+      const xml = '''
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+  <d:response>
+    <d:href>/kinetic/sandy/tasks/</d:href>
+    <d:propstat>
+      <d:prop>
+        <d:resourcetype><d:collection/></d:resourcetype>
+      </d:prop>
+      <d:status>HTTP/1.1 200 OK</d:status>
+    </d:propstat>
+  </d:response>
+  <d:response>
+    <d:href>/kinetic/sandy/tasks/uid-1.ics</d:href>
+    <d:propstat>
+      <d:prop>
+        <d:resourcetype/>
+        <d:getetag>&quot;etag1&quot;</d:getetag>
+      </d:prop>
+      <d:status>HTTP/1.1 200 OK</d:status>
+    </d:propstat>
+  </d:response>
+</d:multistatus>
+''';
+      final entries = WebDavClient.parsePropfind(xml);
+      expect(entries, hasLength(2));
+      expect(entries[0].isCollection, isTrue);
+      expect(entries[1].isCollection, isFalse);
+      expect(entries[1].href, endsWith('uid-1.ics'));
+      expect(entries[1].etag, 'etag1');
+    });
+
+    test('trailing slash implies collection when resourcetype omitted', () {
+      // Some minimal WebDAV servers omit <d:collection/> — trailing slash still
+      // marks the self-entry as a collection.
+      const xml = '''
+<?xml version="1.0"?>
+<d:multistatus xmlns:d="DAV:">
+  <d:response>
+    <d:href>/kinetic/sandy/notes/</d:href>
+    <d:propstat>
+      <d:prop>
+        <d:getetag>&quot;x&quot;</d:getetag>
+      </d:prop>
+      <d:status>HTTP/1.1 200 OK</d:status>
+    </d:propstat>
+  </d:response>
+</d:multistatus>
+''';
+      final entries = WebDavClient.parsePropfind(xml);
+      expect(entries, hasLength(1));
+      expect(entries.single.isCollection, isTrue);
+      expect(entries.single.href.endsWith('.ics'), isFalse);
+    });
+
+    test('unprefixed DAV elements still parse', () {
+      const xml = '''
+<?xml version="1.0"?>
+<multistatus xmlns="DAV:">
+  <response>
+    <href>/kinetic/alex/</href>
+    <propstat>
+      <prop><resourcetype><collection/></resourcetype></prop>
+      <status>HTTP/1.1 200 OK</status>
+    </propstat>
+  </response>
+</multistatus>
+''';
+      final entries = WebDavClient.parsePropfind(xml);
+      expect(entries, hasLength(1));
+      expect(entries.single.isCollection, isTrue);
+      expect(entries.single.href, endsWith('/alex/'));
+    });
   });
 
   // ---------------------------------------------------------------------------

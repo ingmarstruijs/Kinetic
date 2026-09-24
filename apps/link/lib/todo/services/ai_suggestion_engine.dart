@@ -18,7 +18,8 @@ import 'suggestion_heuristics.dart';
 ///
 /// Call [runIfDue] on app resume and on first init. A run that creates at
 /// least one suggestion is throttled for 24 hours; an empty run is not, so
-/// new tasks can surface hints on the next open.
+/// new tasks can surface hints on the next open. Categorize always runs
+/// (even during throttle) because it tracks the current open list.
 class AiSuggestionEngine {
   final AppDatabase _db;
   final AiSuggestionRepository _suggestionRepo;
@@ -58,8 +59,6 @@ class AiSuggestionEngine {
     final selfDue = _isDue(settings?.lastSuggestionRunAt, now);
     final partnerDue = _isDue(settings?.lastFamilyMemberSuggestionRunAt, now);
 
-    if (!selfDue && !partnerDue) return;
-
     final l10n = lookupAppLocalizations(
       Locale(settings?.localeCode == 'nl' ? 'nl' : 'en'),
     );
@@ -69,6 +68,13 @@ class AiSuggestionEngine {
     final openTitlesNorm = openTasks
         .map((t) => normalizeSuggestionText(t.title))
         .toSet();
+
+    // Categorize always tracks the current open list (not the 24h throttle).
+    if (!selfDue) {
+      await _runCategorizeDetector(openTasks);
+    }
+
+    if (!selfDue && !partnerDue) return;
 
     if (selfDue) {
       final before = await _suggestionRepo.countPendingSelf();
@@ -373,14 +379,14 @@ class AiSuggestionEngine {
 
       await _suggestionRepo.upsertSuggestion(
         AiSuggestion.create(
-          title: 'Add ${ids.length} tasks to ${entry.key.name}',
+          title: 'Categorize ${ids.length} as ${entry.key.name}',
           notes: hasCustom ? reused : null,
           category: entry.key.name,
           reason: SuggestionReason.categorize,
           dedupeKey:
               'categorize:${entry.key.name}:${(ids.toList()..sort()).join(',')}',
           relatedTaskIds: ids,
-          explanation: '${ids.length} open tasks have no category.',
+          explanation: 'Open tasks with no category yet.',
         ),
       );
     }

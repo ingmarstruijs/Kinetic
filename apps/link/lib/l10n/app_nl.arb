@@ -33,6 +33,11 @@
   "settingsWebDavConfigure": "WebDAV configureren",
   "settingsWebDavConnected": "Verbonden",
   "settingsWebDavConnectHint": "Verbind met een Nextcloud- of WebDAV-server",
+  "settingsWebDavTurnOff": "WebDAV-sync uitzetten",
+  "settingsWebDavTurnOffTitle": "WebDAV-sync uitzetten?",
+  "settingsWebDavTurnOffBody": "Synchronisatie met de server stopt. Je verliest ook familiekoppeling, gedeelde notities, kindertaken en sync tussen apparaten. Privé-taken en -notities blijven op dit apparaat. De herstelzin blijft je lokale kluis openen.",
+  "settingsWebDavTurnOffConfirm": "Uitzetten",
+  "settingsWebDavTurnedOff": "WebDAV-sync uitgeschakeld.",
   "settingsSectionFamily": "Familie",
   "settingsFamilyMember": "Gezinslid",
   "settingsFamilyMembers": "Gezinsleden",
@@ -55,7 +60,7 @@
   "settingsExportBackup": "Back-up exporteren",
   "settingsExportBackupSubtitle": "Versleuteld .kvault-bestand. De herstelzin zit er niet in.",
   "settingsImportBackup": "Back-up importeren",
-  "settingsImportBackupSubtitle": "Herstel vanuit .kvault met je 12 woorden",
+  "settingsImportBackupSubtitle": "Vervangt alle data op deze telefoon",
 
   "notifServiceFailed": "Meldingenservice kon niet starten: {error}",
   "@notifServiceFailed": {
@@ -73,7 +78,7 @@
   "familyKeyLinkMember": "Gezinslid",
   "familyKeyServer": "Server",
   "familyKeyFingerprint": "Vingerafdruk",
-  "familyKeyServerMismatch": "De server in de QR-code ({scanned}) komt niet overeen met jouw server ({current}). Weet je zeker dat je doorgaat?",
+  "familyKeyServerMismatch": "De server in de uitnodiging ({scanned}) komt niet overeen met jouw WebDAV-server ({current}). Familiesync werkt alleen als iedereen dezelfde server gebruikt — linken is geblokkeerd.",
   "@familyKeyServerMismatch": {
     "placeholders": {
       "scanned": {"type": "String"},
@@ -507,7 +512,12 @@
   "backupRevealTitle": "Herstelzin",
   "backupRevealMissing": "We kunnen de woorden op dit apparaat niet opnieuw tonen. Gebruik je papieren kopie, of herstel de kluis met de 12 woorden.",
   "backupImportTitle": "Back-up importeren",
-  "backupImportBody": "Vul de 12 woorden in van de kluis die in het .kvault-bestand zit. Dit vervangt je huidige taken en notities.",
+  "backupImportBody": "Vul de 12 woorden in voor dit .kvault-bestand.",
+  "backupImportOtherVaultBody": "Deze back-up hoort bij een andere kluis. Vul die 12 woorden in.",
+  "backupImportOverwriteTitle": "Alle data vervangen?",
+  "backupImportOverwriteBody": "Dit wist alles op deze telefoon en zet de back-up ervoor in de plaats. Nieuwere data op dit apparaat gaat verloren.",
+  "backupImportOverwriteConfirm": "Vervangen",
+  "backupImportWrongPhrase": "Verkeerde herstelzin voor deze back-up.",
   "backupCouldNotReadFile": "Kon het bestand niet lezen.",
   "backupRestored": "Back-up succesvol hersteld.",
   "backupInvalidFile": "Ongeldig back-upbestand: {error}",
@@ -531,6 +541,10 @@
   "webdavTestConnection": "Verbinding testen",
   "webdavTestingConnection": "Verbinding testen…",
   "webdavConnectionOk": "Verbinding geslaagd",
+  "webdavErrorAuth": "Verkeerde gebruikersnaam of wachtwoord.",
+  "webdavErrorNoWebDav": "Deze server lijkt geen WebDAV te ondersteunen. Controleer de URL (bij Nextcloud vaak …/remote.php/dav).",
+  "webdavErrorTimeout": "Verbinding time-out. Controleer de server-URL en je netwerk.",
+  "webdavErrorUnreachable": "Server niet bereikbaar. Controleer de URL en je netwerk.",
   "webdavTestFirst": "Test de verbinding eerst voordat je opslaat.",
   "webdavCreateVaultFirst": "Maak eerst een kluis voordat je WebDAV koppelt.",
   "webdavPhraseMismatchServer": "Op deze server staat al een kluis die niet bij jouw herstelzin past.",
@@ -557,7 +571,7 @@
   },
   "webdavMigrationChoose": "Deze bestanden zijn versleuteld met een kluis. Kies hoe je verder wilt gaan:",
   "webdavMigrationCleanOption": "1. Schone installatie — verwijder de oude bestanden op de server en begin opnieuw.",
-  "webdavMigrationImportOption": "2. Back-up importeren — selecteer een .kvault-bestand. De herstelzin van deze kluis ontsleutelt het bestand.",
+  "webdavMigrationImportOption": "2. Back-up importeren — vervangt alle data op deze telefoon met een .kvault-bestand.",
   "webdavMigrationClean": "Schone installatie",
   "webdavMigrationImport": "Back-up importeren",
   "webdavBackupRestoredSync": "Back-up hersteld. De app synchroniseert nu met de server.",
@@ -590,6 +604,86 @@
   "tasksCompletedTooltip": "Voltooide taken",
   "tasksSyncFailed": "Sync mislukt, tap om opnieuw te proberen.",
   "tasksSyncing": "Synchroniseren",
+  "syncStatusTitle": "Syncstatus",
+  "syncStatusIdle": "Bijgewerkt",
+  "syncStatusSyncing": "Synchroniseren…",
+  "syncStatusError": "Sync mislukt",
+  "syncStatusRetry": "Opnieuw synchroniseren",
+  "syncStatusNeverSynced": "Nog niet gesynchroniseerd",
+  "syncStatusLastSuccess": "Laatst geslaagd: {when}",
+  "@syncStatusLastSuccess": {
+    "placeholders": {
+      "when": {"type": "String"}
+    }
+  },
+  "syncErrorTimeout": "Sync time-out. Controleer je verbinding en probeer opnieuw.",
+  "syncErrorAuth": "WebDAV-login mislukt. Controleer gebruikersnaam en wachtwoord.",
+  "syncErrorNetwork": "Server niet bereikbaar. Controleer je verbinding.",
+  "syncErrorGeneric": "Sync mislukt. Probeer opnieuw of controleer WebDAV-instellingen.",
+  "settingsSyncHealthIdle": "Gesynchroniseerd",
+  "settingsSyncHealthSyncing": "Synchroniseren…",
+  "settingsSyncHealthError": "Syncfout — tik voor details",
+  "settingsSyncHealthNever": "Nog niet gesynchroniseerd",
+  "settingsStartFamily": "Gezin starten",
+  "settingsStartFamilyHint": "Begeleide setup: WebDAV, leden en kids",
+  "familySetupPromptTitle": "Gezin instellen?",
+  "familySetupPromptBody": "WebDAV-sync staat aan, maar je hebt nog geen gezin gekoppeld. Gedeelde notities, kindertaken en familiesync tussen apparaten vragen om een familiesleutel.",
+  "familySetupPromptIgnore": "Negeren",
+  "familySetupPromptRemind": "Herinner over {days} dagen",
+  "@familySetupPromptRemind": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "familySetupPromptStart": "Start guide",
+  "webdavJoinFamilyTitle": "Gezin koppelen?",
+  "webdavJoinFamilyBody": "Er gebruikt al iemand Kinetic op deze map.",
+  "webdavJoinFamilyMembersOne": "{name} staat hier al.",
+  "@webdavJoinFamilyMembersOne": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "webdavJoinFamilyMembersMany": "Al aanwezig:",
+  "@webdavJoinFamilyMembersMany": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "webdavJoinFamilySharedOnly": "Gezinsdata gevonden.",
+  "webdavJoinFamilyLink": "Nu koppelen",
+  "webdavJoinFamilyLater": "Niet nu",
+  "webdavFamilyRestored": "Familiesleutel hersteld vanaf deze server.",
+  "wizardTitle": "Gezin starten",
+  "wizardStepWebDav": "WebDAV verbinden",
+  "wizardStepFamily": "Gezin maken of joinen",
+  "wizardStepInvite": "Gezinslid uitnodigen",
+  "wizardStepKids": "Kind inschrijven",
+  "wizardStepDone": "Klaar",
+  "wizardSkip": "Overslaan",
+  "wizardNext": "Verder",
+  "wizardDone": "Klaar",
+  "wizardInviteHint": "Deel je familiesleutel met QR of houd telefoons dichtbij (tap to link).",
+  "wizardKidsPasswordHint": "Het kind heeft nog het WebDAV-wachtwoord nodig — dat zit niet in de QR. Deel het apart.",
+  "wizardFirstSuccessHint": "Probeer een gedeelde notitie of ken een kid-taak toe om sync te zien.",
+  "wizardOpenTasks": "Naar taken",
+  "bleShareTitle": "Tik om te delen",
+  "bleJoinTitle": "Tik om te joinen",
+  "bleSearching": "Zoeken naar een Kinetic-telefoon in de buurt…",
+  "bleAdvertising": "Klaar — houd de andere telefoon dichtbij",
+  "bleConfirmTitle": "Koppelen toestaan?",
+  "bleConfirmBody": "{name} wil bij je gezin.",
+  "@bleConfirmBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "bleConfirmAllow": "Toestaan",
+  "bleConfirmDeny": "Weigeren",
+  "bleSuccess": "Gekoppeld",
+  "bleFailed": "Koppelen via Bluetooth mislukt. Probeer QR.",
+  "bleUnavailable": "Bluetooth niet beschikbaar. Gebruik de QR-code.",
+  "bleTimeout": "Geen telefoon in de buurt. Kom dichterbij of gebruik QR.",
   "tasksForYou": "Voor jou",
   "tasksForFamilyMember": "Voor {name}",
   "@tasksForFamilyMember": {
@@ -792,14 +886,14 @@
   "suggestReasonStale": "Open taak",
   "suggestReasonCalendar": "Kalender",
   "suggestReasonCategorize": "Categorie",
-  "suggestCategorizeTitle": "{count} taken toevoegen aan {category}?",
+  "suggestCategorizeTitle": "Categorie {category} zetten op {count} taken?",
   "@suggestCategorizeTitle": {
     "placeholders": {
       "count": {"type": "int"},
       "category": {"type": "String"}
     }
   },
-  "suggestCategorizeExplanation": "{count} open taken hebben geen categorie.",
+  "suggestCategorizeExplanation": "Deze open taken hebben nog geen categorie. Accepteren zet alleen het label.",
   "@suggestCategorizeExplanation": {
     "placeholders": {
       "count": {"type": "int"}

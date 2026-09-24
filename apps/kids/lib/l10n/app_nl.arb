@@ -16,6 +16,8 @@
   "link": "Koppelen",
   "myTasks": "Mijn Opdrachten",
   "sync": "Synchroniseren",
+  "syncFailed": "Sync mislukt — tik om opnieuw te proberen",
+  "syncOk": "Gesynchroniseerd",
   "leaveFamily": "Familie verlaten",
   "errorWithDetails": "Fout: {error}",
   "allDone": "Alles klaar!",

@@ -160,21 +160,58 @@ class WebDavClient {
   }
 
   // ---------------------------------------------------------------------------
-  // OPTIONS — check if WebDAV is supported
+  // OPTIONS / connection probe
   // ---------------------------------------------------------------------------
 
   /// Returns true if the server responds with DAV support headers.
   Future<bool> supportsWebDav() async {
+    final result = await probeConnection();
+    return result == WebDavConnectionStatus.ok;
+  }
+
+  /// Probes the server with an authenticated Depth-0 PROPFIND.
+  ///
+  /// Distinguishes bad credentials (401/403) from missing WebDAV support and
+  /// network failures — OPTIONS alone often looks identical for all three.
+  Future<WebDavConnectionStatus> probeConnection() async {
     try {
       final response = await _http.send(
-        http.Request('OPTIONS', Uri.parse(_url('/')))
-          ..headers.addAll(_authHeaders),
+        http.Request('PROPFIND', Uri.parse(_url('/')))
+          ..headers.addAll({
+            ..._authHeaders,
+            'Depth': '0',
+            'Content-Type': 'application/xml',
+          })
+          ..body = '<?xml version="1.0"?><d:propfind xmlns:d="DAV:">'
+              '<d:prop><d:resourcetype/></d:prop></d:propfind>',
       );
       await response.stream.drain<void>();
-      return response.headers.containsKey('dav') ||
-          response.headers['allow']?.contains('PROPFIND') == true;
+      final code = response.statusCode;
+      if (code == 401 || code == 403) {
+        return WebDavConnectionStatus.authFailed;
+      }
+      if (code == 207 || code == 200) {
+        return WebDavConnectionStatus.ok;
+      }
+      // Fall back to OPTIONS when PROPFIND is blocked but auth succeeded.
+      if (code == 404 || code == 405 || code == 501) {
+        final options = await _http.send(
+          http.Request('OPTIONS', Uri.parse(_url('/')))
+            ..headers.addAll(_authHeaders),
+        );
+        await options.stream.drain<void>();
+        if (options.statusCode == 401 || options.statusCode == 403) {
+          return WebDavConnectionStatus.authFailed;
+        }
+        final dav = options.headers.containsKey('dav') ||
+            options.headers['allow']?.contains('PROPFIND') == true;
+        return dav
+            ? WebDavConnectionStatus.ok
+            : WebDavConnectionStatus.noWebDav;
+      }
+      return WebDavConnectionStatus.noWebDav;
     } catch (_) {
-      return false;
+      return WebDavConnectionStatus.unreachable;
     }
   }
 
@@ -184,33 +221,43 @@ class WebDavClient {
   // PROPFIND XML parser — intentionally minimal, no xml package dependency.
   // ---------------------------------------------------------------------------
 
-  static final _hrefRegex = RegExp(r'<[Dd](?:av)?:href>(.*?)</', dotAll: true);
+  // Optional DAV / ns prefix — some servers use default xmlns="DAV:" (no prefix).
+  static final _hrefRegex =
+      RegExp(r'<(?:[A-Za-z0-9_]+:)?href>(.*?)</', dotAll: true);
   static final _etagRegex =
-      RegExp(r'<[Dd](?:av)?:getetag>(.*?)</', dotAll: true);
-  static final _collectionRegex = RegExp(r'<[Dd](?:av)?:collection\s*/?>');
+      RegExp(r'<(?:[A-Za-z0-9_]+:)?getetag>(.*?)</', dotAll: true);
+  static final _collectionRegex =
+      RegExp(r'<(?:[A-Za-z0-9_]+:)?collection\s*/?>');
+  // Match a full PROPFIND <response>…</response> block (any common DAV prefix).
+  static final _responseRegex = RegExp(
+    r'<(?:[A-Za-z0-9_]+:)?response\b[^>]*>[\s\S]*?</(?:[A-Za-z0-9_]+:)?response>',
+  );
 
-  static List<WebDavEntry> _parsePropfind(String xml) {
+  /// Parses a PROPFIND multistatus XML body into entries.
+  ///
+  /// Public for unit tests; production code should call [propfind].
+  static List<WebDavEntry> parsePropfind(String xml) {
     final entries = <WebDavEntry>[];
-    final hrefMatches = _hrefRegex.allMatches(xml).toList();
-    for (final hrefMatch in hrefMatches) {
+    for (final match in _responseRegex.allMatches(xml)) {
+      final block = match.group(0)!;
+      final hrefMatch = _hrefRegex.firstMatch(block);
+      if (hrefMatch == null) continue;
       final href = _unescapeXml(hrefMatch.group(1)!.trim());
-      // Find the surrounding <response> block to pick out etag + resourcetype.
-      final blockStart = xml.lastIndexOf('<', hrefMatch.start);
-      var blockEnd = xml.indexOf('</d:response>', hrefMatch.end);
-      if (blockEnd == -1)
-        blockEnd = xml.indexOf('</D:response>', hrefMatch.end);
-      if (blockEnd == -1) continue;
-      final block = xml.substring(blockStart, blockEnd);
       final etagMatch = _etagRegex.firstMatch(block);
       final etag = etagMatch != null
-          ? etagMatch.group(1)!.trim().replaceAll('"', '')
+          ? _unescapeXml(etagMatch.group(1)!.trim()).replaceAll('"', '')
           : null;
-      final isCollection = _collectionRegex.hasMatch(block);
-      entries
-          .add(WebDavEntry(href: href, etag: etag, isCollection: isCollection));
+      // Trailing slash is a common collection hint when <collection/> is omitted.
+      final isCollection =
+          _collectionRegex.hasMatch(block) || href.split('?').first.endsWith('/');
+      entries.add(
+        WebDavEntry(href: href, etag: etag, isCollection: isCollection),
+      );
     }
     return entries;
   }
+
+  static List<WebDavEntry> _parsePropfind(String xml) => parsePropfind(xml);
 
   static String _unescapeXml(String s) => s
       .replaceAll('&amp;', '&')
@@ -223,6 +270,14 @@ class WebDavClient {
 // ---------------------------------------------------------------------------
 // Value types
 // ---------------------------------------------------------------------------
+
+/// Outcome of [WebDavClient.probeConnection].
+enum WebDavConnectionStatus {
+  ok,
+  authFailed,
+  noWebDav,
+  unreachable,
+}
 
 /// A single entry returned by PROPFIND.
 class WebDavEntry {

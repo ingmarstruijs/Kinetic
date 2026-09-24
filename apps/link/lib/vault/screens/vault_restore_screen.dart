@@ -4,11 +4,13 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../db/app_database.dart';
+import '../../db/backup_file_io.dart';
 import '../../db/full_backup_service.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../main.dart';
 import '../../settings/settings_repository.dart';
 import '../../sync/webdav_config_repository.dart';
+import '../../sync/webdav_connection_errors.dart';
 import '../family_vault_sync.dart';
 import '../vault_repository.dart';
 import '../widgets/mnemonic_phrase_field.dart';
@@ -133,8 +135,8 @@ class _RestoreFileScreenState extends State<_RestoreFileScreen> {
         if (mounted) setState(() => _busy = false);
         return;
       }
-      final bytes = result.files.first.bytes;
-      if (bytes == null) {
+      final bytes = await readPlatformFileBytes(result.files.first);
+      if (bytes == null || bytes.isEmpty) {
         throw FormatException(l10n.vaultCouldNotReadFile);
       }
       await FullBackupService.importVaultFromBytes(
@@ -255,7 +257,9 @@ class _RestoreWebDavScreenState extends State<_RestoreWebDavScreen> {
         password,
       );
       if (connError != null) {
-        throw FormatException(connError);
+        throw FormatException(
+          localizeWebDavConnectionError(l10n, connError),
+        );
       }
       final client = WebDavClient(
         baseUrl: serverUrl,

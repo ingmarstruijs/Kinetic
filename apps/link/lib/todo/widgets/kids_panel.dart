@@ -4,8 +4,8 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../debug/demo_session.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../main.dart';
 import '../../settings/models/enrolled_kid.dart';
+import '../../sync/sync_status.dart';
 import '../../sync/webdav_config_repository.dart';
 import '../services/todo_repository.dart';
 import 'tasks_section_header.dart';
@@ -129,7 +129,7 @@ class KidsPanel extends StatefulWidget {
   final Future<void> Function(ICalTask task)? onDeleteKidTask;
   final Future<void> Function(ICalTask task)? onAcceptKidTask;
   final Future<void> Function(ICalTask task)? onRejectKidTask;
-  final ValueNotifier<SyncStatus>? syncStatus;
+  final ValueNotifier<SyncStatusInfo>? syncStatus;
   final void Function({String? kidId, required bool everyone})? onCreateTask;
 
   /// This device's link member id — used to gate verification buttons.
@@ -657,7 +657,7 @@ class KidsPanelState extends State<KidsPanel> {
                       ),
               ),
               if (data.offline ||
-                  widget.syncStatus?.value == SyncStatus.error)
+                  widget.syncStatus?.value.status == SyncStatus.error)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(

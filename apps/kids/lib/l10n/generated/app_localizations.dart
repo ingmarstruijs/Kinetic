@@ -194,6 +194,18 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get sync;
 
+  /// No description provided for @syncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed — tap to retry'**
+  String get syncFailed;
+
+  /// No description provided for @syncOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncOk;
+
   /// No description provided for @leaveFamily.
   ///
   /// In en, this message translates to:

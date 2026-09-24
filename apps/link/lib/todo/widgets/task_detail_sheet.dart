@@ -336,6 +336,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             dueDate: _dueDate,
             isAllDay: _isAllDay,
             recurrenceRule: _recurrenceRule,
+            clearRecurrenceRule: _recurrenceRule == null,
             isPrivate: false,
             listId: _listId,
             customCategory: _customCategory,
@@ -1154,6 +1155,9 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
             ListTile(
               leading: const Icon(Icons.block_outlined),
               title: Text(AppLocalizations.of(context).taskRecurrenceNone),
+              trailing: _recurrenceRule == null
+                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  : null,
               onTap: () {
                 Navigator.pop(ctx);
                 setState(() => _recurrenceRule = null);

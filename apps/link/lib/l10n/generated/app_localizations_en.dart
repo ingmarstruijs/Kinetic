@@ -97,6 +97,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect to a Nextcloud or WebDAV server';
 
   @override
+  String get settingsWebDavTurnOff => 'Turn off WebDAV sync';
+
+  @override
+  String get settingsWebDavTurnOffTitle => 'Turn off WebDAV sync?';
+
+  @override
+  String get settingsWebDavTurnOffBody =>
+      'Sync with the server stops. You also lose family linking, shared notes, kids tasks, and multi-device sync. Your private tasks and notes stay on this device. The recovery phrase still unlocks your local vault.';
+
+  @override
+  String get settingsWebDavTurnOffConfirm => 'Turn off';
+
+  @override
+  String get settingsWebDavTurnedOff => 'WebDAV sync turned off.';
+
+  @override
   String get settingsSectionFamily => 'Family';
 
   @override
@@ -159,8 +175,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsImportBackup => 'Import backup';
 
   @override
-  String get settingsImportBackupSubtitle =>
-      'Restore from .kvault with your 12 words';
+  String get settingsImportBackupSubtitle => 'Replaces all data on this phone';
 
   @override
   String notifServiceFailed(String error) {
@@ -198,7 +213,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String familyKeyServerMismatch(String scanned, String current) {
-    return 'The server in the QR code ($scanned) does not match your server ($current). Are you sure you want to continue?';
+    return 'The server in the invite ($scanned) does not match your WebDAV server ($current). Family sync only works when everyone uses the same server — linking is blocked.';
   }
 
   @override
@@ -966,8 +981,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupImportTitle => 'Import backup';
 
   @override
-  String get backupImportBody =>
-      'Enter the 12 words of the vault inside the .kvault file. This replaces your current tasks and notes.';
+  String get backupImportBody => 'Enter the 12 words for this .kvault file.';
+
+  @override
+  String get backupImportOtherVaultBody =>
+      'This backup uses a different vault. Enter its 12 words.';
+
+  @override
+  String get backupImportOverwriteTitle => 'Replace all data?';
+
+  @override
+  String get backupImportOverwriteBody =>
+      'This deletes everything on this phone and puts the backup in its place. Newer data on this device is lost.';
+
+  @override
+  String get backupImportOverwriteConfirm => 'Replace';
+
+  @override
+  String get backupImportWrongPhrase =>
+      'Wrong recovery phrase for this backup.';
 
   @override
   String get backupCouldNotReadFile => 'Could not read the file.';
@@ -1008,6 +1040,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webdavConnectionOk => 'Connection succeeded';
+
+  @override
+  String get webdavErrorAuth => 'Wrong username or password.';
+
+  @override
+  String get webdavErrorNoWebDav =>
+      'This server does not appear to support WebDAV. Check the URL (for Nextcloud often …/remote.php/dav).';
+
+  @override
+  String get webdavErrorTimeout =>
+      'Connection timed out. Check the server URL and your network.';
+
+  @override
+  String get webdavErrorUnreachable =>
+      'Could not reach the server. Check the URL and your network.';
 
   @override
   String get webdavTestFirst => 'Test the connection before saving.';
@@ -1066,7 +1113,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webdavMigrationImportOption =>
-      '2. Import backup — select a .kvault file. This vault\'s recovery phrase unlocks the file.';
+      '2. Import backup — replaces all data on this phone with a .kvault file.';
 
   @override
   String get webdavMigrationClean => 'Clean install';
@@ -1109,6 +1156,191 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tasksSyncing => 'Syncing';
+
+  @override
+  String get syncStatusTitle => 'Sync status';
+
+  @override
+  String get syncStatusIdle => 'Up to date';
+
+  @override
+  String get syncStatusSyncing => 'Syncing…';
+
+  @override
+  String get syncStatusError => 'Sync failed';
+
+  @override
+  String get syncStatusRetry => 'Retry sync';
+
+  @override
+  String get syncStatusNeverSynced => 'Not synced yet';
+
+  @override
+  String syncStatusLastSuccess(String when) {
+    return 'Last success: $when';
+  }
+
+  @override
+  String get syncErrorTimeout =>
+      'Sync timed out. Check your connection and try again.';
+
+  @override
+  String get syncErrorAuth =>
+      'WebDAV login failed. Check username and password.';
+
+  @override
+  String get syncErrorNetwork =>
+      'Could not reach the server. Check your connection.';
+
+  @override
+  String get syncErrorGeneric =>
+      'Sync failed. Try again or check WebDAV settings.';
+
+  @override
+  String get settingsSyncHealthIdle => 'Synced';
+
+  @override
+  String get settingsSyncHealthSyncing => 'Syncing…';
+
+  @override
+  String get settingsSyncHealthError => 'Sync error — tap for details';
+
+  @override
+  String get settingsSyncHealthNever => 'Not synced yet';
+
+  @override
+  String get settingsStartFamily => 'Start family';
+
+  @override
+  String get settingsStartFamilyHint =>
+      'Guided setup: WebDAV, members, and kids';
+
+  @override
+  String get familySetupPromptTitle => 'Set up your family?';
+
+  @override
+  String get familySetupPromptBody =>
+      'WebDAV sync is on, but you have not linked a family yet. Shared notes, kids tasks, and multi-device family sync need a family key.';
+
+  @override
+  String get familySetupPromptIgnore => 'Ignore';
+
+  @override
+  String familySetupPromptRemind(int days) {
+    return 'Remind in $days days';
+  }
+
+  @override
+  String get familySetupPromptStart => 'Start guide';
+
+  @override
+  String get webdavJoinFamilyTitle => 'Join family?';
+
+  @override
+  String get webdavJoinFamilyBody =>
+      'Someone is already using Kinetic on this folder.';
+
+  @override
+  String webdavJoinFamilyMembersOne(String name) {
+    return '$name is already here.';
+  }
+
+  @override
+  String webdavJoinFamilyMembersMany(int count) {
+    return 'Already here:';
+  }
+
+  @override
+  String get webdavJoinFamilySharedOnly => 'Family data found.';
+
+  @override
+  String get webdavJoinFamilyLink => 'Link now';
+
+  @override
+  String get webdavJoinFamilyLater => 'Not now';
+
+  @override
+  String get webdavFamilyRestored => 'Family key restored from this server.';
+
+  @override
+  String get wizardTitle => 'Start family';
+
+  @override
+  String get wizardStepWebDav => 'Connect WebDAV';
+
+  @override
+  String get wizardStepFamily => 'Create or join family';
+
+  @override
+  String get wizardStepInvite => 'Invite a family member';
+
+  @override
+  String get wizardStepKids => 'Enroll a kid';
+
+  @override
+  String get wizardStepDone => 'You\'re set';
+
+  @override
+  String get wizardSkip => 'Skip';
+
+  @override
+  String get wizardNext => 'Continue';
+
+  @override
+  String get wizardDone => 'Done';
+
+  @override
+  String get wizardInviteHint =>
+      'Share your family key with QR or hold phones close (tap to link).';
+
+  @override
+  String get wizardKidsPasswordHint =>
+      'The child still needs the WebDAV password — it is not in the QR. Share it separately.';
+
+  @override
+  String get wizardFirstSuccessHint =>
+      'Try a shared note or assign a kid task to see sync in action.';
+
+  @override
+  String get wizardOpenTasks => 'Go to tasks';
+
+  @override
+  String get bleShareTitle => 'Tap to share';
+
+  @override
+  String get bleJoinTitle => 'Tap to join';
+
+  @override
+  String get bleSearching => 'Looking for a nearby Kinetic phone…';
+
+  @override
+  String get bleAdvertising => 'Ready — hold the other phone close';
+
+  @override
+  String get bleConfirmTitle => 'Allow link?';
+
+  @override
+  String bleConfirmBody(String name) {
+    return '$name wants to join your family.';
+  }
+
+  @override
+  String get bleConfirmAllow => 'Allow';
+
+  @override
+  String get bleConfirmDeny => 'Deny';
+
+  @override
+  String get bleSuccess => 'Linked successfully';
+
+  @override
+  String get bleFailed => 'Could not link over Bluetooth. Try QR instead.';
+
+  @override
+  String get bleUnavailable => 'Bluetooth is unavailable. Use QR code instead.';
+
+  @override
+  String get bleTimeout => 'No nearby phone found. Move closer or use QR.';
 
   @override
   String get tasksForYou => 'For you';
@@ -1500,12 +1732,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String suggestCategorizeTitle(int count, String category) {
-    return 'Add $count tasks to $category?';
+    return 'Set category $category on $count tasks?';
   }
 
   @override
   String suggestCategorizeExplanation(int count) {
-    return '$count open tasks have no category.';
+    return 'These open tasks have no category yet. Accept only sets the label.';
   }
 
   @override

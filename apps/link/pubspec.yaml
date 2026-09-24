@@ -69,6 +69,9 @@ dependencies:
   # QR code display and scanning for partner key sharing
   qr_flutter: ^4.1.0
 
+  # BLE tap-to-link (guest scan / connect; host confirm flow)
+  flutter_blue_plus: ^1.35.5
+
   # Device lock before showing a recovery phrase
   local_auth: ^3.0.2
 

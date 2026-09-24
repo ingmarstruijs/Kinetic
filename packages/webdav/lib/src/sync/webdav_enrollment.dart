@@ -15,7 +15,8 @@ class WebDavEnrollment {
   /// Tests whether [serverUrl] is reachable and supports WebDAV with the
   /// given credentials.
   ///
-  /// Returns `null` on success, or a human-readable error message on failure.
+  /// Returns `null` on success, or a stable error code on failure:
+  /// `auth`, `no_webdav`, `timeout`, `unreachable`, or `bad_url:<message>`.
   /// Times out after 10 seconds.
   static Future<String?> testConnection(
     String serverUrl,
@@ -26,7 +27,7 @@ class WebDavEnrollment {
     try {
       httpsUrl = WebDavUrl.requireHttps(serverUrl);
     } on FormatException catch (e) {
-      return e.message;
+      return 'bad_url:${e.message}';
     }
 
     final client = WebDavClient(
@@ -35,18 +36,22 @@ class WebDavEnrollment {
       password: password,
     );
     try {
-      final supported = await client.supportsWebDav().timeout(
+      final status = await client.probeConnection().timeout(
             const Duration(seconds: 10),
             onTimeout: () => throw TimeoutException(
               'WebDAV connection test timed out after 10 seconds',
             ),
           );
-      if (!supported) return 'Server does not appear to support WebDAV.';
-      return null;
+      return switch (status) {
+        WebDavConnectionStatus.ok => null,
+        WebDavConnectionStatus.authFailed => 'auth',
+        WebDavConnectionStatus.noWebDav => 'no_webdav',
+        WebDavConnectionStatus.unreachable => 'unreachable',
+      };
     } on TimeoutException {
-      return 'Connection timed out. Check your server URL and network connection.';
-    } on Exception catch (e) {
-      return 'Could not connect: $e';
+      return 'timeout';
+    } on Exception {
+      return 'unreachable';
     } finally {
       client.dispose();
     }

@@ -72,4 +72,31 @@ void main() {
       await db.close();
     });
   });
+
+  testWidgets('NotesScreen groups by category within private/shared', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final db = createTestDatabase();
+      final repo = NoteRepository(db: db);
+
+      await repo.insert(title: 'Groceries', isShared: false, category: 'Home');
+      await repo.insert(title: 'Invoice', isShared: false, category: 'Work');
+      await repo.insert(title: 'Shared plan', isShared: true, category: 'Work');
+
+      await tester.pumpWidget(_app(repo: repo, hasOtherLinkMembers: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Private'), findsOneWidget);
+      expect(find.text('Shared'), findsOneWidget);
+      expect(find.text('HOME'), findsOneWidget);
+      expect(find.text('WORK'), findsNWidgets(2));
+      expect(find.text('Groceries'), findsOneWidget);
+      expect(find.text('Invoice'), findsOneWidget);
+      expect(find.text('Shared plan'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await db.close();
+    });
+  });
 }

@@ -4,66 +4,69 @@ Kinetic is a **local-first family protocol** (encrypted WebDAV, roster, kids loo
 
 **Keep:** no Kinetic account, no telemetry, BYO WebDAV.
 
+Roadmap below is the single source of priority. Phase 1 is in flight on `feature/near-term-and-link-web`.
+
 ---
 
-## Near term
+## Phase 1 — Setup, sync trust, tap-to-link
 
-Practical product steps on the current two apps (Link + Kids). Ship these before chasing platform leaps.
+Ship first: make family setup usable and pairing feel modern without a Kinetic cloud.
 
-### Setup & trust
-- Guided **Start family** wizard: WebDAV → vault → members → kids
-- Lighter kids enrollment (password-on-child is a heavy drop-off)
-- First success moment: shared task / note / kid assignment
-- Sync status UI — surface errors and conflict/recovery (many failures are silent)
-- Family key rotation after removing a member (roster remove alone is not enough)
+### Sync status
+- Richer sync model: phase + last user-facing error + last success time
+- Tap sync icon → status / error / Retry; Settings shows sync health
+- Kids: visible syncing / error (not silent)
 
-### Kids
+### Start-family wizard
+- Guided flow: WebDAV → create/join family → invite member → enroll kid → first success (shared task or note) — **shipped** (Settings → Family → Start family; section hidden without WebDAV)
+- Same WebDAV base URL required for the whole family; QR/BLE URL mismatch blocked — **shipped**
+- Day-1 family nudge (Ignore / Remind 7d / Start) + post-save peer-folder “Link now” — **shipped**
+- Turn off WebDAV sync (clears family/kids linkage on device; keeps vault) — **shipped**
+- Clearer kids WebDAV-password step beside QR (password stays out of QR)
+
+### Tap-to-link (Nearby / BLE)
+- Hold phones close to share family key or kids enrollment — **same payloads as QR**, over BLE
+- Host advertises, guest scans (RSSI), host confirms, then import as after QR
+- QR remains fallback
+- Not NFC P2P (broken cross-platform)
+
+**Done when:** wizard works end-to-end; sync errors are visible and retryable; two Links can pair via BLE; QR still works.
+
+---
+
+## Phase 2 — Kids depth + trust
+
+- Lighter kids enrollment (password UX, orphan kid-id)
+- Kids on **iOS** + offline / local cache
 - Deeper XP, goals, routines; Link week overview
-- Kids on **iOS**
-- Offline / local cache so kids are less WebDAV-dependent
+- **Family key rotation** after removing a member
+- F-Droid / reproducible builds ship
 
-### Household smarts (on-device)
+---
+
+## Phase 3 — Household smarts + notes
+
 - Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
-- Stronger EN/NL heuristics (detectors still NL-heavy)
-- Templates: shopping, weekly menu, holiday checklists
-
-### Notes
-- Shared templates and checklists
-- Note ↔ task linking
-- Clearer unlock vs sync privacy UX
-
-### Distribution
-- F-Droid / reproducible builds (metadata playbook already exists)
+- Stronger EN/NL heuristics (e.g. stop short keywords like `test` matching Health → bogus “Add N tasks to Health?”)
+- Shared note templates, note ↔ task linking, clearer unlock vs sync privacy UX
+- Ambient presence and load — household awareness **without** becoming chat
 
 ---
 
-## Next level
+## Phase 4 — Platform leaps
 
-Bigger bets that change how people *use* Kinetic — still without a Kinetic cloud.
-
-### Kinetic Link Web (phone bridge)
-Desktop/browser client that pairs to a phone Link session — **WhatsApp Web style**. Phone holds vault keys and WebDAV credentials; the browser is a thin encrypted UI over a local relay (QR + short-lived session), not a second full vault. Closes the “I want a big screen without retyping 12 words” gap while keeping keys on the phone.
-
-### Shared family surfaces beyond phone lists
-A wall / tablet / TV **family board**: who’s online, open kids tasks, shared notes — read-mostly from WebDAV + presence. Same protocol, new form factor (kitchen counter, not another personal inbox).
-
-### Protocol costs and federation
-Make the wire more than “files in a folder”: conflict-aware versioning, cheaper incremental sync, optional multi-server / guest access for babysitters without full family key. Kinetic as a **family sync protocol** others could implement — not only our Flutter clients.
-
-### Kids as a game loop, not a task dump
-Streaks, seasonal challenges, collaborative family quests (everyone completes → shared reward), parent “verify” as a social beat. Differentiator vs “chore checklist with XP sticker.”
-
-### Ambient presence and load, not chat
-No generic messenger. Instead: rich presence, load balance, “who’s drowning this week,” soft handoffs of proposals — household awareness without becoming Signal-with-todos.
-
-### Cross-device continuity without accounts
-Link Web + second phone + tablet all as **sessions on one vault**, not separate Kinetic identities. Session revoke from the primary phone. Closest thing to multi-device SaaS UX while staying local-first.
+- **Kinetic Link Web** (phone bridge, WhatsApp Web style): browser UI; phone holds vault keys; QR + short-lived session
+- Cross-device sessions on one vault + revoke from primary phone
+- Family board (wall / tablet / TV) — read-mostly WebDAV + presence
+- Protocol: incremental sync, guest access, federation
+- Kids as a game loop: streaks, seasonal challenges, collaborative quests
 
 ---
 
-## Do not chase first
+## Do not chase
 
 - Kinetic-owned cloud or accounts
 - Generic chat / calendar clones
-- Org / multi-tenant features before setup and kids are deep
+- Org / multi-tenant features before Phase 1–2 are deep
 - Cloud LLM “AI” that undercuts the privacy story
+- NFC phone-to-phone P2P

@@ -8,10 +8,13 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
+import '../db/backup_file_io.dart';
 import '../db/full_backup_service.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/sync_orchestrator.dart';
+import '../sync/sync_status.dart';
 import '../sync/webdav_config_repository.dart';
+import '../sync/webdav_connection_errors.dart';
 import '../theme/app_header.dart';
 import '../theme/app_themes.dart';
 import '../main.dart';
@@ -21,8 +24,10 @@ import '../vault/widgets/mnemonic_phrase_field.dart';
 import '../debug/demo_scenarios.dart';
 import '../debug/demo_scenarios_screen.dart';
 import '../debug/demo_session.dart';
+import 'family_key_scan_screen.dart';
 import 'kids_settings_screen.dart';
 import 'family_members_settings_screen.dart';
+import 'family_setup_wizard.dart';
 import 'settings_repository.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -30,11 +35,13 @@ class SettingsScreen extends StatefulWidget {
   final WebDavConfigRepository configRepo;
   final SettingsRepository settingsRepo;
   final SyncOrchestrator? syncOrchestrator;
+  final ValueNotifier<SyncStatusInfo>? syncStatus;
   final VoidCallback? onConfigSaved;
 
   final VoidCallback? onRestoreComplete;
   final VoidCallback? onOpenTasksTab;
   final VoidCallback? onOpenNotesTab;
+  final VoidCallback? onSyncRetry;
 
   const SettingsScreen({
     super.key,
@@ -42,10 +49,12 @@ class SettingsScreen extends StatefulWidget {
     required this.configRepo,
     required this.settingsRepo,
     this.syncOrchestrator,
+    this.syncStatus,
     this.onConfigSaved,
     this.onRestoreComplete,
     this.onOpenTasksTab,
     this.onOpenNotesTab,
+    this.onSyncRetry,
   });
 
   @override
@@ -54,6 +63,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   SyncConfig? _config;
+  bool _hasFamilyKey = false;
   bool _hasOtherLinkMembers = false;
   int _enrolledKidsCount = 0;
   bool _kidsParticipation = true;
@@ -73,6 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() {
         _config = config;
+        _hasFamilyKey = config?.familyKeyBytes != null;
         _hasOtherLinkMembers = paired;
         _enrolledKidsCount = kids.length;
         _kidsParticipation = kidsParticipation;
@@ -85,6 +96,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _kidsParticipation = enabled);
     await widget.configRepo.saveKidsParticipation(enabled);
     widget.onConfigSaved?.call();
+  }
+
+  Future<void> _openFamilySetupWizard() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => FamilySetupWizard(
+          db: widget.db,
+          configRepo: widget.configRepo,
+          settingsRepo: widget.settingsRepo,
+          syncOrchestrator: widget.syncOrchestrator,
+          onConfigSaved: widget.onConfigSaved,
+          onRestoreComplete: widget.onRestoreComplete,
+          onOpenTasksTab: widget.onOpenTasksTab,
+        ),
+      ),
+    );
+    _loadConfig();
   }
 
   int get _displayKidsCount {
@@ -155,6 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             db: widget.db,
                             configRepo: widget.configRepo,
                             settingsRepo: widget.settingsRepo,
+                            syncOrchestrator: widget.syncOrchestrator,
                             onConfigSaved: widget.onConfigSaved,
                             onRestoreComplete: widget.onRestoreComplete,
                           ),
@@ -163,8 +192,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _loadConfig();
                     },
                   ),
+                  if (isConnected && widget.syncStatus != null)
+                    ValueListenableBuilder<SyncStatusInfo>(
+                      valueListenable: widget.syncStatus!,
+                      builder: (context, info, _) {
+                        final subtitle = switch (info.status) {
+                          SyncStatus.syncing => l10n.settingsSyncHealthSyncing,
+                          SyncStatus.error => l10n.settingsSyncHealthError,
+                          SyncStatus.idle => info.lastSuccessAt == null
+                              ? l10n.settingsSyncHealthNever
+                              : l10n.settingsSyncHealthIdle,
+                        };
+                        return ListTile(
+                          leading: Icon(
+                            info.status == SyncStatus.error
+                                ? Icons.cloud_off_outlined
+                                : Icons.sync,
+                            color: info.status == SyncStatus.error
+                                ? Theme.of(context).colorScheme.error
+                                : iconColor,
+                          ),
+                          title: Text(l10n.syncStatusTitle),
+                          subtitle: Text(subtitle),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () => showSyncStatusSheet(
+                            context,
+                            info: info,
+                            onRetry: widget.onSyncRetry ?? () {},
+                          ),
+                        );
+                      },
+                    ),
                   if (isConnected || DemoSession.instance.active) ...[
-                    _SectionHeader(label: l10n.settingsSectionFamily),
+                    _SectionHeader(
+                      label: l10n.settingsSectionFamily,
+                      trailing: !_hasFamilyKey
+                          ? TextButton(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: _openFamilySetupWizard,
+                              child: Text(l10n.settingsStartFamily),
+                            )
+                          : null,
+                    ),
                     if (_kidsParticipationLoaded && _displayKidsCount > 0)
                       SwitchListTile(
                         secondary: Icon(
@@ -206,7 +282,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: Text(l10n.settingsKids),
                       subtitle: Text(
                         _displayKidsCount > 0
-                            ? l10n.settingsKidsEnrolledCount(_displayKidsCount)
+                            ? l10n.settingsKidsEnrolledCount(
+                                _displayKidsCount,
+                              )
                             : l10n.settingsKidsLinkHint,
                       ),
                       trailing: const Icon(Icons.chevron_right),
@@ -437,6 +515,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Warns that import wipes local data — including anything newer than the backup.
+  Future<bool> _confirmBackupOverwrite() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.backupImportOverwriteTitle),
+        content: Text(l10n.backupImportOverwriteBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.backupImportOverwriteConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _verifyPhrase() async {
     final l10n = AppLocalizations.of(context);
     final phrase = await _askPhrase(
@@ -459,27 +560,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _importFullBackup() async {
     final l10n = AppLocalizations.of(context);
-    final phrase = await _askPhrase(
-      title: l10n.backupImportTitle,
-      body: l10n.backupImportBody,
-    );
-    if (phrase == null || phrase.trim().isEmpty || !mounted) return;
+    if (!await _confirmBackupOverwrite() || !mounted) return;
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.any,
       allowMultiple: false,
       withData: true,
     );
-    if (result == null || result.files.isEmpty) return;
+    if (result == null || result.files.isEmpty || !mounted) return;
 
-    final fileBytes = result.files.first.bytes;
-    if (fileBytes == null) {
+    final fileBytes = await readPlatformFileBytes(result.files.first);
+    if (fileBytes == null || fileBytes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.backupCouldNotReadFile)));
       return;
     }
+
+    final storedKey = await widget.configRepo.loadPersonalKeyBytes();
+    Uint8List? key = storedKey;
+    String? phraseForUnlock;
+
+    // Same-device re-import: use the unlocked vault key (no phrase typing).
+    // Only ask for 12 words when there is no local key, or the file belongs
+    // to a different vault.
+    if (key == null) {
+      phraseForUnlock = await _askPhrase(
+        title: l10n.backupImportTitle,
+        body: l10n.backupImportBody,
+      );
+      if (phraseForUnlock == null ||
+          phraseForUnlock.trim().isEmpty ||
+          !mounted) {
+        return;
+      }
+      try {
+        key = await KineticVault.deriveAesKey(phraseForUnlock);
+      } on FormatException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_backupUserMessage(e, l10n))),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    final importKey = key;
+    if (importKey == null) return;
 
     showDialog<void>(
       context: context,
@@ -495,19 +624,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    try {
-      final key = await KineticVault.deriveAesKey(phrase);
+    Future<void> finishWith(Uint8List decryptKey, {String? phrase}) async {
       await FullBackupService.importVaultFromBytes(
         widget.db,
         fileBytes,
-        key,
+        decryptKey,
         settingsRepo: widget.settingsRepo,
         onThemeRestored: (theme) => themeNotifier.value = theme,
       );
-      await VaultRepository(
-        FlutterSecureKeyValueStore(),
-        widget.configRepo,
-      ).unlockWithPhrase(phrase);
+      if (phrase != null) {
+        await VaultRepository(
+          FlutterSecureKeyValueStore(),
+          widget.configRepo,
+        ).unlockWithPhrase(phrase);
+      }
+    }
+
+    try {
+      await finishWith(importKey, phrase: phraseForUnlock);
       if (mounted) {
         Navigator.of(context).pop();
         await _loadConfig();
@@ -517,24 +651,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     } on FormatException catch (e) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).backupInvalidFile('$e')),
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      // Backup from another vault — ask for that file's phrase once.
+      if (storedKey != null && _isWrongBackupPhrase(e)) {
+        phraseForUnlock = await _askPhrase(
+          title: l10n.backupImportTitle,
+          body: l10n.backupImportOtherVaultBody,
+        );
+        if (phraseForUnlock == null ||
+            phraseForUnlock.trim().isEmpty ||
+            !mounted) {
+          return;
+        }
+        final Uint8List retryKey;
+        try {
+          retryKey = await KineticVault.deriveAesKey(phraseForUnlock);
+        } on FormatException catch (phraseErr) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_backupUserMessage(phraseErr, l10n))),
+          );
+          return;
+        }
+        if (!mounted) return;
+        showDialog<void>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            content: Row(
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 20),
+                Text(AppLocalizations.of(ctx).commonImporting),
+              ],
+            ),
           ),
         );
+        try {
+          await finishWith(retryKey, phrase: phraseForUnlock);
+          if (mounted) {
+            Navigator.of(context).pop();
+            await _loadConfig();
+            widget.onRestoreComplete?.call();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context).backupRestored),
+              ),
+            );
+          }
+        } on FormatException catch (e2) {
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_backupUserMessage(e2, l10n))),
+            );
+          }
+        } catch (e2) {
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.backupImportError('$e2'))),
+            );
+          }
+        }
+        return;
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_backupUserMessage(e, l10n))),
+      );
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).backupImportError('$e')),
-          ),
+          SnackBar(content: Text(l10n.backupImportError('$e'))),
         );
       }
     }
+  }
+
+  static bool _isWrongBackupPhrase(FormatException e) {
+    final m = e.message;
+    return m.contains('Verkeerde herstelzin') ||
+        m.contains('Wrong recovery phrase');
+  }
+
+  static String _backupUserMessage(Object e, AppLocalizations l10n) {
+    if (e is FormatException && _isWrongBackupPhrase(e)) {
+      return l10n.backupImportWrongPhrase;
+    }
+    if (e is FormatException) {
+      return l10n.backupInvalidFile(e.message);
+    }
+    return l10n.backupImportError('$e');
   }
 }
 
@@ -546,6 +757,7 @@ class WebDavSetupScreen extends StatefulWidget {
   final AppDatabase db;
   final WebDavConfigRepository configRepo;
   final SettingsRepository? settingsRepo;
+  final SyncOrchestrator? syncOrchestrator;
   final VoidCallback? onConfigSaved;
   final VoidCallback? onRestoreComplete;
 
@@ -554,6 +766,7 @@ class WebDavSetupScreen extends StatefulWidget {
     required this.db,
     required this.configRepo,
     this.settingsRepo,
+    this.syncOrchestrator,
     this.onConfigSaved,
     this.onRestoreComplete,
   });
@@ -612,9 +825,11 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       _passCtrl.text,
     );
     if (mounted) {
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _testing = false;
-        _testResult = error ?? 'ok';
+        _testResult =
+            error == null ? 'ok' : localizeWebDavConnectionError(l10n, error);
       });
     }
   }
@@ -696,14 +911,36 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
 
         // --- Import backup flow ---
         if (!mounted) return;
+        final overwriteOk = await showDialog<bool>(
+          context: context,
+          builder: (ctx) {
+            final d = AppLocalizations.of(ctx);
+            return AlertDialog(
+              title: Text(d.backupImportOverwriteTitle),
+              content: Text(d.backupImportOverwriteBody),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(d.commonCancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(d.backupImportOverwriteConfirm),
+                ),
+              ],
+            );
+          },
+        );
+        if (overwriteOk != true || !mounted) return;
+
         final result = await FilePicker.platform.pickFiles(
           type: FileType.any,
           allowMultiple: false,
           withData: true,
         );
         if (result == null || result.files.isEmpty) return;
-        final fileBytes = result.files.first.bytes;
-        if (fileBytes == null) {
+        final fileBytes = await readPlatformFileBytes(result.files.first);
+        if (fileBytes == null || fileBytes.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -786,17 +1023,33 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
   ) async {
     try {
       final entries = await client.propfind(path);
-      // PROPFIND depth-1 includes the collection itself — filter it out.
+      // PROPFIND depth-1 includes the collection itself. Some servers omit
+      // <d:collection/>, so !isCollection alone falsely counts the folder as
+      // a file (exactly one "task" + one "note" on a clean empty server).
+      // Only Kinetic .ics blobs are real encrypted data files.
       final basePath = Uri.parse(client.baseUrl).path;
-      return entries.where((e) => !e.isCollection).map((e) {
-        // Hrefs are full server paths; strip the baseUrl path prefix so
-        // client.delete() (which re-prepends baseUrl) resolves correctly.
-        final href = e.href;
-        if (basePath.isNotEmpty && href.startsWith(basePath)) {
-          return href.substring(basePath.length);
-        }
-        return href;
-      }).toList();
+      final collectionNorm = path.endsWith('/')
+          ? path.substring(0, path.length - 1)
+          : path;
+      return entries
+          .where((e) {
+            final hrefPath = e.href.split('?').first;
+            if (!hrefPath.endsWith('.ics')) return false;
+            final stripped = (basePath.isNotEmpty && hrefPath.startsWith(basePath))
+                ? hrefPath.substring(basePath.length)
+                : hrefPath;
+            final norm =
+                stripped.endsWith('/') ? stripped.substring(0, stripped.length - 1) : stripped;
+            return norm != collectionNorm;
+          })
+          .map((e) {
+            final href = e.href.split('?').first;
+            if (basePath.isNotEmpty && href.startsWith(basePath)) {
+              return href.substring(basePath.length);
+            }
+            return href;
+          })
+          .toList();
     } catch (e) {
       debugPrint('[Migration] Error listing $path: $e');
       return [];
@@ -890,10 +1143,14 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
           ? _existing!.linkId
           : const Uuid().v4();
 
-      // Preserve any previously exchanged family key when editing credentials.
-      final existingFamilyKey = isSameAccount
-          ? _existing!.familyKeyBytes
-          : null;
+      // Preserve family key only when editing the same server+user. A new
+      // WebDAV identity must not reuse a leftover family key (that skipped the
+      // "others already on this folder" prompt).
+      if (!isSameAccount) {
+        await widget.configRepo.clearFamilyLinkageForNewAccount();
+      }
+      final existingFamilyKey =
+          isSameAccount ? _existing!.familyKeyBytes : null;
 
       // Always ensure directories exist (needed for both new and updated configs)
       final client = WebDavClient(
@@ -901,6 +1158,8 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         username: username,
         password: password,
       );
+      var familyRestored = false;
+      KineticFolderProbeResult? folderProbe;
       try {
         await WebDavEnrollment.setupDirectories(client, username);
         final meta = await KineticVaultRemote.ensureMeta(
@@ -921,14 +1180,20 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
           setState(() => _saving = false);
           return;
         }
-        final localFamily = await widget.configRepo.loadFamilyKey();
+        final localFamily = existingFamilyKey;
         if (localFamily == null) {
-          await FamilyVaultSync.pullIfPresent(
+          familyRestored = await FamilyVaultSync.pullIfPresent(
             client: client,
             username: username,
             personalKey: personalKey,
             configRepo: widget.configRepo,
           );
+          if (!familyRestored) {
+            folderProbe = await KineticFolderProbe.probe(
+              client: client,
+              username: username,
+            );
+          }
         } else {
           final entropy = await widget.configRepo.loadFamilyEntropy();
           if (entropy != null) {
@@ -945,6 +1210,9 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         client.dispose();
       }
 
+      final familyKeyToSave =
+          existingFamilyKey ?? await widget.configRepo.loadFamilyKey();
+
       await widget.configRepo.save(
         SyncConfig(
           serverUrl: serverUrl,
@@ -952,9 +1220,14 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
           password: password,
           linkId: linkId,
           personalKeyBytes: personalKey,
-          familyKeyBytes: existingFamilyKey,
+          familyKeyBytes: familyKeyToSave,
         ),
       );
+      if (familyKeyToSave == null) {
+        await widget.configRepo.ensureFamilySetupEligibleSince();
+      } else {
+        await widget.configRepo.clearFamilySetupPrompt();
+      }
 
       // Mark all existing non-deleted items as dirty so they'll be synced to the server
       if (_existing == null) {
@@ -975,15 +1248,33 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         }
       }
 
-      if (mounted) {
+      if (!mounted) return;
+
+      if (familyRestored) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).webdavConfigSaved),
-          ),
+          SnackBar(content: Text(l10n.webdavFamilyRestored)),
         );
-        widget.onConfigSaved?.call();
-        Navigator.of(context).pop();
       }
+
+      if (familyKeyToSave == null &&
+          folderProbe != null &&
+          folderProbe.suggestsExistingFamily) {
+        await _offerJoinExistingFamily(
+          probe: folderProbe,
+          serverUrl: serverUrl,
+          username: username,
+          password: password,
+          linkId: linkId,
+          personalKey: personalKey,
+        );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.webdavConfigSaved)),
+      );
+      widget.onConfigSaved?.call();
+      Navigator.of(context).pop();
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -994,6 +1285,65 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  /// Propose a fast family link when other Kinetic data is already on this folder.
+  Future<void> _offerJoinExistingFamily({
+    required KineticFolderProbeResult probe,
+    required String serverUrl,
+    required String username,
+    required String password,
+    required String linkId,
+    required Uint8List personalKey,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final peers = probe.otherUsernames;
+    final linkNow = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.webdavJoinFamilyTitle),
+        content: Text(
+          peers.length == 1
+              ? l10n.webdavJoinFamilyMembersOne(peers.single)
+              : peers.length > 1
+              ? '${l10n.webdavJoinFamilyMembersMany(peers.length)}\n${peers.map((n) => '• $n').join('\n')}'
+              : l10n.webdavJoinFamilySharedOnly,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.webdavJoinFamilyLater),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.webdavJoinFamilyLink),
+          ),
+        ],
+      ),
+    );
+    if (linkNow != true || !mounted) return;
+
+    final config = SyncConfig(
+      serverUrl: serverUrl,
+      username: username,
+      password: password,
+      linkId: linkId,
+      personalKeyBytes: personalKey,
+      familyKeyBytes: null,
+    );
+    final linked = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => FamilyKeyScanScreen(
+          currentConfig: config,
+          configRepo: widget.configRepo,
+        ),
+      ),
+    );
+    if (linked == true) {
+      await widget.configRepo.setHasOtherLinkMembers(true);
+      await FamilyVaultSync.pushIfPossible(widget.configRepo);
+      await widget.configRepo.clearFamilySetupPrompt();
     }
   }
 
@@ -1094,10 +1444,68 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
                   : const Icon(Icons.save_outlined),
               label: Text(_saving ? l10n.commonSaving : l10n.commonSave),
             ),
+            if (_existing != null) ...[
+              const SizedBox(height: 32),
+              TextButton.icon(
+                onPressed: _saving ? null : _turnOffWebDav,
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                icon: const Icon(Icons.cloud_off_outlined),
+                label: Text(l10n.settingsWebDavTurnOff),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _turnOffWebDav() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.settingsWebDavTurnOffTitle),
+        content: Text(l10n.settingsWebDavTurnOffBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.settingsWebDavTurnOffConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _saving = true);
+    try {
+      try {
+        await widget.syncOrchestrator?.pushDisconnect();
+      } catch (_) {}
+
+      await (widget.db.delete(
+        widget.db.personalNotes,
+      )..where((n) => n.isShared.equals(true))).go();
+      await widget.db.delete(widget.db.linkMemberProposals).go();
+      await widget.configRepo.disconnectWebDav();
+
+      if (!mounted) return;
+      widget.onConfigSaved?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.settingsWebDavTurnedOff)),
+      );
+      Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 }
 
@@ -1154,20 +1562,28 @@ class _TestResultBanner extends StatelessWidget {
 
 class _SectionHeader extends StatelessWidget {
   final String label;
+  final Widget? trailing;
 
-  const _SectionHeader({required this.label});
+  const _SectionHeader({required this.label, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-      child: Text(
-        label.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.8,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }

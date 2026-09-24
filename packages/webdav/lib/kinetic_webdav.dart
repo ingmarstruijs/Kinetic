@@ -32,5 +32,8 @@ export 'src/presence_info.dart';
 // Family roster (link members + kids)
 export 'src/family_roster.dart';
 
+// Probe /kinetic/ for other users / existing family markers
+export 'src/kinetic_folder_probe.dart';
+
 // Kids XP goals
 export 'src/kid_goal.dart';

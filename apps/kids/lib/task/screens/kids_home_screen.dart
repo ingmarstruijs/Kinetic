@@ -39,6 +39,7 @@ class KidsHomeScreen extends StatefulWidget {
 class _KidsHomeScreenState extends State<KidsHomeScreen> {
   late KidsTaskRepository _taskRepository;
   bool _syncing = false;
+  String? _syncError;
 
   @override
   void initState() {
@@ -48,11 +49,25 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
 
   Future<void> _sync() async {
     if (_syncing || widget.orchestrator == null) return;
-    setState(() => _syncing = true);
+    setState(() {
+      _syncing = true;
+      _syncError = null;
+    });
     try {
       await widget.orchestrator!.sync();
-    } finally {
-      if (mounted) setState(() => _syncing = false);
+      if (mounted) {
+        setState(() {
+          _syncing = false;
+          _syncError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _syncing = false;
+          _syncError = e.toString();
+        });
+      }
     }
   }
 
@@ -107,9 +122,14 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
               )
             else
               IconButton(
-                icon: const Icon(Icons.sync),
+                icon: Icon(
+                  _syncError != null ? Icons.cloud_off_outlined : Icons.sync,
+                  color: _syncError != null
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                ),
                 onPressed: _sync,
-                tooltip: l10n.sync,
+                tooltip: _syncError != null ? l10n.syncFailed : l10n.sync,
               ),
           ],
           PopupMenuButton<String>(

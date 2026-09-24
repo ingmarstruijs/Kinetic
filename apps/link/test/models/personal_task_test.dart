@@ -210,6 +210,22 @@ void main() {
       expect(cleared.dueDate, isNull);
     });
 
+    test('can set and clear recurrence', () {
+      final task = PersonalTask.create(
+        title: 'Task',
+        listId: 'inbox',
+        recurrenceRule: 'FREQ=WEEKLY',
+      );
+      expect(task.recurrenceRule, 'FREQ=WEEKLY');
+
+      final cleared = task.copyWith(clearRecurrenceRule: true);
+      expect(cleared.recurrenceRule, isNull);
+
+      // null without clear flag must not wipe an existing rule
+      final kept = task.copyWith(title: 'Still recurring');
+      expect(kept.recurrenceRule, 'FREQ=WEEKLY');
+    });
+
     test('can associate with kids tasks', () {
       final task = PersonalTask.create(title: 'Task', listId: 'inbox');
       expect(task.kidsTaskId, isNull);

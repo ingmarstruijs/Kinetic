@@ -32,10 +32,13 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 
 ### Requires WebDAV
 
-Family features are **not** available offline-only. Configure WebDAV in **Settings** first; then pairing, proposals, kids, and shared data use that server.
+Family features are **not** available offline-only. Configure WebDAV in **Settings → Sync** first. The **Family** section (including **Start family**) appears only after WebDAV is connected.
 
-- **WebDAV sync** — bring your own server, no vendor backend
-- **Family coordination** — QR pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
+**Same server for the whole family.** All Link and Kids devices in one family must use the **same WebDAV base URL** (same folder root — e.g. a Nextcloud group folder, not two separate personal homes like `…/dav/files/alice/` vs `…/bob/`). Logins (username/password) may differ per person when the server grants both access to that root; personal data lives under `/kinetic/{username}/`, shared data under `/kinetic/shared/`. Linking with a different server URL is **blocked** (QR / BLE). Manual phrase entry does not carry a URL — configure the matching server first.
+
+- **WebDAV sync** — bring your own server, no vendor backend; connection test distinguishes wrong password vs no WebDAV vs network errors
+- **Turn off sync** — on the WebDAV setup screen; stops sync and clears family/kids linkage on this device, keeps the personal vault and private local data
+- **Family coordination** — QR / BLE / 12-word pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
 - **Kids tasks** — assign to one child or **Everyone**; configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
 - **Shared notes** — share notes with other link members (needs pairing)
 - **Connection-aware send** — family members listed with WebDAV presence status before forwarding
@@ -77,7 +80,7 @@ melos run test        # run all tests
 cd apps/link && flutter run
 ```
 
-No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (family linking, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need a WebDAV connection in **Settings**.
+No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (family linking, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need WebDAV in **Settings → Sync** (same base URL for every family device).
 
 ### Build a release APK
 
@@ -96,25 +99,33 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 ## Family Setup
 
-**Prerequisite:** WebDAV configured and working in Kinetic Link. Without it there is no shared folder, no pairing, and no kids sync — Family settings stay inactive for those flows.
+**Prerequisite:** WebDAV configured and reachable (same base URL for every family member). Without it there is no shared folder, no pairing, and no kids sync — the **Family** settings section is hidden until WebDAV is connected.
+
+One Kinetic family = **one** shared folder tree (`/kinetic/shared/…`) encrypted with **one** family key. Multiple user folders on that server (e.g. `alex`, `bob`) are members of that same family — you do not pick a person to link to; any member’s invite (QR / BLE / 12 words) joins the whole family.
+
+### Start-family guide
+
+After WebDAV is on and you still have no family key:
+
+- **Settings → Family → Start family** (small link next to the section title) opens a guided wizard: WebDAV (if needed) → create/join family → invite → kids → done. The link disappears once a family key exists.
+- **Day-1 nudge:** about a day after WebDAV is configured without a family, Kinetic may prompt with **Ignore** (never again until reconnect), **Remind in 7 days**, or **Start guide**.
+- **Existing data on the folder:** after saving WebDAV, if another Kinetic user folder and/or shared roster/presence is already present, Kinetic offers **Link now** (opens QR / BLE / phrase import immediately) or **Not now**. If `family.key.enc` exists for your username, the family key is restored automatically.
 
 ### Family linking
 
-1. **Settings → Family → Family members** → share QR (12 family words + entropy QR)
-2. The other family member scans **or** types the 12 words and confirms the fingerprint
-3. Proposals sync automatically via WebDAV
-
-
+1. **Settings → Family → Family members** → share QR (12 family words + entropy) or tap-to-link (BLE); QR remains the fallback
+2. The other family member scans, uses BLE, **or** types the 12 words and confirms the fingerprint — **server URL in the invite must match** their configured WebDAV URL or linking is blocked
+3. Proposals and shared data sync via that same WebDAV server
 
 ### Kids enrollment
 
 1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
-2. Child device scans the QR and types the WebDAV password once
+2. Child device scans the QR and types the WebDAV password once (same server as Link)
 3. Kinetic Link forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
 
 Ship Kinetic Link **and** Kinetic Kids at the same minor version when enrollment/QR formats change.
 
-The **Family** screen shows family-member / kids tools only when WebDAV is set up; proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking.
+Proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking.
 
 ## AI Suggestion Engine
 

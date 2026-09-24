@@ -68,6 +68,10 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is needed to scan the partner's QR code for family key sharing.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth is used to share a family key when phones are held close together.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is used to share a family key when phones are held close together.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Kinetic gebruikt Face ID om je herstelzin op dit apparaat te tonen.</string>
 </dict>

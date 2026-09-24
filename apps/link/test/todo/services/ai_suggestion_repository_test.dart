@@ -259,7 +259,7 @@ void main() {
       () async {
         await repo.upsertSuggestion(
           AiSuggestion.create(
-            title: 'Add 3 tasks to Household',
+            title: 'Categorize 3 as Household',
             reason: SuggestionReason.categorize,
             relatedTaskIds: const ['a', 'b', 'c'],
           ),

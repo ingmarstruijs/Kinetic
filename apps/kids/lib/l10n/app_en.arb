@@ -23,6 +23,8 @@
   "link": "Link",
   "myTasks": "My Tasks",
   "sync": "Sync",
+  "syncFailed": "Sync failed — tap to retry",
+  "syncOk": "Synced",
   "leaveFamily": "Leave family",
   "errorWithDetails": "Error: {error}",
   "@errorWithDetails": {

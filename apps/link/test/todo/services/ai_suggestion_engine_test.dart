@@ -506,6 +506,60 @@ void main() {
         expect(next.first.relatedTaskIds, containsAll(['c4', 'c5', 'c6']));
         expect(next.first.relatedTaskIds, isNot(contains('c1')));
       });
+
+      test('still proposes within 24h throttle when new tasks appear', () async {
+        await _insertOpenTask(
+          db,
+          id: 'c1',
+          title: 'Ramen lappen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c2',
+          title: 'Plinten doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c3',
+          title: 'Deurknoppen poetsen',
+          category: 'household',
+        );
+        final engine = _engine();
+        await engine.runIfDue();
+        final id = (await suggestionRepo.watchPendingSelf().first)
+            .firstWhere((s) => s.reason == SuggestionReason.categorize)
+            .id;
+        await suggestionRepo.dismiss(id);
+
+        // Still within 24h — habit/seasonal throttled, categorize must not be.
+        await _insertOpenTask(
+          db,
+          id: 'c4',
+          title: 'Afwas doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c5',
+          title: 'Stofzuigen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'c6',
+          title: 'Was ophangen',
+          category: 'household',
+        );
+        await engine.runIfDue();
+
+        final next = (await suggestionRepo.watchPendingSelf().first).where(
+          (s) => s.reason == SuggestionReason.categorize,
+        );
+        expect(next, hasLength(1));
+        expect(next.first.relatedTaskIds, containsAll(['c4', 'c5', 'c6']));
+      });
     });
 
     group('load balance detector', () {

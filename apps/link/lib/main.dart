@@ -11,10 +11,12 @@ import 'l10n/generated/app_localizations.dart';
 import 'notifications/notification_service.dart';
 import 'notifications/reminder_action.dart';
 import 'family/proposals/link_member_proposal_repository.dart';
+import 'settings/family_setup_prompt.dart';
 import 'settings/settings_repository.dart';
 import 'settings/settings_screen.dart';
 import 'support/link_notification_service.dart';
 import 'sync/sync_orchestrator.dart';
+import 'sync/sync_status.dart';
 import 'sync/webdav_config_repository.dart';
 import 'theme/app_themes.dart';
 import 'todo/screens/notes_screen.dart';
@@ -27,13 +29,13 @@ import 'todo/widgets/snooze_dialog.dart';
 import 'vault/vault_gate.dart';
 import 'debug/demo_session.dart';
 
+export 'sync/sync_status.dart' show SyncStatus, SyncStatusInfo;
+
 // Global theme notifier — allows theme changes from anywhere in the app
 final themeNotifier = ValueNotifier<AppTheme>(AppTheme.light);
 
 /// Global locale notifier — English by default; `en` / `nl` only.
 final localeNotifier = ValueNotifier<Locale>(const Locale('en'));
-
-enum SyncStatus { idle, syncing, error }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -113,7 +115,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   late final AiSuggestionRepository _aiSuggestionRepository;
   AiSuggestionEngine? _aiSuggestionEngine;
   SyncOrchestrator? _syncOrchestrator;
-  final syncStatus = ValueNotifier<SyncStatus>(SyncStatus.idle);
+  final syncStatus = ValueNotifier<SyncStatusInfo>(const SyncStatusInfo());
   final hasOtherLinkMembers = ValueNotifier<bool>(false);
   final enrolledKidsCount = ValueNotifier<int>(0);
   final webDavConfigured = ValueNotifier<bool>(false);
@@ -137,6 +139,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   final notifInitError = ValueNotifier<String?>(null);
   Timer? _syncDebounce;
   StreamSubscription<ReminderActionEvent>? _reminderSub;
+  bool _familySetupPromptBusy = false;
 
   int _selectedIndex = 0;
 
@@ -267,7 +270,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     } else {
       _syncOrchestrator = null;
       webDavConfigured.value = false;
-      syncStatus.value = SyncStatus.idle;
+      syncStatus.value = const SyncStatusInfo();
     }
 
     // Set notifiers after the orchestrator is ready so any rebuild triggered
@@ -286,6 +289,12 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
     if (config != null) _triggerSync(); // fire-and-forget initial sync
 
+    if (config != null && config.familyKeyBytes == null) {
+      await _webDavConfig.ensureFamilySetupEligibleSince();
+    } else if (config?.familyKeyBytes != null) {
+      await _webDavConfig.clearFamilySetupPrompt();
+    }
+
     // Rebuild engine whenever sync config changes (proposal repo may be null initially).
     _aiSuggestionEngine = AiSuggestionEngine(
       db: widget.db,
@@ -295,11 +304,41 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       myLinkId: config?.linkId,
     );
     unawaited(_aiSuggestionEngine!.runIfDue());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_maybeShowFamilySetupPrompt());
+    });
+  }
+
+  Future<void> _maybeShowFamilySetupPrompt() async {
+    if (!mounted || _familySetupPromptBusy || DemoSession.instance.active) {
+      return;
+    }
+    _familySetupPromptBusy = true;
+    try {
+      await maybeShowFamilySetupPrompt(
+        context: context,
+        configRepo: _webDavConfig,
+        db: widget.db,
+        settingsRepo: widget.settingsRepo,
+        syncOrchestrator: _syncOrchestrator,
+        onConfigSaved: _initSync,
+        onOpenTasksTab: () {
+          if (mounted) setState(() => _selectedIndex = 0);
+        },
+      );
+    } finally {
+      _familySetupPromptBusy = false;
+    }
   }
 
   Future<void> _triggerSync() async {
     if (_syncOrchestrator == null) return;
-    syncStatus.value = SyncStatus.syncing;
+    final prev = syncStatus.value;
+    syncStatus.value = prev.copyWith(
+      status: SyncStatus.syncing,
+      clearError: true,
+    );
     try {
       // Set timeout of 30 seconds for sync operations
       await _syncOrchestrator!.sync().timeout(
@@ -307,11 +346,21 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
         onTimeout: () =>
             throw TimeoutException('Sync operation timed out after 30 seconds'),
       );
-      syncStatus.value = SyncStatus.idle;
+      syncStatus.value = SyncStatusInfo(
+        status: SyncStatus.idle,
+        lastSuccessAt: DateTime.now().toUtc(),
+      );
       _syncDoneCount.value++;
     } catch (e) {
       if (kDebugMode) debugPrint('Sync error: $e');
-      syncStatus.value = SyncStatus.error;
+      final l10n = mounted ? AppLocalizations.of(context) : null;
+      syncStatus.value = SyncStatusInfo(
+        status: SyncStatus.error,
+        lastError: l10n != null
+            ? syncErrorMessage(e, l10n)
+            : e.toString(),
+        lastSuccessAt: prev.lastSuccessAt,
+      );
     }
   }
 
@@ -369,6 +418,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
       _triggerSync();
       _checkNotificationPermission();
       unawaited(_aiSuggestionEngine?.runIfDue());
+      unawaited(_maybeShowFamilySetupPrompt());
     }
   }
 
@@ -507,6 +557,8 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         configRepo: _webDavConfig,
                         settingsRepo: widget.settingsRepo,
                         syncOrchestrator: _syncOrchestrator,
+                        syncStatus: hasWebDav ? syncStatus : null,
+                        onSyncRetry: _triggerSync,
                         onConfigSaved: _initSync,
                         onRestoreComplete: _onRestoreComplete,
                         onOpenTasksTab: () =>

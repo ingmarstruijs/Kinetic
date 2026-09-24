@@ -63,6 +63,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sync => 'Synchroniseren';
 
   @override
+  String get syncFailed => 'Sync mislukt — tik om opnieuw te proberen';
+
+  @override
+  String get syncOk => 'Gesynchroniseerd';
+
+  @override
   String get leaveFamily => 'Familie verlaten';
 
   @override

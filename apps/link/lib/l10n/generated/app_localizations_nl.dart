@@ -97,6 +97,22 @@ class AppLocalizationsNl extends AppLocalizations {
       'Verbind met een Nextcloud- of WebDAV-server';
 
   @override
+  String get settingsWebDavTurnOff => 'WebDAV-sync uitzetten';
+
+  @override
+  String get settingsWebDavTurnOffTitle => 'WebDAV-sync uitzetten?';
+
+  @override
+  String get settingsWebDavTurnOffBody =>
+      'Synchronisatie met de server stopt. Je verliest ook familiekoppeling, gedeelde notities, kindertaken en sync tussen apparaten. Privé-taken en -notities blijven op dit apparaat. De herstelzin blijft je lokale kluis openen.';
+
+  @override
+  String get settingsWebDavTurnOffConfirm => 'Uitzetten';
+
+  @override
+  String get settingsWebDavTurnedOff => 'WebDAV-sync uitgeschakeld.';
+
+  @override
   String get settingsSectionFamily => 'Familie';
 
   @override
@@ -160,7 +176,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settingsImportBackupSubtitle =>
-      'Herstel vanuit .kvault met je 12 woorden';
+      'Vervangt alle data op deze telefoon';
 
   @override
   String notifServiceFailed(String error) {
@@ -198,7 +214,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String familyKeyServerMismatch(String scanned, String current) {
-    return 'De server in de QR-code ($scanned) komt niet overeen met jouw server ($current). Weet je zeker dat je doorgaat?';
+    return 'De server in de uitnodiging ($scanned) komt niet overeen met jouw WebDAV-server ($current). Familiesync werkt alleen als iedereen dezelfde server gebruikt — linken is geblokkeerd.';
   }
 
   @override
@@ -966,7 +982,25 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get backupImportBody =>
-      'Vul de 12 woorden in van de kluis die in het .kvault-bestand zit. Dit vervangt je huidige taken en notities.';
+      'Vul de 12 woorden in voor dit .kvault-bestand.';
+
+  @override
+  String get backupImportOtherVaultBody =>
+      'Deze back-up hoort bij een andere kluis. Vul die 12 woorden in.';
+
+  @override
+  String get backupImportOverwriteTitle => 'Alle data vervangen?';
+
+  @override
+  String get backupImportOverwriteBody =>
+      'Dit wist alles op deze telefoon en zet de back-up ervoor in de plaats. Nieuwere data op dit apparaat gaat verloren.';
+
+  @override
+  String get backupImportOverwriteConfirm => 'Vervangen';
+
+  @override
+  String get backupImportWrongPhrase =>
+      'Verkeerde herstelzin voor deze back-up.';
 
   @override
   String get backupCouldNotReadFile => 'Kon het bestand niet lezen.';
@@ -1007,6 +1041,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get webdavConnectionOk => 'Verbinding geslaagd';
+
+  @override
+  String get webdavErrorAuth => 'Verkeerde gebruikersnaam of wachtwoord.';
+
+  @override
+  String get webdavErrorNoWebDav =>
+      'Deze server lijkt geen WebDAV te ondersteunen. Controleer de URL (bij Nextcloud vaak …/remote.php/dav).';
+
+  @override
+  String get webdavErrorTimeout =>
+      'Verbinding time-out. Controleer de server-URL en je netwerk.';
+
+  @override
+  String get webdavErrorUnreachable =>
+      'Server niet bereikbaar. Controleer de URL en je netwerk.';
 
   @override
   String get webdavTestFirst => 'Test de verbinding eerst voordat je opslaat.';
@@ -1066,7 +1115,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get webdavMigrationImportOption =>
-      '2. Back-up importeren — selecteer een .kvault-bestand. De herstelzin van deze kluis ontsleutelt het bestand.';
+      '2. Back-up importeren — vervangt alle data op deze telefoon met een .kvault-bestand.';
 
   @override
   String get webdavMigrationClean => 'Schone installatie';
@@ -1109,6 +1158,194 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tasksSyncing => 'Synchroniseren';
+
+  @override
+  String get syncStatusTitle => 'Syncstatus';
+
+  @override
+  String get syncStatusIdle => 'Bijgewerkt';
+
+  @override
+  String get syncStatusSyncing => 'Synchroniseren…';
+
+  @override
+  String get syncStatusError => 'Sync mislukt';
+
+  @override
+  String get syncStatusRetry => 'Opnieuw synchroniseren';
+
+  @override
+  String get syncStatusNeverSynced => 'Nog niet gesynchroniseerd';
+
+  @override
+  String syncStatusLastSuccess(String when) {
+    return 'Laatst geslaagd: $when';
+  }
+
+  @override
+  String get syncErrorTimeout =>
+      'Sync time-out. Controleer je verbinding en probeer opnieuw.';
+
+  @override
+  String get syncErrorAuth =>
+      'WebDAV-login mislukt. Controleer gebruikersnaam en wachtwoord.';
+
+  @override
+  String get syncErrorNetwork =>
+      'Server niet bereikbaar. Controleer je verbinding.';
+
+  @override
+  String get syncErrorGeneric =>
+      'Sync mislukt. Probeer opnieuw of controleer WebDAV-instellingen.';
+
+  @override
+  String get settingsSyncHealthIdle => 'Gesynchroniseerd';
+
+  @override
+  String get settingsSyncHealthSyncing => 'Synchroniseren…';
+
+  @override
+  String get settingsSyncHealthError => 'Syncfout — tik voor details';
+
+  @override
+  String get settingsSyncHealthNever => 'Nog niet gesynchroniseerd';
+
+  @override
+  String get settingsStartFamily => 'Gezin starten';
+
+  @override
+  String get settingsStartFamilyHint =>
+      'Begeleide setup: WebDAV, leden en kids';
+
+  @override
+  String get familySetupPromptTitle => 'Gezin instellen?';
+
+  @override
+  String get familySetupPromptBody =>
+      'WebDAV-sync staat aan, maar je hebt nog geen gezin gekoppeld. Gedeelde notities, kindertaken en familiesync tussen apparaten vragen om een familiesleutel.';
+
+  @override
+  String get familySetupPromptIgnore => 'Negeren';
+
+  @override
+  String familySetupPromptRemind(int days) {
+    return 'Herinner over $days dagen';
+  }
+
+  @override
+  String get familySetupPromptStart => 'Start guide';
+
+  @override
+  String get webdavJoinFamilyTitle => 'Gezin koppelen?';
+
+  @override
+  String get webdavJoinFamilyBody =>
+      'Er gebruikt al iemand Kinetic op deze map.';
+
+  @override
+  String webdavJoinFamilyMembersOne(String name) {
+    return '$name staat hier al.';
+  }
+
+  @override
+  String webdavJoinFamilyMembersMany(int count) {
+    return 'Al aanwezig:';
+  }
+
+  @override
+  String get webdavJoinFamilySharedOnly => 'Gezinsdata gevonden.';
+
+  @override
+  String get webdavJoinFamilyLink => 'Nu koppelen';
+
+  @override
+  String get webdavJoinFamilyLater => 'Niet nu';
+
+  @override
+  String get webdavFamilyRestored =>
+      'Familiesleutel hersteld vanaf deze server.';
+
+  @override
+  String get wizardTitle => 'Gezin starten';
+
+  @override
+  String get wizardStepWebDav => 'WebDAV verbinden';
+
+  @override
+  String get wizardStepFamily => 'Gezin maken of joinen';
+
+  @override
+  String get wizardStepInvite => 'Gezinslid uitnodigen';
+
+  @override
+  String get wizardStepKids => 'Kind inschrijven';
+
+  @override
+  String get wizardStepDone => 'Klaar';
+
+  @override
+  String get wizardSkip => 'Overslaan';
+
+  @override
+  String get wizardNext => 'Verder';
+
+  @override
+  String get wizardDone => 'Klaar';
+
+  @override
+  String get wizardInviteHint =>
+      'Deel je familiesleutel met QR of houd telefoons dichtbij (tap to link).';
+
+  @override
+  String get wizardKidsPasswordHint =>
+      'Het kind heeft nog het WebDAV-wachtwoord nodig — dat zit niet in de QR. Deel het apart.';
+
+  @override
+  String get wizardFirstSuccessHint =>
+      'Probeer een gedeelde notitie of ken een kid-taak toe om sync te zien.';
+
+  @override
+  String get wizardOpenTasks => 'Naar taken';
+
+  @override
+  String get bleShareTitle => 'Tik om te delen';
+
+  @override
+  String get bleJoinTitle => 'Tik om te joinen';
+
+  @override
+  String get bleSearching => 'Zoeken naar een Kinetic-telefoon in de buurt…';
+
+  @override
+  String get bleAdvertising => 'Klaar — houd de andere telefoon dichtbij';
+
+  @override
+  String get bleConfirmTitle => 'Koppelen toestaan?';
+
+  @override
+  String bleConfirmBody(String name) {
+    return '$name wil bij je gezin.';
+  }
+
+  @override
+  String get bleConfirmAllow => 'Toestaan';
+
+  @override
+  String get bleConfirmDeny => 'Weigeren';
+
+  @override
+  String get bleSuccess => 'Gekoppeld';
+
+  @override
+  String get bleFailed => 'Koppelen via Bluetooth mislukt. Probeer QR.';
+
+  @override
+  String get bleUnavailable =>
+      'Bluetooth niet beschikbaar. Gebruik de QR-code.';
+
+  @override
+  String get bleTimeout =>
+      'Geen telefoon in de buurt. Kom dichterbij of gebruik QR.';
 
   @override
   String get tasksForYou => 'Voor jou';
@@ -1502,12 +1739,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String suggestCategorizeTitle(int count, String category) {
-    return '$count taken toevoegen aan $category?';
+    return 'Categorie $category zetten op $count taken?';
   }
 
   @override
   String suggestCategorizeExplanation(int count) {
-    return '$count open taken hebben geen categorie.';
+    return 'Deze open taken hebben nog geen categorie. Accepteren zet alleen het label.';
   }
 
   @override

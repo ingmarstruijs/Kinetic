@@ -19,6 +19,13 @@ const _kEnrolledKids = 'kinetic_enrolled_kids';
 const _kHasOtherLinkMembers = 'kinetic_has_other_link_members';
 const _kKidsParticipation = 'kinetic_kids_participation';
 const _kCachedRoster = 'kinetic_family_roster';
+const _kFamilySetupEligibleAt = 'kinetic_family_setup_eligible_at';
+const _kFamilySetupPromptSkipped = 'kinetic_family_setup_prompt_skipped';
+const _kFamilySetupPromptSnoozedUntil =
+    'kinetic_family_setup_prompt_snoozed_until';
+
+/// How long after WebDAV-without-family before the Start-family nudge appears.
+const kFamilySetupPromptDelay = Duration(days: 1);
 
 /// Persists and loads [SyncConfig] from [SecureKeyValueStore].
 ///
@@ -115,6 +122,7 @@ class WebDavConfigRepository {
     if (entropy != null) {
       await _store.write(key: _kFamilyEntropy, value: base64.encode(entropy));
     }
+    await clearFamilySetupPrompt();
   }
 
   Future<Uint8List?> loadFamilyEntropy() async {
@@ -177,6 +185,14 @@ class WebDavConfigRepository {
     await _store.delete(key: _kFamilyEntropy);
     await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kCachedRoster);
+  }
+
+  /// Drops family/kids linkage when switching to a different WebDAV identity
+  /// (new server URL and/or username) so a prior family key is not reused.
+  Future<void> clearFamilyLinkageForNewAccount() async {
+    await clearFamilyKey();
+    await _store.delete(key: _kEnrolledKids);
+    await clearFamilySetupPrompt();
   }
 
   /// Marks whether another Link member has been linked (offline hint).
@@ -298,10 +314,72 @@ class WebDavConfigRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Start-family nudge (WebDAV on, no family key yet)
+  // ---------------------------------------------------------------------------
+
+  /// Records when WebDAV became active without a family, if not already set.
+  Future<void> ensureFamilySetupEligibleSince([DateTime? now]) async {
+    final existing = await _store.read(key: _kFamilySetupEligibleAt);
+    if (existing != null) return;
+    final at = (now ?? DateTime.now().toUtc()).toIso8601String();
+    await _store.write(key: _kFamilySetupEligibleAt, value: at);
+  }
+
+  /// Whether the Start-family prompt should be shown now.
+  Future<bool> shouldShowFamilySetupPrompt({
+    DateTime? now,
+    Duration delay = kFamilySetupPromptDelay,
+  }) async {
+    final config = await load();
+    if (config == null || config.familyKeyBytes != null) return false;
+    if (await _store.read(key: _kFamilySetupPromptSkipped) == '1') {
+      return false;
+    }
+    final clock = now ?? DateTime.now().toUtc();
+    final snoozedRaw = await _store.read(key: _kFamilySetupPromptSnoozedUntil);
+    if (snoozedRaw != null) {
+      final until = DateTime.tryParse(snoozedRaw);
+      if (until != null && clock.isBefore(until.toUtc())) return false;
+    }
+    await ensureFamilySetupEligibleSince(clock);
+    final eligibleRaw = await _store.read(key: _kFamilySetupEligibleAt);
+    final eligibleAt = DateTime.tryParse(eligibleRaw ?? '');
+    if (eligibleAt == null) return false;
+    return !clock.isBefore(eligibleAt.toUtc().add(delay));
+  }
+
+  /// Permanently dismiss the nudge until WebDAV is reconnected.
+  Future<void> skipFamilySetupPrompt() async {
+    await _store.write(key: _kFamilySetupPromptSkipped, value: '1');
+    await _store.delete(key: _kFamilySetupPromptSnoozedUntil);
+  }
+
+  /// Remind again after [days] (default 7).
+  Future<void> remindFamilySetupPromptInDays(
+    int days, {
+    DateTime? now,
+  }) async {
+    final until = (now ?? DateTime.now().toUtc()).add(Duration(days: days));
+    await _store.write(
+      key: _kFamilySetupPromptSnoozedUntil,
+      value: until.toIso8601String(),
+    );
+  }
+
+  Future<void> clearFamilySetupPrompt() async {
+    await _store.delete(key: _kFamilySetupEligibleAt);
+    await _store.delete(key: _kFamilySetupPromptSkipped);
+    await _store.delete(key: _kFamilySetupPromptSnoozedUntil);
+  }
+
+  // ---------------------------------------------------------------------------
   // Delete
   // ---------------------------------------------------------------------------
 
   /// Clears all WebDAV configuration from secure storage.
+  ///
+  /// Also removes the personal vault key — prefer [disconnectWebDav] when the
+  /// user only wants to stop syncing and keep their local vault.
   Future<void> clear() async {
     await _store.delete(key: _kServerUrl);
     await _store.delete(key: _kUsername);
@@ -314,5 +392,23 @@ class WebDavConfigRepository {
     await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kKidsParticipation);
     await _store.delete(key: _kCachedRoster);
+    await _store.delete(key: _kEnrolledKids);
+    await clearFamilySetupPrompt();
+  }
+
+  /// Stops WebDAV sync and clears family/kids linkage, but keeps the personal
+  /// vault key and recovery entropy so local encrypted data stays usable.
+  Future<void> disconnectWebDav() async {
+    await _store.delete(key: _kServerUrl);
+    await _store.delete(key: _kUsername);
+    await _store.delete(key: _kPassword);
+    await _store.delete(key: _kLinkId);
+    await _store.delete(key: _kFamilyKey);
+    await _store.delete(key: _kFamilyEntropy);
+    await _store.delete(key: _kHasOtherLinkMembers);
+    await _store.delete(key: _kKidsParticipation);
+    await _store.delete(key: _kCachedRoster);
+    await _store.delete(key: _kEnrolledKids);
+    await clearFamilySetupPrompt();
   }
 }

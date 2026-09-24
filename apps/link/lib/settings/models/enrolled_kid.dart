@@ -1,7 +1,14 @@
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 /// A child registered in the family (local cache of the shared roster).
+///
+/// Draft kids (`isActive == false`) exist after QR generation until the kids
+/// device sends presence (or a parent marks them active). Stale drafts are
+/// soft-purged after [draftExpiry].
 class EnrolledKid {
+  /// Drafts with no presence older than this are removed automatically.
+  static const draftExpiry = Duration(days: 7);
+
   final String id;
   final String name;
   final DateTime enrolledAt;
@@ -12,13 +19,24 @@ class EnrolledKid {
   /// Last local/roster update — used for LWW merge with [FamilyKidMember].
   final DateTime updatedAt;
 
+  /// False until first kids-device presence (or explicit parent confirm).
+  final bool isActive;
+
   const EnrolledKid({
     required this.id,
     required this.name,
     required this.enrolledAt,
     this.xpEnabled = true,
     DateTime? updatedAt,
+    this.isActive = true,
   }) : updatedAt = updatedAt ?? enrolledAt;
+
+  /// True when this draft has aged past [draftExpiry] without activation.
+  bool isStaleDraft([DateTime? now]) {
+    if (isActive) return false;
+    final clock = now ?? DateTime.now().toUtc();
+    return clock.difference(enrolledAt.toUtc()) >= draftExpiry;
+  }
 
   EnrolledKid copyWith({
     String? id,
@@ -26,6 +44,7 @@ class EnrolledKid {
     DateTime? enrolledAt,
     bool? xpEnabled,
     DateTime? updatedAt,
+    bool? isActive,
   }) =>
       EnrolledKid(
         id: id ?? this.id,
@@ -33,6 +52,7 @@ class EnrolledKid {
         enrolledAt: enrolledAt ?? this.enrolledAt,
         xpEnabled: xpEnabled ?? this.xpEnabled,
         updatedAt: updatedAt ?? this.updatedAt,
+        isActive: isActive ?? this.isActive,
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,6 +61,7 @@ class EnrolledKid {
         'enrolledAt': enrolledAt.toIso8601String(),
         'xpEnabled': xpEnabled,
         'updatedAt': updatedAt.toIso8601String(),
+        'isActive': isActive,
       };
 
   factory EnrolledKid.fromJson(Map<String, dynamic> json) {
@@ -52,6 +73,8 @@ class EnrolledKid {
       xpEnabled: json['xpEnabled'] as bool? ?? true,
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ??
           enrolled,
+      // Legacy rows without the field were already linked — treat as active.
+      isActive: json['isActive'] as bool? ?? true,
     );
   }
 
@@ -61,6 +84,7 @@ class EnrolledKid {
         enrolledAt: enrolledAt,
         xpEnabled: xpEnabled,
         updatedAt: updatedAt,
+        isActive: isActive,
       );
 
   factory EnrolledKid.fromFamilyKidMember(FamilyKidMember m) => EnrolledKid(
@@ -69,5 +93,6 @@ class EnrolledKid {
         enrolledAt: m.enrolledAt,
         xpEnabled: m.xpEnabled,
         updatedAt: m.updatedAt,
+        isActive: m.isActive,
       );
 }

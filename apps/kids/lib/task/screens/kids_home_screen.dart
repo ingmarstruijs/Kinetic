@@ -93,7 +93,14 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     );
     if (ok == true) {
       await _taskRepository.requestComplete(task.id);
-      await widget.orchestrator?.sync();
+      try {
+        await widget.orchestrator?.sync();
+      } catch (_) {
+        // Completion stays queued locally until the next successful sync.
+        if (mounted) {
+          setState(() => _syncError = l10n.syncFailed);
+        }
+      }
     }
   }
 

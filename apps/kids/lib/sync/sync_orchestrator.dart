@@ -4,6 +4,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import '../db/app_database.dart';
 import '../task/models/kids_task.dart';
 import '../task/services/kids_task_repository.dart';
+import 'webdav_config_repository.dart';
 
 /// KidsSyncOrchestrator — WebDAV sync for assigned tasks
 ///
@@ -19,6 +20,9 @@ class KidsSyncOrchestrator {
   final KidsTaskRepository _repo;
   final SyncConfig _config;
 
+  /// Optional store for last-sync timestamp (kids offline UX).
+  final WebDavConfigRepository? configRepo;
+
   /// The kid's own ID as assigned by the link app during enrollment.
   /// If empty, all shared tasks are accepted (backwards-compatible).
   final String _myKidId;
@@ -32,12 +36,14 @@ class KidsSyncOrchestrator {
   /// stays verifiable by any participating link member, which is why there is no
   /// verifier picker in the kids UI.
   final Map<String, String> _verifierByTaskId = {};
+  final Map<String, String?> _rruleByTaskId = {};
 
   KidsSyncOrchestrator({
     required AppDatabase db,
     required KidsTaskRepository repo,
     required SyncConfig config,
     String myKidId = '',
+    this.configRepo,
     this.onDisconnected,
     this.onXpResetReceived,
     this.onGoalReceived,
@@ -95,6 +101,7 @@ class KidsSyncOrchestrator {
     await _pullXpReset(service);
     // Pull goal for this kid (hero UI)
     await _pullGoal(service);
+    await configRepo?.saveLastSyncAt(DateTime.now().toUtc());
   }
 
   // ---------------------------------------------------------------------------
@@ -177,6 +184,9 @@ class KidsSyncOrchestrator {
       );
       if (verifier != null && verifier.isNotEmpty) {
         _verifierByTaskId[ical.uid] = verifier;
+      }
+      if (ical.rrule != null && ical.rrule!.isNotEmpty) {
+        _rruleByTaskId[ical.uid] = ical.rrule;
       }
 
       // If the task targets a specific kid, skip it unless it's meant for this device.
@@ -305,7 +315,7 @@ class KidsSyncOrchestrator {
       updatedAt: row.updatedAt,
       dueAt: row.dueDate,
       remindAt: null,
-      rrule: null,
+      rrule: _rruleByTaskId[row.id],
     );
   }
 

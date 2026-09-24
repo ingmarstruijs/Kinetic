@@ -1,7 +1,7 @@
 {
   "@@locale": "nl",
   "leaveFamilyTitle": "Familie verlaten?",
-  "leaveFamilyMessage": "De koppeling met de familie wordt verwijderd. Je lokale opdrachten blijven bewaard.",
+  "leaveFamilyMessage": "De koppeling met de familie wordt verwijderd. Opdrachten en XP op dit apparaat worden gewist.",
   "cancel": "Annuleren",
   "leave": "Verlaten",
   "linkFamilyTitle": "Familie koppelen",
@@ -69,5 +69,16 @@
   "confirmCompleteBody": "Weet je zeker dat je klaar bent? We sturen nu een bevestigingsvraag naar Link.",
   "confirmCompleteAction": "Ja, ik ben klaar",
   "awaitingLinkConfirm": "Wacht tot Link bevestigt",
-  "cleanUpCompleted": "Opschonen"
+  "cleanUpCompleted": "Opschonen",
+  "checkingConnection": "Verbinding controleren…",
+  "connectionErrorAuth": "Verkeerd wachtwoord of gebruikersnaam. Controleer het WebDAV-wachtwoord uit Kinetic Link.",
+  "connectionErrorNoWebDav": "Deze server lijkt geen WebDAV te ondersteunen.",
+  "connectionErrorTimeout": "Verbinding time-out. Controleer je netwerk en probeer opnieuw.",
+  "connectionErrorUnreachable": "Server niet bereikbaar. Controleer het adres en je netwerk.",
+  "connectionErrorGeneric": "Kon niet verbinden: {error}",
+  "enrollBlockedOffline": "Je hebt internet nodig om met de familie te koppelen.",
+  "lastSynced": "Laatst gesynchroniseerd {when}",
+  "neverSynced": "Nog niet gesynchroniseerd",
+  "queuedCompletions": "{count} wachten op sync",
+  "retrySync": "Opnieuw synchroniseren"
 }

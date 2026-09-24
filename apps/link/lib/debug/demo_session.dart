@@ -28,6 +28,7 @@ class DemoSession extends ChangeNotifier {
   List<ICalTask> kidTasks = const [];
   FamilyRoster? roster;
   List<PresenceInfo> presence = const [];
+  List<LoadMetrics> loadMetrics = const [];
 
   /// Other link members for notes / assign UI (excludes this device).
   List<({String id, String name})> get otherLinkMembers {
@@ -54,6 +55,7 @@ class DemoSession extends ChangeNotifier {
     required List<ICalTask> kidTasks,
     FamilyRoster? roster,
     List<PresenceInfo> presence = const [],
+    List<LoadMetrics> loadMetrics = const [],
   }) {
     active = true;
     this.hasOtherLinkMembers = hasOtherLinkMembers;
@@ -61,6 +63,7 @@ class DemoSession extends ChangeNotifier {
     this.kidTasks = kidTasks;
     this.roster = roster;
     this.presence = presence;
+    this.loadMetrics = loadMetrics;
     notifyListeners();
   }
 
@@ -117,6 +120,7 @@ class DemoSession extends ChangeNotifier {
     kidTasks = const [];
     roster = null;
     presence = const [];
+    loadMetrics = const [];
     notifyListeners();
   }
 }

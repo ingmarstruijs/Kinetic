@@ -119,6 +119,11 @@ class KidsTaskRepository {
     await (_db.delete(_db.kidsTasks)..where((t) => t.id.equals(taskId))).go();
   }
 
+  /// Permanently remove every local task (used when leaving the family).
+  Future<void> clearAllTasks() async {
+    await _db.delete(_db.kidsTasks).go();
+  }
+
   /// Delete all completed (accepted) tasks locally — used after XP/goal reset.
   Future<void> hardDeleteCompleted() async {
     await (_db.delete(_db.kidsTasks)

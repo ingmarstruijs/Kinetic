@@ -52,43 +52,43 @@ const demoScenarioCatalog = <DemoScenarioInfo>[
     id: DemoScenario.busyDay,
     titleEn: 'Busy day',
     titleNl: 'Drukke dag',
-    subtitleEn: 'Overdue, today, reminders, categories',
-    subtitleNl: 'Te laat, vandaag, herinneringen, categorieën',
+    subtitleEn: 'Overdue, today, Test1/2 (no Health), categories',
+    subtitleNl: 'Te laat, vandaag, Test1/2 (geen Health), categorieën',
   ),
   DemoScenarioInfo(
     id: DemoScenario.suggestions,
-    titleEn: 'Suggestions + family member',
-    titleNl: 'Suggesties + gezinslid',
-    subtitleEn: 'Inbox, for-you hints, and multiple Link members',
-    subtitleNl: 'Inbox, voor-jou-hints, en meerdere Link-leden',
+    titleEn: 'Suggestions + ambient',
+    titleNl: 'Suggesties + ambient',
+    subtitleEn: 'Inbox, load-balance, presence/load chips',
+    subtitleNl: 'Inbox, load-balance, presence/load-chips',
   ),
   DemoScenarioInfo(
     id: DemoScenario.kids,
-    titleEn: 'Kids overview',
-    titleNl: 'Kinderen',
-    subtitleEn: 'Two kids — XP on/off, pending verification',
-    subtitleNl: 'Twee kinderen — XP aan/uit, wachtend op bevestiging',
+    titleEn: 'Kids + enrollment',
+    titleNl: 'Kinderen + koppelen',
+    subtitleEn: 'Active kids, draft “waiting”, XP on/off, verify',
+    subtitleNl: 'Actieve kids, draft “wacht”, XP aan/uit, verifieren',
   ),
   DemoScenarioInfo(
     id: DemoScenario.notes,
-    titleEn: 'Notes',
-    titleNl: 'Notities',
-    subtitleEn: 'Private + shared note aimed at family members',
-    subtitleNl: 'Privé + gedeelde notitie voor familieleden',
+    titleEn: 'Notes privacy',
+    titleNl: 'Notities privacy',
+    subtitleEn: 'Unlock gate, local-only, note↔task link, shared',
+    subtitleNl: 'Unlock, alleen-dit-apparaat, note↔taak, gedeeld',
   ),
   DemoScenarioInfo(
     id: DemoScenario.family,
     titleEn: 'Family household',
     titleNl: 'Gezin',
-    subtitleEn: 'Alex + Sam, kids, verifier gates, proposals, shared notes',
-    subtitleNl: 'Alex + Sam, kinderen, verifier, voorstellen, gedeelde notities',
+    subtitleEn: 'Alex + Sam, draft kid, ambient load, proposals',
+    subtitleNl: 'Alex + Sam, draft-kind, ambient load, voorstellen',
   ),
   DemoScenarioInfo(
     id: DemoScenario.fullHouse,
     titleEn: 'Full house',
     titleNl: 'Vol huis',
-    subtitleEn: 'Busy day + multi-member family overlay',
-    subtitleNl: 'Drukke dag + gezin met meerdere Link-leden',
+    subtitleEn: 'Busy + privacy notes + kids draft + ambient',
+    subtitleNl: 'Druk + privacy-notities + kids draft + ambient',
   ),
 ];
 
@@ -123,22 +123,38 @@ class DemoScenarioLoader {
       case DemoScenario.suggestions:
         await _seedBusyDay(dutch, compact: true);
         await _seedSuggestions(dutch);
-        _setFamily(hasOtherLinkMembers: true, kids: const []);
+        _setFamily(
+          hasOtherLinkMembers: true,
+          kids: const [],
+          withLoadMetrics: true,
+        );
       case DemoScenario.kids:
         await _seedBusyDay(dutch, compact: true);
-        _setFamily(hasOtherLinkMembers: false, kids: _demoKids());
+        _setFamily(
+          hasOtherLinkMembers: false,
+          kids: _demoKids(includeDraft: true),
+          withLoadMetrics: false,
+        );
       case DemoScenario.notes:
-        await _seedNotes(dutch);
+        await _seedNotes(dutch, withPrivacyExtras: true);
         _setFamily(hasOtherLinkMembers: true, kids: const []);
       case DemoScenario.family:
         await _seedSuggestions(dutch);
-        await _seedNotes(dutch);
-        _setFamily(hasOtherLinkMembers: true, kids: _demoKids());
+        await _seedNotes(dutch, withPrivacyExtras: true);
+        _setFamily(
+          hasOtherLinkMembers: true,
+          kids: _demoKids(includeDraft: true),
+          withLoadMetrics: true,
+        );
       case DemoScenario.fullHouse:
         await _seedBusyDay(dutch);
         await _seedSuggestions(dutch);
-        await _seedNotes(dutch);
-        _setFamily(hasOtherLinkMembers: true, kids: _demoKids());
+        await _seedNotes(dutch, withPrivacyExtras: true);
+        _setFamily(
+          hasOtherLinkMembers: true,
+          kids: _demoKids(includeDraft: true),
+          withLoadMetrics: true,
+        );
     }
   }
 
@@ -150,7 +166,11 @@ class DemoScenarioLoader {
     await _db.delete(_db.aiSuggestions).go();
   }
 
-  void _setFamily({required bool hasOtherLinkMembers, required List<EnrolledKid> kids}) {
+  void _setFamily({
+    required bool hasOtherLinkMembers,
+    required List<EnrolledKid> kids,
+    bool withLoadMetrics = false,
+  }) {
     final now = DateTime.now().toUtc();
     final roster = _demoRoster(
       hasOtherLinkMembers: hasOtherLinkMembers,
@@ -160,11 +180,21 @@ class DemoScenarioLoader {
     DemoSession.instance.apply(
       hasOtherLinkMembers: hasOtherLinkMembers,
       kids: kids,
-      kidTasks: kids.isEmpty
+      kidTasks: kids.where((k) => k.isActive).isEmpty
           ? const []
-          : _demoKidTasks(kids, secondLinkMember: hasOtherLinkMembers),
+          : _demoKidTasks(
+              kids.where((k) => k.isActive).toList(),
+              secondLinkMember: hasOtherLinkMembers,
+            ),
       roster: roster,
-      presence: hasOtherLinkMembers ? _demoPresence(now) : const [],
+      presence: _demoPresence(
+        now,
+        hasOtherLinkMembers: hasOtherLinkMembers,
+        kids: kids,
+      ),
+      loadMetrics: withLoadMetrics && hasOtherLinkMembers
+          ? _demoLoadMetrics(now)
+          : const [],
     );
   }
 
@@ -203,48 +233,83 @@ class DemoScenarioLoader {
             enrolledAt: k.enrolledAt,
             xpEnabled: k.xpEnabled,
             updatedAt: k.enrolledAt,
+            isActive: k.isActive,
           ),
       ],
       updatedAt: now,
     );
   }
 
-  List<PresenceInfo> _demoPresence(DateTime now) => [
-    PresenceInfo(
-      deviceId: DemoSession.linkId,
-      deviceType: 'link',
-      displayName: DemoSession.selfDisplayName,
-      lastSeen: now,
-    ),
-    PresenceInfo(
-      deviceId: DemoSession.linkMemberId,
-      deviceType: 'link',
-      displayName: DemoSession.linkMemberDisplayName,
-      lastSeen: now.subtract(const Duration(minutes: 12)),
-    ),
-    PresenceInfo(
-      deviceId: DemoSession.secondLinkMemberId,
-      deviceType: 'link',
-      displayName: DemoSession.secondLinkMemberDisplayName,
-      lastSeen: now.subtract(const Duration(hours: 5)),
-    ),
-    PresenceInfo(
-      deviceId: 'demo-mees',
-      deviceType: 'kid',
-      displayName: 'Mees',
-      lastSeen: now.subtract(const Duration(hours: 2)),
-    ),
-  ];
+  List<PresenceInfo> _demoPresence(
+    DateTime now, {
+    required bool hasOtherLinkMembers,
+    required List<EnrolledKid> kids,
+  }) {
+    final list = <PresenceInfo>[
+      PresenceInfo(
+        deviceId: DemoSession.linkId,
+        deviceType: 'link',
+        displayName: DemoSession.selfDisplayName,
+        lastSeen: now,
+      ),
+    ];
+    if (hasOtherLinkMembers) {
+      list.addAll([
+        PresenceInfo(
+          deviceId: DemoSession.linkMemberId,
+          deviceType: 'link',
+          displayName: DemoSession.linkMemberDisplayName,
+          lastSeen: now.subtract(const Duration(minutes: 12)),
+        ),
+        PresenceInfo(
+          deviceId: DemoSession.secondLinkMemberId,
+          deviceType: 'link',
+          displayName: DemoSession.secondLinkMemberDisplayName,
+          // Stale-ish for ambient chip contrast.
+          lastSeen: now.subtract(const Duration(days: 8)),
+        ),
+      ]);
+    }
+    // Only active kids with a heartbeat show as connected.
+    for (final kid in kids.where((k) => k.isActive)) {
+      if (kid.id == 'demo-mees') {
+        list.add(
+          PresenceInfo(
+            deviceId: kid.id,
+            deviceType: 'kid',
+            displayName: kid.name,
+            lastSeen: now.subtract(const Duration(hours: 2)),
+          ),
+        );
+      }
+      // Fien (and others): no presence → not connected in settings/ambient.
+    }
+    return list;
+  }
 
-  List<EnrolledKid> _demoKids() {
+  List<LoadMetrics> _demoLoadMetrics(DateTime now) => [
+        LoadMetrics(
+          linkId: DemoSession.linkMemberId,
+          openByCategory: const {'household': 5, 'admin': 1, 'health': 0},
+          updatedAt: now.subtract(const Duration(minutes: 40)),
+        ),
+        LoadMetrics(
+          linkId: DemoSession.secondLinkMemberId,
+          openByCategory: const {'household': 1, 'other': 2},
+          updatedAt: now.subtract(const Duration(hours: 3)),
+        ),
+      ];
+
+  List<EnrolledKid> _demoKids({bool includeDraft = false}) {
     final enrolledAt = DateTime.now().toUtc().subtract(
       const Duration(days: 40),
     );
-    return [
+    final kids = <EnrolledKid>[
       EnrolledKid(
         id: 'demo-mees',
         name: 'Mees',
         enrolledAt: enrolledAt,
+        isActive: true,
       ),
       // Contrast: XP & goals off so the settings toggle is visible in demos.
       EnrolledKid(
@@ -252,8 +317,20 @@ class DemoScenarioLoader {
         name: 'Fien',
         enrolledAt: enrolledAt,
         xpEnabled: false,
+        isActive: true,
       ),
     ];
+    if (includeDraft) {
+      kids.add(
+        EnrolledKid(
+          id: 'demo-sara',
+          name: 'Sara',
+          enrolledAt: DateTime.now().toUtc().subtract(const Duration(hours: 2)),
+          isActive: false,
+        ),
+      );
+    }
+    return kids;
   }
 
   /// When [otherLinkMembers] is true, adds missions verified by Alex and by Sam
@@ -263,12 +340,16 @@ class DemoScenarioLoader {
     bool secondLinkMember = false,
   }) {
     final now = DateTime.now().toUtc();
+    final todayLocal = DateTime.now();
+    final today = DateTime(todayLocal.year, todayLocal.month, todayLocal.day);
     ICalTask chore({
       required String summary,
       required String kidId,
       ICalTaskStatus status = ICalTaskStatus.needsAction,
       int xp = 10,
       String? verifierLinkId,
+      DateTime? dueAt,
+      String? rrule,
     }) {
       final verifierPart = verifierLinkId != null
           ? ';xKineticVerifierLinkId:$verifierLinkId'
@@ -281,19 +362,33 @@ class DemoScenarioLoader {
         status: status,
         createdAt: now,
         updatedAt: now,
+        dueAt: dueAt?.toUtc(),
+        rrule: rrule,
       );
     }
 
     final mees = kids.first.id;
-    final fien = kids.last.id;
+    final fien = kids.length > 1 ? kids[1].id : kids.first.id;
     return [
-      chore(summary: 'Shirts in the hamper', kidId: mees),
+      chore(
+        summary: 'Shirts in the hamper',
+        kidId: mees,
+        dueAt: today.add(const Duration(hours: 18)),
+      ),
       chore(summary: 'Brush teeth', kidId: mees),
       chore(
         summary: 'Make bed',
         kidId: mees,
         status: ICalTaskStatus.completed,
         xp: 15,
+        dueAt: today.subtract(const Duration(days: 1)),
+      ),
+      // Weekly routine still open with RRULE (routines v1).
+      chore(
+        summary: 'Empty dishwasher',
+        kidId: mees,
+        dueAt: today.add(const Duration(days: 2)),
+        rrule: 'FREQ=WEEKLY;BYDAY=WE',
       ),
       chore(summary: 'Tidy room', kidId: fien),
       // Awaiting verification by this device — accept/reject are offered.
@@ -388,6 +483,9 @@ class DemoScenarioLoader {
       categoryEn: 'Household',
       categoryNl: 'Huishouden',
     );
+    // Heuristics false positives — should stay Other / not Health categorize.
+    await add(en: 'Test1', nl: 'Test1');
+    await add(en: 'Test2', nl: 'Test2');
     if (!compact) {
       await add(en: 'Unpack the attic box', nl: 'Zolderdoos uitpakken');
       final done = await _todoRepo.createTask(
@@ -431,8 +529,8 @@ class DemoScenarioLoader {
         reason: SuggestionReason.loadBalance,
         category: 'household',
         explanation: dutch
-            ? 'Je hebt 4 open taken in huishouden. De hint is bewust algemeen.'
-            : 'You have 4 open household tasks. The hint is intentionally generic.',
+            ? 'Peer-load: Alex heeft 5 huishouden-open; jij bent zwaarder.'
+            : 'Peer load: Alex has 5 open household; you are heavier.',
         dedupeKey: 'demo-load-balance',
       ),
     );
@@ -453,7 +551,10 @@ class DemoScenarioLoader {
     );
   }
 
-  Future<void> _seedNotes(bool dutch) async {
+  Future<void> _seedNotes(
+    bool dutch, {
+    bool withPrivacyExtras = false,
+  }) async {
     final remind = DateTime.now().add(const Duration(hours: 3));
     await _noteRepo.insert(
       title: dutch ? 'Verjaardag Mees' : "Mees' birthday",
@@ -471,6 +572,34 @@ class DemoScenarioLoader {
       sharedMemberIds: [
         for (final m in DemoSession.otherDemoMembers) m.id,
       ],
+    );
+
+    if (!withPrivacyExtras) return;
+
+    final linkedTask = await _todoRepo.createTask(
+      title: dutch ? 'Cadeau kopen' : 'Buy gift',
+      customCategory: dutch ? 'Huishouden' : 'Household',
+    );
+    await _noteRepo.insert(
+      title: dutch ? 'Cadeaulijst (gekoppeld)' : 'Gift list (linked)',
+      body: dutch
+          ? 'Ideeën voor Mees — gekoppeld aan de taak.'
+          : 'Ideas for Mees — linked to the task.',
+      linkedTaskIds: [linkedTask.id],
+    );
+    await _noteRepo.insert(
+      title: dutch ? 'Alleen dit apparaat' : 'This device only',
+      body: dutch
+          ? 'Lokale notitie — mag nooit naar WebDAV.'
+          : 'Local-only note — must never PUT to WebDAV.',
+      isLocalOnly: true,
+    );
+    await _noteRepo.insert(
+      title: dutch ? 'Vereist ontgrendelen' : 'Require unlock',
+      body: dutch
+          ? 'Gevoelige tekst — alleen lokaal gated; body sync’t wél.'
+          : 'Sensitive text — local biometric gate; body still syncs.',
+      isContentHidden: true,
     );
   }
 }

@@ -14,28 +14,28 @@ Family setup usable without a Kinetic cloud: sync status, Start-family wizard, s
 
 ---
 
-## Phase 2 — Kids depth + trust
+## Phase 2 — Kids depth + trust — **implemented on `feature/phase-2-and-3`**
 
 Ship next: make kids enrollment and ongoing kids loops trustworthy on more devices.
 
-- Lighter kids enrollment (password UX, orphan kid-id)
-- Kids on **iOS** + offline / local cache
-- Deeper XP, goals, routines; Link week overview
-- **Family key rotation** after removing a member
-- F-Droid / reproducible builds ship
+- [x] Lighter kids enrollment (draft vs active, password probe, orphan purge)
+- [x] Kids on **iOS** target + offline / local cache UX
+- [x] Deeper XP, goals, routines; Link week overview
+- [x] **Family key rotation** after removing a member (optional wizard)
+- [x] F-Droid / reproducible builds path documented (submission MR ready)
 
 **Done when:** kids enroll and sync reliably on Android + iOS; Link can rotate family key after a kick; F-Droid path is clear.
 
 ---
 
-## Phase 3 — Household smarts + notes
+## Phase 3 — Household smarts + notes — **implemented on `feature/phase-2-and-3`**
 
 Ship alongside / right after Phase 2 depth: suggestions and notes that feel intentional, not noisy.
 
-- Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
-- Stronger EN/NL heuristics (e.g. stop short keywords like `test` matching Health → bogus categorize prompts)
-- Shared note templates, note ↔ task linking, clearer unlock vs sync privacy UX
-- Ambient presence and load — household awareness **without** becoming chat
+- [x] Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
+- [x] Stronger EN/NL heuristics (whole-word / min-length; `test` no longer → Health)
+- [x] Note templates, note ↔ task linking, clearer unlock vs sync / local-only privacy UX
+- [x] Ambient presence and load — household awareness **without** becoming chat
 
 **Done when:** categorize/load-balance suggestions are trustworthy; notes have a clear shared/privacy story; load metrics feed the UI.
 

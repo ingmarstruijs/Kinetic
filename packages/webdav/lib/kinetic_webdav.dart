@@ -29,6 +29,9 @@ export 'src/sync/webdav_enrollment.dart';
 // Presence tracking
 export 'src/presence_info.dart';
 
+// Family load metrics (coarse open-task counts)
+export 'src/load_metrics.dart';
+
 // Family roster (link members + kids)
 export 'src/family_roster.dart';
 

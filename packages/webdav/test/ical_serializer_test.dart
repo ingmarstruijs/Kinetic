@@ -145,6 +145,16 @@ void main() {
       expect(ical, contains('X-KINETIC-SHARED:0'));
     });
 
+    test('X-KINETIC-LINK-TASK-IDS round-trips', () {
+      final note = _sampleNote().copyWith(
+        linkedTaskIds: ['task-a', 'task-b'],
+      );
+      final ical = ICalSerializer.noteToVjournal(note);
+      expect(ical, contains('X-KINETIC-LINK-TASK-IDS:task-a,task-b'));
+      final parsed = ICalSerializer.vjournalToNote(ical);
+      expect(parsed.linkedTaskIds, ['task-a', 'task-b']);
+    });
+
     test('vjournalToNote round-trips all fields', () {
       final original = _sampleNote().copyWith(updatedByLinkId: 'link-abc');
       final ical = ICalSerializer.noteToVjournal(original);

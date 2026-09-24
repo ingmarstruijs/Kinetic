@@ -120,9 +120,16 @@ class PersonalNotes extends Table {
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
 
   /// When true, body is hidden in the notes list and opening requires
-  /// device biometrics / PIN (local privacy flag, not synced).
+  /// device biometrics / PIN. Local-only flag (not synced); note body still
+  /// syncs via WebDAV unless [isLocalOnly] is true.
   BoolColumn get isContentHidden =>
       boolean().withDefault(const Constant(false))();
+
+  /// When true, this note never leaves the device (no WebDAV PUT). Local-only.
+  BoolColumn get isLocalOnly => boolean().withDefault(const Constant(false))();
+
+  /// JSON list of [PersonalTasks.id] linked to this note (synced when not local-only).
+  TextColumn get linkedTaskIds => text().nullable()();
 
   // WebDAV sync metadata
   TextColumn get webdavEtag => text().nullable()();

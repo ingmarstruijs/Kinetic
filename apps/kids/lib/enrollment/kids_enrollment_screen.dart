@@ -13,6 +13,7 @@ import '../sync/webdav_config_repository.dart';
 // The child scans (or a Link user scans on their behalf) a QR code produced by
 // the link app's "Kinderenapp koppelen" screen.
 //
+// Connection is probed before save so a wrong password fails at enroll time.
 // Returns `true` via Navigator when enrollment succeeds.
 // ---------------------------------------------------------------------------
 
@@ -81,6 +82,36 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
       return;
     }
 
+    final l10n = AppLocalizations.of(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 20),
+            Expanded(child: Text(l10n.checkingConnection)),
+          ],
+        ),
+      ),
+    );
+
+    final errorCode = await WebDavEnrollment.testConnection(
+      data.serverUrl,
+      data.username,
+      password,
+    );
+
+    if (!mounted) return;
+    Navigator.of(context).pop(); // dismiss progress dialog
+
+    if (errorCode != null) {
+      _showError(_localizeConnectionError(l10n, errorCode));
+      setState(() => _processing = false);
+      return;
+    }
+
     await widget.configRepo.saveEnrollment(
       serverUrl: data.serverUrl,
       username: data.username,
@@ -96,6 +127,19 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
         Navigator.of(context).pop(true);
       }
     }
+  }
+
+  String _localizeConnectionError(AppLocalizations l10n, String code) {
+    if (code.startsWith('bad_url:')) {
+      return l10n.connectionErrorGeneric(code.substring('bad_url:'.length));
+    }
+    return switch (code) {
+      'auth' => l10n.connectionErrorAuth,
+      'no_webdav' => l10n.connectionErrorNoWebDav,
+      'timeout' => l10n.connectionErrorTimeout,
+      'unreachable' => l10n.connectionErrorUnreachable,
+      _ => l10n.connectionErrorGeneric(code),
+    };
   }
 
   void _showError(String message) {

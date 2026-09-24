@@ -25,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -146,6 +146,10 @@ class AppDatabase extends _$AppDatabase {
             'last_partner_suggestion_run_at TO last_family_member_suggestion_run_at',
           );
         }
+      }
+      if (from < 22) {
+        await m.addColumn(personalNotes, personalNotes.isLocalOnly);
+        await m.addColumn(personalNotes, personalNotes.linkedTaskIds);
       }
     },
   );

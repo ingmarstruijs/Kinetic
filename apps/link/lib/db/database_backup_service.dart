@@ -207,6 +207,10 @@ class DatabaseBackupService {
                 updatedAt: DateTime.parse(m['updatedAt'] as String),
                 updatedByLinkId: Value(m['updatedByLinkId'] as String?),
                 deletedAt: Value(_parseDateTime(m['deletedAt'])),
+                isContentHidden: Value(m['isContentHidden'] as bool? ?? false),
+                isLocalOnly: Value(m['isLocalOnly'] as bool? ?? false),
+                linkedTaskIds: Value(m['linkedTaskIds'] as String?),
+                sharedMemberIds: Value(m['sharedMemberIds'] as String?),
               ),
             );
       }
@@ -282,6 +286,10 @@ class DatabaseBackupService {
     'updatedAt': r.updatedAt.toUtc().toIso8601String(),
     'updatedByLinkId': r.updatedByLinkId,
     'deletedAt': r.deletedAt?.toUtc().toIso8601String(),
+    'isContentHidden': r.isContentHidden,
+    'isLocalOnly': r.isLocalOnly,
+    'linkedTaskIds': r.linkedTaskIds,
+    'sharedMemberIds': r.sharedMemberIds,
   };
 
   static Map<String, dynamic> _subtaskToJson(PersonalSubtaskRow r) => {

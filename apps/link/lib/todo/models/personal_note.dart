@@ -16,6 +16,13 @@ class PersonalNote {
   final List<String>? sharedMemberIds;
 
   final bool isContentHidden;
+
+  /// Body and links stay on this device only; never pushed to WebDAV.
+  final bool isLocalOnly;
+
+  /// Personal task ids cross-linked from this note.
+  final List<String>? linkedTaskIds;
+
   final DateTime? remindAt;
   final String? category;
   final int sortOrder;
@@ -34,6 +41,8 @@ class PersonalNote {
     required this.isShared,
     this.sharedMemberIds,
     this.isContentHidden = false,
+    this.isLocalOnly = false,
+    this.linkedTaskIds,
     this.remindAt,
     this.category,
     this.sortOrder = 0,
@@ -49,6 +58,8 @@ class PersonalNote {
     bool isShared = false,
     List<String>? sharedMemberIds,
     bool isContentHidden = false,
+    bool isLocalOnly = false,
+    List<String>? linkedTaskIds,
     DateTime? remindAt,
     String? category,
     int sortOrder = 0,
@@ -62,6 +73,8 @@ class PersonalNote {
       isShared: isShared,
       sharedMemberIds: sharedMemberIds,
       isContentHidden: isContentHidden,
+      isLocalOnly: isLocalOnly,
+      linkedTaskIds: linkedTaskIds,
       remindAt: remindAt,
       category: category,
       sortOrder: sortOrder,
@@ -79,6 +92,8 @@ class PersonalNote {
       isShared: row.isShared,
       sharedMemberIds: decodeSharedMemberIds(row.sharedMemberIds),
       isContentHidden: row.isContentHidden,
+      isLocalOnly: row.isLocalOnly,
+      linkedTaskIds: decodeLinkedTaskIds(row.linkedTaskIds),
       remindAt: row.remindAt,
       category: row.category,
       sortOrder: row.sortOrder,
@@ -87,6 +102,19 @@ class PersonalNote {
       updatedByLinkId: row.updatedByLinkId,
       deletedAt: row.deletedAt,
     );
+  }
+
+  /// Decodes the JSON list stored in `personal_notes.linked_task_ids`.
+  static List<String>? decodeLinkedTaskIds(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return null;
+      final ids = decoded.whereType<String>().where((s) => s.isNotEmpty).toList();
+      return ids.isEmpty ? null : ids;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Decodes the JSON list stored in `personal_notes.shared_member_ids`.
@@ -109,6 +137,18 @@ class PersonalNote {
     return jsonEncode(ids);
   }
 
+  String? get linkedTaskIdsJson {
+    final ids = linkedTaskIds;
+    if (ids == null || ids.isEmpty) return null;
+    return jsonEncode(ids);
+  }
+
+  bool isLinkedToTask(String taskId) {
+    final ids = linkedTaskIds;
+    if (ids == null || ids.isEmpty) return false;
+    return ids.contains(taskId);
+  }
+
   /// True when this note reaches [linkMemberId] (all-members notes included).
   bool isSharedWith(String linkMemberId) {
     if (!isShared) return false;
@@ -124,6 +164,9 @@ class PersonalNote {
     List<String>? sharedMemberIds,
     bool clearSharedMemberIds = false,
     bool? isContentHidden,
+    bool? isLocalOnly,
+    List<String>? linkedTaskIds,
+    bool clearLinkedTaskIds = false,
     DateTime? remindAt,
     bool clearRemindAt = false,
     String? category,
@@ -143,6 +186,10 @@ class PersonalNote {
           ? null
           : (sharedMemberIds ?? this.sharedMemberIds),
       isContentHidden: isContentHidden ?? this.isContentHidden,
+      isLocalOnly: isLocalOnly ?? this.isLocalOnly,
+      linkedTaskIds: clearLinkedTaskIds
+          ? null
+          : (linkedTaskIds ?? this.linkedTaskIds),
       remindAt: clearRemindAt ? null : (remindAt ?? this.remindAt),
       category: clearCategory ? null : (category ?? this.category),
       sortOrder: sortOrder ?? this.sortOrder,

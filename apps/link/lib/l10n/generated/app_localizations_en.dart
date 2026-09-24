@@ -537,12 +537,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String familyMemberRemoveBody(String name) {
-    return '$name will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.';
+    return '$name will be removed from this family\'s roster. Their app will disconnect on the next sync. The family key is not changed automatically — you can run the new-key wizard afterward so they cannot decrypt new shared data.';
   }
 
   @override
   String get familyMemberRemovedFromFamily =>
       'You were removed from the family on another device.';
+
+  @override
+  String get familyKeyRotationOfferTitle => 'Create a new family key?';
+
+  @override
+  String get familyKeyRotationOfferBody =>
+      'Removing a member does not change the family key. To keep them from reading new shared notes and tasks, create a new key and share it with everyone who should stay.';
+
+  @override
+  String get familyKeyRotationOfferNow => 'Start wizard';
+
+  @override
+  String get familyKeyRotationOfferLater => 'Not now';
+
+  @override
+  String get familyKeyRotationTitle => 'New family key';
+
+  @override
+  String get familyKeyRotationIntroTitle => 'Rotate the family key';
+
+  @override
+  String get familyKeyRotationIntroBody =>
+      'You will write down a new 12-word family key. Shared data on WebDAV is re-encrypted. Remaining family members and kids must scan a new QR to stay connected.';
+
+  @override
+  String get familyKeyRotationStart => 'Create new key';
+
+  @override
+  String get familyKeyRotationReencryptTitle => 'Re-encrypting shared data…';
+
+  @override
+  String get familyKeyRotationReencryptPreparing => 'Scanning shared folders…';
+
+  @override
+  String familyKeyRotationReencryptProgress(int done, int total) {
+    return '$done of $total files';
+  }
+
+  @override
+  String get familyKeyRotationShareLinkTitle => 'Share with family members';
+
+  @override
+  String get familyKeyRotationShareLinkBody =>
+      'Each remaining Kinetic Link adult must scan this QR or use tap-to-link. Their old key will not open new shared data.';
+
+  @override
+  String get familyKeyRotationShareLinkButton => 'Show family QR';
+
+  @override
+  String get familyKeyRotationShareLinkSkip => 'Skip for now';
+
+  @override
+  String get familyKeyRotationShareKidsTitle => 'Re-enroll kids';
+
+  @override
+  String get familyKeyRotationShareKidsBody =>
+      'Each child device needs a new enrollment QR with the updated family key.';
+
+  @override
+  String get familyKeyRotationDoneTitle => 'Family key updated';
+
+  @override
+  String get familyKeyRotationDoneBody =>
+      'This device uses the new key. Make sure every remaining family member and kid has scanned the new QR when you are ready.';
 
   @override
   String get otherLinkMemberStatusPaired =>
@@ -639,6 +703,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsEnrollWhatSharedBody =>
       'This QR code contains the server, account, and family key — not the WebDAV password. Type that password once on the kids device. Only share the code with the kids app on a trusted device.';
+
+  @override
+  String get kidsEnrollWaitingDevice =>
+      'Waiting for the kids device to connect…';
+
+  @override
+  String get kidsEnrollKeepWaiting => 'Done — keep waiting for device';
+
+  @override
+  String get kidsWaitingForDevice => 'Waiting for device';
+
+  @override
+  String get kidsMarkActive => 'Mark as linked';
+
+  @override
+  String get kidsDraftSection => 'WAITING TO LINK';
 
   @override
   String get settingsLanguage => 'Language';
@@ -933,6 +1013,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String connConnectedSince(String when) {
     return 'Connected ($when)';
   }
+
+  @override
+  String tasksAmbientLoadOpen(int count) {
+    return '$count open';
+  }
+
+  @override
+  String get tasksAmbientLoadUnknown => '—';
 
   @override
   String get notifChannelName => 'Task reminders';
@@ -1640,7 +1728,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesHideContentHint =>
-      'Opening requires biometrics or device PIN';
+      'Hides previews and asks for biometrics or PIN to open. The note body still syncs via WebDAV unless “Keep on this device only” is on.';
+
+  @override
+  String get notesLocalOnly => 'Keep on this device only';
+
+  @override
+  String get notesLocalOnlyHint =>
+      'Title and body never upload to WebDAV. Cannot share with family.';
+
+  @override
+  String get notesLocalOnlyBadge => 'This device';
+
+  @override
+  String get notesLinkedTasks => 'Linked tasks';
+
+  @override
+  String get notesLinkTask => 'Link tasks';
+
+  @override
+  String get notesLinkTaskEmpty => 'No open tasks to link';
+
+  @override
+  String get notesFromTemplate => 'New from template';
+
+  @override
+  String get notesTemplateMeeting => 'Meeting notes';
+
+  @override
+  String get notesTemplateMeetingBody =>
+      '## Attendees\n\n## Agenda\n- \n\n## Actions\n- ';
+
+  @override
+  String get notesTemplateShopping => 'Shopping list';
+
+  @override
+  String get notesTemplateShoppingBody => '- \n- \n- ';
+
+  @override
+  String get notesTemplateJournal => 'Journal';
+
+  @override
+  String get notesTemplateJournalBody => '## Today\n\n## Grateful for\n- ';
+
+  @override
+  String get taskLinkedNotes => 'Linked notes';
 
   @override
   String get notesUnlockReason => 'Unlock this note';
@@ -2071,6 +2203,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kidsXpAndGoalsSubtitle =>
       'Show XP rewards and goals for this child';
+
+  @override
+  String get kidsWeekOverviewTitle => 'This week';
+
+  @override
+  String get kidsWeekOverviewLegend => 'Due · done';
+
+  @override
+  String kidsWeekDayA11y(String weekday, int due, int done) {
+    return '$weekday, $due due, $done done';
+  }
 
   @override
   String get kidsOfflineBanner =>

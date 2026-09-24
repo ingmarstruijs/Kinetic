@@ -11,6 +11,7 @@ import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
+import '../../todo/services/note_repository.dart';
 import '../../todo/services/todo_repository.dart';
 import 'category_sheet.dart';
 import 'task_detail_sheet.dart';
@@ -45,6 +46,7 @@ Future<void> _playCompletionFeedback() async {
 class TaskTile extends StatelessWidget {
   final PersonalTask task;
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final bool hasFamilyKey;
   final bool hasOtherLinkMembers;
   final LinkMemberProposalRepository? proposalRepo;
@@ -57,6 +59,7 @@ class TaskTile extends StatelessWidget {
     super.key,
     required this.task,
     required this.repo,
+    this.noteRepo,
     this.hasFamilyKey = false,
     this.hasOtherLinkMembers = false,
     this.proposalRepo,
@@ -92,6 +95,7 @@ class TaskTile extends StatelessWidget {
       child: _TaskTileContent(
         task: task,
         repo: repo,
+        noteRepo: noteRepo,
         hasFamilyKey: hasFamilyKey,
         hasOtherLinkMembers: hasOtherLinkMembers,
         proposalRepo: proposalRepo,
@@ -107,6 +111,7 @@ class TaskTile extends StatelessWidget {
 class _TaskTileContent extends StatefulWidget {
   final PersonalTask task;
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final bool hasFamilyKey;
   final bool hasOtherLinkMembers;
   final LinkMemberProposalRepository? proposalRepo;
@@ -118,6 +123,7 @@ class _TaskTileContent extends StatefulWidget {
   const _TaskTileContent({
     required this.task,
     required this.repo,
+    this.noteRepo,
     this.hasFamilyKey = false,
     this.hasOtherLinkMembers = false,
     this.proposalRepo,
@@ -405,6 +411,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
       builder: (_) => TaskDetailSheet(
         task: widget.task,
         repo: widget.repo,
+        noteRepo: widget.noteRepo,
         hasFamilyKey: widget.hasFamilyKey,
         hasOtherLinkMembers: widget.hasOtherLinkMembers,
         proposalRepo: widget.proposalRepo,

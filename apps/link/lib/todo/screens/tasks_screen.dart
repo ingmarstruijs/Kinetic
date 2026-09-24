@@ -11,16 +11,19 @@ import '../../sync/webdav_config_repository.dart';
 import '../../theme/app_header.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/ai_suggestion_repository.dart';
+import '../../todo/services/note_repository.dart';
 import '../../todo/services/todo_repository.dart';
 import '../../todo/widgets/kids_panel.dart';
 import '../../todo/widgets/quick_add_bar.dart';
 import '../../todo/widgets/suggestions_panel.dart';
 import '../../todo/widgets/category_sheet.dart';
+import '../../todo/widgets/family_ambient_strip.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
 import '../../todo/widgets/task_tile.dart';
 
 class TasksScreen extends StatefulWidget {
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final SettingsRepository? settingsRepo;
   final LinkMemberProposalRepository? proposalRepo;
   final AiSuggestionRepository? suggestionRepo;
@@ -35,6 +38,7 @@ class TasksScreen extends StatefulWidget {
   final ValueNotifier<int>? syncDoneCount;
   final SyncConfig? syncConfig;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+  final Future<List<LoadMetrics>> Function()? pullLoadMetrics;
   final Future<List<ICalTask>> Function()? pullSharedTasks;
   final List<EnrolledKid>? enrolledKidsOverride;
   final Future<void> Function(ICalTask task)? onDeleteKidTask;
@@ -47,6 +51,7 @@ class TasksScreen extends StatefulWidget {
   const TasksScreen({
     super.key,
     required this.repo,
+    this.noteRepo,
     this.settingsRepo,
     this.proposalRepo,
     this.suggestionRepo,
@@ -61,6 +66,7 @@ class TasksScreen extends StatefulWidget {
     this.syncDoneCount,
     this.syncConfig,
     this.pullPresence,
+    this.pullLoadMetrics,
     this.pullSharedTasks,
     this.enrolledKidsOverride,
     this.onDeleteKidTask,
@@ -129,6 +135,7 @@ class _TasksScreenState extends State<TasksScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => TaskDetailSheet(
         repo: widget.repo,
+        noteRepo: widget.noteRepo,
         hasFamilyKey: widget.hasFamilyKey,
         hasOtherLinkMembers: widget.hasOtherLinkMembers,
         proposalRepo: widget.proposalRepo,
@@ -185,9 +192,27 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: AppHeader(
-            title: AppLocalizations.of(context).tasksTitle,
-            centerTitle: false,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppHeader(
+                title: AppLocalizations.of(context).tasksTitle,
+                centerTitle: false,
+              ),
+              FamilyAmbientStrip(
+                visible: widget.hasFamilyKey &&
+                    (widget.hasOtherLinkMembers || widget.enrolledKidsCount > 0),
+                otherLinkMembers: widget.otherLinkMembers,
+                enrolledKids: widget.enrolledKidsOverride ??
+                    const <EnrolledKid>[],
+                pullPresence: widget.pullPresence,
+                pullLoadMetrics: widget.pullLoadMetrics,
+                syncDoneCount: widget.syncDoneCount,
+                configRepo: widget.configRepo,
+                enrolledKidsCount: widget.enrolledKidsCount,
+              ),
+            ],
           ),
           centerTitle: false,
           actions: [
@@ -212,6 +237,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 useSafeArea: true,
                 builder: (_) => TaskDetailSheet(
                   repo: widget.repo,
+                  noteRepo: widget.noteRepo,
                   hasFamilyKey: widget.hasFamilyKey,
                   hasOtherLinkMembers: widget.hasOtherLinkMembers,
                   proposalRepo: widget.proposalRepo,
@@ -227,6 +253,7 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
         body: _TasksBody(
           repo: widget.repo,
+          noteRepo: widget.noteRepo,
           hasFamilyKey: widget.hasFamilyKey,
           hasOtherLinkMembers: widget.hasOtherLinkMembers,
           // Compact personal empty only when Suggestions or Kids chrome is up —
@@ -311,6 +338,7 @@ class _TaskItem extends _ListItem {
 
 class _TasksBody extends StatefulWidget {
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final bool hasFamilyKey;
   final bool hasOtherLinkMembers;
   /// When true, the personal-task list empty state stays compact (no "all done"
@@ -326,6 +354,7 @@ class _TasksBody extends StatefulWidget {
 
   const _TasksBody({
     required this.repo,
+    this.noteRepo,
     this.hasFamilyKey = false,
     this.hasOtherLinkMembers = false,
     this.familyContext = false,
@@ -474,6 +503,7 @@ class _TasksBodyState extends State<_TasksBody> {
                       index: index,
                       task: taskItem.task,
                       repo: widget.repo,
+                      noteRepo: widget.noteRepo,
                       hasFamilyKey: widget.hasFamilyKey,
                       hasOtherLinkMembers: widget.hasOtherLinkMembers,
                       proposalRepo: widget.proposalRepo,
@@ -645,6 +675,7 @@ class _DraggableTaskRow extends StatelessWidget {
   final int index;
   final PersonalTask task;
   final TodoRepository repo;
+  final NoteRepository? noteRepo;
   final bool hasFamilyKey;
   final bool hasOtherLinkMembers;
   final LinkMemberProposalRepository? proposalRepo;
@@ -658,6 +689,7 @@ class _DraggableTaskRow extends StatelessWidget {
     required this.index,
     required this.task,
     required this.repo,
+    this.noteRepo,
     required this.hasFamilyKey,
     required this.hasOtherLinkMembers,
     this.proposalRepo,
@@ -676,6 +708,7 @@ class _DraggableTaskRow extends StatelessWidget {
           child: TaskTile(
             task: task,
             repo: repo,
+            noteRepo: noteRepo,
             hasFamilyKey: hasFamilyKey,
             hasOtherLinkMembers: hasOtherLinkMembers,
             proposalRepo: proposalRepo,

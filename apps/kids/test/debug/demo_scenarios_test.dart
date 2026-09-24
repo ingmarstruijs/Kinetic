@@ -28,6 +28,22 @@ void main() {
     expect(KidsDemoSession.instance.active, isTrue);
   });
 
+  test('offlineQueued scenario seeds dirty awaiting completions', () async {
+    final db = createTestDatabase();
+    addTearDown(db.close);
+
+    await KidsDemoScenarioLoader(db: db).apply(
+      KidsDemoScenario.offlineQueued,
+      dutch: false,
+    );
+
+    final tasks = await KidsTaskRepository(db: db).watchAll().first;
+    final dirty = tasks.where((t) => t.syncState == 'dirty').toList();
+    expect(dirty, isNotEmpty);
+    expect(dirty.every((t) => t.awaitingVerification), isTrue);
+    expect(KidsDemoSession.instance.active, isTrue);
+  });
+
   test('empty scenario enrolls with no tasks', () async {
     final db = createTestDatabase();
     addTearDown(db.close);

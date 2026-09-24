@@ -10,6 +10,7 @@ import '../ical/ical_serializer.dart';
 import '../ical/ical_task.dart';
 import '../presence_info.dart';
 import '../kid_goal.dart';
+import '../load_metrics.dart';
 import '../sync_config.dart';
 import '../webdav_client.dart';
 
@@ -383,13 +384,12 @@ class WebDavSyncService {
   String get _loadPath => '/kinetic/shared/load';
 
   /// Pulls all family members' load metrics (encrypted with family key).
-  /// Returns a list of JSON-decoded load metrics maps.
-  Future<List<Map<String, dynamic>>> pullLoadMetrics() async {
+  Future<List<LoadMetrics>> pullLoadMetrics() async {
     final familyKey = config.familyKeyBytes;
     if (familyKey == null) return []; // No family key, no metrics to pull
 
     final entries = await _listJsonFiles(_loadPath);
-    final metrics = <Map<String, dynamic>>[];
+    final metrics = <LoadMetrics>[];
 
     for (final entry in entries) {
       try {
@@ -397,7 +397,8 @@ class WebDavSyncService {
         final blob = await client.get(href);
         final plain = await KineticEncryption.decrypt(blob, familyKey);
         final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
-        metrics.add(json);
+        final parsed = LoadMetrics.tryFromJson(json);
+        if (parsed != null) metrics.add(parsed);
       } catch (e) {
         continue;
       }
@@ -408,17 +409,19 @@ class WebDavSyncService {
   /// Encrypts and PUTs load metrics to `/kinetic/shared/load/{linkId}.json`.
   /// Creates the directory on-demand if it doesn't exist (for backward compatibility
   /// with accounts set up before this feature was added).
-  Future<void> pushLoadMetrics(Map<String, dynamic> metricsJson) async {
+  Future<void> pushLoadMetrics(LoadMetrics metrics) async {
     final familyKey = config.familyKeyBytes;
     if (familyKey == null) {
       throw StateError('Family key required to push load metrics');
     }
 
-    final linkId = metricsJson['linkId'] as String;
-    final plain = Uint8List.fromList(utf8.encode(jsonEncode(metricsJson)));
+    final plain = Uint8List.fromList(utf8.encode(jsonEncode(metrics.toJson())));
     final blob = await KineticEncryption.encrypt(plain, familyKey);
 
-    await _putWithCollectionFallback('$_loadPath/$linkId.json', blob);
+    await _putWithCollectionFallback(
+      '$_loadPath/${metrics.linkId}.json',
+      blob,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -663,4 +666,113 @@ class WebDavSyncService {
   /// Deletes the goal file for [kidId].
   Future<void> deleteGoal(String kidId) =>
       client.delete('$_goalsPath/$kidId.json');
+
+  // ---------------------------------------------------------------------------
+  // Family key rotation — re-wrap `/kinetic/shared/**` blobs
+  // ---------------------------------------------------------------------------
+
+  /// Re-encrypts every family-key blob under `/kinetic/shared/`.
+  ///
+  /// Files that cannot be opened with [oldFamilyKey] are left unchanged and
+  /// counted in [FamilySharedReencryptReport.skipped].
+  Future<FamilySharedReencryptReport> reencryptSharedTree({
+    required Uint8List oldFamilyKey,
+    required Uint8List newFamilyKey,
+    void Function(FamilySharedReencryptProgress progress)? onProgress,
+  }) async {
+    final paths = <String>[];
+    for (final entry in await _listIcsFiles(_sharedNotesPath)) {
+      paths.add(_relativizeHref(entry.href));
+    }
+    for (final entry in await _listIcsFiles(_sharedTasksPath)) {
+      paths.add(_relativizeHref(entry.href));
+    }
+    for (final path in [
+      _proposalsPath,
+      _loadPath,
+      _presencePath,
+      _disconnectPath,
+      _xpResetPath,
+      _goalsPath,
+    ]) {
+      for (final entry in await _listJsonFiles(path)) {
+        paths.add(_relativizeHref(entry.href));
+      }
+    }
+    paths.add(_rosterPath);
+
+    var reencrypted = 0;
+    var skipped = 0;
+    var failed = 0;
+    final total = paths.length;
+
+    for (var i = 0; i < paths.length; i++) {
+      final path = paths[i];
+      onProgress?.call(
+        FamilySharedReencryptProgress(path: path, index: i, total: total),
+      );
+      try {
+        final Uint8List blob;
+        try {
+          blob = await client.get(path);
+        } on WebDavException catch (e) {
+          if (e.message.contains('404')) {
+            skipped++;
+            continue;
+          }
+          rethrow;
+        }
+        Uint8List plain;
+        try {
+          plain = await KineticEncryption.decrypt(blob, oldFamilyKey);
+        } catch (_) {
+          skipped++;
+          continue;
+        }
+        final wrapped =
+            await KineticEncryption.encrypt(plain, newFamilyKey);
+        await _putWithCollectionFallback(path, wrapped);
+        reencrypted++;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Family re-encrypt failed for $path: $e');
+        }
+        failed++;
+      }
+    }
+
+    return FamilySharedReencryptReport(
+      reencrypted: reencrypted,
+      skipped: skipped,
+      failed: failed,
+    );
+  }
+}
+
+/// Progress callback payload for [WebDavSyncService.reencryptSharedTree].
+class FamilySharedReencryptProgress {
+  const FamilySharedReencryptProgress({
+    required this.path,
+    required this.index,
+    required this.total,
+  });
+
+  final String path;
+  final int index;
+  final int total;
+}
+
+/// Counts from [WebDavSyncService.reencryptSharedTree].
+class FamilySharedReencryptReport {
+  const FamilySharedReencryptReport({
+    required this.reencrypted,
+    required this.skipped,
+    required this.failed,
+  });
+
+  final int reencrypted;
+  final int skipped;
+  final int failed;
+
+  bool get ok => failed == 0;
 }

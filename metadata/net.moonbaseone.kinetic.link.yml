@@ -44,7 +44,7 @@ Builds:
       # Match CI / .flutter-version pin
       $$flutter$$ --version
       dart pub global activate melos
-      melos bootstrap
+      dart pub global run melos bootstrap
     build: |
       $$flutter$$ build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
     # Reproducibility notes: Flutter and Melos versions are pinned; F-Droid

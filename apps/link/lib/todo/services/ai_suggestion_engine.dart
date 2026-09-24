@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../db/app_database.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -25,6 +26,7 @@ class AiSuggestionEngine {
   final AiSuggestionRepository _suggestionRepo;
   final TodoRepository _todoRepo;
   final LinkMemberProposalRepository? _proposalRepo;
+  final Future<List<LoadMetrics>> Function()? _pullLoadMetrics;
   final String? myLinkId;
   final DateTime Function() _now;
 
@@ -42,12 +44,14 @@ class AiSuggestionEngine {
     required AiSuggestionRepository suggestionRepo,
     required TodoRepository todoRepo,
     LinkMemberProposalRepository? proposalRepo,
+    Future<List<LoadMetrics>> Function()? pullLoadMetrics,
     this.myLinkId,
     DateTime Function()? now,
   }) : _db = db,
        _suggestionRepo = suggestionRepo,
        _todoRepo = todoRepo,
        _proposalRepo = proposalRepo,
+       _pullLoadMetrics = pullLoadMetrics,
        _now = now ?? DateTime.now;
 
   DateTime get _nowUtc => _now().toUtc();
@@ -401,6 +405,8 @@ class AiSuggestionEngine {
       return;
     }
 
+    final peerMetrics = await _fetchPeerLoadMetrics();
+
     final byCategory = <String, List<PersonalTask>>{};
     for (final task in openTasks) {
       byCategory.putIfAbsent(task.category.name, () => []).add(task);
@@ -412,6 +418,14 @@ class AiSuggestionEngine {
       }
       final threshold = entry.key == 'other' ? 5 : 3;
       if (entry.value.length < threshold) continue;
+
+      if (!_localLoadHeavierThanPeers(
+        category: entry.key,
+        localCount: entry.value.length,
+        peerMetrics: peerMetrics,
+      )) {
+        continue;
+      }
 
       final title = loadBalanceTitle(entry.key);
       if (await _suggestionRepo.hasRecentWithTitle(
@@ -434,6 +448,43 @@ class AiSuggestionEngine {
       await _suggestionRepo.upsertSuggestion(suggested);
     }
   }
+
+  Future<List<LoadMetrics>> _fetchPeerLoadMetrics() async {
+    final pull = _pullLoadMetrics;
+    if (pull == null) return const [];
+    try {
+      return await pull();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// When peer metrics exist, only nudge if this device is heavier in the category.
+  @visibleForTesting
+  bool localLoadHeavierThanPeers({
+    required String category,
+    required int localCount,
+    required List<LoadMetrics> peerMetrics,
+  }) {
+    if (peerMetrics.isEmpty) return true;
+    var peerHigh = 0;
+    for (final metrics in peerMetrics) {
+      final count = metrics.openInCategory(category);
+      if (count > peerHigh) peerHigh = count;
+    }
+    return localCount > peerHigh;
+  }
+
+  bool _localLoadHeavierThanPeers({
+    required String category,
+    required int localCount,
+    required List<LoadMetrics> peerMetrics,
+  }) =>
+      localLoadHeavierThanPeers(
+        category: category,
+        localCount: localCount,
+        peerMetrics: peerMetrics,
+      );
 
   DateTime? _proposeReminder({
     required String title,

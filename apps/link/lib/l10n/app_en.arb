@@ -233,13 +233,38 @@
       "name": {"type": "String"}
     }
   },
-  "familyMemberRemoveBody": "{name} will be removed from this family's roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.",
+  "familyMemberRemoveBody": "{name} will be removed from this family's roster. Their app will disconnect on the next sync. The family key is not changed automatically — you can run the new-key wizard afterward so they cannot decrypt new shared data.",
   "@familyMemberRemoveBody": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
   "familyMemberRemovedFromFamily": "You were removed from the family on another device.",
+  "familyKeyRotationOfferTitle": "Create a new family key?",
+  "familyKeyRotationOfferBody": "Removing a member does not change the family key. To keep them from reading new shared notes and tasks, create a new key and share it with everyone who should stay.",
+  "familyKeyRotationOfferNow": "Start wizard",
+  "familyKeyRotationOfferLater": "Not now",
+  "familyKeyRotationTitle": "New family key",
+  "familyKeyRotationIntroTitle": "Rotate the family key",
+  "familyKeyRotationIntroBody": "You will write down a new 12-word family key. Shared data on WebDAV is re-encrypted. Remaining family members and kids must scan a new QR to stay connected.",
+  "familyKeyRotationStart": "Create new key",
+  "familyKeyRotationReencryptTitle": "Re-encrypting shared data…",
+  "familyKeyRotationReencryptPreparing": "Scanning shared folders…",
+  "familyKeyRotationReencryptProgress": "{done} of {total} files",
+  "@familyKeyRotationReencryptProgress": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "familyKeyRotationShareLinkTitle": "Share with family members",
+  "familyKeyRotationShareLinkBody": "Each remaining Kinetic Link adult must scan this QR or use tap-to-link. Their old key will not open new shared data.",
+  "familyKeyRotationShareLinkButton": "Show family QR",
+  "familyKeyRotationShareLinkSkip": "Skip for now",
+  "familyKeyRotationShareKidsTitle": "Re-enroll kids",
+  "familyKeyRotationShareKidsBody": "Each child device needs a new enrollment QR with the updated family key.",
+  "familyKeyRotationDoneTitle": "Family key updated",
+  "familyKeyRotationDoneBody": "This device uses the new key. Make sure every remaining family member and kid has scanned the new QR when you are ready.",
   "otherLinkMemberStatusPaired": "Family member linked — family key present",
   "otherLinkMemberStatusUnpaired": "Family member not linked — scan or share the QR code to link",
   "familyMemberLastSeen": "Last seen {when}",
@@ -316,6 +341,11 @@
   },
   "kidsEnrollWhatShared": "What is shared?",
   "kidsEnrollWhatSharedBody": "This QR code contains the server, account, and family key — not the WebDAV password. Type that password once on the kids device. Only share the code with the kids app on a trusted device.",
+  "kidsEnrollWaitingDevice": "Waiting for the kids device to connect…",
+  "kidsEnrollKeepWaiting": "Done — keep waiting for device",
+  "kidsWaitingForDevice": "Waiting for device",
+  "kidsMarkActive": "Mark as linked",
+  "kidsDraftSection": "WAITING TO LINK",
 
   "settingsLanguage": "Language",
   "settingsLanguageEnglish": "English",
@@ -487,6 +517,14 @@
       "when": {"type": "String"}
     }
   },
+
+  "tasksAmbientLoadOpen": "{count} open",
+  "@tasksAmbientLoadOpen": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tasksAmbientLoadUnknown": "—",
 
   "notifChannelName": "Task reminders",
   "notifChannelDesc": "Reminders for tasks and assignments",
@@ -847,7 +885,21 @@
     }
   },
   "notesHideContent": "Require unlock",
-  "notesHideContentHint": "Opening requires biometrics or device PIN",
+  "notesHideContentHint": "Hides previews and asks for biometrics or PIN to open. The note body still syncs via WebDAV unless “Keep on this device only” is on.",
+  "notesLocalOnly": "Keep on this device only",
+  "notesLocalOnlyHint": "Title and body never upload to WebDAV. Cannot share with family.",
+  "notesLocalOnlyBadge": "This device",
+  "notesLinkedTasks": "Linked tasks",
+  "notesLinkTask": "Link tasks",
+  "notesLinkTaskEmpty": "No open tasks to link",
+  "notesFromTemplate": "New from template",
+  "notesTemplateMeeting": "Meeting notes",
+  "notesTemplateMeetingBody": "## Attendees\n\n## Agenda\n- \n\n## Actions\n- ",
+  "notesTemplateShopping": "Shopping list",
+  "notesTemplateShoppingBody": "- \n- \n- ",
+  "notesTemplateJournal": "Journal",
+  "notesTemplateJournalBody": "## Today\n\n## Grateful for\n- ",
+  "taskLinkedNotes": "Linked notes",
   "notesUnlockReason": "Unlock this note",
   "notesUnlockFailed": "Could not unlock the note",
   "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to require unlock",
@@ -1076,6 +1128,16 @@
   "kidsXpAppliesToEnabled": "Only for kids with XP & goals on",
   "kidsXpAndGoals": "XP & goals",
   "kidsXpAndGoalsSubtitle": "Show XP rewards and goals for this child",
+  "kidsWeekOverviewTitle": "This week",
+  "kidsWeekOverviewLegend": "Due · done",
+  "kidsWeekDayA11y": "{weekday}, {due} due, {done} done",
+  "@kidsWeekDayA11y": {
+    "placeholders": {
+      "weekday": {"type": "String"},
+      "due": {"type": "int"},
+      "done": {"type": "int"}
+    }
+  },
   "kidsOfflineBanner": "Offline — kids tasks sync when WebDAV is back",
   "kidsPendingSync": "Waiting to sync",
   "tasksSyncOffline": "Offline — changes sync later",

@@ -8,6 +8,7 @@ import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
 import '../vault/family_vault_sync.dart';
 import '../vault/screens/family_create_screen.dart';
+import '../vault/screens/family_key_rotation_wizard_screen.dart';
 import '../vault/screens/mnemonic_reveal_screen.dart';
 import '../vault/widgets/mnemonic_phrase_field.dart';
 import 'family_key_scan_screen.dart';
@@ -253,6 +254,43 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
     await _loadConfig();
     await _loadPresence();
     if (mounted) widget.onConfigSaved?.call();
+    if (!mounted) return;
+    await _offerFamilyKeyRotationAfterRemove();
+  }
+
+  Future<void> _offerFamilyKeyRotationAfterRemove() async {
+    final l10n = AppLocalizations.of(context);
+    final rotate = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.familyKeyRotationOfferTitle),
+        content: Text(l10n.familyKeyRotationOfferBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.familyKeyRotationOfferLater),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.familyKeyRotationOfferNow),
+          ),
+        ],
+      ),
+    );
+    if (rotate != true || !mounted) return;
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => FamilyKeyRotationWizardScreen(
+          db: widget.db,
+          configRepo: widget.configRepo,
+          onFinished: widget.onConfigSaved,
+        ),
+      ),
+    );
+    if (mounted) {
+      await _loadConfig();
+      widget.onConfigSaved?.call();
+    }
   }
 
   @override

@@ -120,6 +120,19 @@ List<KidTaskGroup> groupKidsTasks({
   return groups;
 }
 
+/// Group key for a shared kids task (matches [groupKidsTasks]).
+String kidTaskGroupKey(ICalTask task, List<EnrolledKid> enrolledKids) {
+  final targetId = icalProp(task.description, 'xKineticTargetKidId');
+  final enrolledIds = enrolledKids.map((k) => k.id).toSet();
+  if (targetId != null &&
+      targetId.isNotEmpty &&
+      enrolledIds.contains(targetId)) {
+    return targetId;
+  }
+  if (enrolledKids.length == 1) return enrolledKids.first.id;
+  return '__everyone__';
+}
+
 class KidsPanel extends StatefulWidget {
   final WebDavConfigRepository configRepo;
   final SyncConfig? syncConfig;
@@ -535,6 +548,30 @@ class KidsPanelState extends State<KidsPanel> {
     try {
       if (widget.onAcceptKidTask != null) {
         await widget.onAcceptKidTask!(task);
+      } else if (widget.todoRepo != null) {
+        final recurring = await widget.todoRepo!.completeByKidsTaskId(task.uid);
+        await _withService((service) async {
+          if (recurring) {
+            final shared = await widget.todoRepo!.loadLocalKidsTasksAsShared();
+            ICalTask? updated;
+            for (final t in shared) {
+              if (t.uid == task.uid) {
+                updated = t;
+                break;
+              }
+            }
+            if (updated != null) {
+              await service.pushSharedTask(updated);
+            }
+          } else {
+            await service.pushSharedTask(
+              task.copyWith(
+                status: ICalTaskStatus.completed,
+                updatedAt: DateTime.now().toUtc(),
+              ),
+            );
+          }
+        });
       } else {
         await _withService((service) async {
           await service.pushSharedTask(
@@ -544,7 +581,6 @@ class KidsPanelState extends State<KidsPanel> {
             ),
           );
         });
-        await widget.todoRepo?.completeByKidsTaskId(task.uid);
       }
       if (mounted) reload();
     } catch (e) {
@@ -630,10 +666,11 @@ class KidsPanelState extends State<KidsPanel> {
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               TasksSectionHeader(
                 icon: Icons.people_outline,
                 title: l10n.kidsSectionTitle,
@@ -777,6 +814,7 @@ class KidsPanelState extends State<KidsPanel> {
                     ),
               ],
             ],
+            ),
           ),
         );
       },

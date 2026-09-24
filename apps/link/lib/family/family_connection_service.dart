@@ -128,7 +128,7 @@ class FamilyConnectionService {
     final clock = now ?? DateTime.now();
     final byId = {for (final p in presenceList) p.deviceId: p};
     return [
-      for (final kid in enrolledKids)
+      for (final kid in enrolledKids.where((k) => k.isActive))
         () {
           final presence = byId[kid.id];
           final lastSeen = presence?.lastSeen;
@@ -195,6 +195,13 @@ class FamilyConnectionService {
     if (diff > connectedThreshold) return (true, true);
     return (true, false);
   }
+
+  /// Same 7 / 14-day windows as presence, for load-metric [updatedAt] timestamps.
+  static (bool connected, bool stale) evaluateConnection(
+    DateTime? timestamp,
+    DateTime now,
+  ) =>
+      _evaluate(timestamp, now);
 
   static String _formatLastSeen(
     DateTime now,

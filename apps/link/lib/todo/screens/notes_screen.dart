@@ -8,6 +8,7 @@ import '../../theme/app_header.dart';
 import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
+import '../services/todo_repository.dart';
 import '../widgets/category_sheet.dart';
 import '../widgets/note_quick_add_bar.dart';
 import 'note_editor_screen.dart';
@@ -15,6 +16,7 @@ import 'note_editor_screen.dart';
 /// Screen that displays all notes in a scrollable list with create/edit/delete.
 class NotesScreen extends StatefulWidget {
   final NoteRepository repo;
+  final TodoRepository? todoRepo;
   final SettingsRepository? settingsRepo;
   final ValueNotifier<SyncStatusInfo>? syncStatus;
   final bool hasOtherLinkMembers;
@@ -25,6 +27,7 @@ class NotesScreen extends StatefulWidget {
   const NotesScreen({
     super.key,
     required this.repo,
+    this.todoRepo,
     this.settingsRepo,
     this.syncStatus,
     this.hasOtherLinkMembers = false,
@@ -41,6 +44,8 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _openEditor({
     PersonalNote? note,
     bool initialIsShared = false,
+    String? initialTitle,
+    String? initialBody,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
@@ -69,9 +74,12 @@ class _NotesScreenState extends State<NotesScreen> {
         fullscreenDialog: true,
         builder: (_) => NoteEditorScreen(
           repo: widget.repo,
+          todoRepo: widget.todoRepo,
           note: note,
           hasFamilyKey: widget.hasOtherLinkMembers,
           initialIsShared: note?.isShared ?? initialIsShared,
+          initialTitle: initialTitle,
+          initialBody: initialBody,
           otherLinkMembers: widget.otherLinkMembers,
         ),
       ),
@@ -81,6 +89,83 @@ class _NotesScreenState extends State<NotesScreen> {
         SnackBar(content: Text(AppLocalizations.of(context).notesSaved)),
       );
     }
+  }
+
+  void _showNewNoteMenu() {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.note_add_outlined),
+              title: Text(l10n.notesNewTooltip),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openEditor();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.notesFromTemplate),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showTemplatePicker();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTemplatePicker() {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text(l10n.notesFromTemplate)),
+            ListTile(
+              title: Text(l10n.notesTemplateMeeting),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openEditor(
+                  initialTitle: l10n.notesTemplateMeeting,
+                  initialBody: l10n.notesTemplateMeetingBody,
+                );
+              },
+            ),
+            ListTile(
+              title: Text(l10n.notesTemplateShopping),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openEditor(
+                  initialTitle: l10n.notesTemplateShopping,
+                  initialBody: l10n.notesTemplateShoppingBody,
+                );
+              },
+            ),
+            ListTile(
+              title: Text(l10n.notesTemplateJournal),
+              onTap: () {
+                Navigator.pop(ctx);
+                _openEditor(
+                  initialTitle: l10n.notesTemplateJournal,
+                  initialBody: l10n.notesTemplateJournalBody,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showTrashSheet(BuildContext context) {
@@ -128,7 +213,7 @@ class _NotesScreenState extends State<NotesScreen> {
             IconButton(
               icon: const Icon(Icons.add),
               tooltip: AppLocalizations.of(context).notesNewTooltip,
-              onPressed: () => _openEditor(),
+              onPressed: _showNewNoteMenu,
             ),
           ],
         ),
@@ -142,6 +227,7 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
         bottomSheet: NoteQuickAddBar(
           repo: widget.repo,
+          todoRepo: widget.todoRepo,
           hasFamilyKey: widget.hasOtherLinkMembers,
           otherLinkMembers: widget.otherLinkMembers,
         ),
@@ -700,7 +786,8 @@ class _NoteCard extends StatelessWidget {
         ? '${l10n.notesLastModified} · $updatedLabel'
         : '${l10n.notesLastModified} · $updatedLabel · $editorLabel';
     final reminderPassed = note.remindAt != null && isOverdue(note.remindAt!);
-    final showMeta = note.remindAt != null || note.isContentHidden;
+    final showMeta =
+        note.remindAt != null || note.isContentHidden || note.isLocalOnly;
 
     return Material(
       color: scheme.surfaceContainerLow,
@@ -757,6 +844,12 @@ class _NoteCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 6,
                   children: [
+                    if (note.isLocalOnly)
+                      _NoteMetaChip(
+                        icon: Icons.phonelink_lock_outlined,
+                        label: l10n.notesLocalOnlyBadge,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     if (note.isContentHidden)
                       _NoteMetaChip(
                         icon: Icons.lock_outline,

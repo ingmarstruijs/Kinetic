@@ -233,13 +233,38 @@
       "name": {"type": "String"}
     }
   },
-  "familyMemberRemoveBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. Dit roteert de familiesleutel niet — voor volledige uitsluiting later: maak een nieuwe familiesleutel.",
+  "familyMemberRemoveBody": "{name} wordt uit de familielijst gehaald. Hun app ontkoppelt bij de volgende sync. De familiesleutel verandert niet automatisch — daarna kun je de wizard voor een nieuwe sleutel starten zodat zij geen nieuwe gedeelde data kunnen lezen.",
   "@familyMemberRemoveBody": {
     "placeholders": {
       "name": {"type": "String"}
     }
   },
   "familyMemberRemovedFromFamily": "Je bent op een ander apparaat uit de familie verwijderd.",
+  "familyKeyRotationOfferTitle": "Nieuwe familiesleutel maken?",
+  "familyKeyRotationOfferBody": "Iemand verwijderen verandert de familiesleutel niet. Maak een nieuwe sleutel en deel die met iedereen die mag blijven, zodat de verwijderde persoon geen nieuwe gedeelde data kan lezen.",
+  "familyKeyRotationOfferNow": "Wizard starten",
+  "familyKeyRotationOfferLater": "Niet nu",
+  "familyKeyRotationTitle": "Nieuwe familiesleutel",
+  "familyKeyRotationIntroTitle": "Familiesleutel roteren",
+  "familyKeyRotationIntroBody": "Je noteert een nieuwe familiesleutel van 12 woorden. Gedeelde data op WebDAV wordt opnieuw versleuteld. Overgebleven gezinsleden en kinderen moeten een nieuwe QR scannen.",
+  "familyKeyRotationStart": "Nieuwe sleutel maken",
+  "familyKeyRotationReencryptTitle": "Gedeelde data opnieuw versleutelen…",
+  "familyKeyRotationReencryptPreparing": "Gedeelde mappen scannen…",
+  "familyKeyRotationReencryptProgress": "{done} van {total} bestanden",
+  "@familyKeyRotationReencryptProgress": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "familyKeyRotationShareLinkTitle": "Delen met gezinsleden",
+  "familyKeyRotationShareLinkBody": "Elke volwassene met Kinetic Link moet deze QR scannen of tap-to-link gebruiken. De oude sleutel opent geen nieuwe gedeelde data meer.",
+  "familyKeyRotationShareLinkButton": "Familie-QR tonen",
+  "familyKeyRotationShareLinkSkip": "Nu overslaan",
+  "familyKeyRotationShareKidsTitle": "Kinderen opnieuw inschrijven",
+  "familyKeyRotationShareKidsBody": "Elk kinderapparaat heeft een nieuwe inschrijf-QR nodig met de bijgewerkte familiesleutel.",
+  "familyKeyRotationDoneTitle": "Familiesleutel bijgewerkt",
+  "familyKeyRotationDoneBody": "Dit apparaat gebruikt de nieuwe sleutel. Zorg dat elk gezinslid en kind de nieuwe QR heeft gescand wanneer je klaar bent.",
   "otherLinkMemberStatusPaired": "Gezinslid gekoppeld — familiesleutel aanwezig",
   "otherLinkMemberStatusUnpaired": "Gezinslid niet gekoppeld — scan of deel de QR-code om te koppelen",
   "familyMemberLastSeen": "Laatst gezien {when}",
@@ -316,6 +341,11 @@
   },
   "kidsEnrollWhatShared": "Wat wordt er gedeeld?",
   "kidsEnrollWhatSharedBody": "Deze QR-code bevat de server, het account en de familiesleutel — niet het WebDAV-wachtwoord. Typ dat wachtwoord één keer op het kindertoestel. Deel de code alleen met de kinderenapp op een vertrouwd apparaat.",
+  "kidsEnrollWaitingDevice": "Wachten tot het kindertoestel verbindt…",
+  "kidsEnrollKeepWaiting": "Klaar — blijf wachten op toestel",
+  "kidsWaitingForDevice": "Wachten op toestel",
+  "kidsMarkActive": "Markeer als gekoppeld",
+  "kidsDraftSection": "WACHT OP KOPPELING",
 
   "settingsLanguage": "Taal",
   "settingsLanguageEnglish": "English",
@@ -487,6 +517,14 @@
       "when": {"type": "String"}
     }
   },
+
+  "tasksAmbientLoadOpen": "{count} openstaand",
+  "@tasksAmbientLoadOpen": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "tasksAmbientLoadUnknown": "—",
 
   "notifChannelName": "Taakherinneringen",
   "notifChannelDesc": "Herinneringen voor taken en opdrachten",
@@ -847,7 +885,21 @@
     }
   },
   "notesHideContent": "Ontgrendelen vereisen",
-  "notesHideContentHint": "Openen vereist biometrie of apparaat-pincode",
+  "notesHideContentHint": "Verbergt voorvertoningen en vraagt biometrie of pincode bij openen. De inhoud sync nog via WebDAV, tenzij ‘Alleen op dit apparaat’ aan staat.",
+  "notesLocalOnly": "Alleen op dit apparaat",
+  "notesLocalOnlyHint": "Titel en inhoud worden nooit naar WebDAV geüpload. Delen met gezin kan niet.",
+  "notesLocalOnlyBadge": "Dit apparaat",
+  "notesLinkedTasks": "Gekoppelde taken",
+  "notesLinkTask": "Taken koppelen",
+  "notesLinkTaskEmpty": "Geen open taken om te koppelen",
+  "notesFromTemplate": "Nieuw van sjabloon",
+  "notesTemplateMeeting": "Vergadernotities",
+  "notesTemplateMeetingBody": "## Aanwezigen\n\n## Agenda\n- \n\n## Acties\n- ",
+  "notesTemplateShopping": "Boodschappenlijst",
+  "notesTemplateShoppingBody": "- \n- \n- ",
+  "notesTemplateJournal": "Dagboek",
+  "notesTemplateJournalBody": "## Vandaag\n\n## Dankbaar voor\n- ",
+  "taskLinkedNotes": "Gekoppelde notities",
   "notesUnlockReason": "Ontgrendel deze notitie",
   "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
   "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om ontgrendelen te vereisen",
@@ -1076,6 +1128,16 @@
   "kidsXpAppliesToEnabled": "Alleen voor kinderen met XP & goals aan",
   "kidsXpAndGoals": "XP & goals",
   "kidsXpAndGoalsSubtitle": "Toon XP-beloningen en goals voor dit kind",
+  "kidsWeekOverviewTitle": "Deze week",
+  "kidsWeekOverviewLegend": "Te doen · klaar",
+  "kidsWeekDayA11y": "{weekday}, {due} te doen, {done} klaar",
+  "@kidsWeekDayA11y": {
+    "placeholders": {
+      "weekday": {"type": "String"},
+      "due": {"type": "int"},
+      "done": {"type": "int"}
+    }
+  },
   "kidsOfflineBanner": "Offline — kindertaken synchroniseren als WebDAV terug is",
   "kidsPendingSync": "Wacht op sync",
   "tasksSyncOffline": "Offline — wijzigingen synchroniseren later",

@@ -50,6 +50,13 @@ class NoteRepository {
         .map((rows) => rows.map(_noteFromRow).toList());
   }
 
+  /// Active notes that link to [taskId].
+  Stream<List<PersonalNote>> watchNotesLinkedToTask(String taskId) {
+    return watchAll().map(
+      (notes) => notes.where((n) => n.isLinkedToTask(taskId)).toList(),
+    );
+  }
+
   /// Stream a single note by id.
   Stream<PersonalNote?> watchOne(String id) {
     return (_db.select(_db.personalNotes)..where((t) => t.id.equals(id)))
@@ -64,6 +71,8 @@ class NoteRepository {
     bool isShared = false,
     List<String>? sharedMemberIds,
     bool isContentHidden = false,
+    bool isLocalOnly = false,
+    List<String>? linkedTaskIds,
     DateTime? remindAt,
     String? category,
     int sortOrder = 0,
@@ -75,6 +84,8 @@ class NoteRepository {
         isShared: isShared,
         sharedMemberIds: sharedMemberIds,
         isContentHidden: isContentHidden,
+        isLocalOnly: isLocalOnly,
+        linkedTaskIds: linkedTaskIds,
         remindAt: remindAt,
         category: category,
         sortOrder: sortOrder,
@@ -248,6 +259,8 @@ class NoteRepository {
       isShared: Value(note.isShared),
       sharedMemberIds: Value(note.sharedMemberIdsJson),
       isContentHidden: Value(note.isContentHidden),
+      isLocalOnly: Value(note.isLocalOnly),
+      linkedTaskIds: Value(note.linkedTaskIdsJson),
       remindAt: Value(note.remindAt),
       category: Value(note.category),
       sortOrder: Value(note.sortOrder),

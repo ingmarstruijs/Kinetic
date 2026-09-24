@@ -1013,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyMemberRemoveBody.
   ///
   /// In en, this message translates to:
-  /// **'{name} will be removed from this family\'s roster. Their app will disconnect on the next sync. This does not rotate the family key — for full exclusion later, create a new family key.'**
+  /// **'{name} will be removed from this family\'s roster. Their app will disconnect on the next sync. The family key is not changed automatically — you can run the new-key wizard afterward so they cannot decrypt new shared data.'**
   String familyMemberRemoveBody(String name);
 
   /// No description provided for @familyMemberRemovedFromFamily.
@@ -1021,6 +1021,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You were removed from the family on another device.'**
   String get familyMemberRemovedFromFamily;
+
+  /// No description provided for @familyKeyRotationOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new family key?'**
+  String get familyKeyRotationOfferTitle;
+
+  /// No description provided for @familyKeyRotationOfferBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing a member does not change the family key. To keep them from reading new shared notes and tasks, create a new key and share it with everyone who should stay.'**
+  String get familyKeyRotationOfferBody;
+
+  /// No description provided for @familyKeyRotationOfferNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start wizard'**
+  String get familyKeyRotationOfferNow;
+
+  /// No description provided for @familyKeyRotationOfferLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get familyKeyRotationOfferLater;
+
+  /// No description provided for @familyKeyRotationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New family key'**
+  String get familyKeyRotationTitle;
+
+  /// No description provided for @familyKeyRotationIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate the family key'**
+  String get familyKeyRotationIntroTitle;
+
+  /// No description provided for @familyKeyRotationIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will write down a new 12-word family key. Shared data on WebDAV is re-encrypted. Remaining family members and kids must scan a new QR to stay connected.'**
+  String get familyKeyRotationIntroBody;
+
+  /// No description provided for @familyKeyRotationStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new key'**
+  String get familyKeyRotationStart;
+
+  /// No description provided for @familyKeyRotationReencryptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-encrypting shared data…'**
+  String get familyKeyRotationReencryptTitle;
+
+  /// No description provided for @familyKeyRotationReencryptPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning shared folders…'**
+  String get familyKeyRotationReencryptPreparing;
+
+  /// No description provided for @familyKeyRotationReencryptProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} files'**
+  String familyKeyRotationReencryptProgress(int done, int total);
+
+  /// No description provided for @familyKeyRotationShareLinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share with family members'**
+  String get familyKeyRotationShareLinkTitle;
+
+  /// No description provided for @familyKeyRotationShareLinkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each remaining Kinetic Link adult must scan this QR or use tap-to-link. Their old key will not open new shared data.'**
+  String get familyKeyRotationShareLinkBody;
+
+  /// No description provided for @familyKeyRotationShareLinkButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Show family QR'**
+  String get familyKeyRotationShareLinkButton;
+
+  /// No description provided for @familyKeyRotationShareLinkSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get familyKeyRotationShareLinkSkip;
+
+  /// No description provided for @familyKeyRotationShareKidsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-enroll kids'**
+  String get familyKeyRotationShareKidsTitle;
+
+  /// No description provided for @familyKeyRotationShareKidsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Each child device needs a new enrollment QR with the updated family key.'**
+  String get familyKeyRotationShareKidsBody;
+
+  /// No description provided for @familyKeyRotationDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family key updated'**
+  String get familyKeyRotationDoneTitle;
+
+  /// No description provided for @familyKeyRotationDoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This device uses the new key. Make sure every remaining family member and kid has scanned the new QR when you are ready.'**
+  String get familyKeyRotationDoneBody;
 
   /// No description provided for @otherLinkMemberStatusPaired.
   ///
@@ -1165,6 +1279,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This QR code contains the server, account, and family key — not the WebDAV password. Type that password once on the kids device. Only share the code with the kids app on a trusted device.'**
   String get kidsEnrollWhatSharedBody;
+
+  /// No description provided for @kidsEnrollWaitingDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the kids device to connect…'**
+  String get kidsEnrollWaitingDevice;
+
+  /// No description provided for @kidsEnrollKeepWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Done — keep waiting for device'**
+  String get kidsEnrollKeepWaiting;
+
+  /// No description provided for @kidsWaitingForDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for device'**
+  String get kidsWaitingForDevice;
+
+  /// No description provided for @kidsMarkActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as linked'**
+  String get kidsMarkActive;
+
+  /// No description provided for @kidsDraftSection.
+  ///
+  /// In en, this message translates to:
+  /// **'WAITING TO LINK'**
+  String get kidsDraftSection;
 
   /// No description provided for @settingsLanguage.
   ///
@@ -1669,6 +1813,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connected ({when})'**
   String connConnectedSince(String when);
+
+  /// No description provided for @tasksAmbientLoadOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} open'**
+  String tasksAmbientLoadOpen(int count);
+
+  /// No description provided for @tasksAmbientLoadUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get tasksAmbientLoadUnknown;
 
   /// No description provided for @notifChannelName.
   ///
@@ -2873,8 +3029,92 @@ abstract class AppLocalizations {
   /// No description provided for @notesHideContentHint.
   ///
   /// In en, this message translates to:
-  /// **'Opening requires biometrics or device PIN'**
+  /// **'Hides previews and asks for biometrics or PIN to open. The note body still syncs via WebDAV unless “Keep on this device only” is on.'**
   String get notesHideContentHint;
+
+  /// No description provided for @notesLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep on this device only'**
+  String get notesLocalOnly;
+
+  /// No description provided for @notesLocalOnlyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Title and body never upload to WebDAV. Cannot share with family.'**
+  String get notesLocalOnlyHint;
+
+  /// No description provided for @notesLocalOnlyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get notesLocalOnlyBadge;
+
+  /// No description provided for @notesLinkedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked tasks'**
+  String get notesLinkedTasks;
+
+  /// No description provided for @notesLinkTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Link tasks'**
+  String get notesLinkTask;
+
+  /// No description provided for @notesLinkTaskEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No open tasks to link'**
+  String get notesLinkTaskEmpty;
+
+  /// No description provided for @notesFromTemplate.
+  ///
+  /// In en, this message translates to:
+  /// **'New from template'**
+  String get notesFromTemplate;
+
+  /// No description provided for @notesTemplateMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting notes'**
+  String get notesTemplateMeeting;
+
+  /// No description provided for @notesTemplateMeetingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'## Attendees\n\n## Agenda\n- \n\n## Actions\n- '**
+  String get notesTemplateMeetingBody;
+
+  /// No description provided for @notesTemplateShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping list'**
+  String get notesTemplateShopping;
+
+  /// No description provided for @notesTemplateShoppingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'- \n- \n- '**
+  String get notesTemplateShoppingBody;
+
+  /// No description provided for @notesTemplateJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get notesTemplateJournal;
+
+  /// No description provided for @notesTemplateJournalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'## Today\n\n## Grateful for\n- '**
+  String get notesTemplateJournalBody;
+
+  /// No description provided for @taskLinkedNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked notes'**
+  String get taskLinkedNotes;
 
   /// No description provided for @notesUnlockReason.
   ///
@@ -3577,6 +3817,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show XP rewards and goals for this child'**
   String get kidsXpAndGoalsSubtitle;
+
+  /// No description provided for @kidsWeekOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get kidsWeekOverviewTitle;
+
+  /// No description provided for @kidsWeekOverviewLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Due · done'**
+  String get kidsWeekOverviewLegend;
+
+  /// No description provided for @kidsWeekDayA11y.
+  ///
+  /// In en, this message translates to:
+  /// **'{weekday}, {due} due, {done} done'**
+  String kidsWeekDayA11y(String weekday, int due, int done);
 
   /// No description provided for @kidsOfflineBanner.
   ///

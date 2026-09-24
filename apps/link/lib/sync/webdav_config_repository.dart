@@ -272,8 +272,9 @@ class WebDavConfigRepository {
     }
   }
 
-  /// Adds a new kid with [name] to the enrolled list and returns the
-  /// [EnrolledKid] that was created (including its generated ID).
+  /// Adds a draft kid with [name] (inactive until first presence).
+  ///
+  /// Returns the [EnrolledKid] that was created (including its generated ID).
   Future<EnrolledKid> addEnrolledKid(String name) async {
     final now = DateTime.now().toUtc();
     final kid = EnrolledKid(
@@ -281,11 +282,50 @@ class WebDavConfigRepository {
       name: name,
       enrolledAt: now,
       updatedAt: now,
+      isActive: false,
     );
     final kids = await loadEnrolledKids();
     kids.add(kid);
     await _writeEnrolledKids(kids);
     return kid;
+  }
+
+  /// Removes draft kids older than [EnrolledKid.draftExpiry] with no activation.
+  ///
+  /// Returns the ids that were removed.
+  Future<List<String>> purgeStaleDraftKids({DateTime? now}) async {
+    final kids = await loadEnrolledKids();
+    final clock = now ?? DateTime.now().toUtc();
+    final kept = <EnrolledKid>[];
+    final removed = <String>[];
+    for (final kid in kids) {
+      if (kid.isStaleDraft(clock)) {
+        removed.add(kid.id);
+      } else {
+        kept.add(kid);
+      }
+    }
+    if (removed.isEmpty) return const [];
+    await _writeEnrolledKids(kept);
+    return removed;
+  }
+
+  /// Marks [kidId] active (first presence or explicit parent confirm).
+  ///
+  /// Returns the updated kid, or `null` if not found / already active.
+  Future<EnrolledKid?> activateEnrolledKid(String kidId) async {
+    final kids = await loadEnrolledKids();
+    final index = kids.indexWhere((k) => k.id == kidId);
+    if (index < 0) return null;
+    final kid = kids[index];
+    if (kid.isActive) return null;
+    final updated = kid.copyWith(
+      isActive: true,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    kids[index] = updated;
+    await _writeEnrolledKids(kids);
+    return updated;
   }
 
   /// Updates an enrolled kid (e.g. name or XP preference).

@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaveFamilyMessage.
   ///
   /// In en, this message translates to:
-  /// **'The link with the family will be removed. Your local tasks will be kept.'**
+  /// **'The link with the family will be removed. Tasks and XP on this device will be cleared.'**
   String get leaveFamilyMessage;
 
   /// No description provided for @cancel.
@@ -517,6 +517,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clean up'**
   String get cleanUpCompleted;
+
+  /// No description provided for @checkingConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking connection…'**
+  String get checkingConnection;
+
+  /// No description provided for @connectionErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password or username. Check the WebDAV password from Kinetic Link.'**
+  String get connectionErrorAuth;
+
+  /// No description provided for @connectionErrorNoWebDav.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not appear to support WebDAV.'**
+  String get connectionErrorNoWebDav;
+
+  /// No description provided for @connectionErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out. Check your network and try again.'**
+  String get connectionErrorTimeout;
+
+  /// No description provided for @connectionErrorUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Server unreachable. Check the address and your network.'**
+  String get connectionErrorUnreachable;
+
+  /// No description provided for @connectionErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect: {error}'**
+  String connectionErrorGeneric(String error);
+
+  /// No description provided for @enrollBlockedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'You need an internet connection to link with the family.'**
+  String get enrollBlockedOffline;
+
+  /// No description provided for @lastSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synced {when}'**
+  String lastSynced(String when);
+
+  /// No description provided for @neverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not synced yet'**
+  String get neverSynced;
+
+  /// No description provided for @queuedCompletions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} waiting to sync'**
+  String queuedCompletions(int count);
+
+  /// No description provided for @retrySync.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry sync'**
+  String get retrySync;
 }
 
 class _AppLocalizationsDelegate

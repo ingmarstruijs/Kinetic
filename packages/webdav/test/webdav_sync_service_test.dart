@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:kinetic_webdav/kinetic_webdav.dart';
@@ -262,6 +263,71 @@ void main() {
           '/kinetic/shared/notes/c6f8dd97-a47c-4bb1-88db-dcedab5f1e3e.ics',
         ),
         isTrue,
+      );
+    });
+  });
+
+  group('WebDavSyncService.reencryptSharedTree', () {
+    late SharedStorage storage;
+    late Uint8List oldKey;
+    late Uint8List newKey;
+    late WebDavSyncService service;
+
+    setUp(() {
+      storage = SharedStorage();
+      oldKey = KineticEncryption.generateFamilyKey();
+      newKey = KineticEncryption.generateFamilyKey();
+      service = WebDavSyncService(
+        client: WebDavClient(
+          baseUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          httpClient: FakeHttpClient(storage),
+        ),
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          linkId: 'link-1',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: oldKey,
+        ),
+      );
+    });
+
+    test('re-wraps decryptable shared notes with new family key', () async {
+      const uid = 'note-rotate-1';
+      final ical = ICalSerializer.noteToVjournal(
+        ICalNote(
+          uid: uid,
+          summary: 'Shared',
+          isShared: true,
+          createdAt: DateTime.utc(2026, 1, 1),
+          updatedAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      final blob = await KineticEncryption.encrypt(
+        Uint8List.fromList(utf8.encode(ical)),
+        oldKey,
+      );
+      storage.put('/kinetic/shared/notes/$uid.ics', blob);
+
+      final report = await service.reencryptSharedTree(
+        oldFamilyKey: oldKey,
+        newFamilyKey: newKey,
+      );
+
+      expect(report.reencrypted, greaterThan(0));
+      expect(report.failed, 0);
+
+      final stored = storage.get('/kinetic/shared/notes/$uid.ics')!;
+      final plain = await KineticEncryption.decrypt(stored, newKey);
+      final note = ICalSerializer.vjournalToNote(utf8.decode(plain));
+      expect(note.uid, uid);
+
+      expect(
+        () => KineticEncryption.decrypt(stored, oldKey),
+        throwsA(isA<SecretBoxAuthenticationError>()),
       );
     });
   });

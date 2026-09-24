@@ -13,7 +13,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get leaveFamilyMessage =>
-      'De koppeling met de familie wordt verwijderd. Je lokale opdrachten blijven bewaard.';
+      'De koppeling met de familie wordt verwijderd. Opdrachten en XP op dit apparaat worden gewist.';
 
   @override
   String get cancel => 'Annuleren';
@@ -233,4 +233,48 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get cleanUpCompleted => 'Opschonen';
+
+  @override
+  String get checkingConnection => 'Verbinding controleren…';
+
+  @override
+  String get connectionErrorAuth =>
+      'Verkeerd wachtwoord of gebruikersnaam. Controleer het WebDAV-wachtwoord uit Kinetic Link.';
+
+  @override
+  String get connectionErrorNoWebDav =>
+      'Deze server lijkt geen WebDAV te ondersteunen.';
+
+  @override
+  String get connectionErrorTimeout =>
+      'Verbinding time-out. Controleer je netwerk en probeer opnieuw.';
+
+  @override
+  String get connectionErrorUnreachable =>
+      'Server niet bereikbaar. Controleer het adres en je netwerk.';
+
+  @override
+  String connectionErrorGeneric(String error) {
+    return 'Kon niet verbinden: $error';
+  }
+
+  @override
+  String get enrollBlockedOffline =>
+      'Je hebt internet nodig om met de familie te koppelen.';
+
+  @override
+  String lastSynced(String when) {
+    return 'Laatst gesynchroniseerd $when';
+  }
+
+  @override
+  String get neverSynced => 'Nog niet gesynchroniseerd';
+
+  @override
+  String queuedCompletions(int count) {
+    return '$count wachten op sync';
+  }
+
+  @override
+  String get retrySync => 'Opnieuw synchroniseren';
 }

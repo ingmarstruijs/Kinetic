@@ -14,6 +14,8 @@ Future<void> _insertDirtyKidsTask(
   required String kidsTaskId,
   required String title,
   String? targetKidId,
+  String? recurrenceRule,
+  DateTime? dueDate,
 }) async {
   final now = DateTime.now().toUtc();
   await db.into(db.personalTasks).insert(
@@ -23,6 +25,8 @@ Future<void> _insertDirtyKidsTask(
           kidsTaskId: Value(kidsTaskId),
           targetKidId: Value(targetKidId),
           syncState: const Value('dirty'),
+          recurrenceRule: Value(recurrenceRule),
+          dueDate: Value(dueDate),
           createdAt: now,
           updatedAt: now,
         ),
@@ -64,6 +68,33 @@ void main() {
       expect(shared.single.summary, 'Tidy room');
       expect(shared.single.description, contains('xKineticTargetKidId:kid-mees'));
       expect(shared.single.status, ICalTaskStatus.needsAction);
+    });
+
+    test('pushes recurrence rule on shared kids task', () async {
+      final db = createTestDatabase();
+      final alice = await makeLinkOrchestrator(
+        db,
+        storage,
+        username: 'alice',
+        linkId: 'link-alice',
+        personalKey: syncTestPersonalKeyA,
+      );
+      final due = DateTime.utc(2026, 9, 22, 17);
+
+      await _insertDirtyKidsTask(
+        db,
+        id: 'personal-rec',
+        kidsTaskId: 'kids-uid-rec',
+        title: 'Brush teeth',
+        targetKidId: 'kid-mees',
+        recurrenceRule: 'FREQ=DAILY',
+        dueDate: due,
+      );
+      await alice.orchestrator.syncWithService(alice.service);
+
+      final shared = (await alice.service.pullSharedTasks()).single;
+      expect(shared.rrule, 'FREQ=DAILY');
+      expect(shared.dueAt, due);
     });
 
     test('preserves remote inProcess when pushing dirty kids task', () async {

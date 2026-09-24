@@ -248,12 +248,35 @@ void main() {
       expect(linked?.kidsTaskId, isNotNull);
       expect(linked?.isCompleted, isFalse);
 
-      await repo.completeByKidsTaskId(linked!.kidsTaskId!);
+      final recurring = await repo.completeByKidsTaskId(linked!.kidsTaskId!);
+      expect(recurring, isFalse);
       final done = await repo.getTask(created.id);
       expect(done?.isCompleted, isTrue);
       expect(done?.completedAt, isNotNull);
       final raw = await repo.debugGetRawTask(created.id);
       expect(raw?.syncState, equals('dirty'));
+    });
+
+    test('completeByKidsTaskId advances recurring kids mission', () async {
+      final due = DateTime.utc(2026, 9, 22, 8);
+      final created = await repo.createTask(
+        title: 'Teeth',
+        dueDate: due,
+        recurrenceRule: 'FREQ=WEEKLY',
+      );
+      await repo.sendToKids(created.id, targetKidId: 'mees');
+      final linked = await repo.getTask(created.id);
+      expect(linked?.kidsTaskId, isNotNull);
+
+      final recurring = await repo.completeByKidsTaskId(linked!.kidsTaskId!);
+      expect(recurring, isTrue);
+      final rolled = await repo.getTask(created.id);
+      expect(rolled?.isCompleted, isFalse);
+      expect(rolled?.dueDate, isNotNull);
+      expect(
+        rolled!.dueDate!.difference(due).inDays,
+        greaterThanOrEqualTo(7),
+      );
     });
   });
 

@@ -241,8 +241,9 @@ class _KidsAppShellState extends State<_KidsAppShell>
           repo: _repository,
           config: config,
           myKidId: kidId,
+          configRepo: configRepo,
           onDisconnected: () {
-            if (mounted) _leaveFamily();
+            if (mounted) unawaited(_leaveFamily(forced: true));
           },
           onXpResetReceived: (resetAt) async {
             await FlutterSecureKeyValueStore().write(
@@ -298,44 +299,39 @@ class _KidsAppShellState extends State<_KidsAppShell>
     }
   }
 
-  Future<void> _leaveFamily() async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.leaveFamilyTitle),
-        content: Text(l10n.leaveFamilyMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
+  Future<void> _leaveFamily({bool forced = false}) async {
+    if (!forced) {
+      final l10n = AppLocalizations.of(context);
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.leaveFamilyTitle),
+          content: Text(l10n.leaveFamilyMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l10n.cancel),
             ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.leave),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(ctx).colorScheme.error,
+              ),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.leave),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
 
     if (KidsDemoSession.instance.active) {
       KidsDemoSession.instance.clear();
-      await widget.appDb.delete(widget.appDb.kidsTasks).go();
-      if (mounted) {
-        setState(() {
-          _enrolled = false;
-          _orchestrator = null;
-          _goal = null;
-        });
-      }
-      return;
     }
 
+    await _repository.clearAllTasks();
     final store = FlutterSecureKeyValueStore();
+    await store.delete(key: 'kinetic_xp_reset_at');
     final configRepo = WebDavConfigRepository(store);
     await configRepo.clearEnrollment();
     if (mounted) {
@@ -343,6 +339,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
         _enrolled = false;
         _orchestrator = null;
         _goal = null;
+        _xpResetAt = null;
       });
     }
   }

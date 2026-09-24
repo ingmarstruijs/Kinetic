@@ -90,6 +90,10 @@ class ICalSerializer {
     if (updatedBy != null && updatedBy.isNotEmpty) {
       buf.writeln('X-KINETIC-UPDATED-BY:$updatedBy');
     }
+    final linkedTasks = note.linkedTaskIds;
+    if (linkedTasks != null && linkedTasks.isNotEmpty) {
+      buf.writeln('X-KINETIC-LINK-TASK-IDS:${linkedTasks.join(',')}');
+    }
     if (note.remindAt != null) {
       buf.writeln('BEGIN:VALARM');
       buf.writeln('ACTION:DISPLAY');
@@ -123,6 +127,7 @@ class ICalSerializer {
       remindAt: alarmProps['TRIGGER'] != null
           ? _parseTrigger(alarmProps['TRIGGER']!)
           : null,
+      linkedTaskIds: _parseSharedMembers(props['X-KINETIC-LINK-TASK-IDS']),
     );
   }
 

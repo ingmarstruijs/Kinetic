@@ -89,6 +89,13 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
       for (final p in presence) {
         if (p.deviceType == 'kid') kidPresence[p.deviceId] = p;
       }
+      // Promote drafts that already heartbeat'd (e.g. kids enrolled while QR open).
+      var activated = false;
+      for (final kidId in kidPresence.keys) {
+        final updated = await widget.configRepo.activateEnrolledKid(kidId);
+        if (updated != null) activated = true;
+      }
+      if (activated) await _loadData();
       if (mounted) setState(() => _presenceByKidId = kidPresence);
     } catch (_) {}
   }
@@ -122,6 +129,7 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
       ),
     );
     await _loadData();
+    await _loadPresence();
     if (mounted) widget.onConfigSaved?.call();
   }
 
@@ -174,6 +182,16 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
 
   Widget _buildKidSubtitle(BuildContext context, EnrolledKid kid) {
     final l10n = AppLocalizations.of(context);
+    if (!kid.isActive) {
+      return Text(
+        l10n.kidsWaitingForDevice,
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.tertiary,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+    }
     final presence = _presenceByKidId[kid.id];
     final enrolledText = l10n.kidsEnrolledOn(_formatDate(kid.enrolledAt));
     if (presence == null) {
@@ -200,6 +218,13 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _markActive(EnrolledKid kid) async {
+    if (DemoSession.instance.active) return;
+    await widget.configRepo.activateEnrolledKid(kid.id);
+    await _loadData();
+    if (mounted) widget.onConfigSaved?.call();
   }
 
   static String _formatLastSeen(AppLocalizations l10n, Duration diff) {
@@ -243,14 +268,25 @@ class _KidsSettingsScreenState extends State<KidsSettingsScreen> {
             for (final kid in _enrolledKids)
               ListTile(
                 leading: Icon(
-                  Icons.face,
-                  color: Theme.of(context).colorScheme.primary,
+                  kid.isActive ? Icons.face : Icons.hourglass_top_outlined,
+                  color: kid.isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.tertiary,
                 ),
                 title: Text(kid.name),
                 subtitle: _buildKidSubtitle(context, kid),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (!kid.isActive)
+                      IconButton(
+                        icon: Icon(
+                          Icons.check_circle_outline,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        tooltip: l10n.kidsMarkActive,
+                        onPressed: () => _markActive(kid),
+                      ),
                     IconButton(
                       icon: Icon(
                         kid.xpEnabled

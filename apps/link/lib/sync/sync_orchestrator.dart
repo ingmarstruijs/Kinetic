@@ -203,7 +203,7 @@ class SyncOrchestrator {
       final remote = await service.pullRoster() ?? FamilyRoster.empty();
       final localCached =
           await configRepo.loadCachedRoster() ?? FamilyRoster.empty();
-      await configRepo.purgeStaleDraftKids();
+      final purgedDraftIds = await configRepo.purgeStaleDraftKids();
       final kids = await configRepo.loadEnrolledKids();
       final kidsParticipation = await configRepo.loadKidsParticipation();
       final now = DateTime.now().toUtc();
@@ -226,14 +226,15 @@ class SyncOrchestrator {
         localKids: kids.map((k) => k.toFamilyKidMember()).toList(),
       );
 
-      // Drop remotely-known stale drafts that local purge already removed.
-      final localIds = kids.map((k) => k.id).toSet();
-      merged = merged.copyWith(
-        kids: merged.kids
-            .where((k) => k.isActive || localIds.contains(k.id))
-            .toList(),
-        updatedAt: now,
-      );
+      // Drop only drafts this device just soft-purged — keep peer drafts so
+      // other Links still see "waiting for device" kids.
+      if (purgedDraftIds.isNotEmpty) {
+        final purged = purgedDraftIds.toSet();
+        merged = merged.copyWith(
+          kids: merged.kids.where((k) => !purged.contains(k.id)).toList(),
+          updatedAt: now,
+        );
+      }
 
       await service.pushRoster(merged);
       await configRepo.saveCachedRoster(merged);

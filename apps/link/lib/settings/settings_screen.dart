@@ -495,13 +495,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
 
-      final savedPath = await FilePicker.platform.saveFile(
+      final savedUri = await FilePicker.saveFile(
         fileName: fileName,
         bytes: bytes,
       );
 
       if (!mounted) return;
-      if (savedPath != null) {
+      if (savedUri != null) {
+        final savedPath =
+            savedUri.scheme == 'file' ? savedUri.toFilePath() : '$savedUri';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).backupSaved(savedPath)),
@@ -582,14 +584,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     if (!await _confirmBackupOverwrite() || !mounted) return;
 
-    final result = await FilePicker.platform.pickFiles(
+    final files = await FilePicker.pickFiles(
       type: FileType.any,
-      allowMultiple: false,
-      withData: true,
     );
-    if (result == null || result.files.isEmpty || !mounted) return;
+    if (files.isEmpty || !mounted) return;
 
-    final fileBytes = await readPlatformFileBytes(result.files.first);
+    final fileBytes = await readPlatformFileBytes(files.first);
     if (fileBytes == null || fileBytes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -953,13 +953,11 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         );
         if (overwriteOk != true || !mounted) return;
 
-        final result = await FilePicker.platform.pickFiles(
+        final files = await FilePicker.pickFiles(
           type: FileType.any,
-          allowMultiple: false,
-          withData: true,
         );
-        if (result == null || result.files.isEmpty) return;
-        final fileBytes = await readPlatformFileBytes(result.files.first);
+        if (files.isEmpty) return;
+        final fileBytes = await readPlatformFileBytes(files.first);
         if (fileBytes == null || fileBytes.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

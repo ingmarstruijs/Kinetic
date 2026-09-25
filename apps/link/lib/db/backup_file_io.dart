@@ -3,13 +3,12 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 
-/// Reads bytes from a [PlatformFile], falling back to [path] when [bytes] is
-/// null (common on Android when [FilePicker] is used with `withData: true`).
+/// Reads bytes from a [PlatformFile], falling back to [path] when needed.
 Future<Uint8List?> readPlatformFileBytes(PlatformFile file) async {
-  final inline = file.bytes;
-  if (inline != null && inline.isNotEmpty) {
-    return inline;
-  }
+  try {
+    final inline = await file.readAsBytes();
+    if (inline.isNotEmpty) return inline;
+  } catch (_) {}
   final path = file.path;
   if (path == null || path.isEmpty) return null;
   try {

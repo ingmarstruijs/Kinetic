@@ -126,16 +126,14 @@ class _RestoreFileScreenState extends State<_RestoreFileScreen> {
     });
     try {
       final key = await KineticVault.deriveAesKey(_phraseCtrl.text);
-      final result = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.any,
-        allowMultiple: false,
-        withData: true,
       );
-      if (result == null || result.files.isEmpty) {
+      if (files.isEmpty) {
         if (mounted) setState(() => _busy = false);
         return;
       }
-      final bytes = await readPlatformFileBytes(result.files.first);
+      final bytes = await readPlatformFileBytes(files.first);
       if (bytes == null || bytes.isEmpty) {
         throw FormatException(l10n.vaultCouldNotReadFile);
       }

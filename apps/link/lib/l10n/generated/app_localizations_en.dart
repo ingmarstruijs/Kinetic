@@ -87,6 +87,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionSync => 'Sync';
 
   @override
+  String get linkWebTitle => 'Link Web';
+
+  @override
+  String get linkWebSettingsSubtitle =>
+      'Open tasks in a browser on the same Wi‑Fi';
+
+  @override
+  String get linkWebIntro =>
+      'Scan this QR (or open the URL) on a computer on the same Wi‑Fi. Your vault keys stay on this phone — the browser only sees decrypted tasks over a short-lived session.';
+
+  @override
+  String get linkWebPickIp => 'Wi‑Fi address';
+
+  @override
+  String get linkWebKeepAwake =>
+      'Keep this screen open and the phone awake while using Link Web.';
+
+  @override
+  String get linkWebCopyUrl => 'Copy URL';
+
+  @override
+  String get linkWebCopied => 'URL copied';
+
+  @override
+  String get linkWebRevoke => 'Revoke & stop';
+
+  @override
+  String get linkWebStart => 'Start bridge';
+
+  @override
+  String get linkWebNewSession => 'New QR';
+
+  @override
   String get settingsWebDavConfigure => 'Configure WebDAV';
 
   @override

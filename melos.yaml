@@ -7,17 +7,29 @@ packages:
 scripts:
   test:
     exec: flutter test
-    description: Run all tests across packages
+    description: Run Flutter tests across packages
     packageFilters:
       dirExists: test
+      flutter: true
+
+  test_dart:
+    exec: dart test
+    description: Run pure Dart package tests
+    packageFilters:
+      dirExists: test
+      flutter: false
 
   analyze:
     exec: flutter analyze
-    description: Analyze all packages
+    description: Analyze Flutter packages
+    packageFilters:
+      flutter: true
 
   pub_get:
     exec: flutter pub get
     description: Get pub dependencies for all packages
+    packageFilters:
+      flutter: true
 
   build_link:
     exec: flutter build apk --release

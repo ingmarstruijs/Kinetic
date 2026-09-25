@@ -254,6 +254,66 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get settingsSectionSync;
 
+  /// No description provided for @linkWebTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Web'**
+  String get linkWebTitle;
+
+  /// No description provided for @linkWebSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open tasks in a browser on the same Wi‑Fi'**
+  String get linkWebSettingsSubtitle;
+
+  /// No description provided for @linkWebIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this QR (or open the URL) on a computer on the same Wi‑Fi. Your vault keys stay on this phone — the browser only sees decrypted tasks over a short-lived session.'**
+  String get linkWebIntro;
+
+  /// No description provided for @linkWebPickIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi‑Fi address'**
+  String get linkWebPickIp;
+
+  /// No description provided for @linkWebKeepAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this screen open and the phone awake while using Link Web.'**
+  String get linkWebKeepAwake;
+
+  /// No description provided for @linkWebCopyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get linkWebCopyUrl;
+
+  /// No description provided for @linkWebCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'URL copied'**
+  String get linkWebCopied;
+
+  /// No description provided for @linkWebRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke & stop'**
+  String get linkWebRevoke;
+
+  /// No description provided for @linkWebStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start bridge'**
+  String get linkWebStart;
+
+  /// No description provided for @linkWebNewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New QR'**
+  String get linkWebNewSession;
+
   /// No description provided for @settingsWebDavConfigure.
   ///
   /// In en, this message translates to:

@@ -87,6 +87,39 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSectionSync => 'Synchronisatie';
 
   @override
+  String get linkWebTitle => 'Link Web';
+
+  @override
+  String get linkWebSettingsSubtitle =>
+      'Open taken in een browser op hetzelfde wifi';
+
+  @override
+  String get linkWebIntro =>
+      'Scan deze QR (of open de URL) op een computer op hetzelfde wifi. Je kluissleutels blijven op deze telefoon — de browser ziet alleen ontsleutelde taken via een korte sessie.';
+
+  @override
+  String get linkWebPickIp => 'Wifi-adres';
+
+  @override
+  String get linkWebKeepAwake =>
+      'Houd dit scherm open en de telefoon wakker terwijl je Link Web gebruikt.';
+
+  @override
+  String get linkWebCopyUrl => 'URL kopiëren';
+
+  @override
+  String get linkWebCopied => 'URL gekopieerd';
+
+  @override
+  String get linkWebRevoke => 'Intrekken & stoppen';
+
+  @override
+  String get linkWebStart => 'Bridge starten';
+
+  @override
+  String get linkWebNewSession => 'Nieuwe QR';
+
+  @override
   String get settingsWebDavConfigure => 'WebDAV configureren';
 
   @override

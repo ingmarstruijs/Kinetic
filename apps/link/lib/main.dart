@@ -571,6 +571,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                             setState(() => _selectedIndex = 0),
                         onOpenNotesTab: () =>
                             setState(() => _selectedIndex = 1),
+                        todoRepository: _todoRepository,
                       ),
                     ];
 

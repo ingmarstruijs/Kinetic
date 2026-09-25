@@ -24,6 +24,8 @@ import '../vault/widgets/mnemonic_phrase_field.dart';
 import '../debug/demo_scenarios.dart';
 import '../debug/demo_scenarios_screen.dart';
 import '../debug/demo_session.dart';
+import '../bridge/link_web_bridge_screen.dart';
+import '../todo/services/todo_repository.dart';
 import 'family_key_scan_screen.dart';
 import 'kids_settings_screen.dart';
 import 'family_members_settings_screen.dart';
@@ -42,6 +44,7 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback? onOpenTasksTab;
   final VoidCallback? onOpenNotesTab;
   final VoidCallback? onSyncRetry;
+  final TodoRepository? todoRepository;
 
   const SettingsScreen({
     super.key,
@@ -55,6 +58,7 @@ class SettingsScreen extends StatefulWidget {
     this.onOpenTasksTab,
     this.onOpenNotesTab,
     this.onSyncRetry,
+    this.todoRepository,
   });
 
   @override
@@ -192,6 +196,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _loadConfig();
                     },
                   ),
+                  if (widget.todoRepository != null)
+                    ListTile(
+                      leading: Icon(Icons.laptop_windows_outlined, color: iconColor),
+                      title: Text(l10n.linkWebTitle),
+                      subtitle: Text(l10n.linkWebSettingsSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => LinkWebBridgeScreen(
+                              todoRepository: widget.todoRepository!,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   if (isConnected && widget.syncStatus != null)
                     ValueListenableBuilder<SyncStatusInfo>(
                       valueListenable: widget.syncStatus!,

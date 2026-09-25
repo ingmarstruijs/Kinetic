@@ -77,6 +77,7 @@ Family features are **not** available offline-only. Configure WebDAV in **Settin
 | Apps          | Flutter (Kinetic Link + Kinetic Kids)                |
 | Local DB      | Drift (SQLite)                                       |
 | Crypto & sync | `packages/webdav` — AES-256-GCM, iCal, WebDAV client |
+| Link Web bridge | `packages/link_bridge` + `apps/link_web` (LAN phone proxy) — [`docs/LINK_WEB.md`](docs/LINK_WEB.md) |
 | Monorepo      | Melos                                                |
 | Tests         | `flutter test` per package; multi-device protocol in CI — see [`docs/MULTI_DEVICE_TESTING.md`](docs/MULTI_DEVICE_TESTING.md) |
 
@@ -93,6 +94,8 @@ cd apps/link && flutter run
 ```
 
 No server required for personal use — Kinetic Link works fully offline for tasks, notes, vault, and themes. **Family extras** (family linking, proposals, kids enrollment/overview, shared notes, presence, multi-device sync) need WebDAV in **Settings → Sync** (same base URL for every family device).
+
+**Link Web (experimental):** on the same Wi‑Fi, **Settings → Link Web** starts a phone bridge; open the HTTP URL on your computer. Keys stay on the phone. Details: [`docs/LINK_WEB.md`](docs/LINK_WEB.md). The static SPA is also published to GitHub Pages on `main` (still pair via the phone URL for LAN).
 
 ### Build a release APK
 

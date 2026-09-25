@@ -26,6 +26,12 @@ jobs:
           channel: stable
           cache: true
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/link_web/package-lock.json
+
       - name: Bootstrap monorepo
         run: |
           flutter pub get
@@ -33,8 +39,20 @@ jobs:
 
       - name: Analyze
         # Pre-existing infos/warnings should not block PRs; tests are the hard gate.
-        run: dart run melos exec -- flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: dart run melos exec --flutter -- flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Analyze Dart packages
+        run: dart run melos exec --no-flutter -- dart analyze
 
       - name: Test
         # One Flutter process at a time — parallel melos exec hits the startup lock.
-        run: dart run melos exec --concurrency=1 --dir-exists=test -- flutter test
+        run: dart run melos exec --concurrency=1 --flutter --dir-exists=test -- flutter test
+
+      - name: Test Dart packages
+        run: dart run melos exec --no-flutter --dir-exists=test -- dart test
+
+      - name: Build Link Web SPA
+        working-directory: apps/link_web
+        run: |
+          npm ci
+          npm run build

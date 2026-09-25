@@ -1050,7 +1050,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String tasksAmbientLoadOpen(int count) {
-    return '$count openstaand';
+    return '$count open';
   }
 
   @override

@@ -39,6 +39,10 @@ Ship alongside / right after Phase 2 depth: suggestions and notes that feel inte
 
 **Done when:** categorize/load-balance suggestions are trustworthy; notes have a clear shared/privacy story; load metrics feed the UI.
 
+### Multi-device test coverage
+
+Protocol routes are covered in CI (fake dual-device harness), not by hand with phone+emulator. See [`docs/MULTI_DEVICE_TESTING.md`](docs/MULTI_DEVICE_TESTING.md).
+
 ---
 
 ## Phase 4 — Platform leaps

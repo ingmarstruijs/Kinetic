@@ -111,6 +111,14 @@ class _LinkWebBridgeScreenState extends State<LinkWebBridgeScreen> {
             l10n.linkWebIntro,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.linkWebSteps,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.45,
+                ),
+          ),
           const SizedBox(height: 16),
           if (_hosts.length > 1) ...[
             Text(l10n.linkWebPickIp, style: Theme.of(context).textTheme.titleSmall),

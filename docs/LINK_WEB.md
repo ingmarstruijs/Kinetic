@@ -2,19 +2,13 @@
 
 Browser UI for **personal tasks**, paired to Kinetic Link on your phone (WhatsApp Web style).
 
-## Model
+## What you do
 
-- **Phone holds vault keys** and WebDAV credentials.
-- Browser receives **plaintext domain objects** over a short-lived LAN session.
-- No Kinetic account or cloud relay.
+1. On the **phone**: Kinetic Link → **Settings → Link Web** (leave that screen open).
+2. On the **computer** (same Wi‑Fi): open the **HTTP URL** under the QR, or scan the QR.
+3. Tasks appear in the browser. Vault keys never leave the phone.
 
-## Same Wi‑Fi (v1)
-
-1. In Link: **Settings → Link Web** → keep the screen open.
-2. On your computer (same Wi‑Fi), open the **HTTP URL** shown under the QR (or scan the QR with a reader that opens URLs).
-3. The phone serves the SPA over HTTP and a WebSocket at `/bridge` so the browser avoids HTTPS→`ws://` mixed content.
-
-**GitHub Pages** hosts the same static SPA for discoverability (`https://<org>.github.io/Kinetic/`). From Pages you must still open the phone HTTP URL to pair (LAN `ws://`).
+**GitHub Pages** (`https://…/Kinetic/`) is only a landing page — it cannot pair by itself. Always open the phone’s `http://192.168.…` URL.
 
 ## Revoke
 

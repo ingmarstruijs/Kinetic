@@ -13,36 +13,31 @@ const client = new BridgeClient();
 let tasks: BridgeTask[] = [];
 let error = '';
 let online = false;
+let pairing = false;
 
 function render(): void {
   const onPhone = isPhoneOrigin();
   app.innerHTML = `
     <header>
       <h1>Kinetic Link Web</h1>
-      <p>Browser UI for personal tasks. Vault keys stay on your phone.</p>
+      <p>Personal tasks in the browser. Vault keys stay on your phone.</p>
     </header>
     <div class="card">
       <div class="status ${online ? 'online' : 'offline'}">
-        ${online ? 'Connected to phone' : 'Not connected'}
+        ${
+          online
+            ? 'Connected to phone'
+            : pairing
+              ? 'Connecting…'
+              : 'Not connected'
+        }
       </div>
       ${
         online
           ? ''
-          : `
-        <p class="hint" style="margin-top:1rem">
-          ${
-            onPhone
-              ? 'Connecting via this phone bridge…'
-              : 'GitHub Pages is HTTPS — open the <strong>HTTP URL shown on your phone</strong> (same Wi‑Fi) so the browser can use <code>ws://</code>. Or paste the QR JSON below for debugging on localhost.'
-          }
-        </p>
-        <div style="margin-top:1rem">
-          <label for="qr">Paste Link Web QR JSON</label>
-          <textarea id="qr" placeholder='{"v":1,"type":"link-web",...}'></textarea>
-          <div class="row">
-            <button id="connect" type="button">Connect</button>
-          </div>
-        </div>`
+          : onPhone
+            ? phonePairingCopy()
+            : pagesHowToCopy()
       }
       ${error ? `<p class="error">${escapeHtml(error)}</p>` : ''}
     </div>
@@ -123,6 +118,38 @@ function render(): void {
   });
 }
 
+function phonePairingCopy(): string {
+  return `
+    <ol class="steps">
+      <li>This tab was opened from your phone’s Link Web screen.</li>
+      <li>Pairing happens automatically — keep the Link Web screen open on the phone.</li>
+    </ol>
+    <p class="hint">If nothing happens, go back to the phone, tap <strong>Copy URL</strong>, and open that address here.</p>
+  `;
+}
+
+function pagesHowToCopy(): string {
+  return `
+    <p class="lead">This GitHub Pages site is only a landing page. It cannot reach your vault by itself.</p>
+    <ol class="steps">
+      <li>On your <strong>phone</strong>: open Kinetic Link → <strong>Settings → Link Web</strong>.</li>
+      <li>Leave that screen open (phone awake, same Wi‑Fi as this computer).</li>
+      <li>On <strong>this computer</strong>, open the <strong>HTTP address</strong> shown under the QR
+        (or tap <strong>Copy URL</strong> on the phone and paste it in the address bar).
+        It looks like <code>http://192.168.…</code>.</li>
+      <li>Tasks load automatically. You can close this Pages tab.</li>
+    </ol>
+    <details class="advanced">
+      <summary>Advanced: paste QR JSON (developers)</summary>
+      <label for="qr">QR payload from the Link Web screen</label>
+      <textarea id="qr" placeholder='{"v":1,"type":"link-web",...}'></textarea>
+      <div class="row">
+        <button id="connect" type="button">Connect</button>
+      </div>
+    </details>
+  `;
+}
+
 function escapeHtml(s: string): string {
   return s
     .replaceAll('&', '&amp;')
@@ -139,8 +166,11 @@ async function refreshTasks(): Promise<void> {
 
 async function connectWithPayload(qr: QrPayload): Promise<void> {
   error = '';
+  pairing = true;
+  render();
   await client.connect(qr);
   online = true;
+  pairing = false;
   await refreshTasks();
 }
 
@@ -156,13 +186,17 @@ async function connectWithRaw(raw: string): Promise<void> {
   } catch (e) {
     error = String(e);
     online = false;
+    pairing = false;
     render();
   }
 }
 
 client.onConnectionChange = (v) => {
   online = v;
-  if (!v) render();
+  if (!v) {
+    pairing = false;
+    render();
+  }
 };
 client.onError = (m) => {
   error = m;
@@ -172,6 +206,8 @@ client.onError = (m) => {
 render();
 
 if (isPhoneOrigin()) {
+  pairing = true;
+  render();
   void (async () => {
     const qr = await fetchPhoneQr();
     if (qr) {
@@ -179,8 +215,14 @@ if (isPhoneOrigin()) {
         await connectWithPayload(qr);
       } catch (e) {
         error = String(e);
+        pairing = false;
         render();
       }
+    } else {
+      error =
+        'Could not read session from the phone. Keep Settings → Link Web open and reload this page.';
+      pairing = false;
+      render();
     }
   })();
 }

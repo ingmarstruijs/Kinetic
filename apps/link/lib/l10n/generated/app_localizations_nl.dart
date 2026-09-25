@@ -95,14 +95,18 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get linkWebIntro =>
-      'Scan deze QR (of open de URL) op een computer op hetzelfde wifi. Je kluissleutels blijven op deze telefoon — de browser ziet alleen ontsleutelde taken via een korte sessie.';
+      'Open taken op je computer; de kluissleutels blijven op deze telefoon.';
+
+  @override
+  String get linkWebSteps =>
+      '1. Houd dit scherm open (telefoon wakker, zelfde wifi als de computer).\n2. Open op de computer de URL hieronder — of scan de QR.\n3. Taken verschijnen automatisch in de browser.';
 
   @override
   String get linkWebPickIp => 'Wifi-adres';
 
   @override
   String get linkWebKeepAwake =>
-      'Houd dit scherm open en de telefoon wakker terwijl je Link Web gebruikt.';
+      'Laat dit scherm open zolang je Link Web gebruikt.';
 
   @override
   String get linkWebCopyUrl => 'URL kopiëren';

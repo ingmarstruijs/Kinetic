@@ -95,14 +95,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkWebIntro =>
-      'Scan this QR (or open the URL) on a computer on the same Wi‑Fi. Your vault keys stay on this phone — the browser only sees decrypted tasks over a short-lived session.';
+      'Open tasks on your computer while keys stay on this phone.';
+
+  @override
+  String get linkWebSteps =>
+      '1. Keep this screen open (phone awake, same Wi‑Fi as the computer).\n2. On the computer, open the URL below — or scan the QR.\n3. Tasks appear in the browser automatically.';
 
   @override
   String get linkWebPickIp => 'Wi‑Fi address';
 
   @override
   String get linkWebKeepAwake =>
-      'Keep this screen open and the phone awake while using Link Web.';
+      'Leave this screen open the whole time you use Link Web.';
 
   @override
   String get linkWebCopyUrl => 'Copy URL';

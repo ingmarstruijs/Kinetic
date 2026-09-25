@@ -357,6 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               widget.onOpenTasksTab?.call();
                             }
                           },
+                          onExited: widget.onSyncRetry,
                         ),
                       ),
                     );

@@ -248,4 +248,33 @@ void main() {
     DemoSession.instance.removeKidTask('drop');
     expect(DemoSession.instance.kidTasks.map((t) => t.uid), ['keep']);
   });
+
+  test('exitDemoMode clears seeded rows and deactivates session', () async {
+    final db = createTestDatabase();
+    addTearDown(() async {
+      DemoSession.instance.clear();
+      await db.close();
+    });
+    final todoRepo = TodoRepository(db: db);
+    final loader = DemoScenarioLoader(
+      db: db,
+      todoRepo: todoRepo,
+      noteRepo: NoteRepository(db: db),
+      suggestionRepo: AiSuggestionRepository(db),
+      proposalRepo: LinkMemberProposalRepository(
+        db: db,
+        todoRepository: todoRepo,
+      ),
+    );
+
+    await loader.apply(DemoScenario.busyDay, dutch: false);
+    expect(DemoSession.instance.active, isTrue);
+    expect(await todoRepo.watchAllTasks().first, isNotEmpty);
+
+    await DemoScenarioLoader.exitDemoMode(db);
+    expect(DemoSession.instance.active, isFalse);
+    expect(DemoSession.instance.kids, isEmpty);
+    expect(await todoRepo.watchAllTasks().first, isEmpty);
+    expect(await NoteRepository(db: db).watchAll().first, isEmpty);
+  });
 }

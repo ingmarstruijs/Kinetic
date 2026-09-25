@@ -191,6 +191,17 @@ class DemoScenarioLoader {
     await _db.delete(_db.aiSuggestions).go();
   }
 
+  /// Leaves demo mode: wipe local screenshot seeds and clear [DemoSession].
+  /// Caller should trigger WebDAV sync afterward.
+  static Future<void> exitDemoMode(AppDatabase db) async {
+    await db.delete(db.personalSubtasks).go();
+    await db.delete(db.personalTasks).go();
+    await db.delete(db.personalNotes).go();
+    await db.delete(db.linkMemberProposals).go();
+    await db.delete(db.aiSuggestions).go();
+    DemoSession.instance.clear();
+  }
+
   void _setFamily({
     required bool hasOtherLinkMembers,
     required List<EnrolledKid> kids,

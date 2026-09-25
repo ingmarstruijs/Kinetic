@@ -87,6 +87,50 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSectionSync => 'Synchronisatie';
 
   @override
+  String get linkWebTitle => 'Link Web';
+
+  @override
+  String get linkWebSettingsSubtitle =>
+      'Open taken in een browser op hetzelfde wifi';
+
+  @override
+  String get linkWebExperimentalBanner => 'Experimenteel';
+
+  @override
+  String get linkWebExperimentalBody =>
+      'Link Web is een vroege preview. Verwacht ruwe randen, alleen lokaal wifi, en mogelijke breaking changes. Vertrouw er nog niet op voor kritieke workflows.';
+
+  @override
+  String get linkWebIntro =>
+      'Open taken op je computer; de kluissleutels blijven op deze telefoon.';
+
+  @override
+  String get linkWebSteps =>
+      '1. Houd dit scherm open (telefoon wakker, zelfde wifi als de computer).\n2. Open op de computer de URL hieronder — of scan de QR.\n3. Taken verschijnen automatisch in de browser.';
+
+  @override
+  String get linkWebPickIp => 'Wifi-adres';
+
+  @override
+  String get linkWebKeepAwake =>
+      'Laat dit scherm open zolang je Link Web gebruikt.';
+
+  @override
+  String get linkWebCopyUrl => 'URL kopiëren';
+
+  @override
+  String get linkWebCopied => 'URL gekopieerd';
+
+  @override
+  String get linkWebRevoke => 'Intrekken & stoppen';
+
+  @override
+  String get linkWebStart => 'Bridge starten';
+
+  @override
+  String get linkWebNewSession => 'Nieuwe QR';
+
+  @override
   String get settingsWebDavConfigure => 'WebDAV configureren';
 
   @override
@@ -1017,7 +1061,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String tasksAmbientLoadOpen(int count) {
-    return '$count openstaand';
+    return '$count open';
   }
 
   @override
@@ -1238,6 +1282,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tasksTitle => 'Taken';
+
+  @override
+  String get tasksSectionTitle => 'Taken';
 
   @override
   String get tasksCompletedTooltip => 'Voltooide taken';

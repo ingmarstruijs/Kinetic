@@ -24,6 +24,8 @@ import '../vault/widgets/mnemonic_phrase_field.dart';
 import '../debug/demo_scenarios.dart';
 import '../debug/demo_scenarios_screen.dart';
 import '../debug/demo_session.dart';
+import '../bridge/link_web_bridge_screen.dart';
+import '../todo/services/todo_repository.dart';
 import 'family_key_scan_screen.dart';
 import 'kids_settings_screen.dart';
 import 'family_members_settings_screen.dart';
@@ -42,6 +44,7 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback? onOpenTasksTab;
   final VoidCallback? onOpenNotesTab;
   final VoidCallback? onSyncRetry;
+  final TodoRepository? todoRepository;
 
   const SettingsScreen({
     super.key,
@@ -55,6 +58,7 @@ class SettingsScreen extends StatefulWidget {
     this.onOpenTasksTab,
     this.onOpenNotesTab,
     this.onSyncRetry,
+    this.todoRepository,
   });
 
   @override
@@ -192,6 +196,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _loadConfig();
                     },
                   ),
+                  if (widget.todoRepository != null)
+                    ListTile(
+                      leading: Icon(Icons.laptop_windows_outlined, color: iconColor),
+                      title: Text(l10n.linkWebTitle),
+                      subtitle: Text(l10n.linkWebSettingsSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => LinkWebBridgeScreen(
+                              todoRepository: widget.todoRepository!,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   if (isConnected && widget.syncStatus != null)
                     ValueListenableBuilder<SyncStatusInfo>(
                       valueListenable: widget.syncStatus!,
@@ -321,8 +341,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   subtitle: Text(
                     localeNotifier.value.languageCode == 'nl'
-                        ? 'Laad testdata voor screenshots'
-                        : 'Load test data for screenshots',
+                        ? 'Test scenarios voor debug'
+                        : 'Test scenarios for debug',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -337,6 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               widget.onOpenTasksTab?.call();
                             }
                           },
+                          onExited: widget.onSyncRetry,
                         ),
                       ),
                     );
@@ -475,13 +496,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
 
-      final savedPath = await FilePicker.platform.saveFile(
+      final savedUri = await FilePicker.saveFile(
         fileName: fileName,
         bytes: bytes,
       );
 
       if (!mounted) return;
-      if (savedPath != null) {
+      if (savedUri != null) {
+        final savedPath =
+            savedUri.scheme == 'file' ? savedUri.toFilePath() : '$savedUri';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(AppLocalizations.of(context).backupSaved(savedPath)),
@@ -562,14 +585,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     if (!await _confirmBackupOverwrite() || !mounted) return;
 
-    final result = await FilePicker.platform.pickFiles(
+    final files = await FilePicker.pickFiles(
       type: FileType.any,
-      allowMultiple: false,
-      withData: true,
     );
-    if (result == null || result.files.isEmpty || !mounted) return;
+    if (files.isEmpty || !mounted) return;
 
-    final fileBytes = await readPlatformFileBytes(result.files.first);
+    final fileBytes = await readPlatformFileBytes(files.first);
     if (fileBytes == null || fileBytes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -933,13 +954,11 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
         );
         if (overwriteOk != true || !mounted) return;
 
-        final result = await FilePicker.platform.pickFiles(
+        final files = await FilePicker.pickFiles(
           type: FileType.any,
-          allowMultiple: false,
-          withData: true,
         );
-        if (result == null || result.files.isEmpty) return;
-        final fileBytes = await readPlatformFileBytes(result.files.first);
+        if (files.isEmpty) return;
+        final fileBytes = await readPlatformFileBytes(files.first);
         if (fileBytes == null || fileBytes.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

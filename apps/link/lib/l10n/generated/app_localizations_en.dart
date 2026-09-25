@@ -87,6 +87,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionSync => 'Sync';
 
   @override
+  String get linkWebTitle => 'Link Web';
+
+  @override
+  String get linkWebSettingsSubtitle =>
+      'Open tasks in a browser on the same Wi‑Fi';
+
+  @override
+  String get linkWebExperimentalBanner => 'Experimental';
+
+  @override
+  String get linkWebExperimentalBody =>
+      'Link Web is an early preview. Expect rough edges, LAN-only pairing, and possible breaking changes. Do not rely on it for critical workflows yet.';
+
+  @override
+  String get linkWebIntro =>
+      'Open tasks on your computer while keys stay on this phone.';
+
+  @override
+  String get linkWebSteps =>
+      '1. Keep this screen open (phone awake, same Wi‑Fi as the computer).\n2. On the computer, open the URL below — or scan the QR.\n3. Tasks appear in the browser automatically.';
+
+  @override
+  String get linkWebPickIp => 'Wi‑Fi address';
+
+  @override
+  String get linkWebKeepAwake =>
+      'Leave this screen open the whole time you use Link Web.';
+
+  @override
+  String get linkWebCopyUrl => 'Copy URL';
+
+  @override
+  String get linkWebCopied => 'URL copied';
+
+  @override
+  String get linkWebRevoke => 'Revoke & stop';
+
+  @override
+  String get linkWebStart => 'Start bridge';
+
+  @override
+  String get linkWebNewSession => 'New QR';
+
+  @override
   String get settingsWebDavConfigure => 'Configure WebDAV';
 
   @override
@@ -1235,6 +1279,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tasksTitle => 'Tasks';
+
+  @override
+  String get tasksSectionTitle => 'Tasks';
 
   @override
   String get tasksCompletedTooltip => 'Completed tasks';

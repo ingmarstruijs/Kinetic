@@ -129,7 +129,7 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
     if (members.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: EdgeInsets.zero,
       child: Wrap(
         spacing: 6,
         runSpacing: 4,

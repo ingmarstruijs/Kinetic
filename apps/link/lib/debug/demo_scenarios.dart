@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
 
@@ -156,6 +157,30 @@ class DemoScenarioLoader {
           withLoadMetrics: true,
         );
     }
+
+    // Keep demo mode on for every scenario (including empty / busy day) so
+    // WebDAV sync does not pull real data back or push screenshot seeds.
+    if (!DemoSession.instance.active) {
+      DemoSession.instance.apply(
+        hasOtherLinkMembers: false,
+        kids: const [],
+        kidTasks: const [],
+      );
+    }
+    await _markSeededRowsClean();
+  }
+
+  /// Screenshot seeds must not become dirty WebDAV uploads if sync resumes.
+  Future<void> _markSeededRowsClean() async {
+    await _db
+        .update(_db.personalTasks)
+        .write(const PersonalTasksCompanion(syncState: Value('clean')));
+    await _db
+        .update(_db.personalNotes)
+        .write(const PersonalNotesCompanion(syncState: Value('clean')));
+    await _db
+        .update(_db.linkMemberProposals)
+        .write(const LinkMemberProposalsCompanion(syncState: Value('clean')));
   }
 
   Future<void> _clearPersonalData() async {
@@ -164,6 +189,17 @@ class DemoScenarioLoader {
     await _db.delete(_db.personalNotes).go();
     await _db.delete(_db.linkMemberProposals).go();
     await _db.delete(_db.aiSuggestions).go();
+  }
+
+  /// Leaves demo mode: wipe local screenshot seeds and clear [DemoSession].
+  /// Caller should trigger WebDAV sync afterward.
+  static Future<void> exitDemoMode(AppDatabase db) async {
+    await db.delete(db.personalSubtasks).go();
+    await db.delete(db.personalTasks).go();
+    await db.delete(db.personalNotes).go();
+    await db.delete(db.linkMemberProposals).go();
+    await db.delete(db.aiSuggestions).go();
+    DemoSession.instance.clear();
   }
 
   void _setFamily({

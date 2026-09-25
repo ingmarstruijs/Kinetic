@@ -254,6 +254,84 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get settingsSectionSync;
 
+  /// No description provided for @linkWebTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Web'**
+  String get linkWebTitle;
+
+  /// No description provided for @linkWebSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open tasks in a browser on the same Wi‑Fi'**
+  String get linkWebSettingsSubtitle;
+
+  /// No description provided for @linkWebExperimentalBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get linkWebExperimentalBanner;
+
+  /// No description provided for @linkWebExperimentalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Web is an early preview. Expect rough edges, LAN-only pairing, and possible breaking changes. Do not rely on it for critical workflows yet.'**
+  String get linkWebExperimentalBody;
+
+  /// No description provided for @linkWebIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Open tasks on your computer while keys stay on this phone.'**
+  String get linkWebIntro;
+
+  /// No description provided for @linkWebSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Keep this screen open (phone awake, same Wi‑Fi as the computer).\n2. On the computer, open the URL below — or scan the QR.\n3. Tasks appear in the browser automatically.'**
+  String get linkWebSteps;
+
+  /// No description provided for @linkWebPickIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi‑Fi address'**
+  String get linkWebPickIp;
+
+  /// No description provided for @linkWebKeepAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave this screen open the whole time you use Link Web.'**
+  String get linkWebKeepAwake;
+
+  /// No description provided for @linkWebCopyUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy URL'**
+  String get linkWebCopyUrl;
+
+  /// No description provided for @linkWebCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'URL copied'**
+  String get linkWebCopied;
+
+  /// No description provided for @linkWebRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke & stop'**
+  String get linkWebRevoke;
+
+  /// No description provided for @linkWebStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start bridge'**
+  String get linkWebStart;
+
+  /// No description provided for @linkWebNewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'New QR'**
+  String get linkWebNewSession;
+
   /// No description provided for @settingsWebDavConfigure.
   ///
   /// In en, this message translates to:
@@ -2155,6 +2233,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tasks'**
   String get tasksTitle;
+
+  /// No description provided for @tasksSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get tasksSectionTitle;
 
   /// No description provided for @tasksCompletedTooltip.
   ///

@@ -20,6 +20,7 @@ import '../../todo/widgets/category_sheet.dart';
 import '../../todo/widgets/family_ambient_strip.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
 import '../../todo/widgets/task_tile.dart';
+import '../../todo/widgets/tasks_section_header.dart';
 
 class TasksScreen extends StatefulWidget {
   final TodoRepository repo;
@@ -192,27 +193,9 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppHeader(
-                title: AppLocalizations.of(context).tasksTitle,
-                centerTitle: false,
-              ),
-              FamilyAmbientStrip(
-                visible: widget.hasFamilyKey &&
-                    (widget.hasOtherLinkMembers || widget.enrolledKidsCount > 0),
-                otherLinkMembers: widget.otherLinkMembers,
-                enrolledKids: widget.enrolledKidsOverride ??
-                    const <EnrolledKid>[],
-                pullPresence: widget.pullPresence,
-                pullLoadMetrics: widget.pullLoadMetrics,
-                syncDoneCount: widget.syncDoneCount,
-                configRepo: widget.configRepo,
-                enrolledKidsCount: widget.enrolledKidsCount,
-              ),
-            ],
+          title: AppHeader(
+            title: AppLocalizations.of(context).tasksTitle,
+            centerTitle: false,
           ),
           centerTitle: false,
           actions: [
@@ -251,61 +234,90 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
           ],
         ),
-        body: _TasksBody(
-          repo: widget.repo,
-          noteRepo: widget.noteRepo,
-          hasFamilyKey: widget.hasFamilyKey,
-          hasOtherLinkMembers: widget.hasOtherLinkMembers,
-          // Compact personal empty only when Suggestions or Kids chrome is up —
-          // family-linked alone still gets the centered "All done!" state.
-          familyContext: _showKids || _suggestionsVisible,
-          settingsRepo: widget.settingsRepo,
-          proposalRepo: widget.proposalRepo,
-          myLinkId: widget.myLinkId,
-          otherLinkMembers: widget.otherLinkMembers,
-          configRepo: widget.configRepo,
-          pullPresence: widget.pullPresence,
-          header: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.suggestionRepo != null)
-                SuggestionsPanel(
-                  suggestionRepo: widget.suggestionRepo!,
-                  todoRepo: widget.repo,
-                  proposalRepo: widget.proposalRepo,
-                  myLinkId: widget.myLinkId,
-                  hasOtherLinkMembers: widget.hasOtherLinkMembers,
-                  otherLinkMembers: widget.otherLinkMembers,
-                  onSyncRequested: widget.onSyncRetry,
-                  onVisibilityChanged: (visible) {
-                    if (!mounted || _suggestionsVisible == visible) return;
-                    setState(() => _suggestionsVisible = visible);
-                  },
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.hasFamilyKey &&
+                (widget.hasOtherLinkMembers || widget.enrolledKidsCount > 0))
+              Material(
+                color: scheme.surface,
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: FamilyAmbientStrip(
+                    visible: true,
+                    otherLinkMembers: widget.otherLinkMembers,
+                    enrolledKids: widget.enrolledKidsOverride ??
+                        const <EnrolledKid>[],
+                    pullPresence: widget.pullPresence,
+                    pullLoadMetrics: widget.pullLoadMetrics,
+                    syncDoneCount: widget.syncDoneCount,
+                    configRepo: widget.configRepo,
+                    enrolledKidsCount: widget.enrolledKidsCount,
+                  ),
                 ),
-              if (_showKids)
-                KidsPanel(
-                  key: _kidsKey,
-                  configRepo: widget.configRepo!,
-                  syncConfig: widget.syncConfig,
-                  pullSharedTasks: widget.pullSharedTasks,
-                  enrolledKidsOverride: widget.enrolledKidsOverride,
-                  todoRepo: widget.repo,
-                  syncStatus: widget.syncStatus,
-                  onDeleteKidTask: widget.onDeleteKidTask,
-                  onAcceptKidTask: widget.onAcceptKidTask,
-                  onRejectKidTask: widget.onRejectKidTask,
-                  myLinkId: widget.myLinkId,
-                  kidsParticipation: widget.kidsParticipation,
-                  onCreateTask: ({String? kidId, required bool everyone}) {
-                    _showKidsCreateSheet(
-                      context,
-                      kidId: kidId,
-                      everyone: everyone,
-                    );
-                  },
+              ),
+            Expanded(
+              child: _TasksBody(
+                repo: widget.repo,
+                noteRepo: widget.noteRepo,
+                hasFamilyKey: widget.hasFamilyKey,
+                hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                // Compact personal empty only when Suggestions or Kids chrome is up —
+                // family-linked alone still gets the centered "All done!" state.
+                familyContext: _showKids || _suggestionsVisible,
+                settingsRepo: widget.settingsRepo,
+                proposalRepo: widget.proposalRepo,
+                myLinkId: widget.myLinkId,
+                otherLinkMembers: widget.otherLinkMembers,
+                configRepo: widget.configRepo,
+                pullPresence: widget.pullPresence,
+                header: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.suggestionRepo != null)
+                      SuggestionsPanel(
+                        suggestionRepo: widget.suggestionRepo!,
+                        todoRepo: widget.repo,
+                        proposalRepo: widget.proposalRepo,
+                        myLinkId: widget.myLinkId,
+                        hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                        otherLinkMembers: widget.otherLinkMembers,
+                        onSyncRequested: widget.onSyncRetry,
+                        onVisibilityChanged: (visible) {
+                          if (!mounted || _suggestionsVisible == visible) {
+                            return;
+                          }
+                          setState(() => _suggestionsVisible = visible);
+                        },
+                      ),
+                    if (_showKids)
+                      KidsPanel(
+                        key: _kidsKey,
+                        configRepo: widget.configRepo!,
+                        syncConfig: widget.syncConfig,
+                        pullSharedTasks: widget.pullSharedTasks,
+                        enrolledKidsOverride: widget.enrolledKidsOverride,
+                        todoRepo: widget.repo,
+                        syncStatus: widget.syncStatus,
+                        onDeleteKidTask: widget.onDeleteKidTask,
+                        onAcceptKidTask: widget.onAcceptKidTask,
+                        onRejectKidTask: widget.onRejectKidTask,
+                        myLinkId: widget.myLinkId,
+                        kidsParticipation: widget.kidsParticipation,
+                        onCreateTask: ({String? kidId, required bool everyone}) {
+                          _showKidsCreateSheet(
+                            context,
+                            kidId: kidId,
+                            everyone: everyone,
+                          );
+                        },
+                      ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
         bottomSheet: QuickAddBar(
           repo: widget.repo,
@@ -324,6 +336,9 @@ class _TasksScreenState extends State<TasksScreen> {
 }
 
 sealed class _ListItem {}
+
+/// Space so the last row clears [QuickAddBar] (bar ~56 + breathing room).
+const _kQuickAddClearance = 128.0;
 
 class _HeaderItem extends _ListItem {
   final String? category;
@@ -375,6 +390,7 @@ class _TasksBodyState extends State<_TasksBody> {
   List<String?> _categoryOrder = [];
   late final Stream<List<PersonalTask>> _openTasks = widget.repo
       .watchOpenTasks();
+  bool _tasksExpanded = true;
 
   List<String?> _mergeOrder(Iterable<String?> streamKeys) {
     final known = Set<String?>.from(streamKeys);
@@ -459,44 +475,75 @@ class _TasksBodyState extends State<_TasksBody> {
         return CustomScrollView(
           slivers: [
             SliverToBoxAdapter(child: widget.header),
-            if (flatItems.isEmpty)
-              if (widget.familyContext)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 88),
-                    child: _EmptyOpen(familyContext: true),
+            if (widget.familyContext)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Kids/Suggestions panels end with ~4px bottom padding;
+                      // extra space below keeps the rule visually centered.
+                      const SizedBox(height: 8),
+                      Divider(
+                        height: 1,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 20),
+                      TasksSectionHeader(
+                        icon: Icons.checklist_outlined,
+                        title: AppLocalizations.of(context).tasksSectionTitle,
+                        count: tasks.isEmpty ? null : tasks.length,
+                        expanded: _tasksExpanded,
+                        onToggle: () =>
+                            setState(() => _tasksExpanded = !_tasksExpanded),
+                      ),
+                    ],
                   ),
-                )
+                ),
+              ),
+            if (!widget.familyContext || _tasksExpanded) ...[
+              if (flatItems.isEmpty)
+                if (widget.familyContext)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                      child: _EmptyOpen(familyContext: true),
+                    ),
+                  )
+                else
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                      child: Center(child: _EmptyOpen()),
+                    ),
+                  )
               else
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
-                    child: Center(child: _EmptyOpen()),
-                  ),
-                )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.only(top: 4, bottom: 88),
-                sliver: SliverReorderableList(
-                  itemCount: flatItems.length,
-                  onReorder: (oldIndex, newIndex) {
-                    _onReorder(flatItems, oldIndex, newIndex);
-                  },
-                  itemBuilder: (context, index) {
-                    final item = flatItems[index];
-                    if (item is _HeaderItem) {
-                      return _CategoryHeader(
-                        key: ValueKey('header_${item.category}'),
-                        label:
-                            item.category ??
-                            AppLocalizations.of(context).commonNoCategory,
-                        count: item.count,
-                        index: index,
-                        canRename: item.category != null,
-                        onRename: () => _renameCategory(item.category),
-                      );
-                    }
+                SliverPadding(
+                  padding: const EdgeInsets.only(top: 4),
+                  sliver: SliverReorderableList(
+                    itemCount: flatItems.length,
+                    onReorder: (oldIndex, newIndex) {
+                      _onReorder(flatItems, oldIndex, newIndex);
+                    },
+                    itemBuilder: (context, index) {
+                      final item = flatItems[index];
+                      if (item is _HeaderItem) {
+                        return _CategoryHeader(
+                          key: ValueKey('header_${item.category}'),
+                          label:
+                              item.category ??
+                              AppLocalizations.of(context).commonNoCategory,
+                          count: item.count,
+                          index: index,
+                          canRename: item.category != null,
+                          onRename: () => _renameCategory(item.category),
+                        );
+                      }
                     final taskItem = item as _TaskItem;
                     return _DraggableTaskRow(
                       key: ValueKey(taskItem.task.id),
@@ -515,6 +562,9 @@ class _TasksBodyState extends State<_TasksBody> {
                   },
                 ),
               ),
+            ],
+            // Always clear the floating QuickAddBar (also when Tasks is collapsed).
+            const SliverToBoxAdapter(child: SizedBox(height: _kQuickAddClearance)),
           ],
         );
       },

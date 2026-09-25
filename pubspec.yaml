@@ -8,6 +8,7 @@ workspace:
   - apps/kids
   - apps/link
   - packages/kinetic_qr_scanner
+  - packages/link_bridge
   - packages/webdav
 
 dev_dependencies:

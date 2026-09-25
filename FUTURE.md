@@ -43,7 +43,8 @@ Protocol routes are covered in CI (fake dual-device harness), not by hand with p
 
 ## Phase 4 — Platform leaps
 
-- **Kinetic Link Web** (phone bridge, WhatsApp Web style): browser UI; phone holds vault keys; QR + short-lived session
+- **Kinetic Link Web (LAN v1 — in progress on `feature/link-web`)**: browser UI; phone holds vault keys; QR + short-lived LAN session; SPA on GitHub Pages (pair via phone HTTP URL). See [`docs/LINK_WEB.md`](docs/LINK_WEB.md).
+- Link Web over **WebRTC** (off-LAN) under the same bridge RPC
 - Cross-device sessions on one vault + revoke from primary phone
 - Family board (wall / tablet / TV) — read-mostly WebDAV + presence
 - Protocol: incremental sync, guest access, federation

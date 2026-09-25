@@ -5,6 +5,9 @@ import '../settings/models/enrolled_kid.dart';
 
 /// In-memory overlay for debug UI scenarios. Never persisted; release builds
 /// keep [active] false because the settings entry is compiled out.
+///
+/// While [active] is true, Link skips WebDAV sync so scenario clears/seeds are
+/// not overwritten by the server and demo rows are not uploaded.
 class DemoSession extends ChangeNotifier {
   DemoSession._();
   static final DemoSession instance = DemoSession._();

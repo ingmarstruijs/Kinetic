@@ -1270,6 +1270,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksTitle => 'Tasks';
 
   @override
+  String get tasksSectionTitle => 'Tasks';
+
+  @override
   String get tasksCompletedTooltip => 'Completed tasks';
 
   @override

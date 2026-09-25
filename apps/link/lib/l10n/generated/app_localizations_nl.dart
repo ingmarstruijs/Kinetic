@@ -1273,6 +1273,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get tasksTitle => 'Taken';
 
   @override
+  String get tasksSectionTitle => 'Taken';
+
+  @override
   String get tasksCompletedTooltip => 'Voltooide taken';
 
   @override

@@ -649,6 +649,7 @@
   },
 
   "tasksTitle": "Tasks",
+  "tasksSectionTitle": "Tasks",
   "tasksCompletedTooltip": "Completed tasks",
   "tasksSyncFailed": "Sync failed, tap to retry.",
   "tasksSyncing": "Syncing",

@@ -649,6 +649,7 @@
   },
 
   "tasksTitle": "Taken",
+  "tasksSectionTitle": "Taken",
   "tasksCompletedTooltip": "Voltooide taken",
   "tasksSyncFailed": "Sync mislukt, tap om opnieuw te proberen.",
   "tasksSyncing": "Synchroniseren",

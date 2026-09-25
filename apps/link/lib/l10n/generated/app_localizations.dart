@@ -2216,6 +2216,12 @@ abstract class AppLocalizations {
   /// **'Tasks'**
   String get tasksTitle;
 
+  /// No description provided for @tasksSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get tasksSectionTitle;
+
   /// No description provided for @tasksCompletedTooltip.
   ///
   /// In en, this message translates to:

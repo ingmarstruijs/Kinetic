@@ -55,6 +55,74 @@ void main() {
         bobRoster.linkMembers.map((m) => m.id).toSet(),
         containsAll(['link-alice', 'link-bob']),
       );
+      // Draft until presence — Bob still sees the waiting kid.
+      expect(
+        bobRoster.kids.singleWhere((k) => k.id == kid.id).isActive,
+        isFalse,
+      );
+    });
+
+    test('kid presence promotes draft to active for Alice and Bob', () async {
+      final kid = await aliceRepo.addEnrolledKid('Mees');
+      expect(kid.isActive, isFalse);
+
+      final alice = await makeLinkOrchestrator(
+        createTestDatabase(),
+        storage,
+        username: 'alice',
+        linkId: 'link-alice',
+        personalKey: syncTestPersonalKeyA,
+        configRepo: aliceRepo,
+      );
+      final bob = await makeLinkOrchestrator(
+        createTestDatabase(),
+        storage,
+        username: 'bob',
+        linkId: 'link-bob',
+        personalKey: syncTestPersonalKeyB,
+        configRepo: bobRepo,
+      );
+
+      await alice.orchestrator.syncWithService(alice.service);
+
+      // Simulate kids-device heartbeat without depending on the kids app.
+      final kidConfig = SyncConfig(
+        serverUrl: 'https://fake-dav',
+        username: 'alice',
+        password: 'pass',
+        linkId: kid.id,
+        personalKeyBytes: syncTestPersonalKeyA,
+        familyKeyBytes: syncTestFamilyKey,
+      );
+      final kidClient = WebDavClient(
+        baseUrl: kidConfig.baseUrl,
+        username: kidConfig.username,
+        password: kidConfig.password,
+        httpClient: FakeHttpClient(storage),
+      );
+      final kidService = WebDavSyncService(client: kidClient, config: kidConfig);
+      await kidService.pushPresence(
+        PresenceInfo(
+          deviceId: kid.id,
+          deviceType: 'kid',
+          displayName: 'Mees',
+          lastSeen: DateTime.now().toUtc(),
+        ),
+      );
+      kidClient.dispose();
+
+      await alice.orchestrator.syncWithService(alice.service);
+      await bob.orchestrator.syncWithService(bob.service);
+
+      final aliceKids = await aliceRepo.loadEnrolledKids();
+      final active = aliceKids.singleWhere((k) => k.id == kid.id);
+      expect(active.isActive, isTrue);
+
+      final bobRoster = await bobRepo.loadCachedRoster();
+      expect(
+        bobRoster!.kids.singleWhere((k) => k.id == kid.id).isActive,
+        isTrue,
+      );
     });
 
     test('Bob kidsParticipation=false wins LWW on Alice sync', () async {

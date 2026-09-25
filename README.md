@@ -1,17 +1,27 @@
-![Kinetic Link](brand/logo-link.svg)    ![Kinetic Kids](brand/logo-kids.svg)
+<p align="center">
+  <img src="brand/logo-link.svg" alt="Kinetic Link" width="88" height="88" />
+  &nbsp;&nbsp;
+  <img src="brand/logo-kids.svg" alt="Kinetic Kids" width="88" height="88" />
+</p>
 
-# Kinetic Link
+<h1 align="center">Kinetic Link</h1>
 
-**Tasks. Notes. Family.**  
-Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
+<p align="center">
+  <strong>Tasks. Notes. Family.</strong><br>
+  Local-first personal tasks — encrypted on your device. Family features need your own WebDAV server.
+</p>
 
-*Kinetic Link* · *Kinetic Kids*
+<p align="center">
+  <em>Kinetic Link</em> · <em>Kinetic Kids</em>
+</p>
 
-Flutter · AES-256-GCM · Offline-first · No account · No telemetry
+<p align="center">
+  Flutter · AES-256-GCM · Offline-first · No account · No telemetry
+</p>
 
 ---
 
-Kinetic Link helps families run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: family-member proposals, kids assignments, shared notes, presence, and multi-device sync.
+Kinetic Link helps families run household tasks without accounts, without telemetry, and without cloud lock-in. Without a server you get encrypted personal tasks, notes, themes, and vault backup on one device. Connect your own WebDAV server to unlock family extras: family-member proposals, kids assignments, shared notes, presence, load awareness, and multi-device sync.
 
 Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, iCal, WebDAV client).
 
@@ -22,7 +32,7 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 ### Always available (local / vault)
 
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
-- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN)
+- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN); **local-only** notes never leave the device; templates and note ↔ task links
 - **AI suggestions (for you)** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history) with human-readable explanations
 - **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
@@ -39,9 +49,11 @@ Family features are **not** available offline-only. Configure WebDAV in **Settin
 - **WebDAV sync** — bring your own server, no vendor backend; connection test distinguishes wrong password vs no WebDAV vs network errors
 - **Turn off sync** — on the WebDAV setup screen; stops sync and clears family/kids linkage on this device, keeps the personal vault and private local data
 - **Family coordination** — QR / BLE / 12-word pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
-- **Kids tasks** — assign to one child or **Everyone**; configurable XP and per-kid goals; the kids app syncs assignments and awards XP on completion
-- **Shared notes** — share notes with other link members (needs pairing)
+- **Kids tasks** — assign to one child or **Everyone**; configurable XP, goals, and routines; draft enrollment becomes **active** when the kids app reports presence; the kids app syncs assignments and awards XP on completion
+- **Family key rotation** — optional wizard after removing a member; shared blobs are re-encrypted so the old key cannot read new data
+- **Shared notes** — share notes with other link members (needs pairing); local-only notes stay off the server
 - **Connection-aware send** — family members listed with WebDAV presence status before forwarding
+- **Ambient presence & load** — shared load metrics (`/kinetic/shared/load/…`) feed household awareness and suggestions without becoming chat
 - **Family-member / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
 
 
@@ -66,7 +78,7 @@ Family features are **not** available offline-only. Configure WebDAV in **Settin
 | Local DB      | Drift (SQLite)                                       |
 | Crypto & sync | `packages/webdav` — AES-256-GCM, iCal, WebDAV client |
 | Monorepo      | Melos                                                |
-| Tests         | `flutter test` per package                           |
+| Tests         | `flutter test` per package; multi-device protocol in CI — see [`docs/MULTI_DEVICE_TESTING.md`](docs/MULTI_DEVICE_TESTING.md) |
 
 
 
@@ -121,11 +133,16 @@ After WebDAV is on and you still have no family key:
 
 1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
 2. Child device scans the QR and types the WebDAV password once (same server as Link)
-3. Kinetic Link forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
+3. The kid appears as **draft** on the roster until the kids app syncs **presence**, then becomes **active**
+4. Kinetic Link forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
 
 Ship Kinetic Link **and** Kinetic Kids at the same minor version when enrollment/QR formats change.
 
-Proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking.
+Proposals and kids panels on Tasks appear after pairing or enrollment. Shared notes require family linking. After removing a family member you can optionally **rotate the family key** so their old key cannot decrypt new shared data.
+
+### Multi-device sync testing
+
+Protocol behaviour (roster, kids complete, load metrics, leave wipe, key rotation, …) is covered in CI with a fake dual-device harness — not by running phone + emulator for every route. See [`docs/MULTI_DEVICE_TESTING.md`](docs/MULTI_DEVICE_TESTING.md). Roadmap: [`FUTURE.md`](FUTURE.md).
 
 ## AI Suggestion Engine
 
@@ -154,7 +171,7 @@ Suggestions appear in a banner on the **Private** tab and in structured sections
 | Key                | Scope                                                                                                                                                                                                                                                                                |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Personal vault** | 12 English BIP-39 words → PBKDF2 seed → 32-byte AES-256-GCM key. Encrypts personal tasks, notes, `.kvault` backups, and `vault.meta`. 16-byte entropy may be stored on-device so Settings can show the words again behind the device lock. Paper remains the only off-device backup. |
-| **Family key**     | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. A 0.2.x random family key is kept as-is (no words until you create a new family vault).          |
+| **Family key**     | 12 BIP-39 words → derived AES-256-GCM key. QR carries 16-byte entropy (no WebDAV password). Fingerprint in settings. Recovered via `family.key.enc` after a personal vault restore. Optional **rotation** after removing a member re-encrypts `/kinetic/shared/**`. A 0.2.x random family key is kept as-is (no words until you create a new family vault). |
 | **Kid UUID**       | Per enrolled child device for task targeting. Omitting `xKineticTargetKidId` assigns to **Everyone**                                                                                                                                                                                 |
 
 

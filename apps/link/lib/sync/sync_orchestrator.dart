@@ -544,65 +544,74 @@ class SyncOrchestrator {
     );
     final service = WebDavSyncService(client: client, config: _config);
     try {
-      final now = DateTime.now().toUtc();
-      final linked =
-          await (_db.select(_db.personalTasks)..where(
-                (t) => t.kidsTaskId.equals(sharedTask.uid),
-              ))
-              .getSingleOrNull();
-      final recurring = linked != null &&
-          linked.recurrenceRule != null &&
-          linked.dueDate != null;
-      if (recurring) {
-        final nextDue = TodoRepository.nextOccurrence(
-          linked.recurrenceRule!,
-          linked.dueDate!,
-        );
-        await (_db.update(
-          _db.personalTasks,
-        )..where((t) => t.id.equals(linked.id))).write(
-          PersonalTasksCompanion(
-            dueDate: Value(nextDue),
-            isCompleted: const Value(false),
-            completedAt: const Value(null),
-            updatedAt: Value(now),
-            syncState: const Value('dirty'),
-          ),
-        );
-        final updated = linked.copyWith(
-          dueDate: Value(nextDue),
-          isCompleted: false,
-          completedAt: const Value(null),
-          updatedAt: now,
-        );
-        await service.pushSharedTask(
-          _sharedKidsTaskFromRow(
-            updated,
-            statusOverride: ICalTaskStatus.needsAction,
-          ),
-        );
-        return;
-      }
-      await service.pushSharedTask(
-        sharedTask.copyWith(
-          status: ICalTaskStatus.completed,
-          updatedAt: now,
-        ),
-      );
-      if (linked != null) {
-        await (_db.update(
-          _db.personalTasks,
-        )..where((t) => t.id.equals(linked.id))).write(
-          PersonalTasksCompanion(
-            isCompleted: const Value(true),
-            completedAt: Value(now),
-            updatedAt: Value(now),
-            syncState: const Value('dirty'),
-          ),
-        );
-      }
+      await acceptKidsTaskCompletionWithService(service, sharedTask);
     } finally {
       client.dispose();
+    }
+  }
+
+  /// Accept path against a pre-built [service] (fake dual-device tests).
+  @visibleForTesting
+  Future<void> acceptKidsTaskCompletionWithService(
+    WebDavSyncService service,
+    ICalTask sharedTask,
+  ) async {
+    final now = DateTime.now().toUtc();
+    final linked =
+        await (_db.select(_db.personalTasks)..where(
+              (t) => t.kidsTaskId.equals(sharedTask.uid),
+            ))
+            .getSingleOrNull();
+    final recurring = linked != null &&
+        linked.recurrenceRule != null &&
+        linked.dueDate != null;
+    if (recurring) {
+      final nextDue = TodoRepository.nextOccurrence(
+        linked.recurrenceRule!,
+        linked.dueDate!,
+      );
+      await (_db.update(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(linked.id))).write(
+        PersonalTasksCompanion(
+          dueDate: Value(nextDue),
+          isCompleted: const Value(false),
+          completedAt: const Value(null),
+          updatedAt: Value(now),
+          syncState: const Value('dirty'),
+        ),
+      );
+      final updated = linked.copyWith(
+        dueDate: Value(nextDue),
+        isCompleted: false,
+        completedAt: const Value(null),
+        updatedAt: now,
+      );
+      await service.pushSharedTask(
+        _sharedKidsTaskFromRow(
+          updated,
+          statusOverride: ICalTaskStatus.needsAction,
+        ),
+      );
+      return;
+    }
+    await service.pushSharedTask(
+      sharedTask.copyWith(
+        status: ICalTaskStatus.completed,
+        updatedAt: now,
+      ),
+    );
+    if (linked != null) {
+      await (_db.update(
+        _db.personalTasks,
+      )..where((t) => t.id.equals(linked.id))).write(
+        PersonalTasksCompanion(
+          isCompleted: const Value(true),
+          completedAt: Value(now),
+          updatedAt: Value(now),
+          syncState: const Value('dirty'),
+        ),
+      );
     }
   }
 

@@ -97,6 +97,55 @@ void main() {
       expect(shared.dueAt, due);
     });
 
+    test('accepting recurring kids mission rolls due and keeps RRULE', () async {
+      final db = createTestDatabase();
+      final alice = await makeLinkOrchestrator(
+        db,
+        storage,
+        username: 'alice',
+        linkId: 'link-alice',
+        personalKey: syncTestPersonalKeyA,
+      );
+      final due = DateTime.utc(2026, 9, 22, 17);
+
+      await _insertDirtyKidsTask(
+        db,
+        id: 'personal-rec-accept',
+        kidsTaskId: 'kids-uid-rec-accept',
+        title: 'Brush teeth',
+        targetKidId: 'kid-mees',
+        recurrenceRule: 'FREQ=DAILY',
+        dueDate: due,
+      );
+      await alice.orchestrator.syncWithService(alice.service);
+
+      // Kid marks awaiting verification on the wire.
+      final remote = (await alice.service.pullSharedTasks()).single;
+      await alice.service.pushSharedTask(
+        remote.copyWith(
+          status: ICalTaskStatus.inProcess,
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+
+      await alice.orchestrator.acceptKidsTaskCompletionWithService(
+        alice.service,
+        (await alice.service.pullSharedTasks()).single,
+      );
+
+      final after = (await alice.service.pullSharedTasks()).single;
+      expect(after.status, ICalTaskStatus.needsAction);
+      expect(after.rrule, 'FREQ=DAILY');
+      expect(after.dueAt!.toUtc(), DateTime.utc(2026, 9, 23, 17));
+
+      final local = await (db.select(db.personalTasks)
+            ..where((t) => t.id.equals('personal-rec-accept')))
+          .getSingle();
+      expect(local.isCompleted, isFalse);
+      expect(local.dueDate!.toUtc(), DateTime.utc(2026, 9, 23, 17));
+      expect(local.recurrenceRule, 'FREQ=DAILY');
+    });
+
     test('preserves remote inProcess when pushing dirty kids task', () async {
       final db = createTestDatabase();
       final alice = await makeLinkOrchestrator(

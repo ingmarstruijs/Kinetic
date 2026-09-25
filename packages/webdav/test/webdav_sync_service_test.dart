@@ -330,5 +330,64 @@ void main() {
         throwsA(isA<SecretBoxAuthenticationError>()),
       );
     });
+
+    test('peer with old family key cannot pull re-encrypted shared tasks',
+        () async {
+      final now = DateTime.utc(2026, 3, 1);
+      await service.pushSharedTask(
+        ICalTask(
+          uid: 'task-rotate-1',
+          summary: 'Shared chore',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final report = await service.reencryptSharedTree(
+        oldFamilyKey: oldKey,
+        newFamilyKey: newKey,
+      );
+      expect(report.reencrypted, greaterThan(0));
+      expect(report.failed, 0);
+
+      final stalePeer = WebDavSyncService(
+        client: WebDavClient(
+          baseUrl: 'https://dav.example.com',
+          username: 'bob',
+          password: 'secret',
+          httpClient: FakeHttpClient(storage),
+        ),
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'bob',
+          password: 'secret',
+          linkId: 'link-bob',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: oldKey,
+        ),
+      );
+      expect(await stalePeer.pullSharedTasks(), isEmpty);
+
+      final rotatedPeer = WebDavSyncService(
+        client: WebDavClient(
+          baseUrl: 'https://dav.example.com',
+          username: 'bob',
+          password: 'secret',
+          httpClient: FakeHttpClient(storage),
+        ),
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'bob',
+          password: 'secret',
+          linkId: 'link-bob',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: newKey,
+        ),
+      );
+      final tasks = await rotatedPeer.pullSharedTasks();
+      expect(tasks.single.uid, 'task-rotate-1');
+      expect(tasks.single.summary, 'Shared chore');
+    });
   });
 }

@@ -337,6 +337,9 @@ class _TasksScreenState extends State<TasksScreen> {
 
 sealed class _ListItem {}
 
+/// Space so the last row clears [QuickAddBar] (bar ~56 + breathing room).
+const _kQuickAddClearance = 128.0;
+
 class _HeaderItem extends _ListItem {
   final String? category;
   final int count;
@@ -507,7 +510,7 @@ class _TasksBodyState extends State<_TasksBody> {
                 if (widget.familyContext)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 88),
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                       child: _EmptyOpen(familyContext: true),
                     ),
                   )
@@ -515,13 +518,13 @@ class _TasksBodyState extends State<_TasksBody> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 88),
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
                       child: Center(child: _EmptyOpen()),
                     ),
                   )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.only(top: 4, bottom: 88),
+                  padding: const EdgeInsets.only(top: 4),
                   sliver: SliverReorderableList(
                     itemCount: flatItems.length,
                     onReorder: (oldIndex, newIndex) {
@@ -560,6 +563,8 @@ class _TasksBodyState extends State<_TasksBody> {
                 ),
               ),
             ],
+            // Always clear the floating QuickAddBar (also when Tasks is collapsed).
+            const SliverToBoxAdapter(child: SizedBox(height: _kQuickAddClearance)),
           ],
         );
       },

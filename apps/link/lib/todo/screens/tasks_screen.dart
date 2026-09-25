@@ -475,10 +475,13 @@ class _TasksBodyState extends State<_TasksBody> {
             if (widget.familyContext)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Kids/Suggestions panels end with ~4px bottom padding;
+                      // 8 + 12 keeps the rule visually centered between headers.
+                      const SizedBox(height: 8),
                       Divider(
                         height: 1,
                         color: Theme.of(context)
@@ -486,7 +489,7 @@ class _TasksBodyState extends State<_TasksBody> {
                             .outlineVariant
                             .withValues(alpha: 0.5),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       TasksSectionHeader(
                         icon: Icons.checklist_outlined,
                         title: AppLocalizations.of(context).tasksSectionTitle,

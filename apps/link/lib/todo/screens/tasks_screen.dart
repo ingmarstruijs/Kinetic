@@ -480,7 +480,7 @@ class _TasksBodyState extends State<_TasksBody> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Kids/Suggestions panels end with ~4px bottom padding;
-                      // 8 + 12 keeps the rule visually centered between headers.
+                      // extra space below keeps the rule visually centered.
                       const SizedBox(height: 8),
                       Divider(
                         height: 1,
@@ -489,7 +489,7 @@ class _TasksBodyState extends State<_TasksBody> {
                             .outlineVariant
                             .withValues(alpha: 0.5),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 20),
                       TasksSectionHeader(
                         icon: Icons.checklist_outlined,
                         title: AppLocalizations.of(context).tasksSectionTitle,

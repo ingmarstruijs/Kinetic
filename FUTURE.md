@@ -4,7 +4,7 @@ Kinetic is a **local-first family protocol** (encrypted WebDAV, roster, kids loo
 
 **Keep:** no Kinetic account, no telemetry, BYO WebDAV.
 
-Roadmap below is the single source of priority. Phase 1 shipped on `main`. **Phase 2 + 3** are in flight on `feature/phase-2-and-3`.
+Roadmap below is the single source of priority. **Phase 1–3 shipped on `main`.** Phase 4 is next.
 
 ---
 
@@ -14,23 +14,19 @@ Family setup usable without a Kinetic cloud: sync status, Start-family wizard, s
 
 ---
 
-## Phase 2 — Kids depth + trust — **implemented on `feature/phase-2-and-3`**
-
-Ship next: make kids enrollment and ongoing kids loops trustworthy on more devices.
+## Phase 2 — Kids depth + trust — **shipped**
 
 - [x] Lighter kids enrollment (draft vs active, password probe, orphan purge)
-- [x] Kids on **iOS** target + offline / local cache UX
-- [x] Deeper XP, goals, routines; Link week overview
+- [x] Kids offline / local cache UX (iOS target still pending — Kids ships Android today)
+- [x] Deeper XP, goals, routines; Link kids overview
 - [x] **Family key rotation** after removing a member (optional wizard)
-- [x] F-Droid / reproducible builds path documented (submission MR ready)
+- [x] F-Droid / reproducible builds path documented
 
-**Done when:** kids enroll and sync reliably on Android + iOS; Link can rotate family key after a kick; F-Droid path is clear.
+**Done when:** kids enroll and sync reliably; Link can rotate family key after a kick; F-Droid path is clear.
 
 ---
 
-## Phase 3 — Household smarts + notes — **implemented on `feature/phase-2-and-3`**
-
-Ship alongside / right after Phase 2 depth: suggestions and notes that feel intentional, not noisy.
+## Phase 3 — Household smarts + notes — **shipped**
 
 - [x] Drive shared load metrics (`/kinetic/shared/load/…`) into Suggestions / Tasks
 - [x] Stronger EN/NL heuristics (whole-word / min-length; `test` no longer → Health)
@@ -52,6 +48,7 @@ Protocol routes are covered in CI (fake dual-device harness), not by hand with p
 - Family board (wall / tablet / TV) — read-mostly WebDAV + presence
 - Protocol: incremental sync, guest access, federation
 - Kids as a game loop: streaks, seasonal challenges, collaborative quests
+- Kids on **iOS**
 
 ---
 
@@ -59,6 +56,6 @@ Protocol routes are covered in CI (fake dual-device harness), not by hand with p
 
 - Kinetic-owned cloud or accounts
 - Generic chat / calendar clones
-- Org / multi-tenant features before Phase 2–3 are deep
+- Org / multi-tenant features before Phase 4 depth
 - Cloud LLM “AI” that undercuts the privacy story
 - NFC phone-to-phone P2P

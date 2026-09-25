@@ -62,7 +62,7 @@ Version **name** and **code** for releases must match across:
 - Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit:` tag
 - Git annotated tag `vX.Y.Z` on `main`
 
-Current draft metadata targets **0.3.8** / **7** / tag **`v0.3.8`**.
+Current draft metadata targets **0.3.9** / **8** / tag **`v0.3.9`**.
 
 ### Reproducibility notes
 
@@ -78,8 +78,8 @@ Current draft metadata targets **0.3.8** / **7** / tag **`v0.3.8`**.
    matching the metadata `commit:` field:
    ```bash
    git checkout main && git pull
-   git tag -a v0.3.8 -m "Kinetic 0.3.8 for F-Droid"
-   git push origin v0.3.8
+   git tag -a v0.3.9 -m "Kinetic 0.3.9 for F-Droid"
+   git push origin v0.3.9
    ```
    GitHub Releases are created only for tags whose commit is already on `main`.
 3. Confirm Flutter **3.44.1** builds both APKs locally:
@@ -99,7 +99,7 @@ Current draft metadata targets **0.3.8** / **7** / tag **`v0.3.8`**.
 
 Use this when opening the GitLab MR against `fdroid/fdroiddata` `master`:
 
-- [ ] YAML `commit:` points at an **annotated tag** on `main` (`v0.3.8`).
+- [ ] YAML `commit:` points at an **annotated tag** on `main` (`v0.3.9`).
 - [ ] `versionName` / `versionCode` match pubspec and `CurrentVersion*`.
 - [ ] `srclibs: flutter@3.44.1` (same as repo pins).
 - [ ] `License: Apache-2.0`, `Repo` / `SourceCode` URLs correct.

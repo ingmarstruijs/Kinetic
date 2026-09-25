@@ -32,6 +32,8 @@
   "settingsSectionSync": "Synchronisatie",
   "linkWebTitle": "Link Web",
   "linkWebSettingsSubtitle": "Open taken in een browser op hetzelfde wifi",
+  "linkWebExperimentalBanner": "Experimenteel",
+  "linkWebExperimentalBody": "Link Web is een vroege preview. Verwacht ruwe randen, alleen lokaal wifi, en mogelijke breaking changes. Vertrouw er nog niet op voor kritieke workflows.",
   "linkWebIntro": "Open taken op je computer; de kluissleutels blijven op deze telefoon.",
   "linkWebSteps": "1. Houd dit scherm open (telefoon wakker, zelfde wifi als de computer).\n2. Open op de computer de URL hieronder — of scan de QR.\n3. Taken verschijnen automatisch in de browser.",
   "linkWebPickIp": "Wifi-adres",

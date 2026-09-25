@@ -94,6 +94,13 @@ class AppLocalizationsNl extends AppLocalizations {
       'Open taken in een browser op hetzelfde wifi';
 
   @override
+  String get linkWebExperimentalBanner => 'Experimenteel';
+
+  @override
+  String get linkWebExperimentalBody =>
+      'Link Web is een vroege preview. Verwacht ruwe randen, alleen lokaal wifi, en mogelijke breaking changes. Vertrouw er nog niet op voor kritieke workflows.';
+
+  @override
   String get linkWebIntro =>
       'Open taken op je computer; de kluissleutels blijven op deze telefoon.';
 

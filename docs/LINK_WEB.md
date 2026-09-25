@@ -4,6 +4,8 @@ Browser UI for **personal tasks**, paired to Kinetic Link on your phone (WhatsAp
 
 ## What you do
 
+> **Experimental.** Early preview — LAN-only, rough edges, possible breaking changes. Don’t rely on it for critical workflows yet.
+
 1. On the **phone**: Kinetic Link → **Settings → Link Web** (leave that screen open).
 2. On the **computer** (same Wi‑Fi): open the **HTTP URL** under the QR, or scan the QR.
 3. Tasks appear in the browser. Vault keys never leave the phone.

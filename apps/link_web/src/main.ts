@@ -22,6 +22,10 @@ function render(): void {
       <h1>Kinetic Link Web</h1>
       <p>Personal tasks in the browser. Vault keys stay on your phone.</p>
     </header>
+    <aside class="experimental" role="status">
+      <div class="experimental-badge">Experimental</div>
+      <p>Early preview. Expect rough edges, LAN-only pairing, and breaking changes. Don’t rely on it for critical workflows yet.</p>
+    </aside>
     <div class="card">
       <div class="status ${online ? 'online' : 'offline'}">
         ${

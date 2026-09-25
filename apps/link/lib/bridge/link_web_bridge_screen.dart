@@ -107,6 +107,60 @@ class _LinkWebBridgeScreenState extends State<LinkWebBridgeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.tertiaryContainer,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: scheme.tertiary.withValues(alpha: 0.55),
+                width: 1.5,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.science_outlined,
+                    size: 36,
+                    color: scheme.onTertiaryContainer,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.linkWebExperimentalBanner.toUpperCase(),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                color: scheme.onTertiaryContainer,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.6,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.linkWebExperimentalBody,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                color: scheme.onTertiaryContainer,
+                                height: 1.4,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           Text(
             l10n.linkWebIntro,
             style: Theme.of(context).textTheme.bodyLarge,

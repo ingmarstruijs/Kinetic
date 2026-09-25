@@ -266,6 +266,18 @@ abstract class AppLocalizations {
   /// **'Open tasks in a browser on the same Wi‑Fi'**
   String get linkWebSettingsSubtitle;
 
+  /// No description provided for @linkWebExperimentalBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get linkWebExperimentalBanner;
+
+  /// No description provided for @linkWebExperimentalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Web is an early preview. Expect rough edges, LAN-only pairing, and possible breaking changes. Do not rely on it for critical workflows yet.'**
+  String get linkWebExperimentalBody;
+
   /// No description provided for @linkWebIntro.
   ///
   /// In en, this message translates to:

@@ -94,6 +94,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Open tasks in a browser on the same Wi‑Fi';
 
   @override
+  String get linkWebExperimentalBanner => 'Experimental';
+
+  @override
+  String get linkWebExperimentalBody =>
+      'Link Web is an early preview. Expect rough edges, LAN-only pairing, and possible breaking changes. Do not rely on it for critical workflows yet.';
+
+  @override
   String get linkWebIntro =>
       'Open tasks on your computer while keys stay on this phone.';
 

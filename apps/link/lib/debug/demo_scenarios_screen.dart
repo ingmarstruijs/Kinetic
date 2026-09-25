@@ -33,8 +33,8 @@ class DemoScenariosScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               nl
-                  ? 'Vervangt taken, notities, suggesties en voorstellen op dit debug-toestel. Partnerkoppeling en kinderen blijven lokaal (niet in WebDAV).'
-                  : 'Replaces tasks, notes, suggestions and proposals on this debug device. Family linking and kids stay local (not on WebDAV).',
+                  ? 'Vervangt taken, notities, suggesties en voorstellen op dit debug-toestel. WebDAV-sync wordt gepauzeerd zolang een scenario actief is (ook bij “leeg”), zodat de server je UI niet terugzet of demo-data uploadt.'
+                  : 'Replaces tasks, notes, suggestions and proposals on this debug device. WebDAV sync pauses while a scenario is active (including Empty), so the server cannot restore or upload demo data.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),

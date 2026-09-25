@@ -95,8 +95,9 @@ void main() {
 
       await loader.apply(DemoScenario.empty, dutch: true);
       expect(await todoRepo.watchAllTasks().first, isEmpty);
-      expect(DemoSession.instance.active, isFalse);
+      expect(DemoSession.instance.active, isTrue);
       expect(DemoSession.instance.roster, isNull);
+      expect(DemoSession.instance.kids, isEmpty);
     },
   );
 

@@ -341,8 +341,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   subtitle: Text(
                     localeNotifier.value.languageCode == 'nl'
-                        ? 'Laad testdata voor screenshots'
-                        : 'Load test data for screenshots',
+                        ? 'Testdata voor screenshots (pauzeert WebDAV-sync)'
+                        : 'Screenshot test data (pauses WebDAV sync)',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {

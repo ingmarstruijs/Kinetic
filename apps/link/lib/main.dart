@@ -334,6 +334,12 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   }
 
   Future<void> _triggerSync() async {
+    if (DemoSession.instance.active) {
+      if (kDebugMode) {
+        debugPrint('Sync skipped: UI scenario active (local-only)');
+      }
+      return;
+    }
     if (_syncOrchestrator == null) return;
     final prev = syncStatus.value;
     syncStatus.value = prev.copyWith(

@@ -99,6 +99,52 @@ void main() {
       expect(shared.single.status, ICalTaskStatus.inProcess);
     });
 
+    test('offline completion stays dirty until sync then Link sees inProcess',
+        () async {
+      final link = _makeLinkService(storage);
+      final now = DateTime.now().toUtc();
+      await link.pushSharedTask(
+        ICalTask(
+          uid: 'kids-task-offline',
+          summary: 'Make bed',
+          description:
+              'xKineticLinkTaskId:p-off;xKineticCategory:household;xKineticXpReward:5;xKineticTargetKidId:$kidId',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      final db = createTestDatabase();
+      final repo = KidsTaskRepository(db: db);
+      final kids = makeKidsOrchestrator(db, storage, myKidId: kidId);
+      await kids.orchestrator.syncWithService(kids.service);
+
+      // Local complete while "offline" — queue dirty, wire untouched.
+      await repo.requestComplete('kids-task-offline');
+      final pending = (await repo.getDirtyRows()).single;
+      expect(pending.id, 'kids-task-offline');
+      expect(pending.awaitingVerification, isTrue);
+      expect(pending.syncState, 'dirty');
+      expect(
+        (await link.pullSharedTasks()).single.status,
+        ICalTaskStatus.needsAction,
+      );
+
+      // Next sync flushes the queue; Link sees pending verification.
+      await kids.orchestrator.syncWithService(kids.service);
+      expect(await repo.getDirtyRows(), isEmpty);
+      final after = await (db.select(db.kidsTasks)
+            ..where((t) => t.id.equals('kids-task-offline')))
+          .getSingle();
+      expect(after.syncState, 'clean');
+      expect(after.awaitingVerification, isTrue);
+      expect(
+        (await link.pullSharedTasks()).single.status,
+        ICalTaskStatus.inProcess,
+      );
+    });
+
     test('tombstone for kid id fires onDisconnected', () async {
       var disconnected = false;
       final link = _makeLinkService(storage);

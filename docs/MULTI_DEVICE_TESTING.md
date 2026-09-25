@@ -35,12 +35,12 @@ await bob.orchestrator.syncWithService(bob.service);
 |----|------|--------|-----------|
 | B1 | Draft kid → kid presence → **active**; peer sees kid | ✅ | `apps/link/test/sync/roster_roundtrip_test.dart` |
 | B1b | Alice enrolls draft → Bob sees draft on roster | ✅ | same |
-| B3 | Kids offline complete → dirty → sync → Link pending | ⏳ | kids + link shared tasks |
+| B3 | Kids offline complete → dirty → sync → Link pending | ✅ | `apps/kids/test/sync/kids_sync_roundtrip_test.dart` |
 | B4 | Kids leave/wipe local tasks+XP | ✅ | `apps/kids/test/sync/leave_family_wipe_test.dart` |
 | B5 | LoadMetrics Alice push → Bob pull | ✅ | `apps/link/test/sync/load_metrics_roundtrip_test.dart` |
 | B6 | Local-only note never PUT | ✅ | `apps/link/test/sync/local_only_notes_sync_test.dart` |
-| B7 | Family key rotation: old key cannot read new shared | ⏳ | vault + `reencryptSharedTree` |
-| B8 | Recurring kids accept → next due + RRULE | partial | `kids_shared_tasks_roundtrip_test.dart` |
+| B7 | Family key rotation: old key cannot read new shared | ✅ | `packages/webdav/test/webdav_sync_service_test.dart` |
+| B8 | Recurring kids accept → next due + RRULE | ✅ | `apps/link/test/sync/kids_shared_tasks_roundtrip_test.dart` |
 
 ## Manual (keep short)
 

@@ -199,15 +199,27 @@ class _TaskTileContentState extends State<_TaskTileContent> {
         !widget.task.isCompleted;
 
     return Material(
-      color: Colors.transparent,
+      color: overdue
+          ? Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.35)
+          : Colors.transparent,
       child: InkWell(
         onTap: () => _openDetail(context),
         onLongPress: () => _pickCategory(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (overdue)
+                Container(
+                  width: 4,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               // ── Checkbox ────────────────────────────────────────────────────
               GestureDetector(
                 onTap: _toggleComplete,
@@ -253,6 +265,30 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                             ),
                           ),
                         ),
+                        if (overdue)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6, top: 2),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .error
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                AppLocalizations.of(context).taskOverdueChip,
+                                style: tt.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
                         if (widget.task.priority != TaskPriority.none)
                           _PriorityMark(
                             priority: widget.task.priority,
@@ -273,7 +309,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                               ),
                               style: tt.labelSmall?.copyWith(
                                 color: overdue
-                                    ? Colors.redAccent
+                                    ? Theme.of(context).colorScheme.error
                                     : Theme.of(
                                         context,
                                       ).colorScheme.onSurfaceVariant,
@@ -288,6 +324,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                                 ).colorScheme.onSurfaceVariant,
                               ),
                             ),
+
                           if (widget.task.notes != null)
                             Expanded(
                               child: Text(
@@ -395,6 +432,10 @@ class _TaskTileContentState extends State<_TaskTileContent> {
                       child: _MissionBadge(),
                     ),
                 ],
+              ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

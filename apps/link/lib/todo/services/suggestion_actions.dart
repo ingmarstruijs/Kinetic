@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../family/proposals/link_member_proposal_repository.dart';
+import '../../theme/app_themes.dart';
 import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
+import '../models/personal_task.dart';
 import 'ai_suggestion_repository.dart';
 import 'suggestion_heuristics.dart';
 import 'todo_repository.dart';
@@ -31,6 +33,7 @@ String suggestionDisplayTitle(AiSuggestion suggestion, AppLocalizations l10n) {
     case SuggestionReason.habit:
     case SuggestionReason.seasonal:
     case SuggestionReason.stale:
+    case SuggestionReason.overdue:
       return suggestion.title;
   }
 }
@@ -63,6 +66,7 @@ String suggestionDisplayExplanation(
     case SuggestionReason.habit:
     case SuggestionReason.seasonal:
     case SuggestionReason.stale:
+    case SuggestionReason.overdue:
       return suggestion.explanation ?? '';
   }
 }
@@ -172,7 +176,8 @@ Future<void> acceptSelfSuggestion({
   }
 
   final title = suggestionDisplayTitle(suggestion, l10n);
-  if (suggestion.reason == SuggestionReason.stale &&
+  if ((suggestion.reason == SuggestionReason.stale ||
+          suggestion.reason == SuggestionReason.overdue) &&
       suggestion.suggestedDueDate != null) {
     final applied = await todoRepo.applyReminderToOpenTask(
       title: suggestion.title,
@@ -204,12 +209,16 @@ Future<void> acceptSelfSuggestion({
 
 /// Shows what the family member will see, then sends. Returns false if cancelled
 /// or if pairing data is missing.
+///
+/// For [SuggestionReason.loadBalance], the sender must pick a concrete
+/// shareable task so the recipient gets an actionable title.
 Future<bool> confirmAndSendSuggestionToFamilyMember({
   required BuildContext context,
   required AiSuggestion suggestion,
   required LinkMemberProposalRepository proposalRepo,
   required AiSuggestionRepository suggestionRepo,
   required String? myLinkId,
+  TodoRepository? todoRepo,
   List<({String id, String name})> otherLinkMembers = const [],
 }) async {
   final l10n = AppLocalizations.of(context);
@@ -256,8 +265,67 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
     if (name.isNotEmpty) recipientName = name;
   }
 
+  PersonalTask? pickedTask;
+  if (suggestion.reason == SuggestionReason.loadBalance) {
+    if (todoRepo == null) return false;
+    final candidates = await _shareableLoadBalanceTasks(
+      todoRepo: todoRepo,
+      suggestion: suggestion,
+    );
+    if (candidates.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.suggestPickTaskEmpty)),
+        );
+      }
+      return false;
+    }
+    if (!context.mounted) return false;
+    if (candidates.length == 1) {
+      pickedTask = candidates.first;
+    } else {
+      pickedTask = await showDialog<PersonalTask>(
+        context: context,
+        builder: (ctx) {
+          final dialogL10n = AppLocalizations.of(ctx);
+          return SimpleDialog(
+            title: Text(dialogL10n.suggestPickTaskTitle),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                child: Text(
+                  dialogL10n.suggestPickTaskSubtitle,
+                  style: Theme.of(ctx).textTheme.bodySmall,
+                ),
+              ),
+              for (final task in candidates)
+                SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, task),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.task_alt_outlined),
+                    title: Text(task.title),
+                    subtitle: task.dueDate != null
+                        ? Text(
+                            formatDueDate(
+                              task.dueDate!,
+                              dialogL10n,
+                              allDay: task.isAllDay,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+            ],
+          );
+        },
+      );
+      if (pickedTask == null) return false;
+    }
+  }
+
   if (!context.mounted) return false;
-  final title = suggestionDisplayTitle(suggestion, l10n);
+  final title = pickedTask?.title ?? suggestionDisplayTitle(suggestion, l10n);
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) {
@@ -272,9 +340,11 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
             Text(title, style: tt.titleMedium),
             const SizedBox(height: 8),
             Text(
-              suggestion.isFamilyMemberTargeted
-                  ? dialogL10n.suggestFamilyMemberSeesGeneric
-                  : dialogL10n.suggestFamilyMemberSeesFull,
+              pickedTask != null
+                  ? dialogL10n.suggestPickTaskSubtitle
+                  : suggestion.isFamilyMemberTargeted
+                      ? dialogL10n.suggestFamilyMemberSeesGeneric
+                      : dialogL10n.suggestFamilyMemberSeesFull,
               style: tt.bodySmall,
             ),
           ],
@@ -298,10 +368,14 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
     myLinkId: myLinkId,
     toMemberId: toMemberId,
     taskTitle: title,
-    taskNotes: suggestion.isFamilyMemberTargeted ? null : suggestion.notes,
-    taskCategory: suggestion.category,
-    taskPriority: TaskPriority.values[suggestion.priority],
-    taskDueDate: suggestion.suggestedDueDate,
+    taskNotes: pickedTask != null
+        ? pickedTask.notes
+        : (suggestion.isFamilyMemberTargeted ? null : suggestion.notes),
+    taskCategory: pickedTask?.category.name ?? suggestion.category,
+    taskPriority:
+        pickedTask?.priority ?? TaskPriority.values[suggestion.priority],
+    taskDueDate: pickedTask?.dueDate ?? suggestion.suggestedDueDate,
+    sourceTaskId: pickedTask?.id,
     autoGenerated: suggestion.isFamilyMemberTargeted,
   );
   await suggestionRepo.accept(suggestion.id);
@@ -315,4 +389,49 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
     );
   }
   return true;
+}
+
+/// Shareable open tasks for a load-balance send: prefer [relatedTaskIds],
+/// otherwise open non-private tasks matching the suggestion category
+/// (auto category **or** custom label aliases like "Household" / "Huishouden").
+Future<List<PersonalTask>> _shareableLoadBalanceTasks({
+  required TodoRepository todoRepo,
+  required AiSuggestion suggestion,
+}) async {
+  final fromIds = <PersonalTask>[];
+  for (final id in suggestion.relatedTaskIds) {
+    final task = await todoRepo.getTask(id);
+    if (task == null || task.isCompleted || task.isPrivate) continue;
+    fromIds.add(task);
+  }
+  if (fromIds.isNotEmpty) return fromIds;
+
+  final open = await todoRepo.watchOpenTasks().first;
+  final category = suggestion.category.trim().toLowerCase();
+  final matched = [
+    for (final task in open)
+      if (!task.isPrivate &&
+          !task.isCompleted &&
+          _taskMatchesLoadCategory(task, category))
+        task,
+  ];
+  if (matched.isNotEmpty) return matched;
+
+  // Last resort: any shareable open task so Send never dead-ends on a stale hint.
+  return [
+    for (final task in open)
+      if (!task.isPrivate && !task.isCompleted) task,
+  ];
+}
+
+bool _taskMatchesLoadCategory(PersonalTask task, String category) {
+  if (category.isEmpty || category == 'other') return true;
+  if (task.category.name == category) return true;
+  final custom = task.customCategory?.trim().toLowerCase();
+  if (custom == null || custom.isEmpty) return false;
+  final aliases = categoryNameAliases(category).map((a) => a.toLowerCase());
+  for (final alias in aliases) {
+    if (custom == alias || custom.contains(alias)) return true;
+  }
+  return false;
 }

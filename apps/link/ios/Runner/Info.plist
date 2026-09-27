@@ -67,7 +67,9 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera is needed to scan the partner's QR code for family key sharing.</string>
+	<string>Camera is used to scan QR codes for family linking and to attach photos to notes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is used to attach images to notes.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Bluetooth is used to share a family key when phones are held close together.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>

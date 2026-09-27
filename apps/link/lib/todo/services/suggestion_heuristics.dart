@@ -161,6 +161,20 @@ String normalizeSuggestionText(String s) => s
     .replaceAll(RegExp(r'\s+'), ' ')
     .trim();
 
+/// Groups near-duplicate habit titles (e.g. "Boodschappen AH" ≈ "boodschappen").
+String habitGroupKey(String title) {
+  final n = normalizeSuggestionText(title);
+  for (final k in strongHabitKeywords) {
+    if (n == k || RegExp('\\b${RegExp.escape(k)}\\b').hasMatch(n)) {
+      return 'kw:$k';
+    }
+  }
+  return n;
+}
+
+bool openCoversHabitGroup(Set<String> openHabitGroups, String groupKey) =>
+    openHabitGroups.contains(groupKey);
+
 bool containsAnyKeyword(String haystack, List<String> keywords) {
   final n = normalizeSuggestionText(haystack);
   return keywords.any((k) => n.contains(k));
@@ -168,6 +182,21 @@ bool containsAnyKeyword(String haystack, List<String> keywords) {
 
 bool isStrongHabitTitle(String title) =>
     containsAnyKeyword(title, strongHabitKeywords);
+
+/// Base quality score before feedback adjustments (higher = better).
+int suggestionBaseScore(SuggestionReason reason) => switch (reason) {
+      SuggestionReason.overdue => 90,
+      SuggestionReason.habit => 75,
+      SuggestionReason.seasonal => 70,
+      SuggestionReason.familyMemberComplement => 65,
+      SuggestionReason.loadBalance => 60,
+      SuggestionReason.calendar => 50,
+      SuggestionReason.categorize => 45,
+      SuggestionReason.stale => 40,
+    };
+
+/// Minimum score after feedback to surface a suggestion.
+const suggestionMinScore = 25;
 
 List<CalendarPrompt> calendarPromptsForMonth(int month) =>
     calendarPrompts.where((p) => p.months.contains(month)).toList();
@@ -185,12 +214,12 @@ FamilyMemberHintTemplate? matchFamilyMemberHint({required String title, String? 
 }
 
 String loadBalanceTitle(String categoryName) => switch (categoryName) {
-  'household' => 'Can you pick up something around the house this week?',
-  'health' => 'Can you pick up something around care or health this week?',
-  'admin' => 'Can you pick up something in admin this week?',
-  'school' => 'Can you pick up something around school this week?',
-  'finance' => 'Can you pick up something in finances this week?',
-  _ => 'Can you pick something up this week?',
+  'household' => 'Can you help with household this week?',
+  'health' => 'Can you help with care or health this week?',
+  'admin' => 'Can you help with admin this week?',
+  'school' => 'Can you help with school this week?',
+  'finance' => 'Can you help with finances this week?',
+  _ => 'Can you help with something this week?',
 };
 
 String categoryLabel(String category) => switch (category) {

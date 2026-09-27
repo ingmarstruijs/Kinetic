@@ -87,11 +87,14 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSectionSync => 'Synchronisatie';
 
   @override
+  String get settingsSectionExperimental => 'Experimenteel';
+
+  @override
   String get linkWebTitle => 'Link Web';
 
   @override
   String get linkWebSettingsSubtitle =>
-      'Open taken in een browser op hetzelfde wifi';
+      'Vroege LAN-preview — taken in de browser; sleutels blijven op de telefoon';
 
   @override
   String get linkWebExperimentalBanner => 'Experimenteel';
@@ -166,10 +169,57 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsFamilyMembers => 'Gezinsleden';
 
   @override
-  String get settingsFamilyMemberLinked => 'Gezinslid gekoppeld';
+  String get settingsFamilyMemberLinked => 'Andere volwassenen gekoppeld';
 
   @override
-  String get settingsFamilyMemberLinkHint => 'Koppel met een ander gezinslid';
+  String get settingsFamilyMemberLinkHint =>
+      'Start, join, nodig volwassenen uit of koppel kids';
+
+  @override
+  String get settingsFamilyHubStatusNoKey => 'Nog geen familiesleutel';
+
+  @override
+  String get settingsFamilyHubStatusKidsOnly =>
+      'Kids gekoppeld — nodig een volwassene uit of join om notities te delen';
+
+  @override
+  String get settingsFamilyHubStatusReady => 'Familiesleutel klaar';
+
+  @override
+  String get settingsFamilyHubStart => 'Gezin starten';
+
+  @override
+  String get settingsFamilyHubStartSubtitle =>
+      'Maak een familiesleutel op dit apparaat';
+
+  @override
+  String get settingsFamilyHubJoin => 'Gezin joinen';
+
+  @override
+  String get settingsFamilyHubJoinSubtitle =>
+      'Scan een QR, gebruik tap-to-link, of typ de 12 woorden';
+
+  @override
+  String get settingsFamilyHubInvite => 'Volwassene uitnodigen';
+
+  @override
+  String get settingsFamilyHubInviteSubtitle =>
+      'Deel je familiesleutel zodat een andere Link kan joinen';
+
+  @override
+  String get settingsFamilyHubLinkKids => 'Kinderenapp koppelen';
+
+  @override
+  String get settingsFamilyHubLinkKidsSubtitle =>
+      'Schrijf een kindertoestel in met een QR (maakt een sleutel aan indien nodig)';
+
+  @override
+  String get settingsFamilyHubAdoptDifferent =>
+      'Andere familiesleutel gebruiken';
+
+  @override
+  String get settingsFamilyHubAdoptDifferentSubtitle =>
+      'Vervangt deze sleutel — huidige gedeelde data wordt onleesbaar';
 
   @override
   String get settingsKids => 'Kinderen';
@@ -1369,7 +1419,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get familySetupPromptStart => 'Start guide';
+  String get familySetupPromptStart => 'Gezinsleden openen';
 
   @override
   String get webdavJoinFamilyTitle => 'Gezin koppelen?';
@@ -1842,6 +1892,30 @@ class AppLocalizationsNl extends AppLocalizations {
   String get notesBodyHint => 'Schrijf een notitie…';
 
   @override
+  String get notesDetails => 'Details';
+
+  @override
+  String get notesInsertImage => 'Afbeelding invoegen';
+
+  @override
+  String get notesInsertImageError => 'Afbeelding toevoegen mislukt';
+
+  @override
+  String get notesPickImageSource => 'Afbeelding toevoegen';
+
+  @override
+  String get notesPickFromGallery => 'Galerij';
+
+  @override
+  String get notesPickFromCamera => 'Camera';
+
+  @override
+  String get notesDetailsExpanded => 'Details verbergen';
+
+  @override
+  String get taskOverdueChip => 'Te laat';
+
+  @override
   String get notesMdBold => 'Vet';
 
   @override
@@ -1882,11 +1956,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberSeesGeneric =>
-      'Bewust algemeen — geen privé-titels of notities.';
+      'Je kiest hierna een concrete deelbare taak — privé blijft verborgen.';
 
   @override
   String get suggestFamilyMemberSeesFull =>
       'Titel en eventuele notities van deze suggestie gaan mee.';
+
+  @override
+  String get suggestPickTaskTitle => 'Welke taak moeten zij oppakken?';
+
+  @override
+  String get suggestPickTaskSubtitle => 'Zij zien precies deze titel.';
+
+  @override
+  String get suggestPickTaskEmpty =>
+      'Geen deelbare open taken in deze categorie.';
 
   @override
   String get suggestSend => 'Versturen';
@@ -1918,6 +2002,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get suggestReasonCategorize => 'Categorie';
 
   @override
+  String get suggestReasonOverdue => 'Te laat';
+
+  @override
   String suggestCategorizeTitle(int count, String category) {
     return 'Categorie $category zetten op $count taken?';
   }
@@ -1929,35 +2016,36 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestLoadBalanceTitleHousehold =>
-      'Kun jij deze week iets in huis oppakken?';
+      'Kun jij deze week helpen met huishouden?';
 
   @override
   String get suggestLoadBalanceTitleHealth =>
-      'Kun jij deze week iets rond zorg of gezondheid oppakken?';
+      'Kun jij deze week helpen met zorg of gezondheid?';
 
   @override
   String get suggestLoadBalanceTitleAdmin =>
-      'Kun jij deze week iets administratiefs oppakken?';
+      'Kun jij deze week helpen met administratie?';
 
   @override
   String get suggestLoadBalanceTitleSchool =>
-      'Kun jij deze week iets rond school oppakken?';
+      'Kun jij deze week helpen met school?';
 
   @override
   String get suggestLoadBalanceTitleFinance =>
-      'Kun jij deze week iets rond financiën oppakken?';
+      'Kun jij deze week helpen met financiën?';
 
   @override
-  String get suggestLoadBalanceTitleOther => 'Kun jij deze week iets oppakken?';
+  String get suggestLoadBalanceTitleOther =>
+      'Kun jij deze week ergens mee helpen?';
 
   @override
   String suggestLoadBalanceExplanation(int count, String category) {
-    return 'Je hebt $count open taken in $category. De hint is bewust algemeen.';
+    return 'Je hebt $count deelbare open taken in $category. Bij Versturen kies je welke taak zij krijgen.';
   }
 
   @override
   String suggestLoadBalanceExplanationGeneric(String category) {
-    return 'Je hebt meerdere open taken in $category. De hint is bewust algemeen.';
+    return 'Je hebt meerdere deelbare open taken in $category. Bij Versturen kies je welke taak zij krijgen.';
   }
 
   @override
@@ -1970,11 +2058,11 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberTitleHousehold =>
-      'Kun jij deze week iets in huis oppakken?';
+      'Kun jij deze week helpen met huishouden?';
 
   @override
   String get suggestFamilyMemberExplanationHousehold =>
-      'Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.';
+      'Je hebt meerdere huishoudelijke taken open. Bij Versturen kies je een concrete deelbare taak.';
 
   @override
   String get suggestFamilyMemberTitleHealth =>
@@ -1982,7 +2070,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberExplanationHealth =>
-      'Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.';
+      'Er speelt iets rond zorg. Kies bij versturen een deelbare taak.';
 
   @override
   String get suggestFamilyMemberTitleSport => 'Sporttas of training deze week?';
@@ -1997,7 +2085,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberExplanationAdmin =>
-      'Er staat administratie open. De hint noemt geen concrete taak.';
+      'Er staat administratie open. Kies bij versturen een concrete deelbare taak.';
 
   @override
   String get suggestCalendarTaxTitle => 'Belastingaangifte controleren';
@@ -2042,6 +2130,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String suggestStaleExplanation(String title, int days) {
     return '\"$title\" staat $days dagen open zonder herinnering.';
+  }
+
+  @override
+  String suggestOverdueExplanation(String title, int days) {
+    return '\"$title\" is $days dagen te laat — nieuwe herinnering?';
   }
 
   @override

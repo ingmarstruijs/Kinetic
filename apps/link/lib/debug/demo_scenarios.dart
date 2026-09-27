@@ -477,6 +477,7 @@ class DemoScenarioLoader {
       DateTime? remindAt,
       String? categoryEn,
       String? categoryNl,
+      TaskCategory? taskCategory,
     }) {
       return _todoRepo.createTask(
         title: dutch ? nl : en,
@@ -484,6 +485,7 @@ class DemoScenarioLoader {
         dueDate: due?.toUtc(),
         isAllDay: allDay,
         remindAt: remindAt?.toUtc(),
+        category: taskCategory,
         customCategory: dutch ? categoryNl : categoryEn,
       );
     }
@@ -495,6 +497,7 @@ class DemoScenarioLoader {
       due: yesterday,
       categoryEn: 'Admin',
       categoryNl: 'Admin',
+      taskCategory: TaskCategory.admin,
     );
     await add(
       en: 'School run',
@@ -504,6 +507,7 @@ class DemoScenarioLoader {
       remindAt: DateTime(now.year, now.month, now.day, now.hour + 1),
       categoryEn: 'School',
       categoryNl: 'School',
+      taskCategory: TaskCategory.school,
     );
     await add(
       en: 'Call the dentist',
@@ -511,6 +515,7 @@ class DemoScenarioLoader {
       priority: TaskPriority.high,
       categoryEn: 'Health',
       categoryNl: 'Gezondheid',
+      taskCategory: TaskCategory.health,
     );
     await add(
       en: 'Groceries',
@@ -518,6 +523,21 @@ class DemoScenarioLoader {
       due: tomorrow,
       categoryEn: 'Household',
       categoryNl: 'Huishouden',
+      taskCategory: TaskCategory.household,
+    );
+    await add(
+      en: 'Vacuum living room',
+      nl: 'Woonkamer stofzuigen',
+      categoryEn: 'Household',
+      categoryNl: 'Huishouden',
+      taskCategory: TaskCategory.household,
+    );
+    await add(
+      en: 'Fold laundry',
+      nl: 'Was opvouwen',
+      categoryEn: 'Household',
+      categoryNl: 'Huishouden',
+      taskCategory: TaskCategory.household,
     );
     // Heuristics false positives — should stay Other / not Health categorize.
     await add(en: 'Test1', nl: 'Test1');
@@ -560,14 +580,18 @@ class DemoScenarioLoader {
     await _suggestionRepo.upsertSuggestion(
       AiSuggestion.create(
         title: dutch
-            ? 'Kun jij deze week iets in huishouden oppakken?'
-            : 'Can you pick something up in household this week?',
+            ? 'Kun jij deze week helpen met huishouden?'
+            : 'Can you help with household this week?',
         reason: SuggestionReason.loadBalance,
         category: 'household',
         explanation: dutch
-            ? 'Peer-load: Alex heeft 5 huishouden-open; jij bent zwaarder.'
-            : 'Peer load: Alex has 5 open household; you are heavier.',
+            ? 'Je hebt deelbare huishoudtaken open. Bij Versturen kies je welke taak zij krijgen.'
+            : 'You have shareable household tasks open. On Send, pick which one they should take.',
         dedupeKey: 'demo-load-balance',
+        relatedTaskIds: [
+          for (final t in await _todoRepo.watchOpenTasks().first)
+            if (!t.isPrivate && t.category == TaskCategory.household) t.id,
+        ],
       ),
     );
 

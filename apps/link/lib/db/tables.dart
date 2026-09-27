@@ -272,6 +272,25 @@ class AiSuggestions extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// ---------------------------------------------------------------------------
+// NoteAssets — local image binaries referenced from note markdown
+// ---------------------------------------------------------------------------
+
+@DataClassName('NoteAssetRow')
+class NoteAssets extends Table {
+  TextColumn get id => text()();
+  TextColumn get noteId => text()();
+  TextColumn get mimeType => text().withDefault(const Constant('image/jpeg'))();
+  /// Relative filename under the note-assets documents directory.
+  TextColumn get fileName => text()();
+  TextColumn get syncState => text().withDefault(const Constant('dirty'))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DataClassName('AppSettingsRow')
 class AppSettings extends Table {
   // Always use 'default' as the single key

@@ -58,6 +58,9 @@ dependencies:
   # File path resolution for database location
   path_provider: ^2.1.6
 
+  # Gallery / camera for note images
+  image_picker: ^1.1.2
+
   # UUID generation for domain models
   uuid: ^4.6.0
 

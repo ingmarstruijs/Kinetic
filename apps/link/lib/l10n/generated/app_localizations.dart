@@ -254,6 +254,12 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get settingsSectionSync;
 
+  /// No description provided for @settingsSectionExperimental.
+  ///
+  /// In en, this message translates to:
+  /// **'Experimental'**
+  String get settingsSectionExperimental;
+
   /// No description provided for @linkWebTitle.
   ///
   /// In en, this message translates to:
@@ -263,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkWebSettingsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Open tasks in a browser on the same Wi‑Fi'**
+  /// **'Early LAN preview — browser tasks while keys stay on the phone'**
   String get linkWebSettingsSubtitle;
 
   /// No description provided for @linkWebExperimentalBanner.
@@ -395,20 +401,98 @@ abstract class AppLocalizations {
   /// No description provided for @settingsFamilyMembers.
   ///
   /// In en, this message translates to:
-  /// **'Family members'**
+  /// **'Family'**
   String get settingsFamilyMembers;
 
   /// No description provided for @settingsFamilyMemberLinked.
   ///
   /// In en, this message translates to:
-  /// **'Family member linked'**
+  /// **'Other adults linked'**
   String get settingsFamilyMemberLinked;
 
   /// No description provided for @settingsFamilyMemberLinkHint.
   ///
   /// In en, this message translates to:
-  /// **'Link with another family member'**
+  /// **'Start, join, invite adults, or link kids'**
   String get settingsFamilyMemberLinkHint;
+
+  /// No description provided for @settingsFamilyHubStatusNoKey.
+  ///
+  /// In en, this message translates to:
+  /// **'No family key yet'**
+  String get settingsFamilyHubStatusNoKey;
+
+  /// No description provided for @settingsFamilyHubStatusKidsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Kids linked — invite or join an adult to share notes and sync'**
+  String get settingsFamilyHubStatusKidsOnly;
+
+  /// No description provided for @settingsFamilyHubStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Family key ready'**
+  String get settingsFamilyHubStatusReady;
+
+  /// No description provided for @settingsFamilyHubStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start family'**
+  String get settingsFamilyHubStart;
+
+  /// No description provided for @settingsFamilyHubStartSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a family key on this device'**
+  String get settingsFamilyHubStartSubtitle;
+
+  /// No description provided for @settingsFamilyHubJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join family'**
+  String get settingsFamilyHubJoin;
+
+  /// No description provided for @settingsFamilyHubJoinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a QR, use tap-to-link, or type the 12 words'**
+  String get settingsFamilyHubJoinSubtitle;
+
+  /// No description provided for @settingsFamilyHubInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite adult'**
+  String get settingsFamilyHubInvite;
+
+  /// No description provided for @settingsFamilyHubInviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your family key so another Link can join'**
+  String get settingsFamilyHubInviteSubtitle;
+
+  /// No description provided for @settingsFamilyHubLinkKids.
+  ///
+  /// In en, this message translates to:
+  /// **'Link kids app'**
+  String get settingsFamilyHubLinkKids;
+
+  /// No description provided for @settingsFamilyHubLinkKidsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enroll a child device with a QR (creates a key if needed)'**
+  String get settingsFamilyHubLinkKidsSubtitle;
+
+  /// No description provided for @settingsFamilyHubAdoptDifferent.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a different family key'**
+  String get settingsFamilyHubAdoptDifferent;
+
+  /// No description provided for @settingsFamilyHubAdoptDifferentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace this key — current shared data becomes unreadable'**
+  String get settingsFamilyHubAdoptDifferentSubtitle;
 
   /// No description provided for @settingsKids.
   ///
@@ -2387,7 +2471,7 @@ abstract class AppLocalizations {
   /// No description provided for @familySetupPromptStart.
   ///
   /// In en, this message translates to:
-  /// **'Start guide'**
+  /// **'Open Family'**
   String get familySetupPromptStart;
 
   /// No description provided for @webdavJoinFamilyTitle.
@@ -3224,6 +3308,54 @@ abstract class AppLocalizations {
   /// **'Write a note…'**
   String get notesBodyHint;
 
+  /// No description provided for @notesDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get notesDetails;
+
+  /// No description provided for @notesInsertImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert image'**
+  String get notesInsertImage;
+
+  /// No description provided for @notesInsertImageError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add image'**
+  String get notesInsertImageError;
+
+  /// No description provided for @notesPickImageSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add image'**
+  String get notesPickImageSource;
+
+  /// No description provided for @notesPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get notesPickFromGallery;
+
+  /// No description provided for @notesPickFromCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get notesPickFromCamera;
+
+  /// No description provided for @notesDetailsExpanded.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get notesDetailsExpanded;
+
+  /// No description provided for @taskOverdueChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get taskOverdueChip;
+
   /// No description provided for @notesMdBold.
   ///
   /// In en, this message translates to:
@@ -3299,7 +3431,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestFamilyMemberSeesGeneric.
   ///
   /// In en, this message translates to:
-  /// **'Intentionally generic — no private titles or notes.'**
+  /// **'You choose a concrete shareable task next — private tasks stay hidden.'**
   String get suggestFamilyMemberSeesGeneric;
 
   /// No description provided for @suggestFamilyMemberSeesFull.
@@ -3307,6 +3439,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The title and any notes from this suggestion will be included.'**
   String get suggestFamilyMemberSeesFull;
+
+  /// No description provided for @suggestPickTaskTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which task should they take?'**
+  String get suggestPickTaskTitle;
+
+  /// No description provided for @suggestPickTaskSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'They will see this exact title.'**
+  String get suggestPickTaskSubtitle;
+
+  /// No description provided for @suggestPickTaskEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No shareable open tasks in this category.'**
+  String get suggestPickTaskEmpty;
 
   /// No description provided for @suggestSend.
   ///
@@ -3362,6 +3512,12 @@ abstract class AppLocalizations {
   /// **'Category'**
   String get suggestReasonCategorize;
 
+  /// No description provided for @suggestReasonOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get suggestReasonOverdue;
+
   /// No description provided for @suggestCategorizeTitle.
   ///
   /// In en, this message translates to:
@@ -3377,49 +3533,49 @@ abstract class AppLocalizations {
   /// No description provided for @suggestLoadBalanceTitleHousehold.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something around the house this week?'**
+  /// **'Can you help with household this week?'**
   String get suggestLoadBalanceTitleHousehold;
 
   /// No description provided for @suggestLoadBalanceTitleHealth.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something around care or health this week?'**
+  /// **'Can you help with care or health this week?'**
   String get suggestLoadBalanceTitleHealth;
 
   /// No description provided for @suggestLoadBalanceTitleAdmin.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something in admin this week?'**
+  /// **'Can you help with admin this week?'**
   String get suggestLoadBalanceTitleAdmin;
 
   /// No description provided for @suggestLoadBalanceTitleSchool.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something around school this week?'**
+  /// **'Can you help with school this week?'**
   String get suggestLoadBalanceTitleSchool;
 
   /// No description provided for @suggestLoadBalanceTitleFinance.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something in finances this week?'**
+  /// **'Can you help with finances this week?'**
   String get suggestLoadBalanceTitleFinance;
 
   /// No description provided for @suggestLoadBalanceTitleOther.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick something up this week?'**
+  /// **'Can you help with something this week?'**
   String get suggestLoadBalanceTitleOther;
 
   /// No description provided for @suggestLoadBalanceExplanation.
   ///
   /// In en, this message translates to:
-  /// **'You have {count} open tasks in {category}. The suggestion is intentionally generic.'**
+  /// **'You have {count} open shareable tasks in {category}. On Send, pick which one they should take.'**
   String suggestLoadBalanceExplanation(int count, String category);
 
   /// No description provided for @suggestLoadBalanceExplanationGeneric.
   ///
   /// In en, this message translates to:
-  /// **'You have several open tasks in {category}. The suggestion is intentionally generic.'**
+  /// **'You have several open shareable tasks in {category}. On Send, pick which one they should take.'**
   String suggestLoadBalanceExplanationGeneric(String category);
 
   /// No description provided for @suggestFamilyMemberTitleSchool.
@@ -3437,13 +3593,13 @@ abstract class AppLocalizations {
   /// No description provided for @suggestFamilyMemberTitleHousehold.
   ///
   /// In en, this message translates to:
-  /// **'Can you pick up something around the house this week?'**
+  /// **'Can you help with household this week?'**
   String get suggestFamilyMemberTitleHousehold;
 
   /// No description provided for @suggestFamilyMemberExplanationHousehold.
   ///
   /// In en, this message translates to:
-  /// **'You have several household tasks open. The suggestion is intentionally generic.'**
+  /// **'You have several household tasks open. On Send, pick a concrete shareable task.'**
   String get suggestFamilyMemberExplanationHousehold;
 
   /// No description provided for @suggestFamilyMemberTitleHealth.
@@ -3455,7 +3611,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestFamilyMemberExplanationHealth.
   ///
   /// In en, this message translates to:
-  /// **'Something around care is going on. Your family member only sees this generic question.'**
+  /// **'Something around care is going on. Pick a shareable task when you send.'**
   String get suggestFamilyMemberExplanationHealth;
 
   /// No description provided for @suggestFamilyMemberTitleSport.
@@ -3479,7 +3635,7 @@ abstract class AppLocalizations {
   /// No description provided for @suggestFamilyMemberExplanationAdmin.
   ///
   /// In en, this message translates to:
-  /// **'There is admin work open. The suggestion does not name a concrete task.'**
+  /// **'There is admin work open. Pick a concrete shareable task when you send.'**
   String get suggestFamilyMemberExplanationAdmin;
 
   /// No description provided for @suggestCalendarTaxTitle.
@@ -3541,6 +3697,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\"{title}\" has been open for {days} days without a reminder.'**
   String suggestStaleExplanation(String title, int days);
+
+  /// No description provided for @suggestOverdueExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{title}\" is {days} days overdue — pick a new reminder?'**
+  String suggestOverdueExplanation(String title, int days);
 
   /// No description provided for @monthJanuary.
   ///

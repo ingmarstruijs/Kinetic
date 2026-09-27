@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_themes.dart';
 import '../../vault/vault_biometrics.dart';
 import '../models/personal_note.dart';
 import '../reminder_time.dart';
+import '../services/note_asset_store.dart';
 import '../services/note_repository.dart';
 import '../services/todo_repository.dart';
 import '../widgets/category_sheet.dart';
 import '../widgets/detail_meta_row.dart';
 import '../widgets/hour_first_time_picker.dart';
+import '../widgets/note_image_embed.dart';
 import '../widgets/note_markdown_codec.dart';
 import '../widgets/note_task_link_picker.dart';
 
@@ -49,8 +53,11 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late final TextEditingController _titleCtrl;
   late final QuillController _quillCtrl;
   late final FocusNode _editorFocus;
+  late final FocusNode _titleFocus;
   late final ScrollController _editorScroll;
   late final String _baselineBody;
+  late final String _noteId;
+  late final NoteAssetStore _assetStore;
   late bool _isShared;
   late bool _isContentHidden;
   late bool _isLocalOnly;
@@ -63,11 +70,14 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   List<String>? _sharedMemberIds;
   bool _saving = false;
   bool _allowPop = false;
+  bool _detailsExpanded = false;
 
   @override
   void initState() {
     super.initState();
     final note = widget.note;
+    _noteId = note?.id ?? const Uuid().v4();
+    _assetStore = NoteAssetStore(widget.repo.db);
     _titleCtrl = TextEditingController(
       text: note?.title ?? widget.initialTitle ?? '',
     );
@@ -79,6 +89,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     );
     _baselineBody = NoteMarkdownCodec.markdownFromDocument(_quillCtrl.document);
     _editorFocus = FocusNode();
+    _titleFocus = FocusNode();
     _editorScroll = ScrollController();
     _isShared = note?.isShared ?? widget.initialIsShared;
     _sharedMemberIds = note?.sharedMemberIds;
@@ -89,6 +100,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _linkedTaskIds = note?.linkedTaskIds;
     _titleCtrl.addListener(_onFieldsChanged);
     _quillCtrl.addListener(_onFieldsChanged);
+    _editorFocus.addListener(_onFocusChanged);
+    _titleFocus.addListener(_onFocusChanged);
     _loadLinkedTaskTitles();
   }
 
@@ -104,15 +117,28 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   void dispose() {
     _titleCtrl.removeListener(_onFieldsChanged);
     _quillCtrl.removeListener(_onFieldsChanged);
+    _editorFocus.removeListener(_onFocusChanged);
+    _titleFocus.removeListener(_onFocusChanged);
     _titleCtrl.dispose();
     _quillCtrl.dispose();
     _editorFocus.dispose();
+    _titleFocus.dispose();
     _editorScroll.dispose();
     super.dispose();
   }
 
   void _onFieldsChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool _shouldCollapseMeta(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final editing = _editorFocus.hasFocus || _titleFocus.hasFocus;
+    return (keyboardOpen || editing) && !_detailsExpanded;
   }
 
   String get _bodyMarkdown =>
@@ -191,7 +217,16 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     if (action == _UnsavedAction.save) {
       await _save();
     } else if (action == _UnsavedAction.discard) {
+      await _discardPendingAssets();
       await _popAllowed();
+    }
+  }
+
+  Future<void> _discardPendingAssets() async {
+    if (widget.note == null) {
+      await _assetStore.deleteForNote(_noteId);
+    } else {
+      await _assetStore.pruneUnreferenced(_noteId, _baselineBody);
     }
   }
 
@@ -253,6 +288,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         savedNote = updatedNote;
       } else {
         savedNote = await widget.repo.insert(
+          id: _noteId,
           title: _titleCtrl.text.trim(),
           body: body,
           isShared: _isShared,
@@ -265,6 +301,8 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         );
       }
 
+      await _assetStore.pruneUnreferenced(_noteId, body);
+
       if (mounted) await _popAllowed(savedNote);
     } catch (e) {
       if (mounted) {
@@ -276,6 +314,52 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       }
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _insertImage() async {
+    final l10n = AppLocalizations.of(context);
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text(l10n.notesPickImageSource)),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(l10n.notesPickFromGallery),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: Text(l10n.notesPickFromCamera),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 2048,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      final bytes = await picked.readAsBytes();
+      final row = await _assetStore.saveBytes(
+        noteId: _noteId,
+        bytes: bytes,
+        mimeType: mimeFromMagic(bytes),
+      );
+      insertNoteImageEmbed(_quillCtrl, NoteAssetStore.uriFor(row.id));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.notesInsertImageError)),
+      );
     }
   }
 
@@ -362,7 +446,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     return formatClockTime(dt, AppLocalizations.of(context));
   }
 
-  static const _toolbarConfig = QuillSimpleToolbarConfig(
+  QuillSimpleToolbarConfig get _toolbarConfig => QuillSimpleToolbarConfig(
     multiRowsDisplay: false,
     showFontFamily: false,
     showFontSize: false,
@@ -390,6 +474,13 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     showSuperscript: false,
     showDividers: false,
     headerStyleType: HeaderStyleType.buttons,
+    customButtons: [
+      QuillToolbarCustomButtonOptions(
+        icon: const Icon(Icons.image_outlined),
+        tooltip: AppLocalizations.of(context).notesInsertImage,
+        onPressed: _insertImage,
+      ),
+    ],
   );
 
   @override
@@ -434,6 +525,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: TextField(
                   controller: _titleCtrl,
+                  focusNode: _titleFocus,
                   autofocus: widget.note == null,
                   style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
                   decoration: InputDecoration(
@@ -453,7 +545,12 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    4,
+                    20,
+                    8 + MediaQuery.viewInsetsOf(context).bottom * 0.02,
+                  ),
                   child: QuillEditor.basic(
                     controller: _quillCtrl,
                     focusNode: _editorFocus,
@@ -463,6 +560,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                       padding: EdgeInsets.zero,
                       autoFocus: false,
                       expands: true,
+                      embedBuilders: [
+                        KineticNoteImageEmbedBuilder(_assetStore),
+                      ],
                       customStyles: DefaultStyles(
                         paragraph: DefaultTextBlockStyle(
                           tt.bodyLarge?.copyWith(height: 1.45) ??
@@ -493,6 +593,25 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                 ),
               ),
               const Divider(height: 1),
+              if (_shouldCollapseMeta(context))
+                DetailMetaRow(
+                  icon: Icons.tune_outlined,
+                  label: l10n.notesDetails,
+                  active: false,
+                  onTap: () {
+                    _editorFocus.unfocus();
+                    _titleFocus.unfocus();
+                    setState(() => _detailsExpanded = true);
+                  },
+                )
+              else ...[
+              if (_detailsExpanded)
+                DetailMetaRow(
+                  icon: Icons.expand_more,
+                  label: l10n.notesDetailsExpanded,
+                  active: true,
+                  onTap: () => setState(() => _detailsExpanded = false),
+                ),
               DetailMetaRow(
                 icon: Icons.alarm_outlined,
                 label: l10n.commonReminder,
@@ -502,7 +621,12 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     ? Text(
                         '${_formatDateOnly(_remindAt!.toLocal())} · '
                         '${_formatTimeOnly(_remindAt!.toLocal())}',
-                        style: tt.bodyMedium?.copyWith(color: scheme.primary),
+                        style: tt.bodyMedium?.copyWith(
+                          color: _remindAt != null &&
+                                  isOverdue(_remindAt!)
+                              ? scheme.error
+                              : scheme.primary,
+                        ),
                       )
                     : null,
                 trailing: _remindAt != null
@@ -635,6 +759,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                   onChanged: _setContentHidden,
                 ),
               ),
+              ],
               SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
             ],
           ),

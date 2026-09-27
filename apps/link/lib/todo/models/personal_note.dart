@@ -53,6 +53,7 @@ class PersonalNote {
   });
 
   static PersonalNote create({
+    String? id,
     required String title,
     String body = '',
     bool isShared = false,
@@ -67,7 +68,7 @@ class PersonalNote {
   }) {
     final now = DateTime.now().toUtc();
     return PersonalNote(
-      id: const Uuid().v4(),
+      id: id ?? const Uuid().v4(),
       title: title,
       body: body,
       isShared: isShared,

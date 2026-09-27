@@ -212,6 +212,73 @@ class WebDavSyncService {
     return client.delete(path);
   }
 
+  String _noteAssetsDir(String noteUid, {required bool isShared}) =>
+      isShared
+          ? '$_sharedNotesPath/$noteUid.assets'
+          : '$_personalNotesPath/$noteUid.assets';
+
+  /// Encrypts and uploads a note image asset beside the note `.ics`.
+  Future<void> pushNoteAsset({
+    required String noteUid,
+    required String assetId,
+    required Uint8List plainBytes,
+    required bool isShared,
+  }) async {
+    final key = isShared ? config.familyKeyBytes : config.personalKeyBytes;
+    if (isShared && key == null) {
+      throw StateError('Family key required to push shared note asset');
+    }
+    final blob = await KineticEncryption.encrypt(plainBytes, key!);
+    final dir = _noteAssetsDir(noteUid, isShared: isShared);
+    try {
+      await client.mkcol(dir);
+    } catch (_) {
+      // Collection may already exist.
+    }
+    await client.put('$dir/$assetId.bin', blob);
+  }
+
+  /// Lists and decrypts note image assets for [noteUid].
+  Future<List<({String assetId, Uint8List bytes})>> pullNoteAssets(
+    String noteUid, {
+    required bool isShared,
+  }) async {
+    final key = isShared ? config.familyKeyBytes : config.personalKeyBytes;
+    if (isShared && key == null) return const [];
+    final dir = _noteAssetsDir(noteUid, isShared: isShared);
+    List<WebDavEntry> entries;
+    try {
+      entries = await client.propfind(dir);
+    } catch (_) {
+      return const [];
+    }
+    final out = <({String assetId, Uint8List bytes})>[];
+    for (final entry in entries) {
+      if (entry.isCollection) continue;
+      final href = _relativizeHref(entry.href);
+      final name = href.split('/').where((s) => s.isNotEmpty).last;
+      if (!name.endsWith('.bin')) continue;
+      final assetId = name.substring(0, name.length - 4);
+      try {
+        final blob = await client.get(href);
+        final plain = await KineticEncryption.decrypt(blob, key!);
+        out.add((assetId: assetId, bytes: plain));
+      } catch (_) {
+        // Skip undecryptable / missing assets.
+      }
+    }
+    return out;
+  }
+
+  /// Best-effort delete of the asset collection for a note.
+  Future<void> deleteNoteAssets(String noteUid, {required bool isShared}) async {
+    try {
+      await client.delete(_noteAssetsDir(noteUid, isShared: isShared));
+    } catch (_) {
+      // Collection may not exist.
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // LWW merge helper
   // ---------------------------------------------------------------------------

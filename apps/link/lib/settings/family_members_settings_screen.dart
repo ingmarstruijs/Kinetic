@@ -13,12 +13,17 @@ import '../vault/screens/mnemonic_reveal_screen.dart';
 import '../vault/widgets/mnemonic_phrase_field.dart';
 import 'family_key_scan_screen.dart';
 import 'family_key_share_screen.dart';
+import 'kids_settings_screen.dart';
+import 'models/enrolled_kid.dart';
+
+/// Optional deep-link into a primary hub action.
+enum FamilyHubAction { start, join, invite, kids }
 
 // ---------------------------------------------------------------------------
-// FamilyMembersSettingsScreen
+// FamilyMembersSettingsScreen — Family hub (Gezinsleden)
 //
-// Manages family linking: share/scan family key QR, backup family key,
-// and leaving the family.  Only reachable when WebDAV is configured.
+// Start / Join / Invite adults / Link kids, plus member management.
+// Only reachable when WebDAV is configured.
 // ---------------------------------------------------------------------------
 
 class FamilyMembersSettingsScreen extends StatefulWidget {
@@ -26,6 +31,7 @@ class FamilyMembersSettingsScreen extends StatefulWidget {
   final WebDavConfigRepository configRepo;
   final SyncOrchestrator? syncOrchestrator;
   final VoidCallback? onConfigSaved;
+  final FamilyHubAction? initialAction;
 
   const FamilyMembersSettingsScreen({
     super.key,
@@ -33,23 +39,48 @@ class FamilyMembersSettingsScreen extends StatefulWidget {
     required this.configRepo,
     this.syncOrchestrator,
     this.onConfigSaved,
+    this.initialAction,
   });
 
   @override
-  State<FamilyMembersSettingsScreen> createState() => _FamilyMembersSettingsScreenState();
+  State<FamilyMembersSettingsScreen> createState() =>
+      _FamilyMembersSettingsScreenState();
 }
 
-class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScreen> {
+class _FamilyMembersSettingsScreenState
+    extends State<FamilyMembersSettingsScreen> {
   SyncConfig? _config;
   bool _hasOtherLinkMembers = false;
   List<PresenceInfo> _presenceList = [];
   List<FamilyLinkMember> _otherLinkMembers = const [];
+  List<EnrolledKid> _kids = const [];
   String? _fingerprint;
+  var _didRunInitialAction = false;
+
+  bool get _hasFamilyKey => _config?.familyKeyBytes != null;
 
   @override
   void initState() {
     super.initState();
-    _loadConfig();
+    _loadConfig().then((_) {
+      if (!mounted || _didRunInitialAction) return;
+      _didRunInitialAction = true;
+      final action = widget.initialAction;
+      if (action == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        switch (action) {
+          case FamilyHubAction.start:
+            _startFamily();
+          case FamilyHubAction.join:
+            _importFamilyKey();
+          case FamilyHubAction.invite:
+            _exportFamilyKey();
+          case FamilyHubAction.kids:
+            _openKids();
+        }
+      });
+    });
     _loadPresence();
   }
 
@@ -57,6 +88,7 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
     final config = await widget.configRepo.load();
     final paired = await widget.configRepo.hasOtherLinkMembers();
     final roster = await widget.configRepo.loadCachedRoster();
+    final kids = await widget.configRepo.loadEnrolledKids();
     String? fingerprint;
     if (config?.familyKeyBytes != null) {
       fingerprint = await KineticVault.fingerprint(config!.familyKeyBytes!);
@@ -68,6 +100,7 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
         _fingerprint = fingerprint;
         _otherLinkMembers =
             roster?.otherLinkMembers(config?.linkId ?? '') ?? const [];
+        _kids = kids;
       });
     }
   }
@@ -120,6 +153,27 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
       await _loadConfig();
       widget.onConfigSaved?.call();
     }
+  }
+
+  Future<void> _startFamily() async {
+    if (!await _ensureFamilyVault()) return;
+    if (mounted) widget.onConfigSaved?.call();
+  }
+
+  Future<void> _openKids() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => KidsSettingsScreen(
+          configRepo: widget.configRepo,
+          syncOrchestrator: widget.syncOrchestrator,
+          onConfigSaved: () {
+            widget.onConfigSaved?.call();
+            _loadConfig();
+          },
+        ),
+      ),
+    );
+    if (mounted) await _loadConfig();
   }
 
   Future<void> _importFamilyKey() async {
@@ -299,7 +353,10 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
     final demo = DemoSession.instance;
     if (demo.active) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.settingsFamilyMember), centerTitle: false),
+        appBar: AppBar(
+          title: Text(l10n.settingsFamilyMembers),
+          centerTitle: false,
+        ),
         body: ListView(
           children: [
             const SizedBox(height: 8),
@@ -312,9 +369,7 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
               subtitle: Text(
                 demo.otherLinkMembers.isEmpty
                     ? l10n.settingsFamilyMemberLinkHint
-                    : demo.otherLinkMembers
-                        .map((m) => m.name)
-                        .join(', '),
+                    : demo.otherLinkMembers.map((m) => m.name).join(', '),
               ),
             ),
             for (final member in demo.otherLinkMembers)
@@ -333,25 +388,121 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
 
     final config = _config;
     final paired = _hasOtherLinkMembers;
+    final hasKey = _hasFamilyKey;
+    final kidsCount = _kids.length;
+    final kidsOnly = hasKey && !paired && kidsCount > 0;
 
-    // Link-member presence: other Kinetic Link devices only.
     final partnerPresence = _presenceList
         .where((p) => p.deviceType == 'link')
         .toList();
 
+    final statusText = !hasKey
+        ? l10n.settingsFamilyHubStatusNoKey
+        : kidsOnly
+            ? l10n.settingsFamilyHubStatusKidsOnly
+            : l10n.settingsFamilyHubStatusReady;
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsFamilyMember), centerTitle: false),
+      appBar: AppBar(
+        title: Text(l10n.settingsFamilyMembers),
+        centerTitle: false,
+      ),
       body: ListView(
         children: [
           if (config != null) ...[
             const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Text(
+                statusText,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+              ),
+            ),
             _FamilyMemberStatusBanner(
               paired: paired,
               presenceList: partnerPresence,
               fingerprint: _fingerprint,
             ),
-            const SizedBox(height: 8),
+            if (kidsCount > 0)
+              ListTile(
+                leading: Icon(
+                  Icons.child_care_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(l10n.settingsKidsEnrolledCount(kidsCount)),
+              ),
+            const Divider(height: 24),
+            if (!hasKey) ...[
+              ListTile(
+                leading: Icon(
+                  Icons.family_restroom,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(l10n.settingsFamilyHubStart),
+                subtitle: Text(l10n.settingsFamilyHubStartSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _startFamily,
+              ),
+              ListTile(
+                leading: Icon(
+                  Icons.qr_code_scanner,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(l10n.settingsFamilyHubJoin),
+                subtitle: Text(l10n.settingsFamilyHubJoinSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _importFamilyKey,
+              ),
+            ],
+            if (hasKey) ...[
+              ListTile(
+                leading: Icon(
+                  Icons.person_add_alt_1_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(l10n.settingsFamilyHubInvite),
+                subtitle: Text(l10n.settingsFamilyHubInviteSubtitle),
+                trailing: const Icon(Icons.qr_code),
+                onTap: _exportFamilyKey,
+              ),
+              // Keep Join visible for kids-only / unpaired so adults can still join.
+              if (!paired || kidsOnly)
+                ListTile(
+                  leading: Icon(
+                    Icons.qr_code_scanner,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(l10n.settingsFamilyHubJoin),
+                  subtitle: Text(l10n.settingsFamilyHubJoinSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _importFamilyKey,
+                ),
+              if (paired)
+                ListTile(
+                  leading: Icon(
+                    Icons.swap_horiz,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  title: Text(l10n.settingsFamilyHubAdoptDifferent),
+                  subtitle: Text(l10n.settingsFamilyHubAdoptDifferentSubtitle),
+                  onTap: _importFamilyKey,
+                ),
+            ],
+            ListTile(
+              leading: Icon(
+                Icons.child_care,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(l10n.settingsFamilyHubLinkKids),
+              subtitle: Text(l10n.settingsFamilyHubLinkKidsSubtitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _openKids,
+            ),
             if (paired) ...[
+              const Divider(height: 24),
               for (final member in _otherLinkMembers)
                 ListTile(
                   leading: Icon(
@@ -373,39 +524,6 @@ class _FamilyMembersSettingsScreenState extends State<FamilyMembersSettingsScree
                     onPressed: () => _confirmRemoveMember(member),
                   ),
                 ),
-            ],
-            if (!paired) ...[
-              ListTile(
-                leading: Icon(
-                  Icons.people_outline,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(l10n.familyMemberShareViaQr),
-                subtitle: Text(l10n.familyMemberShareViaQrSubtitle),
-                trailing: const Icon(Icons.qr_code),
-                onTap: _exportFamilyKey,
-              ),
-              ListTile(
-                leading: Icon(
-                  Icons.qr_code_scanner,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(l10n.familyMemberScanKey),
-                subtitle: Text(l10n.familyMemberScanKeySubtitle),
-                onTap: _importFamilyKey,
-              ),
-            ],
-            if (paired) ...[
-              ListTile(
-                leading: Icon(
-                  Icons.qr_code,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                title: Text(l10n.familyMemberReshareKey),
-                subtitle: Text(l10n.familyMemberReshareKeySubtitle),
-                trailing: const Icon(Icons.qr_code),
-                onTap: _exportFamilyKey,
-              ),
               ListTile(
                 leading: Icon(
                   Icons.verified_user_outlined,

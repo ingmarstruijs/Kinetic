@@ -16,6 +16,7 @@ part 'app_database.drift.dart';
     AppSettings,
     ExclusionRules,
     AiSuggestions,
+    NoteAssets,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -25,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -150,6 +151,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 22) {
         await m.addColumn(personalNotes, personalNotes.isLocalOnly);
         await m.addColumn(personalNotes, personalNotes.linkedTaskIds);
+      }
+      if (from < 23) {
+        await m.createTable(noteAssets);
       }
     },
   );

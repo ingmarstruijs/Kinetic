@@ -87,11 +87,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionSync => 'Sync';
 
   @override
+  String get settingsSectionExperimental => 'Experimental';
+
+  @override
   String get linkWebTitle => 'Link Web';
 
   @override
   String get linkWebSettingsSubtitle =>
-      'Open tasks in a browser on the same Wi‑Fi';
+      'Early LAN preview — browser tasks while keys stay on the phone';
 
   @override
   String get linkWebExperimentalBanner => 'Experimental';
@@ -163,13 +166,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFamilyMember => 'Family member';
 
   @override
-  String get settingsFamilyMembers => 'Family members';
+  String get settingsFamilyMembers => 'Family';
 
   @override
-  String get settingsFamilyMemberLinked => 'Family member linked';
+  String get settingsFamilyMemberLinked => 'Other adults linked';
 
   @override
-  String get settingsFamilyMemberLinkHint => 'Link with another family member';
+  String get settingsFamilyMemberLinkHint =>
+      'Start, join, invite adults, or link kids';
+
+  @override
+  String get settingsFamilyHubStatusNoKey => 'No family key yet';
+
+  @override
+  String get settingsFamilyHubStatusKidsOnly =>
+      'Kids linked — invite or join an adult to share notes and sync';
+
+  @override
+  String get settingsFamilyHubStatusReady => 'Family key ready';
+
+  @override
+  String get settingsFamilyHubStart => 'Start family';
+
+  @override
+  String get settingsFamilyHubStartSubtitle =>
+      'Create a family key on this device';
+
+  @override
+  String get settingsFamilyHubJoin => 'Join family';
+
+  @override
+  String get settingsFamilyHubJoinSubtitle =>
+      'Scan a QR, use tap-to-link, or type the 12 words';
+
+  @override
+  String get settingsFamilyHubInvite => 'Invite adult';
+
+  @override
+  String get settingsFamilyHubInviteSubtitle =>
+      'Share your family key so another Link can join';
+
+  @override
+  String get settingsFamilyHubLinkKids => 'Link kids app';
+
+  @override
+  String get settingsFamilyHubLinkKidsSubtitle =>
+      'Enroll a child device with a QR (creates a key if needed)';
+
+  @override
+  String get settingsFamilyHubAdoptDifferent => 'Use a different family key';
+
+  @override
+  String get settingsFamilyHubAdoptDifferentSubtitle =>
+      'Replace this key — current shared data becomes unreadable';
 
   @override
   String get settingsKids => 'Kids';
@@ -1366,7 +1415,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get familySetupPromptStart => 'Start guide';
+  String get familySetupPromptStart => 'Open Family';
 
   @override
   String get webdavJoinFamilyTitle => 'Join family?';
@@ -1835,6 +1884,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesBodyHint => 'Write a note…';
 
   @override
+  String get notesDetails => 'Details';
+
+  @override
+  String get notesInsertImage => 'Insert image';
+
+  @override
+  String get notesInsertImageError => 'Could not add image';
+
+  @override
+  String get notesPickImageSource => 'Add image';
+
+  @override
+  String get notesPickFromGallery => 'Gallery';
+
+  @override
+  String get notesPickFromCamera => 'Camera';
+
+  @override
+  String get notesDetailsExpanded => 'Hide details';
+
+  @override
+  String get taskOverdueChip => 'Overdue';
+
+  @override
   String get notesMdBold => 'Bold';
 
   @override
@@ -1874,11 +1947,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberSeesGeneric =>
-      'Intentionally generic — no private titles or notes.';
+      'You choose a concrete shareable task next — private tasks stay hidden.';
 
   @override
   String get suggestFamilyMemberSeesFull =>
       'The title and any notes from this suggestion will be included.';
+
+  @override
+  String get suggestPickTaskTitle => 'Which task should they take?';
+
+  @override
+  String get suggestPickTaskSubtitle => 'They will see this exact title.';
+
+  @override
+  String get suggestPickTaskEmpty =>
+      'No shareable open tasks in this category.';
 
   @override
   String get suggestSend => 'Send';
@@ -1910,6 +1993,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestReasonCategorize => 'Category';
 
   @override
+  String get suggestReasonOverdue => 'Overdue';
+
+  @override
   String suggestCategorizeTitle(int count, String category) {
     return 'Set category $category on $count tasks?';
   }
@@ -1921,36 +2007,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestLoadBalanceTitleHousehold =>
-      'Can you pick up something around the house this week?';
+      'Can you help with household this week?';
 
   @override
   String get suggestLoadBalanceTitleHealth =>
-      'Can you pick up something around care or health this week?';
+      'Can you help with care or health this week?';
 
   @override
   String get suggestLoadBalanceTitleAdmin =>
-      'Can you pick up something in admin this week?';
+      'Can you help with admin this week?';
 
   @override
   String get suggestLoadBalanceTitleSchool =>
-      'Can you pick up something around school this week?';
+      'Can you help with school this week?';
 
   @override
   String get suggestLoadBalanceTitleFinance =>
-      'Can you pick up something in finances this week?';
+      'Can you help with finances this week?';
 
   @override
   String get suggestLoadBalanceTitleOther =>
-      'Can you pick something up this week?';
+      'Can you help with something this week?';
 
   @override
   String suggestLoadBalanceExplanation(int count, String category) {
-    return 'You have $count open tasks in $category. The suggestion is intentionally generic.';
+    return 'You have $count open shareable tasks in $category. On Send, pick which one they should take.';
   }
 
   @override
   String suggestLoadBalanceExplanationGeneric(String category) {
-    return 'You have several open tasks in $category. The suggestion is intentionally generic.';
+    return 'You have several open shareable tasks in $category. On Send, pick which one they should take.';
   }
 
   @override
@@ -1963,11 +2049,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberTitleHousehold =>
-      'Can you pick up something around the house this week?';
+      'Can you help with household this week?';
 
   @override
   String get suggestFamilyMemberExplanationHousehold =>
-      'You have several household tasks open. The suggestion is intentionally generic.';
+      'You have several household tasks open. On Send, pick a concrete shareable task.';
 
   @override
   String get suggestFamilyMemberTitleHealth =>
@@ -1975,7 +2061,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberExplanationHealth =>
-      'Something around care is going on. Your family member only sees this generic question.';
+      'Something around care is going on. Pick a shareable task when you send.';
 
   @override
   String get suggestFamilyMemberTitleSport =>
@@ -1990,7 +2076,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suggestFamilyMemberExplanationAdmin =>
-      'There is admin work open. The suggestion does not name a concrete task.';
+      'There is admin work open. Pick a concrete shareable task when you send.';
 
   @override
   String get suggestCalendarTaxTitle => 'Check tax return';
@@ -2035,6 +2121,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String suggestStaleExplanation(String title, int days) {
     return '\"$title\" has been open for $days days without a reminder.';
+  }
+
+  @override
+  String suggestOverdueExplanation(String title, int days) {
+    return '\"$title\" is $days days overdue — pick a new reminder?';
   }
 
   @override

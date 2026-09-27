@@ -195,6 +195,7 @@ class _SuggestionsCard extends StatelessWidget {
               _FamilyMemberTargetRow(
                 suggestion: suggestion,
                 suggestionRepo: suggestionRepo,
+                todoRepo: todoRepo,
                 proposalRepo: proposalRepo,
                 myLinkId: myLinkId,
                 hasOtherLinkMembers: hasOtherLinkMembers,
@@ -374,6 +375,7 @@ class _SelfSuggestionRow extends StatelessWidget {
 class _FamilyMemberTargetRow extends StatelessWidget {
   final AiSuggestion suggestion;
   final AiSuggestionRepository suggestionRepo;
+  final TodoRepository todoRepo;
   final LinkMemberProposalRepository? proposalRepo;
   final String? myLinkId;
   final bool hasOtherLinkMembers;
@@ -383,6 +385,7 @@ class _FamilyMemberTargetRow extends StatelessWidget {
   const _FamilyMemberTargetRow({
     required this.suggestion,
     required this.suggestionRepo,
+    required this.todoRepo,
     required this.proposalRepo,
     required this.myLinkId,
     required this.hasOtherLinkMembers,
@@ -460,6 +463,7 @@ class _FamilyMemberTargetRow extends StatelessWidget {
                               suggestion: suggestion,
                               proposalRepo: proposalRepo!,
                               suggestionRepo: suggestionRepo,
+                              todoRepo: todoRepo,
                               myLinkId: myLinkId,
                               otherLinkMembers: otherLinkMembers,
                             );

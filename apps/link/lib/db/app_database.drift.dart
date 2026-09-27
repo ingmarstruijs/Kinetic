@@ -5815,6 +5815,466 @@ class AiSuggestionsCompanion extends UpdateCompanion<AiSuggestionRow> {
   }
 }
 
+class $NoteAssetsTable extends NoteAssets
+    with TableInfo<$NoteAssetsTable, NoteAssetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NoteAssetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteIdMeta = const VerificationMeta('noteId');
+  @override
+  late final GeneratedColumn<String> noteId = GeneratedColumn<String>(
+    'note_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('image/jpeg'),
+  );
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta(
+    'syncState',
+  );
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+    'sync_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('dirty'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    noteId,
+    mimeType,
+    fileName,
+    syncState,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'note_assets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NoteAssetRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('note_id')) {
+      context.handle(
+        _noteIdMeta,
+        noteId.isAcceptableOrUnknown(data['note_id']!, _noteIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_noteIdMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(
+        _syncStateMeta,
+        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NoteAssetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NoteAssetRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      noteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note_id'],
+      )!,
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      )!,
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+      syncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_state'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $NoteAssetsTable createAlias(String alias) {
+    return $NoteAssetsTable(attachedDatabase, alias);
+  }
+}
+
+class NoteAssetRow extends DataClass implements Insertable<NoteAssetRow> {
+  final String id;
+  final String noteId;
+  final String mimeType;
+
+  /// Relative filename under the note-assets documents directory.
+  final String fileName;
+  final String syncState;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const NoteAssetRow({
+    required this.id,
+    required this.noteId,
+    required this.mimeType,
+    required this.fileName,
+    required this.syncState,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['note_id'] = Variable<String>(noteId);
+    map['mime_type'] = Variable<String>(mimeType);
+    map['file_name'] = Variable<String>(fileName);
+    map['sync_state'] = Variable<String>(syncState);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  NoteAssetsCompanion toCompanion(bool nullToAbsent) {
+    return NoteAssetsCompanion(
+      id: Value(id),
+      noteId: Value(noteId),
+      mimeType: Value(mimeType),
+      fileName: Value(fileName),
+      syncState: Value(syncState),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory NoteAssetRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NoteAssetRow(
+      id: serializer.fromJson<String>(json['id']),
+      noteId: serializer.fromJson<String>(json['noteId']),
+      mimeType: serializer.fromJson<String>(json['mimeType']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'noteId': serializer.toJson<String>(noteId),
+      'mimeType': serializer.toJson<String>(mimeType),
+      'fileName': serializer.toJson<String>(fileName),
+      'syncState': serializer.toJson<String>(syncState),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  NoteAssetRow copyWith({
+    String? id,
+    String? noteId,
+    String? mimeType,
+    String? fileName,
+    String? syncState,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => NoteAssetRow(
+    id: id ?? this.id,
+    noteId: noteId ?? this.noteId,
+    mimeType: mimeType ?? this.mimeType,
+    fileName: fileName ?? this.fileName,
+    syncState: syncState ?? this.syncState,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  NoteAssetRow copyWithCompanion(NoteAssetsCompanion data) {
+    return NoteAssetRow(
+      id: data.id.present ? data.id.value : this.id,
+      noteId: data.noteId.present ? data.noteId.value : this.noteId,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NoteAssetRow(')
+          ..write('id: $id, ')
+          ..write('noteId: $noteId, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('fileName: $fileName, ')
+          ..write('syncState: $syncState, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    noteId,
+    mimeType,
+    fileName,
+    syncState,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NoteAssetRow &&
+          other.id == this.id &&
+          other.noteId == this.noteId &&
+          other.mimeType == this.mimeType &&
+          other.fileName == this.fileName &&
+          other.syncState == this.syncState &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class NoteAssetsCompanion extends UpdateCompanion<NoteAssetRow> {
+  final Value<String> id;
+  final Value<String> noteId;
+  final Value<String> mimeType;
+  final Value<String> fileName;
+  final Value<String> syncState;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const NoteAssetsCompanion({
+    this.id = const Value.absent(),
+    this.noteId = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NoteAssetsCompanion.insert({
+    required String id,
+    required String noteId,
+    this.mimeType = const Value.absent(),
+    required String fileName,
+    this.syncState = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       noteId = Value(noteId),
+       fileName = Value(fileName),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<NoteAssetRow> custom({
+    Expression<String>? id,
+    Expression<String>? noteId,
+    Expression<String>? mimeType,
+    Expression<String>? fileName,
+    Expression<String>? syncState,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (noteId != null) 'note_id': noteId,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (fileName != null) 'file_name': fileName,
+      if (syncState != null) 'sync_state': syncState,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NoteAssetsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? noteId,
+    Value<String>? mimeType,
+    Value<String>? fileName,
+    Value<String>? syncState,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return NoteAssetsCompanion(
+      id: id ?? this.id,
+      noteId: noteId ?? this.noteId,
+      mimeType: mimeType ?? this.mimeType,
+      fileName: fileName ?? this.fileName,
+      syncState: syncState ?? this.syncState,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (noteId.present) {
+      map['note_id'] = Variable<String>(noteId.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NoteAssetsCompanion(')
+          ..write('id: $id, ')
+          ..write('noteId: $noteId, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('fileName: $fileName, ')
+          ..write('syncState: $syncState, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5829,6 +6289,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   late final $ExclusionRulesTable exclusionRules = $ExclusionRulesTable(this);
   late final $AiSuggestionsTable aiSuggestions = $AiSuggestionsTable(this);
+  late final $NoteAssetsTable noteAssets = $NoteAssetsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5842,6 +6303,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     appSettings,
     exclusionRules,
     aiSuggestions,
+    noteAssets,
   ];
 }
 
@@ -9050,6 +9512,244 @@ typedef $$AiSuggestionsTableProcessedTableManager =
       AiSuggestionRow,
       PrefetchHooks Function()
     >;
+typedef $$NoteAssetsTableCreateCompanionBuilder =
+    NoteAssetsCompanion Function({
+      required String id,
+      required String noteId,
+      Value<String> mimeType,
+      required String fileName,
+      Value<String> syncState,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$NoteAssetsTableUpdateCompanionBuilder =
+    NoteAssetsCompanion Function({
+      Value<String> id,
+      Value<String> noteId,
+      Value<String> mimeType,
+      Value<String> fileName,
+      Value<String> syncState,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$NoteAssetsTableFilterComposer
+    extends Composer<_$AppDatabase, $NoteAssetsTable> {
+  $$NoteAssetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get noteId => $composableBuilder(
+    column: $table.noteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NoteAssetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $NoteAssetsTable> {
+  $$NoteAssetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get noteId => $composableBuilder(
+    column: $table.noteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NoteAssetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NoteAssetsTable> {
+  $$NoteAssetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get noteId =>
+      $composableBuilder(column: $table.noteId, builder: (column) => column);
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$NoteAssetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NoteAssetsTable,
+          NoteAssetRow,
+          $$NoteAssetsTableFilterComposer,
+          $$NoteAssetsTableOrderingComposer,
+          $$NoteAssetsTableAnnotationComposer,
+          $$NoteAssetsTableCreateCompanionBuilder,
+          $$NoteAssetsTableUpdateCompanionBuilder,
+          (
+            NoteAssetRow,
+            BaseReferences<_$AppDatabase, $NoteAssetsTable, NoteAssetRow>,
+          ),
+          NoteAssetRow,
+          PrefetchHooks Function()
+        > {
+  $$NoteAssetsTableTableManager(_$AppDatabase db, $NoteAssetsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NoteAssetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NoteAssetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NoteAssetsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> noteId = const Value.absent(),
+                Value<String> mimeType = const Value.absent(),
+                Value<String> fileName = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NoteAssetsCompanion(
+                id: id,
+                noteId: noteId,
+                mimeType: mimeType,
+                fileName: fileName,
+                syncState: syncState,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String noteId,
+                Value<String> mimeType = const Value.absent(),
+                required String fileName,
+                Value<String> syncState = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => NoteAssetsCompanion.insert(
+                id: id,
+                noteId: noteId,
+                mimeType: mimeType,
+                fileName: fileName,
+                syncState: syncState,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NoteAssetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NoteAssetsTable,
+      NoteAssetRow,
+      $$NoteAssetsTableFilterComposer,
+      $$NoteAssetsTableOrderingComposer,
+      $$NoteAssetsTableAnnotationComposer,
+      $$NoteAssetsTableCreateCompanionBuilder,
+      $$NoteAssetsTableUpdateCompanionBuilder,
+      (
+        NoteAssetRow,
+        BaseReferences<_$AppDatabase, $NoteAssetsTable, NoteAssetRow>,
+      ),
+      NoteAssetRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9070,4 +9770,6 @@ class $AppDatabaseManager {
       $$ExclusionRulesTableTableManager(_db, _db.exclusionRules);
   $$AiSuggestionsTableTableManager get aiSuggestions =>
       $$AiSuggestionsTableTableManager(_db, _db.aiSuggestions);
+  $$NoteAssetsTableTableManager get noteAssets =>
+      $$NoteAssetsTableTableManager(_db, _db.noteAssets);
 }

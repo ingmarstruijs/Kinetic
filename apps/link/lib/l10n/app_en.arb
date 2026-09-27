@@ -30,8 +30,9 @@
   "settingsSectionAppearance": "Appearance",
   "settingsTheme": "Theme",
   "settingsSectionSync": "Sync",
+  "settingsSectionExperimental": "Experimental",
   "linkWebTitle": "Link Web",
-  "linkWebSettingsSubtitle": "Open tasks in a browser on the same Wi‑Fi",
+  "linkWebSettingsSubtitle": "Early LAN preview — browser tasks while keys stay on the phone",
   "linkWebExperimentalBanner": "Experimental",
   "linkWebExperimentalBody": "Link Web is an early preview. Expect rough edges, LAN-only pairing, and possible breaking changes. Do not rely on it for critical workflows yet.",
   "linkWebIntro": "Open tasks on your computer while keys stay on this phone.",
@@ -53,9 +54,22 @@
   "settingsWebDavTurnedOff": "WebDAV sync turned off.",
   "settingsSectionFamily": "Family",
   "settingsFamilyMember": "Family member",
-  "settingsFamilyMembers": "Family members",
-  "settingsFamilyMemberLinked": "Family member linked",
-  "settingsFamilyMemberLinkHint": "Link with another family member",
+  "settingsFamilyMembers": "Family",
+  "settingsFamilyMemberLinked": "Other adults linked",
+  "settingsFamilyMemberLinkHint": "Start, join, invite adults, or link kids",
+  "settingsFamilyHubStatusNoKey": "No family key yet",
+  "settingsFamilyHubStatusKidsOnly": "Kids linked — invite or join an adult to share notes and sync",
+  "settingsFamilyHubStatusReady": "Family key ready",
+  "settingsFamilyHubStart": "Start family",
+  "settingsFamilyHubStartSubtitle": "Create a family key on this device",
+  "settingsFamilyHubJoin": "Join family",
+  "settingsFamilyHubJoinSubtitle": "Scan a QR, use tap-to-link, or type the 12 words",
+  "settingsFamilyHubInvite": "Invite adult",
+  "settingsFamilyHubInviteSubtitle": "Share your family key so another Link can join",
+  "settingsFamilyHubLinkKids": "Link kids app",
+  "settingsFamilyHubLinkKidsSubtitle": "Enroll a child device with a QR (creates a key if needed)",
+  "settingsFamilyHubAdoptDifferent": "Use a different family key",
+  "settingsFamilyHubAdoptDifferentSubtitle": "Replace this key — current shared data becomes unreadable",
   "settingsKids": "Kids",
   "settingsKidsParticipation": "Kids tasks on this device",
   "settingsKidsParticipationSubtitle": "When off, this device cannot see, create, assign, or verify kids tasks",
@@ -687,7 +701,7 @@
       "days": {"type": "int"}
     }
   },
-  "familySetupPromptStart": "Start guide",
+  "familySetupPromptStart": "Open Family",
   "webdavJoinFamilyTitle": "Join family?",
   "webdavJoinFamilyBody": "Someone is already using Kinetic on this folder.",
   "webdavJoinFamilyMembersOne": "{name} is already here.",
@@ -918,6 +932,14 @@
   "notesUnlockFailed": "Could not unlock the note",
   "notesHideNeedsDeviceLock": "Turn on a screen lock on this device to require unlock",
   "notesBodyHint": "Write a note…",
+  "notesDetails": "Details",
+  "notesInsertImage": "Insert image",
+  "notesInsertImageError": "Could not add image",
+  "notesPickImageSource": "Add image",
+  "notesPickFromGallery": "Gallery",
+  "notesPickFromCamera": "Camera",
+  "notesDetailsExpanded": "Hide details",
+  "taskOverdueChip": "Overdue",
   "notesMdBold": "Bold",
   "notesMdItalic": "Italic",
   "notesMdHeading": "Heading",
@@ -936,8 +958,11 @@
       "name": {"type": "String"}
     }
   },
-  "suggestFamilyMemberSeesGeneric": "Intentionally generic — no private titles or notes.",
+  "suggestFamilyMemberSeesGeneric": "You choose a concrete shareable task next — private tasks stay hidden.",
   "suggestFamilyMemberSeesFull": "The title and any notes from this suggestion will be included.",
+  "suggestPickTaskTitle": "Which task should they take?",
+  "suggestPickTaskSubtitle": "They will see this exact title.",
+  "suggestPickTaskEmpty": "No shareable open tasks in this category.",
   "suggestSend": "Send",
   "suggestSent": "Suggestion sent to {name}",
   "@suggestSent": {
@@ -952,6 +977,7 @@
   "suggestReasonStale": "Open task",
   "suggestReasonCalendar": "Calendar",
   "suggestReasonCategorize": "Category",
+  "suggestReasonOverdue": "Overdue",
   "suggestCategorizeTitle": "Set category {category} on {count} tasks?",
   "@suggestCategorizeTitle": {
     "placeholders": {
@@ -965,20 +991,20 @@
       "count": {"type": "int"}
     }
   },
-  "suggestLoadBalanceTitleHousehold": "Can you pick up something around the house this week?",
-  "suggestLoadBalanceTitleHealth": "Can you pick up something around care or health this week?",
-  "suggestLoadBalanceTitleAdmin": "Can you pick up something in admin this week?",
-  "suggestLoadBalanceTitleSchool": "Can you pick up something around school this week?",
-  "suggestLoadBalanceTitleFinance": "Can you pick up something in finances this week?",
-  "suggestLoadBalanceTitleOther": "Can you pick something up this week?",
-  "suggestLoadBalanceExplanation": "You have {count} open tasks in {category}. The suggestion is intentionally generic.",
+  "suggestLoadBalanceTitleHousehold": "Can you help with household this week?",
+  "suggestLoadBalanceTitleHealth": "Can you help with care or health this week?",
+  "suggestLoadBalanceTitleAdmin": "Can you help with admin this week?",
+  "suggestLoadBalanceTitleSchool": "Can you help with school this week?",
+  "suggestLoadBalanceTitleFinance": "Can you help with finances this week?",
+  "suggestLoadBalanceTitleOther": "Can you help with something this week?",
+  "suggestLoadBalanceExplanation": "You have {count} open shareable tasks in {category}. On Send, pick which one they should take.",
   "@suggestLoadBalanceExplanation": {
     "placeholders": {
       "count": {"type": "int"},
       "category": {"type": "String"}
     }
   },
-  "suggestLoadBalanceExplanationGeneric": "You have several open tasks in {category}. The suggestion is intentionally generic.",
+  "suggestLoadBalanceExplanationGeneric": "You have several open shareable tasks in {category}. On Send, pick which one they should take.",
   "@suggestLoadBalanceExplanationGeneric": {
     "placeholders": {
       "category": {"type": "String"}
@@ -986,14 +1012,14 @@
   },
   "suggestFamilyMemberTitleSchool": "School run or childcare this week?",
   "suggestFamilyMemberExplanationSchool": "Based on your tasks (without private details), school looks like a theme this week. Your family member sees this.",
-  "suggestFamilyMemberTitleHousehold": "Can you pick up something around the house this week?",
-  "suggestFamilyMemberExplanationHousehold": "You have several household tasks open. The suggestion is intentionally generic.",
+  "suggestFamilyMemberTitleHousehold": "Can you help with household this week?",
+  "suggestFamilyMemberExplanationHousehold": "You have several household tasks open. On Send, pick a concrete shareable task.",
   "suggestFamilyMemberTitleHealth": "Something around care or health to pick up?",
-  "suggestFamilyMemberExplanationHealth": "Something around care is going on. Your family member only sees this generic question.",
+  "suggestFamilyMemberExplanationHealth": "Something around care is going on. Pick a shareable task when you send.",
   "suggestFamilyMemberTitleSport": "Sports bag or training this week?",
   "suggestFamilyMemberExplanationSport": "Based on your tasks, sport looks like a theme. No private details.",
   "suggestFamilyMemberTitleAdmin": "An admin chore this week?",
-  "suggestFamilyMemberExplanationAdmin": "There is admin work open. The suggestion does not name a concrete task.",
+  "suggestFamilyMemberExplanationAdmin": "There is admin work open. Pick a concrete shareable task when you send.",
   "suggestCalendarTaxTitle": "Check tax return",
   "suggestCalendarTaxExplanation": "March — time to check the tax return.",
   "suggestCalendarSchoolTitle": "Prepare school supplies",
@@ -1024,6 +1050,13 @@
   },
   "suggestStaleExplanation": "\"{title}\" has been open for {days} days without a reminder.",
   "@suggestStaleExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "days": {"type": "int"}
+    }
+  },
+  "suggestOverdueExplanation": "\"{title}\" is {days} days overdue — pick a new reminder?",
+  "@suggestOverdueExplanation": {
     "placeholders": {
       "title": {"type": "String"},
       "days": {"type": "int"}

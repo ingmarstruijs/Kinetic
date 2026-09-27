@@ -4,7 +4,7 @@ import '../db/app_database.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
-import 'family_setup_wizard.dart';
+import 'family_members_settings_screen.dart';
 import 'settings_repository.dart';
 
 /// Default snooze when the user picks "remind me later".
@@ -12,7 +12,7 @@ const kFamilySetupRemindDays = 7;
 
 enum FamilySetupPromptChoice { ignore, remind, start }
 
-/// Shows the Start-family nudge when WebDAV is on but no family key exists yet
+/// Shows the Family hub nudge when WebDAV is on but no family key exists yet
 /// (after [kFamilySetupPromptDelay], unless skipped or snoozed).
 Future<void> maybeShowFamilySetupPrompt({
   required BuildContext context,
@@ -72,16 +72,15 @@ Future<void> maybeShowFamilySetupPrompt({
     case FamilySetupPromptChoice.start:
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => FamilySetupWizard(
+          builder: (_) => FamilyMembersSettingsScreen(
             db: db,
             configRepo: configRepo,
-            settingsRepo: settingsRepo,
             syncOrchestrator: syncOrchestrator,
             onConfigSaved: onConfigSaved,
-            onRestoreComplete: onRestoreComplete,
-            onOpenTasksTab: onOpenTasksTab,
+            initialAction: FamilyHubAction.start,
           ),
         ),
       );
+      onConfigSaved?.call();
   }
 }

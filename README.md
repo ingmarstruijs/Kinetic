@@ -32,8 +32,8 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 ### Always available (local / vault)
 
 - **Personal tasks** — quick-add, swipe-to-complete, priorities, categories, due dates, recurrence, and **smart reminder chips** that propose contextual times from title and history. Enabling a reminder defaults to **one hour from now, rounded up to the next half hour**; the time dialog focuses the hour field so you can type immediately
-- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN); **local-only** notes never leave the device; templates and note ↔ task links
-- **AI suggestions (for you)** — fully offline heuristic engine (habits, calendar, stale open tasks, seasonal history) with human-readable explanations
+- **Notes** — fullscreen markdown editor (edit/preview, GFM checkboxes, formatting shortcuts, **image attach**); list shows last modified (+ shared audience); optional **require unlock** (open with biometrics/PIN); **local-only** notes never leave the device; templates and note ↔ task links; shared notes sync encrypted image blobs under WebDAV `.assets/`
+- **AI suggestions (for you)** — fully offline heuristic engine (habits, calendar, overdue, stale, seasonal, categorize) with ranking, feedback, and human-readable explanations
 - **Themes** — Default (light blue brand), Calm (warm sand/terracotta), Night (OLED); header logo keeps brand blue on Default and follows the accent on Calm/Night
 - **Encryption** — 12-word BIP-39 vault; derived AES-256-GCM key in device secure storage. Same phrase for WebDAV and `.kvault` backup
 - **Backup & restore** — encrypted `.kvault` (no key in the file). Restore with the 12 words from a file (WebDAV restore also needs a configured server)
@@ -42,16 +42,16 @@ Two Flutter apps share crypto and sync logic in `packages/webdav` (AES-256-GCM, 
 
 ### Requires WebDAV
 
-Family features are **not** available offline-only. Configure WebDAV in **Settings → Sync** first. The **Family** section (including **Start family**) appears only after WebDAV is connected.
+Family features are **not** available offline-only. Configure WebDAV in **Settings → Sync** first. The **Family** section (one hub for members, invite/join, and kids) appears only after WebDAV is connected.
 
 **Same server for the whole family.** All Link and Kids devices in one family must use the **same WebDAV base URL** (same folder root — e.g. a Nextcloud group folder, not two separate personal homes like `…/dav/files/alice/` vs `…/bob/`). Logins (username/password) may differ per person when the server grants both access to that root; personal data lives under `/kinetic/{username}/`, shared data under `/kinetic/shared/`. Linking with a different server URL is **blocked** (QR / BLE). Manual phrase entry does not carry a URL — configure the matching server first.
 
 - **WebDAV sync** — bring your own server, no vendor backend; connection test distinguishes wrong password vs no WebDAV vs network errors
 - **Turn off sync** — on the WebDAV setup screen; stops sync and clears family/kids linkage on this device, keeps the personal vault and private local data
-- **Family coordination** — QR / BLE / 12-word pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** after a **What {name} sees** preview (nothing is auto-sent)
+- **Family coordination** — QR / BLE / 12-word pairing, encrypted task proposals, accept/decline flow; family-member-targeted suggestions require an explicit **Send** (load-balance picks a concrete shareable task, then **What {name} sees**) — nothing is auto-sent
 - **Kids tasks** — assign to one child or **Everyone**; configurable XP, goals, and routines; draft enrollment becomes **active** when the kids app reports presence; the kids app syncs assignments and awards XP on completion
 - **Family key rotation** — optional wizard after removing a member; shared blobs are re-encrypted so the old key cannot read new data
-- **Shared notes** — share notes with other link members (needs pairing); local-only notes stay off the server
+- **Shared notes** — share notes with other link members (needs pairing); local-only notes stay off the server; note images sync encrypted when shared
 - **Connection-aware send** — family members listed with WebDAV presence status before forwarding
 - **Ambient presence & load** — shared load metrics (`/kinetic/shared/load/…`) feed household awareness and suggestions without becoming chat
 - **Family-member / load-balance suggestions** — privacy-preserving hints that only make sense once a family link exists
@@ -118,23 +118,23 @@ Tasks/notes suggestion copy in the link app is still being migrated; nav, settin
 
 One Kinetic family = **one** shared folder tree (`/kinetic/shared/…`) encrypted with **one** family key. Multiple user folders on that server (e.g. `alex`, `bob`) are members of that same family — you do not pick a person to link to; any member’s invite (QR / BLE / 12 words) joins the whole family.
 
-### Start-family guide
+### Family hub
 
-After WebDAV is on and you still have no family key:
+After WebDAV is on:
 
-- **Settings → Family → Start family** (small link next to the section title) opens a guided wizard: WebDAV (if needed) → create/join family → invite → kids → done. The link disappears once a family key exists.
+- **Settings → Family** opens the **family hub**: status, invite/join, members, kids link, and kids-task participation. Create or join from the same screen (no separate “Start family” tile).
 - **Day-1 nudge:** about a day after WebDAV is configured without a family, Kinetic may prompt with **Ignore** (never again until reconnect), **Remind in 7 days**, or **Start guide**.
-- **Existing data on the folder:** after saving WebDAV, if another Kinetic user folder and/or shared roster/presence is already present, Kinetic offers **Link now** (opens QR / BLE / phrase import immediately) or **Not now**. If `family.key.enc` exists for your username, the family key is restored automatically.
+- **Existing data on the folder:** after saving WebDAV, if another Kinetic user folder and/or shared roster/presence is already present, Kinetic offers **Link now** (opens the hub on Join) or **Not now**. If `family.key.enc` exists for your username, the family key is restored automatically.
 
 ### Family linking
 
-1. **Settings → Family → Family members** → share QR (12 family words + entropy) or tap-to-link (BLE); QR remains the fallback
+1. **Settings → Family** → invite or join → share QR (12 family words + entropy) or tap-to-link (BLE); QR remains the fallback
 2. The other family member scans, uses BLE, **or** types the 12 words and confirms the fingerprint — **server URL in the invite must match** their configured WebDAV URL or linking is blocked
 3. Proposals and shared data sync via that same WebDAV server
 
 ### Kids enrollment
 
-1. **Settings → Family → Kids** → generate QR with family key + kid UUID (no WebDAV password)
+1. **Settings → Family → Link kids** → generate QR with family key + kid UUID (no WebDAV password)
 2. Child device scans the QR and types the WebDAV password once (same server as Link)
 3. The kid appears as **draft** on the roster until the kids app syncs **presence**, then becomes **active**
 4. Kinetic Link forwards tasks to that child's UUID, or to **Everyone** (no target id — visible to all enrolled kids)
@@ -158,15 +158,16 @@ An empty run does **not** start the 24-hour throttle, so creating tasks can surf
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------- |
 | **Habit**             | Same non-recurring title completed ≥ 2× and the median interval is overdue, **or** one completion of a strong keyword (e.g. Dutch `boodschappen` / groceries) after ≥ 14 days | You                                        | —                                                              |
 | **Calendar**          | Month-based prompts with no history required (Dutch examples: `belasting` in March, `schoolspullen` in August, `kerst` in December)                                           | You                                        | —                                                              |
+| **Overdue**           | Open task whose due date is past                                                                                                                                              | You (proposes a new reminder time)         | —                                                              |
 | **Stale**             | Open task older than 7 days with no due date or reminder                                                                                                                      | You (sets a reminder on the existing task) | —                                                              |
 | **Seasonal**          | Task completed in the same calendar month in a prior year                                                                                                                     | You                                        | —                                                              |
 | **Family complement** | Keywords in **your** open tasks (including private)                                                                                                                           | Family-member suggestion                   | A **generic** template only — never the private title or notes |
-| **Load balance**      | ≥ 3 open tasks in the same category (private included; `other` needs ≥ 5)                                                                                                     | Family-member suggestion                   | A generic “can you pick something up in [category]?” line      |
+| **Load balance**      | ≥ 3 **shareable** open tasks in the same theme category (`other` skipped; custom labels like Household count)                                                                   | Family-member suggestion                   | After **Send**, a concrete shareable task the sender picks     |
 
 
-Family-member hints are capped at one per keyword-family per 14 days. **Send to family member** always shows **What your family member sees** before anything is sent. Nothing is auto-sent.
+Candidates are scored with accept/dismiss feedback and ranked under a pending cap. Family-member hints are capped at one per keyword-family per 14 days. **Send to family member** always confirms **What your family member sees** before anything is sent. Nothing is auto-sent.
 
-Suggestions appear in a banner on the **Private** tab and in structured sections on **Proposals** (**For you** / **For family member** / **From family member**). See `[apps/link/docs/SMART_FEATURES.md](apps/link/docs/SMART_FEATURES.md)` for reminder chips and send-sheet details.
+Suggestions appear in structured sections on Tasks (**For you** / **For family member** / **From family member**). See [`apps/link/docs/SMART_FEATURES.md`](apps/link/docs/SMART_FEATURES.md) for reminder chips and send-sheet details.
 
 ## Encryption
 

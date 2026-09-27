@@ -8,6 +8,9 @@ import '../models/personal_note.dart';
 /// NoteRepository — CRUD for personal notes with reminder scheduling.
 class NoteRepository {
   final AppDatabase _db;
+
+  /// Exposed for note image asset storage tied to this database.
+  AppDatabase get db => _db;
   final NotificationService? _notifications;
   final void Function()? onWrite;
 
@@ -66,6 +69,7 @@ class NoteRepository {
 
   /// Create a new note.
   Future<PersonalNote> insert({
+    String? id,
     required String title,
     String body = '',
     bool isShared = false,
@@ -79,6 +83,7 @@ class NoteRepository {
   }) async {
     try {
       final note = PersonalNote.create(
+        id: id,
         title: title,
         body: body,
         isShared: isShared,

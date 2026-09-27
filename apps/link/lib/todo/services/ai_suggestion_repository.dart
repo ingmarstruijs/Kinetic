@@ -220,6 +220,46 @@ class AiSuggestionRepository {
         ),
       );
 
+  /// Recent accept/dismiss signal for ranking (−70…+30).
+  ///
+  /// Same [dedupeKey] weighs most; same [reason] accepts give a smaller boost.
+  Future<int> feedbackDelta({
+    required String dedupeKey,
+    required SuggestionReason reason,
+    Duration within = const Duration(days: 90),
+  }) async {
+    final cutoff = DateTime.now().toUtc().subtract(within);
+    final rows = await (_db.select(_db.aiSuggestions)
+          ..where(
+            (t) =>
+                t.updatedAt.isBiggerOrEqualValue(cutoff) &
+                (t.status.equals('dismissed') | t.status.equals('accepted')),
+          ))
+        .get();
+    var delta = 0;
+    for (final row in rows) {
+      final sameKey =
+          dedupeKey.isNotEmpty && row.dedupeKey == dedupeKey;
+      final sameReason = row.reason == reason.name;
+      if (!sameKey && !sameReason) continue;
+      if (row.status == 'dismissed') {
+        delta += sameKey ? -40 : -15;
+      } else if (row.status == 'accepted') {
+        delta += sameKey ? 20 : 8;
+      }
+    }
+    if (delta < -70) return -70;
+    if (delta > 30) return 30;
+    return delta;
+  }
+
+  /// Debug helper: remove all pending suggestions so detectors can recreate.
+  Future<int> clearPending() async {
+    return (_db.delete(_db.aiSuggestions)
+          ..where((t) => t.status.equals('pending')))
+        .go();
+  }
+
   Future<void> snooze(String id) =>
       (_db.update(_db.aiSuggestions)..where((t) => t.id.equals(id))).write(
         AiSuggestionsCompanion(

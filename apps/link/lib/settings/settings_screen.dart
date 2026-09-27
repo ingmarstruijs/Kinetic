@@ -24,12 +24,10 @@ import '../vault/widgets/mnemonic_phrase_field.dart';
 import '../debug/demo_scenarios.dart';
 import '../debug/demo_scenarios_screen.dart';
 import '../debug/demo_session.dart';
+import '../debug/heuristic_debug_screen.dart';
 import '../bridge/link_web_bridge_screen.dart';
 import '../todo/services/todo_repository.dart';
-import 'family_key_scan_screen.dart';
-import 'kids_settings_screen.dart';
 import 'family_members_settings_screen.dart';
-import 'family_setup_wizard.dart';
 import 'settings_repository.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -67,7 +65,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   SyncConfig? _config;
-  bool _hasFamilyKey = false;
   bool _hasOtherLinkMembers = false;
   int _enrolledKidsCount = 0;
   bool _kidsParticipation = true;
@@ -87,7 +84,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       setState(() {
         _config = config;
-        _hasFamilyKey = config?.familyKeyBytes != null;
         _hasOtherLinkMembers = paired;
         _enrolledKidsCount = kids.length;
         _kidsParticipation = kidsParticipation;
@@ -100,23 +96,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _kidsParticipation = enabled);
     await widget.configRepo.saveKidsParticipation(enabled);
     widget.onConfigSaved?.call();
-  }
-
-  Future<void> _openFamilySetupWizard() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => FamilySetupWizard(
-          db: widget.db,
-          configRepo: widget.configRepo,
-          settingsRepo: widget.settingsRepo,
-          syncOrchestrator: widget.syncOrchestrator,
-          onConfigSaved: widget.onConfigSaved,
-          onRestoreComplete: widget.onRestoreComplete,
-          onOpenTasksTab: widget.onOpenTasksTab,
-        ),
-      ),
-    );
-    _loadConfig();
   }
 
   int get _displayKidsCount {
@@ -196,22 +175,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _loadConfig();
                     },
                   ),
-                  if (widget.todoRepository != null)
-                    ListTile(
-                      leading: Icon(Icons.laptop_windows_outlined, color: iconColor),
-                      title: Text(l10n.linkWebTitle),
-                      subtitle: Text(l10n.linkWebSettingsSubtitle),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => LinkWebBridgeScreen(
-                              todoRepository: widget.todoRepository!,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   if (isConnected && widget.syncStatus != null)
                     ValueListenableBuilder<SyncStatusInfo>(
                       valueListenable: widget.syncStatus!,
@@ -244,23 +207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                   if (isConnected || DemoSession.instance.active) ...[
-                    _SectionHeader(
-                      label: l10n.settingsSectionFamily,
-                      trailing: !_hasFamilyKey
-                          ? TextButton(
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              onPressed: _openFamilySetupWizard,
-                              child: Text(l10n.settingsStartFamily),
-                            )
-                          : null,
-                    ),
+                    _SectionHeader(label: l10n.settingsSectionFamily),
                     if (_kidsParticipationLoaded && _displayKidsCount > 0)
                       SwitchListTile(
                         secondary: Icon(
@@ -297,32 +244,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _loadConfig();
                       },
                     ),
+                  ],
+                  if (widget.todoRepository != null) ...[
+                    _SectionHeader(label: l10n.settingsSectionExperimental),
                     ListTile(
-                      leading: Icon(Icons.child_care, color: iconColor),
-                      title: Text(l10n.settingsKids),
-                      subtitle: Text(
-                        _displayKidsCount > 0
-                            ? l10n.settingsKidsEnrolledCount(
-                                _displayKidsCount,
-                              )
-                            : l10n.settingsKidsLinkHint,
+                      leading: Icon(
+                        Icons.laptop_windows_outlined,
+                        color: iconColor,
                       ),
+                      title: Text(l10n.linkWebTitle),
+                      subtitle: Text(l10n.linkWebSettingsSubtitle),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () async {
-                        await Navigator.of(context).push(
+                      onTap: () {
+                        Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => KidsSettingsScreen(
-                              configRepo: widget.configRepo,
-                              syncOrchestrator: widget.syncOrchestrator,
-                              onConfigSaved: widget.onConfigSaved,
+                            builder: (_) => LinkWebBridgeScreen(
+                              todoRepository: widget.todoRepository!,
                             ),
                           ),
                         );
-                        _loadConfig();
                       },
                     ),
                   ],
-              _SectionHeader(label: l10n.settingsSectionVault),
+                  _SectionHeader(label: l10n.settingsSectionVault),
               ListTile(
                 leading: Icon(Icons.verified_user_outlined, color: iconColor),
                 title: Text(l10n.settingsVerifyPhrase),
@@ -363,6 +307,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
                   },
                 ),
+                if (widget.todoRepository != null)
+                  ListTile(
+                    leading: Icon(Icons.psychology_outlined, color: iconColor),
+                    title: const Text('Heuristic engine'),
+                    subtitle: Text(
+                      localeNotifier.value.languageCode == 'nl'
+                          ? 'Forceer een run en bekijk de reasoning-log'
+                          : 'Force a run and inspect the reasoning log',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => HeuristicDebugScreen(
+                            db: widget.db,
+                            todoRepo: widget.todoRepository!,
+                            configRepo: widget.configRepo,
+                            syncOrchestrator: widget.syncOrchestrator,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               ],
               _SectionHeader(label: l10n.settingsSectionBackup),
               ListTile(
@@ -1278,14 +1245,7 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       if (familyKeyToSave == null &&
           folderProbe != null &&
           folderProbe.suggestsExistingFamily) {
-        await _offerJoinExistingFamily(
-          probe: folderProbe,
-          serverUrl: serverUrl,
-          username: username,
-          password: password,
-          linkId: linkId,
-          personalKey: personalKey,
-        );
+        await _offerJoinExistingFamily(probe: folderProbe);
       }
 
       if (!mounted) return;
@@ -1310,11 +1270,6 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
   /// Propose a fast family link when other Kinetic data is already on this folder.
   Future<void> _offerJoinExistingFamily({
     required KineticFolderProbeResult probe,
-    required String serverUrl,
-    required String username,
-    required String password,
-    required String linkId,
-    required Uint8List personalKey,
   }) async {
     final l10n = AppLocalizations.of(context);
     final peers = probe.otherUsernames;
@@ -1343,27 +1298,18 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
     );
     if (linkNow != true || !mounted) return;
 
-    final config = SyncConfig(
-      serverUrl: serverUrl,
-      username: username,
-      password: password,
-      linkId: linkId,
-      personalKeyBytes: personalKey,
-      familyKeyBytes: null,
-    );
-    final linked = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => FamilyKeyScanScreen(
-          currentConfig: config,
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => FamilyMembersSettingsScreen(
+          db: widget.db,
           configRepo: widget.configRepo,
+          syncOrchestrator: widget.syncOrchestrator,
+          onConfigSaved: widget.onConfigSaved,
+          initialAction: FamilyHubAction.join,
         ),
       ),
     );
-    if (linked == true) {
-      await widget.configRepo.setHasOtherLinkMembers(true);
-      await FamilyVaultSync.pushIfPossible(widget.configRepo);
-      await widget.configRepo.clearFamilySetupPrompt();
-    }
+    if (mounted) widget.onConfigSaved?.call();
   }
 
   @override

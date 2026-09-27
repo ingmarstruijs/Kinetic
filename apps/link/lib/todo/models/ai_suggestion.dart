@@ -11,6 +11,7 @@ enum SuggestionReason {
   stale,
   calendar,
   categorize,
+  overdue,
 }
 
 List<String> parseRelatedTaskIds(String? raw) {
@@ -34,6 +35,7 @@ extension SuggestionReasonLabel on SuggestionReason {
     SuggestionReason.stale => l10n.suggestReasonStale,
     SuggestionReason.calendar => l10n.suggestReasonCalendar,
     SuggestionReason.categorize => l10n.suggestReasonCategorize,
+    SuggestionReason.overdue => l10n.suggestReasonOverdue,
   };
 
   bool get isSelfTargeted =>
@@ -41,7 +43,8 @@ extension SuggestionReasonLabel on SuggestionReason {
       this == SuggestionReason.seasonal ||
       this == SuggestionReason.stale ||
       this == SuggestionReason.calendar ||
-      this == SuggestionReason.categorize;
+      this == SuggestionReason.categorize ||
+      this == SuggestionReason.overdue;
 
   bool get isFamilyMemberTargeted =>
       this == SuggestionReason.familyMemberComplement ||

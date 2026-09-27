@@ -36,6 +36,17 @@ void main() {
     });
   });
 
+  group('habitGroupKey', () {
+    test('clusters grocery variants', () {
+      expect(habitGroupKey('Boodschappen AH'), 'kw:boodschappen');
+      expect(habitGroupKey('boodschappen doen'), 'kw:boodschappen');
+    });
+
+    test('keeps unique titles exact', () {
+      expect(habitGroupKey('Vergadering Q3'), 'vergadering q3');
+    });
+  });
+
   test('loadBalanceTitle never uses a source task name', () {
     expect(loadBalanceTitle('household'), contains('house'));
     expect(loadBalanceTitle('household'), isNot(contains('Afwas')));

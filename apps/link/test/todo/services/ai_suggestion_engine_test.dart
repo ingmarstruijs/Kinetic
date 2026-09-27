@@ -625,7 +625,49 @@ void main() {
         },
       );
 
-      test('counts private tasks but does not copy their titles', () async {
+      test('ignores other-category and private-only load', () async {
+        await _insertOpenTask(
+          db,
+          id: 'o1',
+          title: 'Random A',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o2',
+          title: 'Random B',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o3',
+          title: 'Random C',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o4',
+          title: 'Random D',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o5',
+          title: 'Random E',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o6',
+          title: 'Random F',
+          category: 'other',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'o7',
+          title: 'Random G',
+          category: 'other',
+        );
         await _insertOpenTask(
           db,
           id: 'lb1',
@@ -653,12 +695,55 @@ void main() {
           myLinkId: 'link-1',
         ).runIfDue();
 
-        final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
-        expect(suggestions, hasLength(1));
-        expect(suggestions.first.reason, SuggestionReason.loadBalance);
-        expect(suggestions.first.title.toLowerCase(), contains('house'));
-        expect(suggestions.first.title, isNot(contains('Privé')));
-        expect(suggestions.first.notes, isNull);
+        final suggestions =
+            await suggestionRepo.watchPendingFamilyMember().first;
+        expect(
+          suggestions.where((s) => s.reason == SuggestionReason.loadBalance),
+          isEmpty,
+        );
+      });
+
+      test('uses shareable household tasks only', () async {
+        await _insertOpenTask(
+          db,
+          id: 'lb1',
+          title: 'Privé klus A',
+          category: 'household',
+          isPrivate: true,
+        );
+        await _insertOpenTask(
+          db,
+          id: 'lb2',
+          title: 'Ramen lappen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'lb3',
+          title: 'Plinten doen',
+          category: 'household',
+        );
+        await _insertOpenTask(
+          db,
+          id: 'lb4',
+          title: 'Deurknoppen poetsen',
+          category: 'household',
+        );
+
+        await _engine(
+          proposalRepo: _proposalRepo(),
+          myLinkId: 'link-1',
+        ).runIfDue();
+
+        final suggestions =
+            await suggestionRepo.watchPendingFamilyMember().first;
+        final load = suggestions
+            .where((s) => s.reason == SuggestionReason.loadBalance)
+            .toList();
+        expect(load, hasLength(1));
+        expect(load.first.relatedTaskIds, hasLength(3));
+        expect(load.first.relatedTaskIds, isNot(contains('lb1')));
+        expect(load.first.title.toLowerCase(), contains('house'));
       });
     });
 
@@ -725,6 +810,87 @@ void main() {
 
         await engine.runIfDue();
         expect(await suggestionRepo.countPending(), 1);
+      });
+    });
+
+    group('fuzzy habit + ranking + overdue', () {
+      test('groups near-duplicate grocery titles into one habit', () async {
+        await _insertCompletedTask(
+          db,
+          id: 'h1',
+          title: 'Boodschappen AH',
+          completedAt: testNow.subtract(const Duration(days: 40)),
+        );
+        await _insertCompletedTask(
+          db,
+          id: 'h2',
+          title: 'Boodschappen doen',
+          completedAt: testNow.subtract(const Duration(days: 20)),
+        );
+
+        await _engine().runIfDue();
+
+        final pending = await suggestionRepo.watchPendingSelf().first;
+        expect(pending, hasLength(1));
+        expect(pending.first.reason, SuggestionReason.habit);
+        expect(pending.first.dedupeKey, 'habit:kw:boodschappen');
+      });
+
+      test('prefers overdue over stale when both compete for the cap', () async {
+        await _insertOpenTask(
+          db,
+          id: 'over',
+          title: 'Belastingaangifte',
+          createdAt: testNow.subtract(const Duration(days: 3)),
+          dueDate: testNow.subtract(const Duration(days: 2)),
+        );
+        await _insertOpenTask(
+          db,
+          id: 'stale1',
+          title: 'Oude klus A',
+          createdAt: testNow.subtract(const Duration(days: 10)),
+        );
+        await _insertOpenTask(
+          db,
+          id: 'stale2',
+          title: 'Oude klus B',
+          createdAt: testNow.subtract(const Duration(days: 10)),
+        );
+        await _insertOpenTask(
+          db,
+          id: 'stale3',
+          title: 'Oude klus C',
+          createdAt: testNow.subtract(const Duration(days: 10)),
+        );
+
+        await _engine().runIfDue();
+
+        final pending = await suggestionRepo.watchPendingSelf().first;
+        expect(pending.length, lessThanOrEqualTo(3));
+        expect(
+          pending.any((s) => s.reason == SuggestionReason.overdue),
+          isTrue,
+        );
+        expect(pending.first.reason, SuggestionReason.overdue);
+      });
+
+      test('overdue accept applies a reminder to the open task', () async {
+        await _insertOpenTask(
+          db,
+          id: 'over',
+          title: 'Factuur betalen',
+          createdAt: testNow.subtract(const Duration(days: 5)),
+          dueDate: testNow.subtract(const Duration(days: 1)),
+        );
+
+        await _engine().runIfDue();
+        final suggestion =
+            (await suggestionRepo.watchPendingSelf().first).first;
+        expect(suggestion.reason, SuggestionReason.overdue);
+
+        // Accept path covered by suggestion_actions; engine only creates.
+        expect(suggestion.relatedTaskIds, ['over']);
+        expect(suggestion.suggestedDueDate != null, isTrue);
       });
     });
   });

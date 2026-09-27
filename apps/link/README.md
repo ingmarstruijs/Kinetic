@@ -7,31 +7,31 @@ Adult-facing Flutter app (`apps/link`). Manage personal tasks and notes locally 
 | Screen | Description |
 |---|---|
 | **Tasks** | Personal task manager — quick-add, swipe-to-complete, priorities, categories, due dates with separate date/time controls, recurrence. Enabling a reminder defaults to one hour from now rounded up to the next half hour; the time dialog focuses hours. **Smart reminder chips** propose contextual times based on title and history. **With WebDAV + family:** forward tasks to a link member, one kid, or **Everyone**; collapsible **suggestions** (self, family-targeted, incoming proposals) and **kids** section (assignments, XP, goals). Reminder notifications offer **Done** and **Snooze**. Task row icons: person+ = accepted family proposal. |
-| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar). List grouped by **category** (same order as tasks). Local private notes always; **Shared** and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). |
-| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **Sync → Configure WebDAV** (connection test, save, **Turn off WebDAV sync**). **Family** section appears only when WebDAV is connected: **Start family** link (until a family key exists), family members, kids. Debug builds also have **UI scenarios** for screenshots and manual QA. |
+| **Notes** | Fullscreen markdown editor (edit/preview, GitHub-flavored checkboxes, formatting toolbar, **image attach** via gallery/camera). List grouped by **category** (same order as tasks). Local private notes always; **Shared** and share-with-family need WebDAV + pairing. List rows show title, last modified, and (for shared) audience — not body preview. Optional **require unlock**: opening needs device biometrics/PIN (flag is local; body still syncs as VJOURNAL DESCRIPTION when WebDAV is on). Images use local `kinetic-asset://` embeds; shared notes sync encrypted blobs under WebDAV `.assets/`. |
+| **Settings** | Vault, themes, **Backup & Restore** (`.kvault`). **Sync → Configure WebDAV** (connection test, save, **Turn off WebDAV sync**). **Family** section appears when WebDAV is connected: one **Family** hub (members, invite/join, kids) instead of separate tiles. Debug builds also have **UI scenarios** and a **Heuristic engine** debug screen. |
 
 ## Family Setup
 
 **Requires WebDAV on the same base URL for every device in the family.** Logins may differ; shared data is under `/kinetic/shared/`. The Family section (and **Start family**) is hidden until WebDAV is connected. Turning sync off clears family/kids linkage on this device but keeps the personal vault and private local data.
 
-### Start-family guide & prompts
-- **Start family** (next to the Family section title) → guided wizard; gone after a family key exists
+### Family hub & prompts
+- **Settings → Family** opens the **family hub** (`FamilyMembersSettingsScreen`): status, invite/join, members, kids link, participation toggle
 - ~1 day after WebDAV without a family → optional nudge: Ignore / Remind in 7 days / Start guide
-- After WebDAV save, if the folder already has other Kinetic users or shared family markers → **Link now** jumps straight to QR / BLE / phrase import (one invite joins the whole family, even if several usernames are listed)
+- After WebDAV save, if the folder already has other Kinetic users or shared family markers → **Link now** opens the hub on **Join** (QR / BLE / phrase; one invite joins the whole family)
 
 ### Family Member Linking
-1. Settings → Family → Family members → share family key via QR or tap-to-link (BLE)
+1. Settings → Family → invite or join → share family key via QR or tap-to-link (BLE)
 2. Write down the 12 family words (quiz), then show the QR (entropy only) or advertise over BLE
 3. The other family member scans, uses BLE, **or** types the same 12 words and checks the fingerprint — invite server URL must match their WebDAV URL
 4. Linking activated; `family.key.enc` is stored in the personal WebDAV folder
 
 ### Kids Enrollment
 Each child device enrolls independently:
-1. Settings → Family → Kids → "Link kids app"
+1. Settings → Family → Link kids → "Link kids app"
 2. Generate QR with family key + unique kid UUID (no WebDAV password)
 3. Child device scans QR and types the WebDAV password once (same server)
 4. Child receives tasks targeted to their UUID (or Everyone tasks with no target id)
-5. Enrollment count shown in Settings
+5. Enrollment count shown in the family hub
 
 ## Themes
 
@@ -64,8 +64,9 @@ The personal key is **derived from the 12 words**, not from the WebDAV password.
 - `targetKidId` (nullable): When set, task is encrypted as shared task with this UUID in `xKineticTargetKidId` iCal property. When **null**, the assignment is for **Everyone** — each kids device shows it (`xKineticTargetKidId` missing or empty). When set, only that child's UUID matches.
 ### Notes
 - `isContentHidden` (local): Biometric/PIN gate for opening the note and hiding list previews. **Not synced.** The note body still uploads via WebDAV unless the note is local-only.
-- `isLocalOnly` (local): When true, the note is **never pushed** to WebDAV (title, body, and links stay on this device). Trash/delete does not write a server tombstone.
+- `isLocalOnly` (local): When true, the note is **never pushed** to WebDAV (title, body, links, and image assets stay on this device). Trash/delete does not write a server tombstone.
 - `linkedTaskIds` (JSON): Cross-links to personal tasks; synced as `X-KINETIC-LINK-TASK-IDS` on VJOURNAL when the note is not local-only.
+- **Images**: Local `note_assets` rows + files; markdown embeds `kinetic-asset://{id}`. Synced encrypted under WebDAV `.assets/` when the note is not local-only.
 - **Templates**: Built-in personal stubs (meeting, shopping, journal) create a new local note; not stored on WebDAV as shared templates.
 
 ### Security
@@ -116,21 +117,22 @@ Family-member-targeted detectors create suggestions — they do not auto-send pr
 
 | Detector | Trigger | Action |
 |---|---|---|
-| **Habit** | Same non-recurring task ≥ 2× overdue vs median interval, or one strong-keyword completion after ≥ 14 days | Suggests re-doing the task (→ you) |
+| **Habit** | Same non-recurring task ≥ 2× overdue vs median interval, or one strong-keyword completion after ≥ 14 days (light fuzzy title clustering) | Suggests re-doing the task (→ you) |
 | **Calendar** | Month prompt (Dutch keyword examples: belasting / schoolspullen / kerst) with no prior-year history required | Suggests a seasonal chore (→ you) |
+| **Overdue** | Open task whose due date is past | Suggests a new reminder time (→ you) |
 | **Stale** | Open task > 7 days with no due date or reminder | Suggests setting a reminder on that task (→ you) |
 | **Seasonal** | Completed in the same calendar month last year | Suggests re-doing it (→ you) |
 | **Family complement** | Keywords in **your** open tasks, including private | Generic family-member hint — never copies the private title (→ family member) |
-| **Load balance** | ≥ 3 open tasks in the same category (private counted) | Generic “help with this category?” hint (→ family member) |
+| **Load balance** | ≥ 3 shareable (non-private) open tasks in one theme category; `other` skipped | Generic hint; **Send** picks a concrete shareable task (→ family member) |
 
-Each suggestion stores an `explanation` field. Template titles and reasons (load balance, family-member hints, calendar) are localized in the UI from the app language. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`.
+Candidates are scored, adjusted by accept/dismiss feedback, then ranked under a pending cap. Each suggestion stores an `explanation` field. Template titles and reasons (load balance, family-member hints, calendar) are localized in the UI from the app language. Heuristic tables live in `lib/todo/services/suggestion_heuristics.dart`. Debug builds: **Settings → Heuristic engine**.
 
 ### Suggestion UI
 
 - **Tasks screen**: `SuggestionsPanel` is a collapsible card above the list. Hidden when there is nothing pending.
 - Sections: **For you**, **For family member** (when linked), **From family member** (inbox)
-- **For you**: tap accepts (creates the task, applies a stale reminder, or assigns a category); swipe dismisses
-- **For family member**: **Send** opens **What your family member sees**; **Decline** dismisses
+- **For you**: tap accepts (creates the task, applies a stale/overdue reminder, or assigns a category); swipe dismisses
+- **For family member**: **Send** may open a shareable-task picker (load-balance), then **What your family member sees**; **Decline** dismisses
 - **From family member**: **Accept** / **Decline** on the incoming proposal
 - Family-member-targeted proposals are marked `autoGenerated` in the database
 
@@ -149,10 +151,12 @@ Suggestions are stored in the local `AiSuggestions` table and never synced to We
 ```
 /kinetic/{username}/
 ├── tasks/{uid}.ics        — personal tasks (personal key)
-└── notes/{uid}.ics        — personal notes (personal key)
+├── notes/{uid}.ics        — personal notes (personal key)
+└── .assets/{assetId}      — encrypted note image blobs (personal key)
 
 /kinetic/shared/
 ├── notes/{uid}.ics        — shared notes (family key)
+├── .assets/{assetId}      — encrypted note image blobs for shared notes (family key)
 ├── proposals/{id}.json    — link-member proposals (family key)
 ├── load/{linkId}.json   — workload metrics (family key)
 ├── tasks/{uid}.ics        — tasks assigned to children (family key, with optional xKineticTargetKidId)

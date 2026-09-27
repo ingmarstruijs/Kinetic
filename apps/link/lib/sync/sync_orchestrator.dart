@@ -9,6 +9,7 @@ import '../family/proposals/link_member_proposal.dart';
 import '../settings/models/enrolled_kid.dart';
 import '../todo/models/enums.dart';
 import '../todo/models/personal_note.dart';
+import '../todo/services/note_asset_store.dart';
 import '../todo/services/todo_repository.dart';
 import 'webdav_config_repository.dart';
 
@@ -688,6 +689,8 @@ class SyncOrchestrator {
   // ---------------------------------------------------------------------------
 
   Future<void> _syncNotes(WebDavSyncService service) async {
+    final assetStore = NoteAssetStore(_db);
+
     // 1. Push dirty local notes.
     final dirtyRows = await (_db.select(
       _db.personalNotes,
@@ -713,6 +716,7 @@ class SyncOrchestrator {
         try {
           final oppositeIsShared = !icalNote.isShared;
           await service.deleteNote(row.id, isShared: oppositeIsShared);
+          await service.deleteNoteAssets(row.id, isShared: oppositeIsShared);
         } catch (_) {
           // File may not exist — that's fine.
         }
@@ -730,6 +734,30 @@ class SyncOrchestrator {
       }
     }
 
+    // 1b. Push dirty note image assets (skip local-only notes).
+    final dirtyAssets = await assetStore.dirtyAssets();
+    for (final asset in dirtyAssets) {
+      final note = await (_db.select(_db.personalNotes)
+            ..where((t) => t.id.equals(asset.noteId)))
+          .getSingleOrNull();
+      if (note == null || note.isLocalOnly) continue;
+      final bytes = await assetStore.readBytes(asset.id);
+      if (bytes == null) continue;
+      try {
+        await service.pushNoteAsset(
+          noteUid: asset.noteId,
+          assetId: asset.id,
+          plainBytes: bytes,
+          isShared: note.isShared,
+        );
+        await assetStore.markClean(asset.id);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error pushing note asset ${asset.id}: $e');
+        }
+      }
+    }
+
     // 2. Push locally-deleted notes (tombstones stored with syncState='deleted').
     final deletedRows = await (_db.select(
       _db.personalNotes,
@@ -739,7 +767,9 @@ class SyncOrchestrator {
       try {
         if (!row.isLocalOnly) {
           await service.deleteNote(row.id, isShared: row.isShared);
+          await service.deleteNoteAssets(row.id, isShared: row.isShared);
         }
+        await assetStore.deleteForNote(row.id);
         await (_db.delete(
           _db.personalNotes,
         )..where((t) => t.id.equals(row.id))).go();
@@ -769,6 +799,7 @@ class SyncOrchestrator {
             'Shared note deleted on another Link device, removing locally: ${local.id}',
           );
         }
+        await assetStore.deleteForNote(local.id);
         await (_db.delete(
           _db.personalNotes,
         )..where((t) => t.id.equals(local.id))).go();
@@ -815,6 +846,25 @@ class SyncOrchestrator {
         await (_db.update(_db.personalNotes)
               ..where((t) => t.id.equals(note.uid)))
             .write(_icalNoteToCompanion(note, etag: existing.webdavEtag));
+      }
+
+      // Pull encrypted image assets for this note (personal then shared).
+      try {
+        final remoteAssets = await service.pullNoteAssets(
+          note.uid,
+          isShared: note.isShared,
+        );
+        for (final remote in remoteAssets) {
+          await assetStore.upsertFromRemote(
+            id: remote.assetId,
+            noteId: note.uid,
+            bytes: remote.bytes,
+          );
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error pulling note assets for ${note.uid}: $e');
+        }
       }
     }
   }

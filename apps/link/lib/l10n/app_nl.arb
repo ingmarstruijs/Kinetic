@@ -30,8 +30,9 @@
   "settingsSectionAppearance": "Uiterlijk",
   "settingsTheme": "Thema",
   "settingsSectionSync": "Synchronisatie",
+  "settingsSectionExperimental": "Experimenteel",
   "linkWebTitle": "Link Web",
-  "linkWebSettingsSubtitle": "Open taken in een browser op hetzelfde wifi",
+  "linkWebSettingsSubtitle": "Vroege LAN-preview — taken in de browser; sleutels blijven op de telefoon",
   "linkWebExperimentalBanner": "Experimenteel",
   "linkWebExperimentalBody": "Link Web is een vroege preview. Verwacht ruwe randen, alleen lokaal wifi, en mogelijke breaking changes. Vertrouw er nog niet op voor kritieke workflows.",
   "linkWebIntro": "Open taken op je computer; de kluissleutels blijven op deze telefoon.",
@@ -54,8 +55,21 @@
   "settingsSectionFamily": "Familie",
   "settingsFamilyMember": "Gezinslid",
   "settingsFamilyMembers": "Gezinsleden",
-  "settingsFamilyMemberLinked": "Gezinslid gekoppeld",
-  "settingsFamilyMemberLinkHint": "Koppel met een ander gezinslid",
+  "settingsFamilyMemberLinked": "Andere volwassenen gekoppeld",
+  "settingsFamilyMemberLinkHint": "Start, join, nodig volwassenen uit of koppel kids",
+  "settingsFamilyHubStatusNoKey": "Nog geen familiesleutel",
+  "settingsFamilyHubStatusKidsOnly": "Kids gekoppeld — nodig een volwassene uit of join om notities te delen",
+  "settingsFamilyHubStatusReady": "Familiesleutel klaar",
+  "settingsFamilyHubStart": "Gezin starten",
+  "settingsFamilyHubStartSubtitle": "Maak een familiesleutel op dit apparaat",
+  "settingsFamilyHubJoin": "Gezin joinen",
+  "settingsFamilyHubJoinSubtitle": "Scan een QR, gebruik tap-to-link, of typ de 12 woorden",
+  "settingsFamilyHubInvite": "Volwassene uitnodigen",
+  "settingsFamilyHubInviteSubtitle": "Deel je familiesleutel zodat een andere Link kan joinen",
+  "settingsFamilyHubLinkKids": "Kinderenapp koppelen",
+  "settingsFamilyHubLinkKidsSubtitle": "Schrijf een kindertoestel in met een QR (maakt een sleutel aan indien nodig)",
+  "settingsFamilyHubAdoptDifferent": "Andere familiesleutel gebruiken",
+  "settingsFamilyHubAdoptDifferentSubtitle": "Vervangt deze sleutel — huidige gedeelde data wordt onleesbaar",
   "settingsKids": "Kinderen",
   "settingsKidsParticipation": "Kindertaken op dit apparaat",
   "settingsKidsParticipationSubtitle": "Uit = dit apparaat kan kindertaken niet zien, maken, toewijzen of goedkeuren",
@@ -687,7 +701,7 @@
       "days": {"type": "int"}
     }
   },
-  "familySetupPromptStart": "Start guide",
+  "familySetupPromptStart": "Gezinsleden openen",
   "webdavJoinFamilyTitle": "Gezin koppelen?",
   "webdavJoinFamilyBody": "Er gebruikt al iemand Kinetic op deze map.",
   "webdavJoinFamilyMembersOne": "{name} staat hier al.",
@@ -918,6 +932,14 @@
   "notesUnlockFailed": "Notitie kon niet worden ontgrendeld",
   "notesHideNeedsDeviceLock": "Zet een schermvergrendeling aan om ontgrendelen te vereisen",
   "notesBodyHint": "Schrijf een notitie…",
+  "notesDetails": "Details",
+  "notesInsertImage": "Afbeelding invoegen",
+  "notesInsertImageError": "Afbeelding toevoegen mislukt",
+  "notesPickImageSource": "Afbeelding toevoegen",
+  "notesPickFromGallery": "Galerij",
+  "notesPickFromCamera": "Camera",
+  "notesDetailsExpanded": "Details verbergen",
+  "taskOverdueChip": "Te laat",
   "notesMdBold": "Vet",
   "notesMdItalic": "Cursief",
   "notesMdHeading": "Kop",
@@ -936,8 +958,11 @@
       "name": {"type": "String"}
     }
   },
-  "suggestFamilyMemberSeesGeneric": "Bewust algemeen — geen privé-titels of notities.",
+  "suggestFamilyMemberSeesGeneric": "Je kiest hierna een concrete deelbare taak — privé blijft verborgen.",
   "suggestFamilyMemberSeesFull": "Titel en eventuele notities van deze suggestie gaan mee.",
+  "suggestPickTaskTitle": "Welke taak moeten zij oppakken?",
+  "suggestPickTaskSubtitle": "Zij zien precies deze titel.",
+  "suggestPickTaskEmpty": "Geen deelbare open taken in deze categorie.",
   "suggestSend": "Versturen",
   "suggestSent": "Voorstel naar {name} gestuurd",
   "@suggestSent": {
@@ -952,6 +977,7 @@
   "suggestReasonStale": "Open taak",
   "suggestReasonCalendar": "Kalender",
   "suggestReasonCategorize": "Categorie",
+  "suggestReasonOverdue": "Te laat",
   "suggestCategorizeTitle": "Categorie {category} zetten op {count} taken?",
   "@suggestCategorizeTitle": {
     "placeholders": {
@@ -965,20 +991,20 @@
       "count": {"type": "int"}
     }
   },
-  "suggestLoadBalanceTitleHousehold": "Kun jij deze week iets in huis oppakken?",
-  "suggestLoadBalanceTitleHealth": "Kun jij deze week iets rond zorg of gezondheid oppakken?",
-  "suggestLoadBalanceTitleAdmin": "Kun jij deze week iets administratiefs oppakken?",
-  "suggestLoadBalanceTitleSchool": "Kun jij deze week iets rond school oppakken?",
-  "suggestLoadBalanceTitleFinance": "Kun jij deze week iets rond financiën oppakken?",
-  "suggestLoadBalanceTitleOther": "Kun jij deze week iets oppakken?",
-  "suggestLoadBalanceExplanation": "Je hebt {count} open taken in {category}. De hint is bewust algemeen.",
+  "suggestLoadBalanceTitleHousehold": "Kun jij deze week helpen met huishouden?",
+  "suggestLoadBalanceTitleHealth": "Kun jij deze week helpen met zorg of gezondheid?",
+  "suggestLoadBalanceTitleAdmin": "Kun jij deze week helpen met administratie?",
+  "suggestLoadBalanceTitleSchool": "Kun jij deze week helpen met school?",
+  "suggestLoadBalanceTitleFinance": "Kun jij deze week helpen met financiën?",
+  "suggestLoadBalanceTitleOther": "Kun jij deze week ergens mee helpen?",
+  "suggestLoadBalanceExplanation": "Je hebt {count} deelbare open taken in {category}. Bij Versturen kies je welke taak zij krijgen.",
   "@suggestLoadBalanceExplanation": {
     "placeholders": {
       "count": {"type": "int"},
       "category": {"type": "String"}
     }
   },
-  "suggestLoadBalanceExplanationGeneric": "Je hebt meerdere open taken in {category}. De hint is bewust algemeen.",
+  "suggestLoadBalanceExplanationGeneric": "Je hebt meerdere deelbare open taken in {category}. Bij Versturen kies je welke taak zij krijgen.",
   "@suggestLoadBalanceExplanationGeneric": {
     "placeholders": {
       "category": {"type": "String"}
@@ -986,14 +1012,14 @@
   },
   "suggestFamilyMemberTitleSchool": "Schoolrondje of opvang deze week?",
   "suggestFamilyMemberExplanationSchool": "Op basis van je taken (zonder privédetails) lijkt school een thema deze week. Je gezinslid ziet dit.",
-  "suggestFamilyMemberTitleHousehold": "Kun jij deze week iets in huis oppakken?",
-  "suggestFamilyMemberExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. De hint is bewust algemeen.",
+  "suggestFamilyMemberTitleHousehold": "Kun jij deze week helpen met huishouden?",
+  "suggestFamilyMemberExplanationHousehold": "Je hebt meerdere huishoudelijke taken open. Bij Versturen kies je een concrete deelbare taak.",
   "suggestFamilyMemberTitleHealth": "Iets rond zorg of gezondheid oppakken?",
-  "suggestFamilyMemberExplanationHealth": "Er speelt iets rond zorg. Je gezinslid ziet alleen deze algemene vraag.",
+  "suggestFamilyMemberExplanationHealth": "Er speelt iets rond zorg. Kies bij versturen een deelbare taak.",
   "suggestFamilyMemberTitleSport": "Sporttas of training deze week?",
   "suggestFamilyMemberExplanationSport": "Op basis van je taken lijkt sport een thema. Geen privédetails.",
   "suggestFamilyMemberTitleAdmin": "Een administratieve klus deze week?",
-  "suggestFamilyMemberExplanationAdmin": "Er staat administratie open. De hint noemt geen concrete taak.",
+  "suggestFamilyMemberExplanationAdmin": "Er staat administratie open. Kies bij versturen een concrete deelbare taak.",
   "suggestCalendarTaxTitle": "Belastingaangifte controleren",
   "suggestCalendarTaxExplanation": "Maart — tijd om de belastingaangifte te controleren.",
   "suggestCalendarSchoolTitle": "Schoolspullen klaarzetten",
@@ -1024,6 +1050,13 @@
   },
   "suggestStaleExplanation": "\"{title}\" staat {days} dagen open zonder herinnering.",
   "@suggestStaleExplanation": {
+    "placeholders": {
+      "title": {"type": "String"},
+      "days": {"type": "int"}
+    }
+  },
+  "suggestOverdueExplanation": "\"{title}\" is {days} dagen te laat — nieuwe herinnering?",
+  "@suggestOverdueExplanation": {
     "placeholders": {
       "title": {"type": "String"},
       "days": {"type": "int"}

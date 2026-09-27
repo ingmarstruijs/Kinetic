@@ -108,7 +108,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 100));
         await tester.pumpAndSettle();
 
-        expect(find.text('Family members'), findsOneWidget);
+        // Section header + hub tile both use "Family".
+        expect(find.text('Family'), findsWidgets);
         expect(find.text('Kids tasks on this device'), findsNothing);
 
         await tester.pumpWidget(const SizedBox.shrink());

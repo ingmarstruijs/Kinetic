@@ -10,22 +10,22 @@ void main() {
 
   test('load-balance copy follows the UI locale', () {
     final suggestion = AiSuggestion.create(
-      title: 'Can you pick something up this week?',
+      title: 'Can you help with something this week?',
       reason: SuggestionReason.loadBalance,
       category: 'other',
       relatedTaskIds: const ['a', 'b', 'c', 'd', 'e'],
       explanation:
-          'You have 5 open tasks in Other. The suggestion is intentionally generic.',
+          'You have 5 open shareable tasks in Other. On Send, pick which one they should take.',
     );
 
     expect(suggestionDisplayTitle(suggestion, en), contains('this week'));
     expect(
       suggestionDisplayTitle(suggestion, nl),
-      'Kun jij deze week iets oppakken?',
+      'Kun jij deze week ergens mee helpen?',
     );
     expect(
       suggestionDisplayExplanation(suggestion, nl),
-      contains('5 open taken'),
+      contains('5 deelbare open taken'),
     );
     expect(suggestionDisplayExplanation(suggestion, nl), contains('Overig'));
     expect(

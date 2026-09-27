@@ -159,12 +159,12 @@ void main() {
       final suggestionRepo = AiSuggestionRepository(db);
       await suggestionRepo.upsertSuggestion(
         AiSuggestion.create(
-          title: 'Can you pick something up this week?',
+          title: 'Can you help with something this week?',
           reason: SuggestionReason.loadBalance,
           category: 'other',
           relatedTaskIds: const ['a', 'b', 'c', 'd', 'e'],
           explanation:
-              'You have 5 open tasks in Other. The suggestion is intentionally generic.',
+              'You have 5 open shareable tasks in Other. On Send, pick which one they should take.',
         ),
       );
 
@@ -186,10 +186,10 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await tester.pump();
 
-      expect(find.text('Kun jij deze week iets oppakken?'), findsOneWidget);
-      expect(find.textContaining('5 open taken'), findsOneWidget);
+      expect(find.text('Kun jij deze week ergens mee helpen?'), findsOneWidget);
+      expect(find.textContaining('5 deelbare open taken'), findsOneWidget);
       expect(find.textContaining('Overig'), findsOneWidget);
-      expect(find.text('Can you pick something up this week?'), findsNothing);
+      expect(find.text('Can you help with something this week?'), findsNothing);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();
@@ -205,7 +205,7 @@ void main() {
         final suggestionRepo = AiSuggestionRepository(db);
         await suggestionRepo.upsertSuggestion(
           AiSuggestion.create(
-            title: 'Can you pick something up this week?',
+            title: 'Can you help with something this week?',
             reason: SuggestionReason.loadBalance,
             category: 'other',
           ),
@@ -270,7 +270,7 @@ void main() {
         );
         await suggestionRepo.upsertSuggestion(
           AiSuggestion.create(
-            title: 'Can you pick something up this week?',
+            title: 'Can you help with household this week?',
             reason: SuggestionReason.loadBalance,
             category: 'household',
             relatedTaskIds: const ['a', 'b', 'c', 'd', 'e'],

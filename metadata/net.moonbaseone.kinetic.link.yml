@@ -1,55 +1,54 @@
 Categories:
-  - Time
-  - Productivity
+  - Note
+  - Task
 License: Apache-2.0
 AuthorName: Ingmar Struijs
 WebSite: https://github.com/ingmarstruijs/Kinetic
 SourceCode: https://github.com/ingmarstruijs/Kinetic
 IssueTracker: https://github.com/ingmarstruijs/Kinetic/issues
-PrivacyPolicy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 
-AutoName: Kinetic Link
 Name: Kinetic Link
-
-Summary: Local-first encrypted family tasks and notes with optional WebDAV sync
+AutoName: Kinetic Link
 Description: |-
-    Kinetic Link helps families manage tasks and notes without accounts or
-    telemetry. Data stays on your device in an encrypted SQLite database and
-    can optionally sync to your own HTTPS WebDAV server (for example Nextcloud)
-    using AES-256-GCM encryption.
+  Kinetic Link helps families manage tasks and notes without accounts or
+  telemetry. Data stays on your device in an encrypted SQLite database and
+  can optionally sync to your own HTTPS WebDAV server (for example Nextcloud)
+  using AES-256-GCM encryption.
 
-    Features:
-    * Personal tasks and markdown notes
-    * Partner proposals via QR pairing
-    * Kids chores with XP rewards (use with Kinetic Kids)
-    * Offline suggestion heuristics (no cloud AI)
-    * Encrypted .kvault backups
+  Features:
+  * Personal tasks and markdown notes
+  * Partner proposals via QR pairing
+  * Kids chores with XP rewards (use with Kinetic Kids)
+  * Offline suggestion heuristics (no cloud AI)
+  * Encrypted .kvault backups
 
-    Requires camera permission only for QR pairing/enrollment.
-    WebDAV sync requires HTTPS.
+  Requires camera permission only for QR pairing/enrollment.
+  WebDAV sync requires HTTPS.
+  Privacy policy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 
 RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.4.0
-    versionCode: 10
-    commit: v0.4.0
+  - versionName: 0.4.1
+    versionCode: 11
+    commit: REPLACE_WITH_V0_4_1_FULL_SHA
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@3.44.1
-    prebuild: |
-      cd ../../
-      # Match CI / .flutter-version pin
-      $$flutter$$ --version
-      dart pub global activate melos
-      dart pub global run melos bootstrap
-    build: |
-      $$flutter$$ build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
-    # F-Droid resigns the APK. Release steps: metadata/FDROID_SUBMISSION.md.
+    prebuild:
+      - cd ../..
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.4.0
-CurrentVersionCode: 10
+CurrentVersion: 0.4.1
+CurrentVersionCode: 11

@@ -8,8 +8,8 @@ f-droid.org requires a merge request against
 
 | App | Application ID | Listing |
 | --- | --- | --- |
-| Kinetic Link | `net.moonbaseone.kinetic.link` | **Not submitted yet** — first fdroiddata MR still needed |
-| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Not submitted yet** — Android APK only (no desktop/iOS) |
+| Kinetic Link | `net.moonbaseone.kinetic.link` | **Resubmit as 0.4.1** — one app/MR + Fastlane upstream; see [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md) |
+| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Resubmit as 0.4.1** — separate MR; Android APK only |
 
 Kids on F-Droid is the Android companion to Link; other Kids platforms in the
 monorepo are out of scope for fdroiddata.
@@ -62,31 +62,36 @@ These must match for each release:
 
 Do this once, before any “every version” fdroiddata bump:
 
-1. Ensure screenshots and icons are on `main` under
-   `metadata/*/en-US/images/` (phone screenshots + icon)
+1. Put Fastlane metadata in each app (`apps/*/fastlane/metadata/android/en-US/`),
+   including `title.txt`, `short_description.txt`, `full_description.txt`,
+   `changelogs/<versionCode>.txt`, icon, and phone screenshots. Run
+   `bash tool/copy_fastlane_images.sh` if graphics still live under repo
+   `metadata/*/en-US/images/`.
 2. Tag the target version on `main` and verify both APKs with
    `./tool/fdroid_build.sh`
-3. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata) and copy:
+3. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata) and copy **only**:
 
    - `net.moonbaseone.kinetic.link.yml`
    - `net.moonbaseone.kinetic.kids.yml`
-   - `net.moonbaseone.kinetic.link/en-US/` (screenshots + icon)
-   - `net.moonbaseone.kinetic.kids/en-US/` (screenshots + icon)
 
-4. Open a GitLab MR against `fdroid/fdroiddata` `master` with the checklist below
+   Do **not** add screenshots/summary dirs under fdroiddata.
+4. Open **two** GitLab MRs (one app each), titles `New app: …`, App inclusion
+   template, full commit SHA in `commit:`, RB unchecked — see
+   [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md)
 5. When live, update the **Status** table above
 
 ### MR checklist (first listing)
 
-- [ ] YAML `commit:` points at an **annotated tag** on `main` (`vX.Y.Z`)
+- [ ] YAML `commit:` is the **full SHA** of the annotated tag on `main`
 - [ ] `versionName` / `versionCode` match pubspec and `CurrentVersion*`
 - [ ] `srclibs: flutter@…` matches `.flutter-version`
 - [ ] `License: Apache-2.0`, `Repo` / `SourceCode` URLs correct
-- [ ] `PrivacyPolicy:` → `PRIVACY.md` on `main`
-- [ ] Fastlane-style assets present: icons + phone screenshots for both apps
+- [ ] Privacy covered in Description / `PRIVACY.md` on `main` (no `PrivacyPolicy:` field — not in current fdroidserver schema)
+- [ ] Fastlane assets in upstream `apps/*/fastlane/...` (not in fdroiddata)
 - [ ] Build verified locally with `./tool/fdroid_build.sh` for **link** and **kids**
-- [ ] MR description notes **Kids is Android-only**; Link + Kids are separate application IDs
+- [ ] **One app per MR**; Kids noted as Android-only
 - [ ] No proprietary blobs; WebDAV sync is user-configured HTTPS only
+- [ ] Reproducible Builds left off for first listing (Flutter/Melos follow-up)
 
 ## Local build notes
 
@@ -115,5 +120,6 @@ run it natively). Flutter on `PATH` must match `.flutter-version` (FVM:
 
 ## Privacy
 
-`PrivacyPolicy:` points at
-https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
+Link to the policy from the app Description and keep
+https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md on `main`.
+Current fdroidserver rejects a top-level `PrivacyPolicy:` metadata field.

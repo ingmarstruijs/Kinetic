@@ -1,0 +1,15 @@
+Kinetic Link helps families manage tasks and notes without accounts or
+telemetry. Data stays on your device in an encrypted SQLite database and
+can optionally sync to your own HTTPS WebDAV server (for example Nextcloud)
+using AES-256-GCM encryption.
+
+Features:
+• Personal tasks and markdown notes
+• Partner proposals via QR pairing
+• Kids chores with XP rewards (use with Kinetic Kids)
+• Offline suggestion heuristics (no cloud AI)
+• Encrypted .kvault backups
+
+Requires camera permission only for QR pairing/enrollment.
+WebDAV sync requires HTTPS.
+Privacy policy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md

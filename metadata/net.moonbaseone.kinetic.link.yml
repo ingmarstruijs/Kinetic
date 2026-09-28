@@ -32,7 +32,7 @@ Repo: https://github.com/ingmarstruijs/Kinetic.git
 Builds:
   - versionName: 0.4.1
     versionCode: 11
-    commit: REPLACE_WITH_V0_4_1_FULL_SHA
+    commit: 73c877299d2c5f0cc17fa0a93804621949d3a960
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:

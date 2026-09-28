@@ -91,6 +91,14 @@
       "target": {"type": "int"}
     }
   },
+  "goalReached": "Goal reached!",
+  "bonusXpPot": "Bonus XP",
+  "bonusXpAmount": "+{xp} XP",
+  "@bonusXpAmount": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
   "totalXp": "{xp} XP",
   "@totalXp": {
     "placeholders": {

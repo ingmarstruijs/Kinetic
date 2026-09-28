@@ -168,23 +168,6 @@ class TodoRepository {
         .map((rows) => rows.map(_taskFromRow).toList());
   }
 
-  /// Flagged incomplete tasks.
-  Stream<List<PersonalTask>> watchFlaggedTasks() {
-    return (_db.select(_db.personalTasks)
-          ..where(
-            (t) =>
-                t.isCompleted.equals(false) &
-                t.isFlagged.equals(true) &
-                t.syncState.equals('deleted').not(),
-          )
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.priority),
-            (t) => OrderingTerm.asc(t.sortOrder),
-          ]))
-        .watch()
-        .map((rows) => rows.map(_taskFromRow).toList());
-  }
-
   /// Completed tasks (for showing completed section).
   Stream<List<PersonalTask>> watchCompletedTasks() {
     return (_db.select(_db.personalTasks)
@@ -237,7 +220,6 @@ class TodoRepository {
     DateTime? dueDate,
     bool isAllDay = true,
     String? recurrenceRule,
-    bool isFlagged = false,
     bool? isPrivate,
     TaskCategory? category,
     String? customCategory,
@@ -262,7 +244,6 @@ class TodoRepository {
       dueDate: dueDate,
       isAllDay: isAllDay,
       recurrenceRule: recurrenceRule,
-      isFlagged: isFlagged,
       isPrivate: taskIsPrivate,
       category: autoCategory,
       customCategory: customCategory,
@@ -464,18 +445,6 @@ class TodoRepository {
     onWrite?.call();
   }
 
-  Future<void> toggleFlag(String taskId, {required bool flagged}) async {
-    await (_db.update(
-      _db.personalTasks,
-    )..where((t) => t.id.equals(taskId))).write(
-      PersonalTasksCompanion(
-        isFlagged: Value(flagged),
-        updatedAt: Value(DateTime.now().toUtc()),
-      ),
-    );
-    onWrite?.call();
-  }
-
   Future<void> togglePrivate(String taskId, {required bool isPrivate}) async {
     await (_db.update(
       _db.personalTasks,
@@ -526,7 +495,8 @@ class TodoRepository {
     final label = to.trim();
     if (from == label) return;
     final open = await watchOpenTasks().first;
-    for (final task in open) {
+    final completed = await watchCompletedTasks().first;
+    for (final task in [...open, ...completed]) {
       if (task.customCategory == from) {
         await updateTaskCustomCategory(task.id, label.isEmpty ? null : label);
       }
@@ -898,7 +868,6 @@ class TodoRepository {
         recurrenceRule: Value(t.recurrenceRule),
         isCompleted: Value(t.isCompleted),
         completedAt: Value(t.completedAt),
-        isFlagged: Value(t.isFlagged),
         isPrivate: Value(t.isPrivate),
         kidsTaskId: Value(t.kidsTaskId),
         category: Value(t.category.name),

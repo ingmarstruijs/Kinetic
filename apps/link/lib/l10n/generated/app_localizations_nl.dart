@@ -87,9 +87,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settingsSectionSync => 'Synchronisatie';
 
   @override
-  String get settingsSectionExperimental => 'Experimenteel';
-
-  @override
   String get linkWebTitle => 'Link Web';
 
   @override
@@ -1832,7 +1829,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notesHideContentHint =>
-      'Verbergt voorvertoningen en vraagt biometrie of pincode bij openen. De inhoud sync nog via WebDAV, tenzij ‘Alleen op dit apparaat’ aan staat.';
+      'Biometrie of pincode om te openen. Sync tenzij alleen lokaal.';
 
   @override
   String get notesLocalOnly => 'Alleen op dit apparaat';
@@ -2205,6 +2202,42 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get categoryRenameHint => 'Categorienaam';
+
+  @override
+  String get categorySetIcon => 'Kies icoon';
+
+  @override
+  String get categoryIconTitle => 'Categorie-icoon';
+
+  @override
+  String get categoryIconClear => 'Standaardicoon';
+
+  @override
+  String get categoryRemove => 'Categorie verwijderen';
+
+  @override
+  String get categoryRemoveTitle => 'Categorie verwijderen?';
+
+  @override
+  String categoryRemoveBody(String name) {
+    return 'Items in “$name” gaan naar Geen categorie. Dit kan niet ongedaan worden gemaakt.';
+  }
+
+  @override
+  String get commonUndo => 'Ongedaan maken';
+
+  @override
+  String get tasksMarkedDone => 'Taak afgerond';
+
+  @override
+  String get tasksRestore => 'Terugzetten';
+
+  @override
+  String get settingsSmartSort => 'Slim sorteren';
+
+  @override
+  String get settingsSmartSortSubtitle =>
+      'Sorteer op urgentie en recente activiteit. Slepen staat stil zolang dit aan staat.';
 
   @override
   String get suggestionsTitle => 'Suggesties';

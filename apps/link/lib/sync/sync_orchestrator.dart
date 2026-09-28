@@ -954,7 +954,6 @@ class SyncOrchestrator {
       webdavEtag: Value(etag),
       // Keep existing list / category / flags — don't overwrite from server.
       isAllDay: const Value(true),
-      isFlagged: const Value(false),
       isPrivate: const Value(false),
       category: const Value('other'),
       sortOrder: const Value(0),

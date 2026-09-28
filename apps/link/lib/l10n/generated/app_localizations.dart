@@ -254,12 +254,6 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get settingsSectionSync;
 
-  /// No description provided for @settingsSectionExperimental.
-  ///
-  /// In en, this message translates to:
-  /// **'Experimental'**
-  String get settingsSectionExperimental;
-
   /// No description provided for @linkWebTitle.
   ///
   /// In en, this message translates to:
@@ -3197,7 +3191,7 @@ abstract class AppLocalizations {
   /// No description provided for @notesHideContentHint.
   ///
   /// In en, this message translates to:
-  /// **'Hides previews and asks for biometrics or PIN to open. The note body still syncs via WebDAV unless “Keep on this device only” is on.'**
+  /// **'Biometrics or PIN to open. Still syncs unless local-only.'**
   String get notesHideContentHint;
 
   /// No description provided for @notesLocalOnly.
@@ -3841,6 +3835,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category name'**
   String get categoryRenameHint;
+
+  /// No description provided for @categorySetIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose icon'**
+  String get categorySetIcon;
+
+  /// No description provided for @categoryIconTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Category icon'**
+  String get categoryIconTitle;
+
+  /// No description provided for @categoryIconClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Default icon'**
+  String get categoryIconClear;
+
+  /// No description provided for @categoryRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove category'**
+  String get categoryRemove;
+
+  /// No description provided for @categoryRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove category?'**
+  String get categoryRemoveTitle;
+
+  /// No description provided for @categoryRemoveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Items in “{name}” move to No category. This cannot be undone.'**
+  String categoryRemoveBody(String name);
+
+  /// No description provided for @commonUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get commonUndo;
+
+  /// No description provided for @tasksMarkedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Task marked done'**
+  String get tasksMarkedDone;
+
+  /// No description provided for @tasksRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get tasksRestore;
+
+  /// No description provided for @settingsSmartSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart sorting'**
+  String get settingsSmartSort;
+
+  /// No description provided for @settingsSmartSortSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by urgency and recent activity. Drag-and-drop is paused while on.'**
+  String get settingsSmartSortSubtitle;
 
   /// No description provided for @suggestionsTitle.
   ///

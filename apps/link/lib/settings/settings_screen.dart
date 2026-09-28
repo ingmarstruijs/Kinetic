@@ -147,6 +147,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showLanguageSelector(context),
                   ),
+                  StreamBuilder<bool>(
+                    stream: widget.settingsRepo.watchSmartSortEnabled(),
+                    builder: (context, snap) {
+                      final enabled = snap.data ?? false;
+                      return SwitchListTile(
+                        secondary: Icon(
+                          Icons.sort_outlined,
+                          color: iconColor,
+                        ),
+                        title: Text(l10n.settingsSmartSort),
+                        subtitle: Text(l10n.settingsSmartSortSubtitle),
+                        value: enabled,
+                        onChanged: (v) =>
+                            widget.settingsRepo.saveSmartSortEnabled(v),
+                      );
+                    },
+                  ),
                   _SectionHeader(label: l10n.settingsSectionSync),
                   ListTile(
                     leading: Icon(Icons.cloud_outlined, color: iconColor),
@@ -245,27 +262,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                   ],
-                  if (widget.todoRepository != null) ...[
-                    _SectionHeader(label: l10n.settingsSectionExperimental),
-                    ListTile(
-                      leading: Icon(
-                        Icons.laptop_windows_outlined,
-                        color: iconColor,
-                      ),
-                      title: Text(l10n.linkWebTitle),
-                      subtitle: Text(l10n.linkWebSettingsSubtitle),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => LinkWebBridgeScreen(
-                              todoRepository: widget.todoRepository!,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
                   _SectionHeader(label: l10n.settingsSectionVault),
               ListTile(
                 leading: Icon(Icons.verified_user_outlined, color: iconColor),
@@ -276,6 +272,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               if (kDebugMode) ...[
                 const _SectionHeader(label: 'Debug'),
+                if (widget.todoRepository != null)
+                  ListTile(
+                    leading: Icon(
+                      Icons.laptop_windows_outlined,
+                      color: iconColor,
+                    ),
+                    title: Text(l10n.linkWebTitle),
+                    subtitle: Text(l10n.linkWebSettingsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => LinkWebBridgeScreen(
+                            todoRepository: widget.todoRepository!,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ListTile(
                   leading: Icon(Icons.movie_filter_outlined, color: iconColor),
                   title: Text(

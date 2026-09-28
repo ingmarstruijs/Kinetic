@@ -52,8 +52,6 @@ class PersonalTasks extends Table {
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get completedAt => dateTime().nullable()();
 
-  BoolColumn get isFlagged => boolean().withDefault(const Constant(false))();
-
   // true = never propose this task to a family member
   BoolColumn get isPrivate => boolean().withDefault(const Constant(false))();
 
@@ -309,6 +307,13 @@ class AppSettings extends Table {
 
   // JSON-encoded ordered list of note category labels (nullable = no saved order)
   TextColumn get noteCategoryOrder => text().nullable()();
+
+  // JSON map of category label → icon key (shared by tasks + notes)
+  TextColumn get categoryIcons => text().nullable()();
+
+  // Smart urgency/recency sort for tasks + notes (default off)
+  BoolColumn get smartSortEnabled =>
+      boolean().withDefault(const Constant(false))();
 
   // Throttle timestamps for the AI suggestion engine
   DateTimeColumn get lastSuggestionRunAt => dateTime().nullable()();

@@ -127,7 +127,6 @@ class PersonalTask {
   final String? recurrenceRule;
   final bool isCompleted;
   final DateTime? completedAt;
-  final bool isFlagged;
 
   /// When true, this task is never sent to a family member as a proposal.
   final bool isPrivate;
@@ -168,7 +167,6 @@ class PersonalTask {
     this.recurrenceRule,
     required this.isCompleted,
     this.completedAt,
-    required this.isFlagged,
     required this.isPrivate,
     this.kidsTaskId,
     this.targetKidId,
@@ -190,7 +188,6 @@ class PersonalTask {
     DateTime? dueDate,
     bool isAllDay = true,
     String? recurrenceRule,
-    bool isFlagged = false,
     bool isPrivate = false,
     TaskCategory? category,
     String? customCategory,
@@ -211,7 +208,6 @@ class PersonalTask {
       recurrenceRule: recurrenceRule,
       isCompleted: false,
       completedAt: null,
-      isFlagged: isFlagged,
       isPrivate: isPrivate,
       kidsTaskId: null,
       verifierLinkId: verifierLinkId,
@@ -237,7 +233,6 @@ class PersonalTask {
       recurrenceRule: row.recurrenceRule,
       isCompleted: row.isCompleted,
       completedAt: row.completedAt,
-      isFlagged: row.isFlagged,
       isPrivate: row.isPrivate,
       kidsTaskId: row.kidsTaskId,
       targetKidId: row.targetKidId,
@@ -265,7 +260,6 @@ class PersonalTask {
     bool clearRecurrenceRule = false,
     bool? isCompleted,
     DateTime? completedAt,
-    bool? isFlagged,
     bool? isPrivate,
     String? kidsTaskId,
     String? targetKidId,
@@ -292,7 +286,6 @@ class PersonalTask {
           : (recurrenceRule ?? this.recurrenceRule),
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
-      isFlagged: isFlagged ?? this.isFlagged,
       isPrivate: isPrivate ?? this.isPrivate,
       kidsTaskId: kidsTaskId ?? this.kidsTaskId,
       targetKidId: targetKidId ?? this.targetKidId,

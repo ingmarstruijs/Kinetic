@@ -16,6 +16,7 @@ import 'notifications/kids_notification_service.dart';
 import 'settings/kids_settings_screen.dart';
 import 'sync/sync_orchestrator.dart';
 import 'sync/webdav_config_repository.dart';
+import 'task/goal_xp.dart';
 import 'task/screens/kids_home_screen.dart';
 import 'task/services/kids_task_repository.dart';
 
@@ -332,6 +333,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
     await _repository.clearAllTasks();
     final store = FlutterSecureKeyValueStore();
     await store.delete(key: 'kinetic_xp_reset_at');
+    await store.delete(key: kGoalCelebratedStoreKey);
     final configRepo = WebDavConfigRepository(store);
     await configRepo.clearEnrollment();
     if (mounted) {

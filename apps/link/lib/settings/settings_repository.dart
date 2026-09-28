@@ -139,4 +139,87 @@ class SettingsRepository {
           ),
         );
   }
+
+  // ── Category icons (shared tasks + notes) ──────────────────────────────────
+
+  Future<Map<String, String>> loadCategoryIcons() async {
+    final rows = await _db.select(_db.appSettings).get();
+    if (rows.isEmpty || rows.first.categoryIcons == null) return {};
+    try {
+      final map = jsonDecode(rows.first.categoryIcons!) as Map<String, dynamic>;
+      return map.map((k, v) => MapEntry(k, v as String));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Stream<Map<String, String>> watchCategoryIcons() {
+    return _db.select(_db.appSettings).watchSingleOrNull().map((row) {
+      if (row?.categoryIcons == null) return <String, String>{};
+      try {
+        final map = jsonDecode(row!.categoryIcons!) as Map<String, dynamic>;
+        return map.map((k, v) => MapEntry(k, v as String));
+      } catch (_) {
+        return <String, String>{};
+      }
+    });
+  }
+
+  Future<void> saveCategoryIcons(Map<String, String> icons) async {
+    final json = jsonEncode(icons);
+    await _db
+        .into(_db.appSettings)
+        .insertOnConflictUpdate(
+          AppSettingsCompanion(
+            key: const Value('default'),
+            categoryIcons: Value(json),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+  }
+
+  Future<void> setCategoryIcon(String category, String? iconKey) async {
+    final icons = await loadCategoryIcons();
+    if (iconKey == null || iconKey.isEmpty || iconKey == 'label') {
+      icons.remove(category);
+    } else {
+      icons[category] = iconKey;
+    }
+    await saveCategoryIcons(icons);
+  }
+
+  Future<void> renameCategoryIcon(String from, String to) async {
+    final icons = await loadCategoryIcons();
+    final key = icons.remove(from);
+    if (key != null) {
+      icons[to] = key;
+      await saveCategoryIcons(icons);
+    }
+  }
+
+  // ── Smart sort ─────────────────────────────────────────────────────────────
+
+  Future<bool> loadSmartSortEnabled() async {
+    final rows = await _db.select(_db.appSettings).get();
+    if (rows.isEmpty) return false;
+    return rows.first.smartSortEnabled;
+  }
+
+  Stream<bool> watchSmartSortEnabled() {
+    return _db.select(_db.appSettings).watchSingleOrNull().map(
+      (row) => row?.smartSortEnabled ?? false,
+    );
+  }
+
+  Future<void> saveSmartSortEnabled(bool enabled) async {
+    await _db
+        .into(_db.appSettings)
+        .insertOnConflictUpdate(
+          AppSettingsCompanion(
+            key: const Value('default'),
+            smartSortEnabled: Value(enabled),
+            updatedAt: Value(DateTime.now().toUtc()),
+          ),
+        );
+  }
 }

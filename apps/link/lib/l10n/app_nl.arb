@@ -30,7 +30,7 @@
   "settingsSectionAppearance": "Uiterlijk",
   "settingsTheme": "Thema",
   "settingsSectionSync": "Synchronisatie",
-  "settingsSectionExperimental": "Experimenteel",
+
   "linkWebTitle": "Link Web",
   "linkWebSettingsSubtitle": "Vroege LAN-preview — taken in de browser; sleutels blijven op de telefoon",
   "linkWebExperimentalBanner": "Experimenteel",
@@ -913,7 +913,7 @@
     }
   },
   "notesHideContent": "Ontgrendelen vereisen",
-  "notesHideContentHint": "Verbergt voorvertoningen en vraagt biometrie of pincode bij openen. De inhoud sync nog via WebDAV, tenzij ‘Alleen op dit apparaat’ aan staat.",
+  "notesHideContentHint": "Biometrie of pincode om te openen. Sync tenzij alleen lokaal.",
   "notesLocalOnly": "Alleen op dit apparaat",
   "notesLocalOnlyHint": "Titel en inhoud worden nooit naar WebDAV geüpload. Delen met gezin kan niet.",
   "notesLocalOnlyBadge": "Dit apparaat",
@@ -1086,6 +1086,24 @@
   "categoryNewAction": "Nieuwe categorie…",
   "categoryRename": "Categorie hernoemen",
   "categoryRenameHint": "Categorienaam",
+  "categorySetIcon": "Kies icoon",
+  "categoryIconTitle": "Categorie-icoon",
+  "categoryIconClear": "Standaardicoon",
+  "categoryRemove": "Categorie verwijderen",
+  "categoryRemoveTitle": "Categorie verwijderen?",
+  "categoryRemoveBody": "Items in “{name}” gaan naar Geen categorie. Dit kan niet ongedaan worden gemaakt.",
+  "@categoryRemoveBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+
+  "commonUndo": "Ongedaan maken",
+  "tasksMarkedDone": "Taak afgerond",
+  "tasksRestore": "Terugzetten",
+
+  "settingsSmartSort": "Slim sorteren",
+  "settingsSmartSortSubtitle": "Sorteer op urgentie en recente activiteit. Slepen staat stil zolang dit aan staat.",
 
   "suggestionsTitle": "Suggesties",
   "suggestionsSubtitle": "Handige taken om vandaag te overwegen",

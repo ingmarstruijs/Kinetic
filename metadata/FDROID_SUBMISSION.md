@@ -8,8 +8,8 @@ f-droid.org requires a merge request against
 
 | App | Application ID | Listing |
 | --- | --- | --- |
-| Kinetic Link | `net.moonbaseone.kinetic.link` | **Not submitted yet** — first fdroiddata MR still needed |
-| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Not submitted yet** — Android APK only (no desktop/iOS) |
+| Kinetic Link | `net.moonbaseone.kinetic.link` | **Ready to submit** — `v0.4.0` tagged; see [`FDROID_MR_0.4.0.md`](FDROID_MR_0.4.0.md) |
+| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Ready to submit** — Android APK only (no desktop/iOS) |
 
 Kids on F-Droid is the Android companion to Link; other Kids platforms in the
 monorepo are out of scope for fdroiddata.

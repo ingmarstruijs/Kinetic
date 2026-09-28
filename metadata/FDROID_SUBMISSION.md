@@ -1,34 +1,39 @@
 # F-Droid
 
-Draft metadata for both apps lives under `metadata/` in this repo. Listing on
-f-droid.org requires a merge request against
-[fdroiddata](https://gitlab.com/fdroid/fdroiddata).
+Metadata drafts live under `metadata/` in this repo. Listing on f-droid.org
+needs merge requests against [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
+Maintainer/agent release order (GitHub **and** F-Droid):
+[`docs/RELEASING.md`](../docs/RELEASING.md).
 
 ## Status
 
 | App | Application ID | Listing |
 | --- | --- | --- |
-| Kinetic Link | `net.moonbaseone.kinetic.link` | **Resubmit as 0.4.1** — one app/MR + Fastlane upstream; see [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md) |
-| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Resubmit as 0.4.1** — separate MR; Android APK only |
+| Kinetic Link | `net.moonbaseone.kinetic.link` | **MR open** — [!50466](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50466) (`v0.4.1`, pipelines green) |
+| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **MR open** — [!50467](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50467) (`v0.4.1`, pipelines green) |
 
 Kids on F-Droid is the Android companion to Link; other Kids platforms in the
 monorepo are out of scope for fdroiddata.
 
-Update this table when the first MR is opened / merged / live on f-droid.org.
+When both are live on f-droid.org, change the table to **Live** and drop the
+first-listing paste kits (`FDROID_MR_0.4.*.md`).
 
-## Release flow (every version)
+## Release flow (every version after first listing)
 
 GitHub Releases and F-Droid are **separate**. Tagging `main` publishes GitHub
 APKs automatically; F-Droid stays on the previous version until you open an
 fdroiddata MR.
 
 Metadata uses `AutoUpdateMode: None` / `UpdateCheckMode: None`, so **every**
-Kinetic release needs a manual fdroiddata update (not only the first listing).
+Kinetic release needs a manual fdroiddata update.
 
 1. **Version bump PR** on this repo (`release/X.Y.Z`):
    - Bump `apps/link/pubspec.yaml` and `apps/kids/pubspec.yaml` to `X.Y.Z+N`
-   - Update both `metadata/*.yml`: `versionName`, `versionCode`, `commit: vX.Y.Z`,
-     `CurrentVersion`, `CurrentVersionCode`
+   - Add Fastlane `changelogs/N.txt` (and refresh screenshots/copy if needed)
+     under `apps/*/fastlane/metadata/android/en-US/`
+   - Update both `metadata/*.yml`: `versionName`, `versionCode`,
+     `CurrentVersion`, `CurrentVersionCode` (set `commit:` to the **full SHA**
+     after the tag exists)
    - Merge to `main` after CI
 2. **Tag** the merge commit on `main` (see [`docs/RELEASING.md`](../docs/RELEASING.md)) → GitHub APKs
 3. **Verify** the F-Droid recipe locally (Git Bash / WSL / Linux / macOS):
@@ -42,10 +47,10 @@ Kinetic release needs a manual fdroiddata update (not only the first listing).
    - `apps/link/build/app/outputs/flutter-apk/app-release.apk`
    - `apps/kids/build/app/outputs/flutter-apk/app-release.apk`
 
-4. **Update fdroiddata** (after first listing exists): add a new `Builds:` entry
-   and bump `CurrentVersion` / `CurrentVersionCode` in the upstream YAML copies,
-   then open an MR against `fdroid/fdroiddata` `master`
-
+4. **Update fdroiddata**: add a new `Builds:` entry (full SHA in `commit:`) and
+   bump `CurrentVersion` / `CurrentVersionCode` in both YAML copies. Prefer
+   **one update MR** for both apps unless a maintainer asks to split. Do **not**
+   copy Fastlane/screenshot dirs into fdroiddata.
 5. After merge, watch [F-Droid build logs](https://f-droid.org/wiki/page/Build)
    for both application IDs; fix the recipe if bootstrap/native hooks fail
 
@@ -54,44 +59,35 @@ Kinetic release needs a manual fdroiddata update (not only the first listing).
 These must match for each release:
 
 - [ ] `apps/*/pubspec.yaml` → `version: X.Y.Z+N`
-- [ ] Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit: vX.Y.Z`
+- [ ] Fastlane `changelogs/N.txt` present for that versionCode
+- [ ] Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit: <full SHA>`
 - [ ] Annotated git tag `vX.Y.Z` on `main`
 - [ ] Flutter pin in metadata `srclibs` matches `.flutter-version` (and CI / FVM)
+- [ ] `dependenciesInfo.includeInApk = false` still set (no Dependency metadata block)
 
-## First-time submission
+## First-time submission (done for 0.4.1 — keep for reference)
 
-Do this once, before any “every version” fdroiddata bump:
+Paste kit: [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md). Obsolete kit:
+[`FDROID_MR_0.4.0.md`](FDROID_MR_0.4.0.md) (do not reuse).
 
-1. Put Fastlane metadata in each app (`apps/*/fastlane/metadata/android/en-US/`),
-   including `title.txt`, `short_description.txt`, `full_description.txt`,
-   `changelogs/<versionCode>.txt`, icon, and phone screenshots. Run
-   `bash tool/copy_fastlane_images.sh` if graphics still live under repo
-   `metadata/*/en-US/images/`.
-2. Tag the target version on `main` and verify both APKs with
-   `./tool/fdroid_build.sh`
-3. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata) and copy **only**:
+Rules that rejected the first attempt — still required for any new app MR:
 
-   - `net.moonbaseone.kinetic.link.yml`
-   - `net.moonbaseone.kinetic.kids.yml`
-
-   Do **not** add screenshots/summary dirs under fdroiddata.
-4. Open **two** GitLab MRs (one app each), titles `New app: …`, App inclusion
-   template, full commit SHA in `commit:`, RB unchecked — see
-   [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md)
-5. When live, update the **Status** table above
+1. Fastlane under `apps/*/fastlane/metadata/android/en-US/` (title, short + full
+   description, changelogs, icon, phoneScreenshots)
+2. Tag on `main`; `commit:` = **full SHA** of that tag (not `vX.Y.Z`)
+3. fdroiddata gets **yml only** — no asset directories
+4. **One new app per MR**, titles `New app: …`, App inclusion template
+5. Leave Reproducible Builds off until Flutter/Melos RB is deliberate work
+6. No `PrivacyPolicy:` metadata field; no JetBrains `cache-redirector` Maven URLs
 
 ### MR checklist (first listing)
 
-- [ ] YAML `commit:` is the **full SHA** of the annotated tag on `main`
-- [ ] `versionName` / `versionCode` match pubspec and `CurrentVersion*`
-- [ ] `srclibs: flutter@…` matches `.flutter-version`
-- [ ] `License: Apache-2.0`, `Repo` / `SourceCode` URLs correct
-- [ ] Privacy covered in Description / `PRIVACY.md` on `main` (no `PrivacyPolicy:` field — not in current fdroidserver schema)
-- [ ] Fastlane assets in upstream `apps/*/fastlane/...` (not in fdroiddata)
-- [ ] Build verified locally with `./tool/fdroid_build.sh` for **link** and **kids**
-- [ ] **One app per MR**; Kids noted as Android-only
-- [ ] No proprietary blobs; WebDAV sync is user-configured HTTPS only
-- [ ] Reproducible Builds left off for first listing (Flutter/Melos follow-up)
+- [x] YAML `commit:` is the full SHA of `v0.4.1` (`73c877299d2c5f0cc17fa0a93804621949d3a960`)
+- [x] `versionName` / `versionCode` match pubspec `0.4.1+11`
+- [x] `srclibs: flutter@3.44.1` matches `.flutter-version`
+- [x] Fastlane in upstream; no graphics in fdroiddata
+- [x] Separate Link + Kids MRs; pipelines green on fork CI
+- [ ] Merged upstream + live on f-droid.org
 
 ## Local build notes
 
@@ -115,11 +111,12 @@ run it natively). Flutter on `PATH` must match `.flutter-version` (FVM:
 
 - Melos bootstrap is required in `prebuild` (monorepo packages must resolve)
 - F-Droid rebuilds and **re-signs** APKs with the F-Droid key; GitHub Release
-  signing is independent
+  signing is independent (different certificate fingerprint)
 - Local DB encryption uses SQLite3MultipleCiphers via pub workspace hooks
+- AGP `dependenciesInfo` must stay disabled or `check apk` fails
 
 ## Privacy
 
-Link to the policy from the app Description and keep
+Link to the policy from the app Description / Fastlane full description and keep
 https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md on `main`.
 Current fdroidserver rejects a top-level `PrivacyPolicy:` metadata field.

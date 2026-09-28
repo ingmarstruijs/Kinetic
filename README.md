@@ -105,12 +105,17 @@ Settings can verify or reveal the phrase behind the device lock.
 
 ## Releases
 
-Bump version in a PR → merge to `main` → annotated tag `vX.Y.Z` on that commit.
-CI publishes separate Link and Kids GitHub releases (with checksums). F-Droid
-is a separate manual step.
+Every version has **two** publish steps:
 
-Full maintainer/agent checklist (version bump, tags, F-Droid, APK verify):
-[`docs/RELEASING.md`](docs/RELEASING.md).
+1. **GitHub** — bump PR → merge to `main` → annotated tag `vX.Y.Z` → CI publishes
+   separate Link and Kids releases (APKs + checksums).
+2. **F-Droid** — manual: full commit SHA in `metadata/*.yml`, then fdroiddata MR
+   (Fastlane/screenshots stay in this repo). Tagging alone does not update
+   f-droid.org.
+
+Full maintainer/agent checklist:
+[`docs/RELEASING.md`](docs/RELEASING.md) · F-Droid details:
+[`metadata/FDROID_SUBMISSION.md`](metadata/FDROID_SUBMISSION.md).
 
 ### Quick APK check
 

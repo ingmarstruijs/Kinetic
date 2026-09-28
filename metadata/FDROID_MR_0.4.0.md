@@ -1,4 +1,10 @@
-# First F-Droid listing — Kinetic 0.4.0
+# First F-Droid listing — Kinetic 0.4.0 (**obsolete**)
+
+Superseded by **0.4.1** (Fastlane upstream, one app per MR, full commit SHA).
+Do **not** open MRs from this kit or from branch `new/kinetic-0.4.0`.
+
+Use [`FDROID_MR_0.4.1.md`](FDROID_MR_0.4.1.md) and
+[`FDROID_SUBMISSION.md`](FDROID_SUBMISSION.md) instead.
 
 Copy these from Kinetic `main` at tag `v0.4.0` into your
 [fdroiddata](https://gitlab.com/fdroid/fdroiddata) fork:

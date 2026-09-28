@@ -43,6 +43,12 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // F-Droid rejects AGP's encrypted "Dependency metadata" APK signing block.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "net.moonbaseone.kinetic.kids"

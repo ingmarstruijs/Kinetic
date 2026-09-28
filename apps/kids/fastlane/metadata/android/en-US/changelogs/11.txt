@@ -1,0 +1,3 @@
+First F-Droid listing.
+Goal celebration and XP overflow spaarpot until the next goal.
+Demo scenario polish for goal-reached flows.

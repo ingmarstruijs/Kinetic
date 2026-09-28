@@ -1,49 +1,42 @@
 Categories:
-  - Time
-  - Productivity
+  - Habit Tracker
+  - Task
 License: Apache-2.0
 AuthorName: Ingmar Struijs
 WebSite: https://github.com/ingmarstruijs/Kinetic
 SourceCode: https://github.com/ingmarstruijs/Kinetic
 IssueTracker: https://github.com/ingmarstruijs/Kinetic/issues
-PrivacyPolicy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 
-AutoName: Kinetic Kids
 Name: Kinetic Kids
-
-Summary: Kids chores synced from Kinetic Link parents over encrypted WebDAV
+AutoName: Kinetic Kids
 Description: |-
-    Kinetic Kids shows chores assigned from Kinetic Link.
-    Children mark tasks complete and earn XP. There is no account and no
-    telemetry. Local task data is stored in an encrypted SQLite database.
+  Kinetic Kids shows chores assigned from Kinetic Link.
+  Children mark tasks complete and earn XP. There is no account and no
+  telemetry. Local task data is stored in an encrypted SQLite database.
 
-    Enrollment uses a family QR from the link app; the WebDAV password is
-    typed on the kids device (it is not embedded in the QR). Assigned tasks
-    sync from your own HTTPS WebDAV server and are encrypted with the family key.
+  Enrollment uses a family QR from the link app; the WebDAV password is
+  typed on the kids device (it is not embedded in the QR). Assigned tasks
+  sync from your own HTTPS WebDAV server and are encrypted with the family key.
 
-    Requires camera permission only for enrollment QR scanning.
-    WebDAV sync requires HTTPS.
+  Requires camera permission only for enrollment QR scanning.
+  WebDAV sync requires HTTPS.
+  Privacy policy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 
 RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.4.0
-    versionCode: 10
-    commit: v0.4.0
+  - versionName: 0.4.1
+    versionCode: 11
+    commit: REPLACE_WITH_V0_4_1_FULL_SHA
     subdir: apps/kids
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@3.44.1
-    prebuild: |
-      cd ../../
-      $$flutter$$ --version
-      dart pub global activate melos
-      dart pub global run melos bootstrap
-    build: |
-      $$flutter$$ build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+    prebuild: "cd ../../\nexport PATH=\"$$flutter$$/bin:$PATH\"\nflutter config --no-analytics\nflutter --version\ndart pub global activate melos\ndart pub global run melos bootstrap\n"
+    build: "export PATH=\"$$flutter$$/bin:$PATH\"\nflutter build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$\n"
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.4.0
-CurrentVersionCode: 10
+CurrentVersion: 0.4.1
+CurrentVersionCode: 11

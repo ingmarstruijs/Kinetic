@@ -22,7 +22,7 @@ body:
     id: version
     attributes:
       label: App / OS version
-      description: e.g. Link 0.3.10 on Android 15, or iOS 18
+      description: e.g. Link 0.4.0 on Android 15, or iOS 18
       placeholder: Link 0.3.x · Android / iOS …
     validations:
       required: true

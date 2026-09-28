@@ -75,7 +75,6 @@ void main() {
       expect(task.isCompleted, isFalse);
       expect(task.category, equals(TaskCategory.other));
       expect(task.priority, equals(TaskPriority.none));
-      expect(task.isFlagged, isFalse);
       expect(task.isPrivate, isFalse);
       expect(task.createdAt, isNotNull);
       expect(task.updatedAt, isNotNull);
@@ -98,7 +97,6 @@ void main() {
         dueDate: dueDate,
         isAllDay: true,
         recurrenceRule: 'FREQ=WEEKLY',
-        isFlagged: true,
         isPrivate: true,
         category: TaskCategory.household,
       );
@@ -109,7 +107,6 @@ void main() {
       expect(task.dueDate, equals(dueDate));
       expect(task.isAllDay, isTrue);
       expect(task.recurrenceRule, equals('FREQ=WEEKLY'));
-      expect(task.isFlagged, isTrue);
       expect(task.isPrivate, isTrue);
       expect(task.category, equals(TaskCategory.household));
     });
@@ -232,14 +229,6 @@ void main() {
 
       final withKids = task.copyWith(kidsTaskId: 'kids:123');
       expect(withKids.kidsTaskId, equals('kids:123'));
-    });
-
-    test('can toggle flag status', () {
-      final task = PersonalTask.create(title: 'Task', listId: 'inbox');
-      expect(task.isFlagged, isFalse);
-
-      final flagged = task.copyWith(isFlagged: true);
-      expect(flagged.isFlagged, isTrue);
     });
 
     test('can mark as private', () {

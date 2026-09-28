@@ -87,9 +87,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionSync => 'Sync';
 
   @override
-  String get settingsSectionExperimental => 'Experimental';
-
-  @override
   String get linkWebTitle => 'Link Web';
 
   @override
@@ -1824,7 +1821,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notesHideContentHint =>
-      'Hides previews and asks for biometrics or PIN to open. The note body still syncs via WebDAV unless “Keep on this device only” is on.';
+      'Biometrics or PIN to open. Still syncs unless local-only.';
 
   @override
   String get notesLocalOnly => 'Keep on this device only';
@@ -2196,6 +2193,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryRenameHint => 'Category name';
+
+  @override
+  String get categorySetIcon => 'Choose icon';
+
+  @override
+  String get categoryIconTitle => 'Category icon';
+
+  @override
+  String get categoryIconClear => 'Default icon';
+
+  @override
+  String get categoryRemove => 'Remove category';
+
+  @override
+  String get categoryRemoveTitle => 'Remove category?';
+
+  @override
+  String categoryRemoveBody(String name) {
+    return 'Items in “$name” move to No category. This cannot be undone.';
+  }
+
+  @override
+  String get commonUndo => 'Undo';
+
+  @override
+  String get tasksMarkedDone => 'Task marked done';
+
+  @override
+  String get tasksRestore => 'Restore';
+
+  @override
+  String get settingsSmartSort => 'Smart sorting';
+
+  @override
+  String get settingsSmartSortSubtitle =>
+      'Sort by urgency and recent activity. Drag-and-drop is paused while on.';
 
   @override
   String get suggestionsTitle => 'Suggestions';

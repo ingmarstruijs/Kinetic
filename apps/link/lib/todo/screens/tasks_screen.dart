@@ -21,6 +21,8 @@ import '../../todo/widgets/family_ambient_strip.dart';
 import '../../todo/widgets/task_detail_sheet.dart';
 import '../../todo/widgets/task_tile.dart';
 import '../../todo/widgets/tasks_section_header.dart';
+import '../../todo/category_icons.dart';
+import '../../todo/smart_sort.dart';
 
 class TasksScreen extends StatefulWidget {
   final TodoRepository repo;
@@ -428,146 +430,264 @@ class _TasksBodyState extends State<_TasksBody> {
     );
     if (next == null || next.isEmpty || next == category || !mounted) return;
     await widget.repo.renameCustomCategory(from: category, to: next);
+    await widget.settingsRepo?.renameCategoryIcon(category, next);
     final updated = [for (final c in _categoryOrder) c == category ? next : c];
+    setState(() => _categoryOrder = updated);
+    _saveCategoryOrder(updated);
+  }
+
+  Future<void> _setCategoryIcon(String? category) async {
+    if (category == null || category.isEmpty) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || widget.settingsRepo == null) return;
+    final icons = await widget.settingsRepo!.loadCategoryIcons();
+    if (!mounted) return;
+    final picked = await showCategoryIconPicker(
+      context: context,
+      currentIconKey: icons[category],
+    );
+    if (picked == null || !mounted) return;
+    await widget.settingsRepo!.setCategoryIcon(category, picked);
+  }
+
+  Future<void> _removeCategory(String? category) async {
+    if (category == null || category.isEmpty) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.categoryRemoveTitle),
+        content: Text(l10n.categoryRemoveBody(category)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.categoryRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await widget.repo.renameCustomCategory(from: category, to: '');
+    await widget.settingsRepo?.setCategoryIcon(category, null);
+    final updated = [for (final c in _categoryOrder) if (c != category) c];
     setState(() => _categoryOrder = updated);
     _saveCategoryOrder(updated);
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<PersonalTask>>(
-      stream: _openTasks,
-      builder: (ctx, snap) {
-        final tasks = snap.data ?? [];
+    final smartStream =
+        widget.settingsRepo?.watchSmartSortEnabled() ?? Stream.value(false);
+    final iconsStream =
+        widget.settingsRepo?.watchCategoryIcons() ??
+        Stream.value(<String, String>{});
 
-        final groups = <String?, List<PersonalTask>>{};
-        for (final t in tasks) {
-          groups.putIfAbsent(t.customCategory, () => []).add(t);
-        }
+    return StreamBuilder<bool>(
+      stream: smartStream,
+      builder: (context, smartSnap) {
+        final smartSort = smartSnap.data ?? false;
+        return StreamBuilder<Map<String, String>>(
+          stream: iconsStream,
+          builder: (context, iconsSnap) {
+            final categoryIcons = iconsSnap.data ?? const <String, String>{};
+            return StreamBuilder<List<PersonalTask>>(
+              stream: _openTasks,
+              builder: (ctx, snap) {
+                final tasks = snap.data ?? [];
 
-        final merged = _mergeOrder(groups.keys);
-        if (merged.length != _categoryOrder.length ||
-            !merged.every(_categoryOrder.contains)) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              setState(() => _categoryOrder = _mergeOrder(groups.keys));
-            }
-          });
-        }
+                final groups = <String?, List<PersonalTask>>{};
+                for (final t in tasks) {
+                  groups.putIfAbsent(t.customCategory, () => []).add(t);
+                }
 
-        final groupKeys = merged.where(groups.containsKey).toList();
-        final flatItems = <_ListItem>[];
-        final showHeaders =
-            groupKeys.length > 1 ||
-            (groupKeys.isNotEmpty && groupKeys.first != null);
+                for (final entry in groups.entries) {
+                  final list = entry.value;
+                  if (smartSort) {
+                    list.sort(compareTasksSmart);
+                  }
+                }
 
-        for (final cat in groupKeys) {
-          if (showHeaders) {
-            flatItems.add(
-              _HeaderItem(category: cat, count: groups[cat]!.length),
-            );
-          }
-          for (final t in groups[cat]!) {
-            flatItems.add(_TaskItem(task: t));
-          }
-        }
-
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: widget.header),
-            if (widget.familyContext)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Kids/Suggestions panels end with ~4px bottom padding;
-                      // extra space below keeps the rule visually centered.
-                      const SizedBox(height: 8),
-                      Divider(
-                        height: 1,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outlineVariant
-                            .withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(height: 20),
-                      TasksSectionHeader(
-                        icon: Icons.checklist_outlined,
-                        title: AppLocalizations.of(context).tasksSectionTitle,
-                        count: tasks.isEmpty ? null : tasks.length,
-                        expanded: _tasksExpanded,
-                        onToggle: () =>
-                            setState(() => _tasksExpanded = !_tasksExpanded),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            if (!widget.familyContext || _tasksExpanded) ...[
-              if (flatItems.isEmpty)
-                if (widget.familyContext)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                      child: _EmptyOpen(familyContext: true),
-                    ),
-                  )
-                else
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                      child: Center(child: _EmptyOpen()),
-                    ),
-                  )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.only(top: 4),
-                  sliver: SliverReorderableList(
-                    itemCount: flatItems.length,
-                    onReorder: (oldIndex, newIndex) {
-                      _onReorder(flatItems, oldIndex, newIndex);
-                    },
-                    itemBuilder: (context, index) {
-                      final item = flatItems[index];
-                      if (item is _HeaderItem) {
-                        return _CategoryHeader(
-                          key: ValueKey('header_${item.category}'),
-                          label:
-                              item.category ??
-                              AppLocalizations.of(context).commonNoCategory,
-                          count: item.count,
-                          index: index,
-                          canRename: item.category != null,
-                          onRename: () => _renameCategory(item.category),
+                final List<String?> groupKeys;
+                if (smartSort) {
+                  groupKeys = groups.keys.toList()
+                    ..sort(
+                      (a, b) => compareTaskCategoriesSmart(a, b, groups),
+                    );
+                } else {
+                  final merged = _mergeOrder(groups.keys);
+                  if (merged.length != _categoryOrder.length ||
+                      !merged.every(_categoryOrder.contains)) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(
+                          () => _categoryOrder = _mergeOrder(groups.keys),
                         );
                       }
-                    final taskItem = item as _TaskItem;
-                    return _DraggableTaskRow(
-                      key: ValueKey(taskItem.task.id),
-                      index: index,
-                      task: taskItem.task,
-                      repo: widget.repo,
-                      noteRepo: widget.noteRepo,
-                      hasFamilyKey: widget.hasFamilyKey,
-                      hasOtherLinkMembers: widget.hasOtherLinkMembers,
-                      proposalRepo: widget.proposalRepo,
-                      myLinkId: widget.myLinkId,
-                      otherLinkMembers: widget.otherLinkMembers,
-                      configRepo: widget.configRepo,
-                      pullPresence: widget.pullPresence,
+                    });
+                  }
+                  groupKeys = merged.where(groups.containsKey).toList();
+                }
+
+                final flatItems = <_ListItem>[];
+                final showHeaders =
+                    groupKeys.length > 1 ||
+                    (groupKeys.isNotEmpty && groupKeys.first != null);
+
+                for (final cat in groupKeys) {
+                  if (showHeaders) {
+                    flatItems.add(
+                      _HeaderItem(category: cat, count: groups[cat]!.length),
                     );
-                  },
-                ),
-              ),
-            ],
-            // Always clear the floating QuickAddBar (also when Tasks is collapsed).
-            const SliverToBoxAdapter(child: SizedBox(height: _kQuickAddClearance)),
-          ],
+                  }
+                  for (final t in groups[cat]!) {
+                    flatItems.add(_TaskItem(task: t));
+                  }
+                }
+
+                return CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: widget.header),
+                    if (widget.familyContext)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SizedBox(height: 8),
+                              Divider(
+                                height: 1,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(height: 20),
+                              TasksSectionHeader(
+                                icon: Icons.checklist_outlined,
+                                title: AppLocalizations.of(
+                                  context,
+                                ).tasksSectionTitle,
+                                count: tasks.isEmpty ? null : tasks.length,
+                                expanded: _tasksExpanded,
+                                onToggle: () => setState(
+                                  () => _tasksExpanded = !_tasksExpanded,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (!widget.familyContext || _tasksExpanded) ...[
+                      if (flatItems.isEmpty)
+                        if (widget.familyContext)
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                              child: _EmptyOpen(familyContext: true),
+                            ),
+                          )
+                        else
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
+                              child: Center(child: _EmptyOpen()),
+                            ),
+                          )
+                      else
+                        SliverPadding(
+                          padding: const EdgeInsets.only(top: 4),
+                          sliver: smartSort
+                              ? SliverList(
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) => _buildListItem(
+                                      context,
+                                      flatItems,
+                                      index,
+                                      categoryIcons: categoryIcons,
+                                      reorderable: false,
+                                    ),
+                                    childCount: flatItems.length,
+                                  ),
+                                )
+                              : SliverReorderableList(
+                                  itemCount: flatItems.length,
+                                  onReorder: (oldIndex, newIndex) {
+                                    _onReorder(flatItems, oldIndex, newIndex);
+                                  },
+                                  itemBuilder: (context, index) =>
+                                      _buildListItem(
+                                    context,
+                                    flatItems,
+                                    index,
+                                    categoryIcons: categoryIcons,
+                                    reorderable: true,
+                                  ),
+                                ),
+                        ),
+                    ],
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: _kQuickAddClearance),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
         );
       },
+    );
+  }
+
+  Widget _buildListItem(
+    BuildContext context,
+    List<_ListItem> flatItems,
+    int index, {
+    required Map<String, String> categoryIcons,
+    required bool reorderable,
+  }) {
+    final item = flatItems[index];
+    if (item is _HeaderItem) {
+      return _CategoryHeader(
+        key: ValueKey('header_${item.category}'),
+        label:
+            item.category ?? AppLocalizations.of(context).commonNoCategory,
+        icon: CategoryIconCatalog.resolve(
+          item.category == null ? null : categoryIcons[item.category],
+          isNone: item.category == null,
+        ),
+        count: item.count,
+        index: index,
+        canRename: item.category != null,
+        reorderable: reorderable,
+        onRename: () => _renameCategory(item.category),
+        onSetIcon: () => _setCategoryIcon(item.category),
+        onRemove: () => _removeCategory(item.category),
+      );
+    }
+    final taskItem = item as _TaskItem;
+    return _DraggableTaskRow(
+      key: ValueKey(taskItem.task.id),
+      index: index,
+      task: taskItem.task,
+      repo: widget.repo,
+      noteRepo: widget.noteRepo,
+      hasFamilyKey: widget.hasFamilyKey,
+      hasOtherLinkMembers: widget.hasOtherLinkMembers,
+      proposalRepo: widget.proposalRepo,
+      myLinkId: widget.myLinkId,
+      otherLinkMembers: widget.otherLinkMembers,
+      configRepo: widget.configRepo,
+      pullPresence: widget.pullPresence,
+      categoryIcons: categoryIcons,
+      reorderable: reorderable,
     );
   }
 
@@ -616,32 +736,42 @@ class _TasksBodyState extends State<_TasksBody> {
 
 class _CategoryHeader extends StatelessWidget {
   final String label;
+  final IconData icon;
   final int count;
   final int index;
   final bool canRename;
+  final bool reorderable;
   final VoidCallback onRename;
+  final VoidCallback onSetIcon;
+  final VoidCallback onRemove;
 
   const _CategoryHeader({
     super.key,
     required this.label,
+    required this.icon,
     required this.count,
     required this.index,
     required this.canRename,
+    required this.reorderable,
     required this.onRename,
+    required this.onSetIcon,
+    required this.onRemove,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    // Keep trailing chrome the same width for named + "No category" headers
-    // so section margins / task alignment stay consistent.
+    // Keep leading icon + trailing chrome the same width for named and
+    // "No category" headers so section margins / task alignment stay consistent.
     const trailingSlot = 40.0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 4, 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
               children: [
@@ -693,28 +823,39 @@ class _CategoryHeader extends StatelessWidget {
                     ),
                     onSelected: (value) {
                       if (value == 'rename') onRename();
+                      if (value == 'icon') onSetIcon();
+                      if (value == 'remove') onRemove();
                     },
                     itemBuilder: (ctx) => [
                       PopupMenuItem(
                         value: 'rename',
                         child: Text(l10n.categoryRename),
                       ),
+                      PopupMenuItem(
+                        value: 'icon',
+                        child: Text(l10n.categorySetIcon),
+                      ),
+                      PopupMenuItem(
+                        value: 'remove',
+                        child: Text(l10n.categoryRemove),
+                      ),
                     ],
                   )
                 : null,
           ),
-          ReorderableDragStartListener(
-            index: index,
-            child: SizedBox(
-              width: trailingSlot,
-              height: trailingSlot,
-              child: Icon(
-                Icons.drag_indicator,
-                size: 18,
-                color: scheme.outlineVariant,
+          if (reorderable)
+            ReorderableDragStartListener(
+              index: index,
+              child: SizedBox(
+                width: trailingSlot,
+                height: trailingSlot,
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 18,
+                  color: scheme.outlineVariant,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -733,6 +874,8 @@ class _DraggableTaskRow extends StatelessWidget {
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+  final Map<String, String> categoryIcons;
+  final bool reorderable;
 
   const _DraggableTaskRow({
     super.key,
@@ -747,6 +890,8 @@ class _DraggableTaskRow extends StatelessWidget {
     this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
+    this.categoryIcons = const {},
+    this.reorderable = true,
   });
 
   @override
@@ -766,19 +911,21 @@ class _DraggableTaskRow extends StatelessWidget {
             otherLinkMembers: otherLinkMembers,
             configRepo: configRepo,
             pullPresence: pullPresence,
+            categoryIcons: categoryIcons,
           ),
         ),
-        ReorderableDragStartListener(
-          index: index,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            child: Icon(
-              Icons.drag_handle,
-              size: 20,
-              color: Theme.of(context).colorScheme.outlineVariant,
+        if (reorderable)
+          ReorderableDragStartListener(
+            index: index,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Icon(
+                Icons.drag_handle,
+                size: 20,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -850,11 +997,26 @@ class _CompletedBottomSheet extends StatelessWidget {
                   child: ListView.builder(
                     controller: scrollController,
                     itemCount: completed.length,
-                    itemBuilder: (_, i) => TaskTile(
-                      task: completed[i],
-                      repo: repo,
-                      hasFamilyKey: hasFamilyKey,
-                    ),
+                    itemBuilder: (_, i) {
+                      final task = completed[i];
+                      final l10n = AppLocalizations.of(ctx);
+                      final done = task.completedAt;
+                      final subtitle = done == null
+                          ? null
+                          : l10n.tasksDoneOn(done.toLocal().day, done.toLocal().month);
+                      return ListTile(
+                        title: Text(
+                          task.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: subtitle == null ? null : Text(subtitle),
+                        trailing: TextButton(
+                          onPressed: () => repo.uncompleteTask(task.id),
+                          child: Text(l10n.tasksRestore),
+                        ),
+                      );
+                    },
                   ),
                 ),
             ],

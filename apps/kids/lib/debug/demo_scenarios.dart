@@ -2,11 +2,20 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:uuid/uuid.dart';
 
 import '../db/app_database.dart';
+import '../task/goal_xp.dart';
 import '../task/models/kids_task.dart';
 import '../task/services/kids_task_repository.dart';
 import 'demo_session.dart';
 
-enum KidsDemoScenario { empty, chores, waiting, offlineQueued, goal, full }
+enum KidsDemoScenario {
+  empty,
+  chores,
+  waiting,
+  offlineQueued,
+  goal,
+  goalReached,
+  full,
+}
 
 class KidsDemoScenarioInfo {
   final KidsDemoScenario id;
@@ -64,6 +73,13 @@ const kidsDemoScenarioCatalog = <KidsDemoScenarioInfo>[
     subtitleNl: 'Voortgang naar een beloning met wat verdiende XP',
   ),
   KidsDemoScenarioInfo(
+    id: KidsDemoScenario.goalReached,
+    titleEn: 'Goal reached',
+    titleNl: 'Doel gehaald',
+    subtitleEn: 'Full XP bar, bonus spaarpot, and celebration',
+    subtitleNl: 'Volle XP-balk, spaarpot en celebratie',
+  ),
+  KidsDemoScenarioInfo(
     id: KidsDemoScenario.full,
     titleEn: 'Full house',
     titleNl: 'Vol huis',
@@ -105,6 +121,9 @@ class KidsDemoScenarioLoader {
       case KidsDemoScenario.goal:
         await _seedChores(dutch, includeCompleted: true);
         goal = _demoGoal(dutch);
+      case KidsDemoScenario.goalReached:
+        await _seedGoalReached(dutch);
+        goal = _demoGoal(dutch, targetXp: 50);
       case KidsDemoScenario.full:
         await _seedChores(dutch, includeCompleted: true);
         await _seedWaiting(dutch);
@@ -113,6 +132,12 @@ class KidsDemoScenarioLoader {
     }
 
     KidsDemoSession.instance.apply(goal: goal);
+    if (scenario == KidsDemoScenario.goalReached) {
+      // Always replay the celebration in the UI scenario.
+      try {
+        await FlutterSecureKeyValueStore().delete(key: kGoalCelebratedStoreKey);
+      } catch (_) {}
+    }
     return KidsDemoScenarioResult(goal: goal);
   }
 
@@ -182,6 +207,73 @@ class KidsDemoScenarioLoader {
         category: TaskCategory.other,
       );
     }
+  }
+
+  /// Enough accepted XP to fill a 50 XP goal, plus one light open chore.
+  Future<void> _seedGoalReached(bool dutch) async {
+    final repo = KidsTaskRepository(db: _db);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day, 18);
+    final tomorrow = today.add(const Duration(days: 1));
+
+    Future<void> add({
+      required String en,
+      required String nl,
+      DateTime? due,
+      bool done = false,
+      int xp = 10,
+      TaskCategory category = TaskCategory.household,
+      TaskPriority priority = TaskPriority.normal,
+    }) {
+      final created = DateTime.now().toUtc();
+      return repo.upsertTask(
+        KidsTask(
+          id: const Uuid().v4(),
+          linkTaskId: KidsDemoSession.linkTaskId,
+          title: dutch ? nl : en,
+          category: category,
+          priority: priority,
+          dueDate: due?.toUtc(),
+          isCompleted: done,
+          completedAt: done ? created : null,
+          xpReward: xp,
+          syncState: 'clean',
+          createdAt: created,
+          updatedAt: created,
+        ),
+      );
+    }
+
+    // 10 + 15 + 15 + 15 + 10 = 65 XP → target 50 + overflow spaarpot 15
+    await add(en: 'Make the bed', nl: 'Bed opmaken', done: true, xp: 10);
+    await add(
+      en: 'Feed the pet',
+      nl: 'Huisdier voeren',
+      done: true,
+      xp: 15,
+      category: TaskCategory.other,
+    );
+    await add(
+      en: 'Water the plants',
+      nl: 'Plantjes water geven',
+      done: true,
+      xp: 15,
+      category: TaskCategory.household,
+    );
+    await add(
+      en: 'Help with dishes',
+      nl: 'Afwassen helpen',
+      done: true,
+      xp: 15,
+    );
+    await add(
+      en: 'Tidy toys',
+      nl: 'Speelgoed opruimen',
+      done: true,
+      xp: 10,
+      category: TaskCategory.other,
+    );
+    await add(en: 'Set the table', nl: 'Tafel dekken', due: tomorrow, xp: 10);
   }
 
   Future<void> _seedWaiting(bool dutch) async {

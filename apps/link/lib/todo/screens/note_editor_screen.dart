@@ -537,6 +537,10 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
                     border: InputBorder.none,
                   ),
                   textCapitalization: TextCapitalization.sentences,
+                  minLines: 1,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  textInputAction: TextInputAction.newline,
                 ),
               ),
               QuillSimpleToolbar(

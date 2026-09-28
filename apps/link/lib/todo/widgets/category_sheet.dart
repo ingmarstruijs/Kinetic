@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../category_icons.dart';
 
 // ---------------------------------------------------------------------------
 // Category picker bottom sheet
@@ -17,6 +18,7 @@ Future<String?> showCategoryPicker({
   required BuildContext context,
   required List<String> existingCategories,
   String? currentCategory,
+  Map<String, String> categoryIcons = const {},
 }) {
   return showModalBottomSheet<String>(
     context: context,
@@ -25,17 +27,32 @@ Future<String?> showCategoryPicker({
     builder: (_) => _CategoryPickerSheet(
       existingCategories: existingCategories,
       currentCategory: currentCategory,
+      categoryIcons: categoryIcons,
     ),
+  );
+}
+
+Future<String?> showCategoryIconPicker({
+  required BuildContext context,
+  String? currentIconKey,
+}) {
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => _CategoryIconPickerSheet(currentIconKey: currentIconKey),
   );
 }
 
 class _CategoryPickerSheet extends StatefulWidget {
   final List<String> existingCategories;
   final String? currentCategory;
+  final Map<String, String> categoryIcons;
 
   const _CategoryPickerSheet({
     required this.existingCategories,
     this.currentCategory,
+    this.categoryIcons = const {},
   });
 
   @override
@@ -92,7 +109,10 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
           ),
           const SizedBox(height: 4),
           ListTile(
-            leading: const Icon(Icons.label_off_outlined),
+            leading: Icon(
+              CategoryIconCatalog.resolve(null, isNone: true),
+              color: scheme.onSurfaceVariant,
+            ),
             title: Text(l10n.commonNoCategory),
             trailing: widget.currentCategory == null
                 ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
@@ -101,7 +121,13 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
           ),
           for (final cat in widget.existingCategories)
             ListTile(
-              leading: const Icon(Icons.label_outline),
+              leading: Icon(
+                CategoryIconCatalog.resolve(
+                  widget.categoryIcons[cat],
+                  isNone: false,
+                ),
+                color: scheme.onSurfaceVariant,
+              ),
               title: Text(cat),
               trailing: widget.currentCategory == cat
                   ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
@@ -143,6 +169,87 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
             ),
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+class _CategoryIconPickerSheet extends StatelessWidget {
+  final String? currentIconKey;
+
+  const _CategoryIconPickerSheet({this.currentIconKey});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final keys = CategoryIconCatalog.pickerKeys;
+    final selected = currentIconKey ?? CategoryIconCatalog.defaultKey;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.65;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.outlineVariant.withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.categoryIconTitle,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: GridView.builder(
+                itemCount: keys.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 6,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                ),
+                itemBuilder: (context, index) {
+                  final key = keys[index];
+                  final icon = CategoryIconCatalog.icons[key]!;
+                  final isSelected = key == selected;
+                  return Material(
+                    color: isSelected
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => Navigator.of(context).pop(key),
+                      child: Icon(
+                        icon,
+                        color: isSelected
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(CategoryIconCatalog.defaultKey),
+              child: Text(l10n.categoryIconClear),
+            ),
+          ],
+        ),
       ),
     );
   }

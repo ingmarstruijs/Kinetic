@@ -1,20 +1,23 @@
 # Kinetic Link Web
 
-Browser UI for **personal tasks**, paired to Kinetic Link on your phone (WhatsApp Web style).
+Browser UI for **personal tasks**, paired to Kinetic Link on your phone
+(WhatsApp Web style). **Debug builds only** — not shown in release settings.
 
 ## What you do
 
-> **Experimental.** Early preview — LAN-only, rough edges, possible breaking changes. Don’t rely on it for critical workflows yet.
-
-1. On the **phone**: Kinetic Link → **Settings → Link Web** (leave that screen open).
-2. On the **computer** (same Wi‑Fi): open the **HTTP URL** under the QR, or scan the QR.
+1. On the **phone** (debug build): Kinetic Link → **Settings → Debug → Link Web**
+   (leave that screen open).
+2. On the **computer** (same Wi‑Fi): open the **HTTP URL** under the QR, or scan
+   the QR.
 3. Tasks appear in the browser. Vault keys never leave the phone.
 
-**GitHub Pages** (`https://…/Kinetic/`) is only a landing page — it cannot pair by itself. Always open the phone’s `http://192.168.…` URL.
+**GitHub Pages** (`https://…/Kinetic/`) is only a landing page — it cannot pair
+by itself. Always open the phone’s `http://192.168.…` URL.
 
 ## Revoke
 
-**Revoke & stop** on the phone closes sockets and wipes the session secret. Starting again mints a new QR.
+**Revoke & stop** on the phone closes sockets and wipes the session secret.
+Starting again mints a new QR.
 
 ## Dev
 
@@ -30,11 +33,13 @@ cd apps/link_web && npm run build
 # then copy dist/* → apps/link/assets/link_web/
 ```
 
-CI builds the SPA on PRs and deploys to GitHub Pages on pushes to `main` (see `.github/workflows/link-web-pages.yml`).
+CI builds the SPA on PRs and deploys to GitHub Pages on pushes to `main`
+(see `.github/workflows/link-web-pages.yml`).
 
 ## Protocol
 
-See `packages/link_bridge`: QR type `link-web`, HMAC session hello, `tasks.list` / `tasks.create` / `tasks.complete`.
+See `packages/link_bridge`: QR type `link-web`, HMAC session hello,
+`tasks.list` / `tasks.create` / `tasks.complete`.
 
 ## Later
 

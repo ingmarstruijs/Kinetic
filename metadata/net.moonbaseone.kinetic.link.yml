@@ -47,8 +47,7 @@ Builds:
       dart pub global run melos bootstrap
     build: |
       $$flutter$$ build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
-    # Reproducibility notes: Flutter and Melos versions are pinned; F-Droid
-    # resigns the APK. See metadata/FDROID_SUBMISSION.md.
+    # F-Droid resigns the APK. Release steps: metadata/FDROID_SUBMISSION.md.
 
 AutoUpdateMode: None
 UpdateCheckMode: None

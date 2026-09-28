@@ -8,6 +8,7 @@ import '../../sync/sync_orchestrator.dart';
 import '../../theme/app_header.dart';
 import '../models/kids_task.dart';
 import '../services/kids_task_repository.dart';
+import '../widgets/goal_xp_hero.dart';
 import 'kids_task_detail_screen.dart';
 
 class KidsHomeScreen extends StatefulWidget {
@@ -218,7 +219,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
                 shadowColor: scheme.shadow.withValues(alpha: 0.12),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  child: _buildXpHero(context, scheme, l10n),
+                              child: _buildXpHero(),
                 ),
               ),
               Expanded(
@@ -328,87 +329,16 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
     );
   }
 
-  Widget _buildXpHero(
-    BuildContext context,
-    ColorScheme scheme,
-    AppLocalizations l10n,
-  ) {
-    return StreamBuilder<int>(
-      stream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
-      builder: (context, xpSnap) {
-        final totalXp = xpSnap.data ?? 0;
-        final goal = widget.goal;
-        final capped = goal != null && goal.targetXp > 0
-            ? (totalXp > goal.targetXp ? goal.targetXp : totalXp)
-            : totalXp;
-        final progress = goal != null && goal.targetXp > 0
-            ? (capped / goal.targetXp).clamp(0.0, 1.0)
-            : null;
-
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.star_rounded, color: scheme.primary),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      goal != null ? goal.title : l10n.totalXp(capped),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      goal != null
-                          ? l10n.goalProgress(capped, goal.targetXp)
-                          : l10n.keepGoing,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                    if (progress != null) ...[
-                      const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 8,
-                          backgroundColor:
-                              scheme.outline.withValues(alpha: 0.2),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.military_tech_rounded,
-                size: 40,
-                color: scheme.primary.withValues(alpha: 0.7),
-              ),
-            ],
-          ),
-        );
-      },
+  Widget _buildXpHero() {
+    final goal = widget.goal;
+    return GoalXpHero(
+      key: ValueKey<String>(
+        goal == null
+            ? 'xp-no-goal'
+            : 'xp-goal-${goal.updatedAt.toUtc().toIso8601String()}',
+      ),
+      xpStream: _taskRepository.watchTotalXp(resetAt: widget.xpResetAt),
+      goal: goal,
     );
   }
 

@@ -639,21 +639,6 @@ class $PersonalTasksTable extends PersonalTasks
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _isFlaggedMeta = const VerificationMeta(
-    'isFlagged',
-  );
-  @override
-  late final GeneratedColumn<bool> isFlagged = GeneratedColumn<bool>(
-    'is_flagged',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_flagged" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _isPrivateMeta = const VerificationMeta(
     'isPrivate',
   );
@@ -817,7 +802,6 @@ class $PersonalTasksTable extends PersonalTasks
     recurrenceRule,
     isCompleted,
     completedAt,
-    isFlagged,
     isPrivate,
     kidsTaskId,
     targetKidId,
@@ -912,12 +896,6 @@ class $PersonalTasksTable extends PersonalTasks
           data['completed_at']!,
           _completedAtMeta,
         ),
-      );
-    }
-    if (data.containsKey('is_flagged')) {
-      context.handle(
-        _isFlaggedMeta,
-        isFlagged.isAcceptableOrUnknown(data['is_flagged']!, _isFlaggedMeta),
       );
     }
     if (data.containsKey('is_private')) {
@@ -1063,10 +1041,6 @@ class $PersonalTasksTable extends PersonalTasks
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
       ),
-      isFlagged: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_flagged'],
-      )!,
       isPrivate: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_private'],
@@ -1139,7 +1113,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
   final String? recurrenceRule;
   final bool isCompleted;
   final DateTime? completedAt;
-  final bool isFlagged;
   final bool isPrivate;
   final String? kidsTaskId;
   final String? targetKidId;
@@ -1173,7 +1146,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
     this.recurrenceRule,
     required this.isCompleted,
     this.completedAt,
-    required this.isFlagged,
     required this.isPrivate,
     this.kidsTaskId,
     this.targetKidId,
@@ -1211,7 +1183,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
-    map['is_flagged'] = Variable<bool>(isFlagged);
     map['is_private'] = Variable<bool>(isPrivate);
     if (!nullToAbsent || kidsTaskId != null) {
       map['kids_task_id'] = Variable<String>(kidsTaskId);
@@ -1262,7 +1233,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
-      isFlagged: Value(isFlagged),
       isPrivate: Value(isPrivate),
       kidsTaskId: kidsTaskId == null && nullToAbsent
           ? const Value.absent()
@@ -1307,7 +1277,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
       recurrenceRule: serializer.fromJson<String?>(json['recurrenceRule']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
-      isFlagged: serializer.fromJson<bool>(json['isFlagged']),
       isPrivate: serializer.fromJson<bool>(json['isPrivate']),
       kidsTaskId: serializer.fromJson<String?>(json['kidsTaskId']),
       targetKidId: serializer.fromJson<String?>(json['targetKidId']),
@@ -1337,7 +1306,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
       'recurrenceRule': serializer.toJson<String?>(recurrenceRule),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
-      'isFlagged': serializer.toJson<bool>(isFlagged),
       'isPrivate': serializer.toJson<bool>(isPrivate),
       'kidsTaskId': serializer.toJson<String?>(kidsTaskId),
       'targetKidId': serializer.toJson<String?>(targetKidId),
@@ -1365,7 +1333,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
     Value<String?> recurrenceRule = const Value.absent(),
     bool? isCompleted,
     Value<DateTime?> completedAt = const Value.absent(),
-    bool? isFlagged,
     bool? isPrivate,
     Value<String?> kidsTaskId = const Value.absent(),
     Value<String?> targetKidId = const Value.absent(),
@@ -1392,7 +1359,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
         : this.recurrenceRule,
     isCompleted: isCompleted ?? this.isCompleted,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
-    isFlagged: isFlagged ?? this.isFlagged,
     isPrivate: isPrivate ?? this.isPrivate,
     kidsTaskId: kidsTaskId.present ? kidsTaskId.value : this.kidsTaskId,
     targetKidId: targetKidId.present ? targetKidId.value : this.targetKidId,
@@ -1429,7 +1395,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
-      isFlagged: data.isFlagged.present ? data.isFlagged.value : this.isFlagged,
       isPrivate: data.isPrivate.present ? data.isPrivate.value : this.isPrivate,
       kidsTaskId: data.kidsTaskId.present
           ? data.kidsTaskId.value
@@ -1469,7 +1434,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
           ..write('recurrenceRule: $recurrenceRule, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
-          ..write('isFlagged: $isFlagged, ')
           ..write('isPrivate: $isPrivate, ')
           ..write('kidsTaskId: $kidsTaskId, ')
           ..write('targetKidId: $targetKidId, ')
@@ -1499,7 +1463,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
     recurrenceRule,
     isCompleted,
     completedAt,
-    isFlagged,
     isPrivate,
     kidsTaskId,
     targetKidId,
@@ -1528,7 +1491,6 @@ class PersonalTaskRow extends DataClass implements Insertable<PersonalTaskRow> {
           other.recurrenceRule == this.recurrenceRule &&
           other.isCompleted == this.isCompleted &&
           other.completedAt == this.completedAt &&
-          other.isFlagged == this.isFlagged &&
           other.isPrivate == this.isPrivate &&
           other.kidsTaskId == this.kidsTaskId &&
           other.targetKidId == this.targetKidId &&
@@ -1555,7 +1517,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
   final Value<String?> recurrenceRule;
   final Value<bool> isCompleted;
   final Value<DateTime?> completedAt;
-  final Value<bool> isFlagged;
   final Value<bool> isPrivate;
   final Value<String?> kidsTaskId;
   final Value<String?> targetKidId;
@@ -1581,7 +1542,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
     this.recurrenceRule = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
-    this.isFlagged = const Value.absent(),
     this.isPrivate = const Value.absent(),
     this.kidsTaskId = const Value.absent(),
     this.targetKidId = const Value.absent(),
@@ -1608,7 +1568,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
     this.recurrenceRule = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.completedAt = const Value.absent(),
-    this.isFlagged = const Value.absent(),
     this.isPrivate = const Value.absent(),
     this.kidsTaskId = const Value.absent(),
     this.targetKidId = const Value.absent(),
@@ -1638,7 +1597,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
     Expression<String>? recurrenceRule,
     Expression<bool>? isCompleted,
     Expression<DateTime>? completedAt,
-    Expression<bool>? isFlagged,
     Expression<bool>? isPrivate,
     Expression<String>? kidsTaskId,
     Expression<String>? targetKidId,
@@ -1665,7 +1623,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
       if (recurrenceRule != null) 'recurrence_rule': recurrenceRule,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (completedAt != null) 'completed_at': completedAt,
-      if (isFlagged != null) 'is_flagged': isFlagged,
       if (isPrivate != null) 'is_private': isPrivate,
       if (kidsTaskId != null) 'kids_task_id': kidsTaskId,
       if (targetKidId != null) 'target_kid_id': targetKidId,
@@ -1694,7 +1651,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
     Value<String?>? recurrenceRule,
     Value<bool>? isCompleted,
     Value<DateTime?>? completedAt,
-    Value<bool>? isFlagged,
     Value<bool>? isPrivate,
     Value<String?>? kidsTaskId,
     Value<String?>? targetKidId,
@@ -1721,7 +1677,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
       recurrenceRule: recurrenceRule ?? this.recurrenceRule,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
-      isFlagged: isFlagged ?? this.isFlagged,
       isPrivate: isPrivate ?? this.isPrivate,
       kidsTaskId: kidsTaskId ?? this.kidsTaskId,
       targetKidId: targetKidId ?? this.targetKidId,
@@ -1771,9 +1726,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
     }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
-    }
-    if (isFlagged.present) {
-      map['is_flagged'] = Variable<bool>(isFlagged.value);
     }
     if (isPrivate.present) {
       map['is_private'] = Variable<bool>(isPrivate.value);
@@ -1833,7 +1785,6 @@ class PersonalTasksCompanion extends UpdateCompanion<PersonalTaskRow> {
           ..write('recurrenceRule: $recurrenceRule, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('completedAt: $completedAt, ')
-          ..write('isFlagged: $isFlagged, ')
           ..write('isPrivate: $isPrivate, ')
           ..write('kidsTaskId: $kidsTaskId, ')
           ..write('targetKidId: $targetKidId, ')
@@ -4169,6 +4120,32 @@ class $AppSettingsTable extends AppSettings
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _categoryIconsMeta = const VerificationMeta(
+    'categoryIcons',
+  );
+  @override
+  late final GeneratedColumn<String> categoryIcons = GeneratedColumn<String>(
+    'category_icons',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _smartSortEnabledMeta = const VerificationMeta(
+    'smartSortEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> smartSortEnabled = GeneratedColumn<bool>(
+    'smart_sort_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("smart_sort_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _lastSuggestionRunAtMeta =
       const VerificationMeta('lastSuggestionRunAt');
   @override
@@ -4209,6 +4186,8 @@ class $AppSettingsTable extends AppSettings
     localeCode,
     taskCategoryOrder,
     noteCategoryOrder,
+    categoryIcons,
+    smartSortEnabled,
     lastSuggestionRunAt,
     lastFamilyMemberSuggestionRunAt,
     updatedAt,
@@ -4258,6 +4237,24 @@ class $AppSettingsTable extends AppSettings
         noteCategoryOrder.isAcceptableOrUnknown(
           data['note_category_order']!,
           _noteCategoryOrderMeta,
+        ),
+      );
+    }
+    if (data.containsKey('category_icons')) {
+      context.handle(
+        _categoryIconsMeta,
+        categoryIcons.isAcceptableOrUnknown(
+          data['category_icons']!,
+          _categoryIconsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('smart_sort_enabled')) {
+      context.handle(
+        _smartSortEnabledMeta,
+        smartSortEnabled.isAcceptableOrUnknown(
+          data['smart_sort_enabled']!,
+          _smartSortEnabledMeta,
         ),
       );
     }
@@ -4316,6 +4313,14 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.string,
         data['${effectivePrefix}note_category_order'],
       ),
+      categoryIcons: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_icons'],
+      ),
+      smartSortEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}smart_sort_enabled'],
+      )!,
       lastSuggestionRunAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_suggestion_run_at'],
@@ -4343,6 +4348,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
   final String localeCode;
   final String? taskCategoryOrder;
   final String? noteCategoryOrder;
+  final String? categoryIcons;
+  final bool smartSortEnabled;
   final DateTime? lastSuggestionRunAt;
   final DateTime? lastFamilyMemberSuggestionRunAt;
   final DateTime updatedAt;
@@ -4352,6 +4359,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
     required this.localeCode,
     this.taskCategoryOrder,
     this.noteCategoryOrder,
+    this.categoryIcons,
+    required this.smartSortEnabled,
     this.lastSuggestionRunAt,
     this.lastFamilyMemberSuggestionRunAt,
     required this.updatedAt,
@@ -4368,6 +4377,10 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
     if (!nullToAbsent || noteCategoryOrder != null) {
       map['note_category_order'] = Variable<String>(noteCategoryOrder);
     }
+    if (!nullToAbsent || categoryIcons != null) {
+      map['category_icons'] = Variable<String>(categoryIcons);
+    }
+    map['smart_sort_enabled'] = Variable<bool>(smartSortEnabled);
     if (!nullToAbsent || lastSuggestionRunAt != null) {
       map['last_suggestion_run_at'] = Variable<DateTime>(lastSuggestionRunAt);
     }
@@ -4391,6 +4404,10 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
       noteCategoryOrder: noteCategoryOrder == null && nullToAbsent
           ? const Value.absent()
           : Value(noteCategoryOrder),
+      categoryIcons: categoryIcons == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryIcons),
+      smartSortEnabled: Value(smartSortEnabled),
       lastSuggestionRunAt: lastSuggestionRunAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSuggestionRunAt),
@@ -4417,6 +4434,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
       noteCategoryOrder: serializer.fromJson<String?>(
         json['noteCategoryOrder'],
       ),
+      categoryIcons: serializer.fromJson<String?>(json['categoryIcons']),
+      smartSortEnabled: serializer.fromJson<bool>(json['smartSortEnabled']),
       lastSuggestionRunAt: serializer.fromJson<DateTime?>(
         json['lastSuggestionRunAt'],
       ),
@@ -4435,6 +4454,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
       'localeCode': serializer.toJson<String>(localeCode),
       'taskCategoryOrder': serializer.toJson<String?>(taskCategoryOrder),
       'noteCategoryOrder': serializer.toJson<String?>(noteCategoryOrder),
+      'categoryIcons': serializer.toJson<String?>(categoryIcons),
+      'smartSortEnabled': serializer.toJson<bool>(smartSortEnabled),
       'lastSuggestionRunAt': serializer.toJson<DateTime?>(lastSuggestionRunAt),
       'lastFamilyMemberSuggestionRunAt': serializer.toJson<DateTime?>(
         lastFamilyMemberSuggestionRunAt,
@@ -4449,6 +4470,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
     String? localeCode,
     Value<String?> taskCategoryOrder = const Value.absent(),
     Value<String?> noteCategoryOrder = const Value.absent(),
+    Value<String?> categoryIcons = const Value.absent(),
+    bool? smartSortEnabled,
     Value<DateTime?> lastSuggestionRunAt = const Value.absent(),
     Value<DateTime?> lastFamilyMemberSuggestionRunAt = const Value.absent(),
     DateTime? updatedAt,
@@ -4462,6 +4485,10 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
     noteCategoryOrder: noteCategoryOrder.present
         ? noteCategoryOrder.value
         : this.noteCategoryOrder,
+    categoryIcons: categoryIcons.present
+        ? categoryIcons.value
+        : this.categoryIcons,
+    smartSortEnabled: smartSortEnabled ?? this.smartSortEnabled,
     lastSuggestionRunAt: lastSuggestionRunAt.present
         ? lastSuggestionRunAt.value
         : this.lastSuggestionRunAt,
@@ -4483,6 +4510,12 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
       noteCategoryOrder: data.noteCategoryOrder.present
           ? data.noteCategoryOrder.value
           : this.noteCategoryOrder,
+      categoryIcons: data.categoryIcons.present
+          ? data.categoryIcons.value
+          : this.categoryIcons,
+      smartSortEnabled: data.smartSortEnabled.present
+          ? data.smartSortEnabled.value
+          : this.smartSortEnabled,
       lastSuggestionRunAt: data.lastSuggestionRunAt.present
           ? data.lastSuggestionRunAt.value
           : this.lastSuggestionRunAt,
@@ -4502,6 +4535,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
           ..write('localeCode: $localeCode, ')
           ..write('taskCategoryOrder: $taskCategoryOrder, ')
           ..write('noteCategoryOrder: $noteCategoryOrder, ')
+          ..write('categoryIcons: $categoryIcons, ')
+          ..write('smartSortEnabled: $smartSortEnabled, ')
           ..write('lastSuggestionRunAt: $lastSuggestionRunAt, ')
           ..write(
             'lastFamilyMemberSuggestionRunAt: $lastFamilyMemberSuggestionRunAt, ',
@@ -4518,6 +4553,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
     localeCode,
     taskCategoryOrder,
     noteCategoryOrder,
+    categoryIcons,
+    smartSortEnabled,
     lastSuggestionRunAt,
     lastFamilyMemberSuggestionRunAt,
     updatedAt,
@@ -4531,6 +4568,8 @@ class AppSettingsRow extends DataClass implements Insertable<AppSettingsRow> {
           other.localeCode == this.localeCode &&
           other.taskCategoryOrder == this.taskCategoryOrder &&
           other.noteCategoryOrder == this.noteCategoryOrder &&
+          other.categoryIcons == this.categoryIcons &&
+          other.smartSortEnabled == this.smartSortEnabled &&
           other.lastSuggestionRunAt == this.lastSuggestionRunAt &&
           other.lastFamilyMemberSuggestionRunAt ==
               this.lastFamilyMemberSuggestionRunAt &&
@@ -4543,6 +4582,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
   final Value<String> localeCode;
   final Value<String?> taskCategoryOrder;
   final Value<String?> noteCategoryOrder;
+  final Value<String?> categoryIcons;
+  final Value<bool> smartSortEnabled;
   final Value<DateTime?> lastSuggestionRunAt;
   final Value<DateTime?> lastFamilyMemberSuggestionRunAt;
   final Value<DateTime> updatedAt;
@@ -4553,6 +4594,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
     this.localeCode = const Value.absent(),
     this.taskCategoryOrder = const Value.absent(),
     this.noteCategoryOrder = const Value.absent(),
+    this.categoryIcons = const Value.absent(),
+    this.smartSortEnabled = const Value.absent(),
     this.lastSuggestionRunAt = const Value.absent(),
     this.lastFamilyMemberSuggestionRunAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -4564,6 +4607,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
     this.localeCode = const Value.absent(),
     this.taskCategoryOrder = const Value.absent(),
     this.noteCategoryOrder = const Value.absent(),
+    this.categoryIcons = const Value.absent(),
+    this.smartSortEnabled = const Value.absent(),
     this.lastSuggestionRunAt = const Value.absent(),
     this.lastFamilyMemberSuggestionRunAt = const Value.absent(),
     required DateTime updatedAt,
@@ -4575,6 +4620,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
     Expression<String>? localeCode,
     Expression<String>? taskCategoryOrder,
     Expression<String>? noteCategoryOrder,
+    Expression<String>? categoryIcons,
+    Expression<bool>? smartSortEnabled,
     Expression<DateTime>? lastSuggestionRunAt,
     Expression<DateTime>? lastFamilyMemberSuggestionRunAt,
     Expression<DateTime>? updatedAt,
@@ -4586,6 +4633,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
       if (localeCode != null) 'locale_code': localeCode,
       if (taskCategoryOrder != null) 'task_category_order': taskCategoryOrder,
       if (noteCategoryOrder != null) 'note_category_order': noteCategoryOrder,
+      if (categoryIcons != null) 'category_icons': categoryIcons,
+      if (smartSortEnabled != null) 'smart_sort_enabled': smartSortEnabled,
       if (lastSuggestionRunAt != null)
         'last_suggestion_run_at': lastSuggestionRunAt,
       if (lastFamilyMemberSuggestionRunAt != null)
@@ -4601,6 +4650,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
     Value<String>? localeCode,
     Value<String?>? taskCategoryOrder,
     Value<String?>? noteCategoryOrder,
+    Value<String?>? categoryIcons,
+    Value<bool>? smartSortEnabled,
     Value<DateTime?>? lastSuggestionRunAt,
     Value<DateTime?>? lastFamilyMemberSuggestionRunAt,
     Value<DateTime>? updatedAt,
@@ -4612,6 +4663,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
       localeCode: localeCode ?? this.localeCode,
       taskCategoryOrder: taskCategoryOrder ?? this.taskCategoryOrder,
       noteCategoryOrder: noteCategoryOrder ?? this.noteCategoryOrder,
+      categoryIcons: categoryIcons ?? this.categoryIcons,
+      smartSortEnabled: smartSortEnabled ?? this.smartSortEnabled,
       lastSuggestionRunAt: lastSuggestionRunAt ?? this.lastSuggestionRunAt,
       lastFamilyMemberSuggestionRunAt:
           lastFamilyMemberSuggestionRunAt ??
@@ -4638,6 +4691,12 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
     }
     if (noteCategoryOrder.present) {
       map['note_category_order'] = Variable<String>(noteCategoryOrder.value);
+    }
+    if (categoryIcons.present) {
+      map['category_icons'] = Variable<String>(categoryIcons.value);
+    }
+    if (smartSortEnabled.present) {
+      map['smart_sort_enabled'] = Variable<bool>(smartSortEnabled.value);
     }
     if (lastSuggestionRunAt.present) {
       map['last_suggestion_run_at'] = Variable<DateTime>(
@@ -4666,6 +4725,8 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsRow> {
           ..write('localeCode: $localeCode, ')
           ..write('taskCategoryOrder: $taskCategoryOrder, ')
           ..write('noteCategoryOrder: $noteCategoryOrder, ')
+          ..write('categoryIcons: $categoryIcons, ')
+          ..write('smartSortEnabled: $smartSortEnabled, ')
           ..write('lastSuggestionRunAt: $lastSuggestionRunAt, ')
           ..write(
             'lastFamilyMemberSuggestionRunAt: $lastFamilyMemberSuggestionRunAt, ',
@@ -6690,7 +6751,6 @@ typedef $$PersonalTasksTableCreateCompanionBuilder =
       Value<String?> recurrenceRule,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
-      Value<bool> isFlagged,
       Value<bool> isPrivate,
       Value<String?> kidsTaskId,
       Value<String?> targetKidId,
@@ -6718,7 +6778,6 @@ typedef $$PersonalTasksTableUpdateCompanionBuilder =
       Value<String?> recurrenceRule,
       Value<bool> isCompleted,
       Value<DateTime?> completedAt,
-      Value<bool> isFlagged,
       Value<bool> isPrivate,
       Value<String?> kidsTaskId,
       Value<String?> targetKidId,
@@ -6833,11 +6892,6 @@ class $$PersonalTasksTableFilterComposer
 
   ColumnFilters<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isFlagged => $composableBuilder(
-    column: $table.isFlagged,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7009,11 +7063,6 @@ class $$PersonalTasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isFlagged => $composableBuilder(
-    column: $table.isFlagged,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<bool> get isPrivate => $composableBuilder(
     column: $table.isPrivate,
     builder: (column) => ColumnOrderings(column),
@@ -7144,9 +7193,6 @@ class $$PersonalTasksTableAnnotationComposer
     column: $table.completedAt,
     builder: (column) => column,
   );
-
-  GeneratedColumn<bool> get isFlagged =>
-      $composableBuilder(column: $table.isFlagged, builder: (column) => column);
 
   GeneratedColumn<bool> get isPrivate =>
       $composableBuilder(column: $table.isPrivate, builder: (column) => column);
@@ -7284,7 +7330,6 @@ class $$PersonalTasksTableTableManager
                 Value<String?> recurrenceRule = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
-                Value<bool> isFlagged = const Value.absent(),
                 Value<bool> isPrivate = const Value.absent(),
                 Value<String?> kidsTaskId = const Value.absent(),
                 Value<String?> targetKidId = const Value.absent(),
@@ -7310,7 +7355,6 @@ class $$PersonalTasksTableTableManager
                 recurrenceRule: recurrenceRule,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
-                isFlagged: isFlagged,
                 isPrivate: isPrivate,
                 kidsTaskId: kidsTaskId,
                 targetKidId: targetKidId,
@@ -7338,7 +7382,6 @@ class $$PersonalTasksTableTableManager
                 Value<String?> recurrenceRule = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
-                Value<bool> isFlagged = const Value.absent(),
                 Value<bool> isPrivate = const Value.absent(),
                 Value<String?> kidsTaskId = const Value.absent(),
                 Value<String?> targetKidId = const Value.absent(),
@@ -7364,7 +7407,6 @@ class $$PersonalTasksTableTableManager
                 recurrenceRule: recurrenceRule,
                 isCompleted: isCompleted,
                 completedAt: completedAt,
-                isFlagged: isFlagged,
                 isPrivate: isPrivate,
                 kidsTaskId: kidsTaskId,
                 targetKidId: targetKidId,
@@ -8677,6 +8719,8 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<String> localeCode,
       Value<String?> taskCategoryOrder,
       Value<String?> noteCategoryOrder,
+      Value<String?> categoryIcons,
+      Value<bool> smartSortEnabled,
       Value<DateTime?> lastSuggestionRunAt,
       Value<DateTime?> lastFamilyMemberSuggestionRunAt,
       required DateTime updatedAt,
@@ -8689,6 +8733,8 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<String> localeCode,
       Value<String?> taskCategoryOrder,
       Value<String?> noteCategoryOrder,
+      Value<String?> categoryIcons,
+      Value<bool> smartSortEnabled,
       Value<DateTime?> lastSuggestionRunAt,
       Value<DateTime?> lastFamilyMemberSuggestionRunAt,
       Value<DateTime> updatedAt,
@@ -8726,6 +8772,16 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<String> get noteCategoryOrder => $composableBuilder(
     column: $table.noteCategoryOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryIcons => $composableBuilder(
+    column: $table.categoryIcons,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get smartSortEnabled => $composableBuilder(
+    column: $table.smartSortEnabled,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8780,6 +8836,16 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get categoryIcons => $composableBuilder(
+    column: $table.categoryIcons,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get smartSortEnabled => $composableBuilder(
+    column: $table.smartSortEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastSuggestionRunAt => $composableBuilder(
     column: $table.lastSuggestionRunAt,
     builder: (column) => ColumnOrderings(column),
@@ -8824,6 +8890,16 @@ class $$AppSettingsTableAnnotationComposer
 
   GeneratedColumn<String> get noteCategoryOrder => $composableBuilder(
     column: $table.noteCategoryOrder,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categoryIcons => $composableBuilder(
+    column: $table.categoryIcons,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get smartSortEnabled => $composableBuilder(
+    column: $table.smartSortEnabled,
     builder: (column) => column,
   );
 
@@ -8878,6 +8954,8 @@ class $$AppSettingsTableTableManager
                 Value<String> localeCode = const Value.absent(),
                 Value<String?> taskCategoryOrder = const Value.absent(),
                 Value<String?> noteCategoryOrder = const Value.absent(),
+                Value<String?> categoryIcons = const Value.absent(),
+                Value<bool> smartSortEnabled = const Value.absent(),
                 Value<DateTime?> lastSuggestionRunAt = const Value.absent(),
                 Value<DateTime?> lastFamilyMemberSuggestionRunAt =
                     const Value.absent(),
@@ -8889,6 +8967,8 @@ class $$AppSettingsTableTableManager
                 localeCode: localeCode,
                 taskCategoryOrder: taskCategoryOrder,
                 noteCategoryOrder: noteCategoryOrder,
+                categoryIcons: categoryIcons,
+                smartSortEnabled: smartSortEnabled,
                 lastSuggestionRunAt: lastSuggestionRunAt,
                 lastFamilyMemberSuggestionRunAt:
                     lastFamilyMemberSuggestionRunAt,
@@ -8902,6 +8982,8 @@ class $$AppSettingsTableTableManager
                 Value<String> localeCode = const Value.absent(),
                 Value<String?> taskCategoryOrder = const Value.absent(),
                 Value<String?> noteCategoryOrder = const Value.absent(),
+                Value<String?> categoryIcons = const Value.absent(),
+                Value<bool> smartSortEnabled = const Value.absent(),
                 Value<DateTime?> lastSuggestionRunAt = const Value.absent(),
                 Value<DateTime?> lastFamilyMemberSuggestionRunAt =
                     const Value.absent(),
@@ -8913,6 +8995,8 @@ class $$AppSettingsTableTableManager
                 localeCode: localeCode,
                 taskCategoryOrder: taskCategoryOrder,
                 noteCategoryOrder: noteCategoryOrder,
+                categoryIcons: categoryIcons,
+                smartSortEnabled: smartSortEnabled,
                 lastSuggestionRunAt: lastSuggestionRunAt,
                 lastFamilyMemberSuggestionRunAt:
                     lastFamilyMemberSuggestionRunAt,

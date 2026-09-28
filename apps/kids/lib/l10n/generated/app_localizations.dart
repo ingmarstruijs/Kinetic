@@ -482,6 +482,24 @@ abstract class AppLocalizations {
   /// **'{earned} / {target} XP'**
   String goalProgress(int earned, int target);
 
+  /// No description provided for @goalReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal reached!'**
+  String get goalReached;
+
+  /// No description provided for @bonusXpPot.
+  ///
+  /// In en, this message translates to:
+  /// **'Bonus XP'**
+  String get bonusXpPot;
+
+  /// No description provided for @bonusXpAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{xp} XP'**
+  String bonusXpAmount(int xp);
+
   /// No description provided for @totalXp.
   ///
   /// In en, this message translates to:

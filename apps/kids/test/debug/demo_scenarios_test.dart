@@ -44,6 +44,25 @@ void main() {
     expect(KidsDemoSession.instance.active, isTrue);
   });
 
+  test('goalReached scenario fills XP past the target for the spaarpot',
+      () async {
+    final db = createTestDatabase();
+    addTearDown(db.close);
+
+    final result = await KidsDemoScenarioLoader(db: db).apply(
+      KidsDemoScenario.goalReached,
+      dutch: false,
+    );
+
+    final repo = KidsTaskRepository(db: db);
+    final xp = await repo.watchTotalXp().first;
+    expect(result.goal, isNotNull);
+    expect(result.goal!.targetXp, 50);
+    expect(xp, greaterThan(result.goal!.targetXp));
+    expect(xp - result.goal!.targetXp, 15);
+    expect(KidsDemoSession.instance.active, isTrue);
+  });
+
   test('empty scenario enrolls with no tasks', () async {
     final db = createTestDatabase();
     addTearDown(db.close);

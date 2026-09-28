@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.withExecutor(super.executor);
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -154,6 +154,21 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 23) {
         await m.createTable(noteAssets);
+      }
+      if (from < 24) {
+        if (!await _columnExists('app_settings', 'category_icons')) {
+          await m.addColumn(appSettings, appSettings.categoryIcons);
+        }
+        if (!await _columnExists('app_settings', 'smart_sort_enabled')) {
+          await m.addColumn(appSettings, appSettings.smartSortEnabled);
+        }
+      }
+      if (from < 25) {
+        if (await _columnExists('personal_tasks', 'is_flagged')) {
+          await customStatement(
+            'ALTER TABLE personal_tasks DROP COLUMN is_flagged',
+          );
+        }
       }
     },
   );

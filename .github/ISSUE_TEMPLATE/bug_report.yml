@@ -1,0 +1,69 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. **Never** paste recovery phrases, vault keys, or WebDAV passwords.
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - Kinetic Link
+        - Kinetic Kids
+        - Both / monorepo
+        - Unsure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App / OS version
+      description: e.g. Link 0.3.10 on Android 15, or iOS 18
+      placeholder: Link 0.3.x · Android / iOS …
+    validations:
+      required: true
+  - type: dropdown
+    id: context
+    attributes:
+      label: Sync / family context
+      options:
+        - Offline only (no WebDAV)
+        - WebDAV connected
+        - Family linked
+        - Kids enrolled
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Extra notes
+      description: Screenshots, logs (redact secrets), related issues
+    validations:
+      required: false

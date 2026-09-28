@@ -214,6 +214,17 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get goalReached => 'Doel gehaald!';
+
+  @override
+  String get bonusXpPot => 'Extra XP';
+
+  @override
+  String bonusXpAmount(int xp) {
+    return '+$xp XP';
+  }
+
+  @override
   String totalXp(int xp) {
     return '$xp XP';
   }

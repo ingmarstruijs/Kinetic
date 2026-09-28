@@ -1,0 +1,47 @@
+name: Feature request
+description: Propose an improvement that fits Kinetic’s local-first model
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Kinetic stays **no Kinetic account, no telemetry, BYO WebDAV**.
+  - type: dropdown
+    id: app
+    attributes:
+      label: App
+      options:
+        - Kinetic Link
+        - Kinetic Kids
+        - Both / monorepo
+        - Docs / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What friction or gap are you hitting?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should change? Keep it concrete.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy fit
+      options:
+        - label: This does not require a Kinetic cloud account or sending vault contents to a third-party AI
+          required: true

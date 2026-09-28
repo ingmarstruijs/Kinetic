@@ -1,6 +1,6 @@
-# Smart Features — Reminders, Family Send & AI Suggestions
+# Smart Features — Reminders, Family Send & Heuristics
 
-This document describes the smart reminder chips, reminder time defaults, notes list privacy, connection-aware task delegation, and the on-device suggestion engine in the link app.
+This document describes the smart reminder chips, reminder time defaults, notes list privacy, connection-aware task delegation, and the on-device **heuristic** suggestion engine in the link app.
 
 ## Notes list
 

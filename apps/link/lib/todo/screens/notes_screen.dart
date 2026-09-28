@@ -11,6 +11,8 @@ import '../services/note_repository.dart';
 import '../services/todo_repository.dart';
 import '../widgets/category_sheet.dart';
 import '../widgets/note_quick_add_bar.dart';
+import '../category_icons.dart';
+import '../smart_sort.dart';
 import 'note_editor_screen.dart';
 
 /// Screen that displays all notes in a scrollable list with create/edit/delete.
@@ -434,7 +436,52 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
     );
     if (next == null || next.isEmpty || next == category || !mounted) return;
     await widget.repo.renameNoteCategory(from: category, to: next);
+    await widget.settingsRepo?.renameCategoryIcon(category, next);
     final updated = [for (final c in _categoryOrder) c == category ? next : c];
+    setState(() => _categoryOrder = updated);
+    _saveCategoryOrder(updated);
+  }
+
+  Future<void> _setCategoryIcon(String? category) async {
+    if (category == null || category.isEmpty) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted || widget.settingsRepo == null) return;
+    final icons = await widget.settingsRepo!.loadCategoryIcons();
+    if (!mounted) return;
+    final picked = await showCategoryIconPicker(
+      context: context,
+      currentIconKey: icons[category],
+    );
+    if (picked == null || !mounted) return;
+    await widget.settingsRepo!.setCategoryIcon(category, picked);
+  }
+
+  Future<void> _removeCategory(String? category) async {
+    if (category == null || category.isEmpty) return;
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.categoryRemoveTitle),
+        content: Text(l10n.categoryRemoveBody(category)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.categoryRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await widget.repo.renameNoteCategory(from: category, to: '');
+    await widget.settingsRepo?.setCategoryIcon(category, null);
+    final updated = [for (final c in _categoryOrder) if (c != category) c];
     setState(() => _categoryOrder = updated);
     _saveCategoryOrder(updated);
   }
@@ -443,6 +490,7 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
     required List<_NoteListItem> flatItems,
     required List<PersonalNote> sectionNotes,
     required bool isShared,
+    required bool smartSort,
   }) {
     if (sectionNotes.isEmpty) return;
 
@@ -451,15 +499,25 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
       groups.putIfAbsent(n.category, () => []).add(n);
     }
     for (final list in groups.values) {
-      list.sort((a, b) {
-        final byOrder = a.sortOrder.compareTo(b.sortOrder);
-        if (byOrder != 0) return byOrder;
-        return b.createdAt.compareTo(a.createdAt);
-      });
+      if (smartSort) {
+        list.sort(compareNotesSmart);
+      } else {
+        list.sort((a, b) {
+          final byOrder = a.sortOrder.compareTo(b.sortOrder);
+          if (byOrder != 0) return byOrder;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+      }
     }
 
-    final merged = _mergeOrder(groups.keys);
-    final groupKeys = merged.where(groups.containsKey).toList();
+    final List<String?> groupKeys;
+    if (smartSort) {
+      groupKeys = groups.keys.toList()
+        ..sort((a, b) => compareNoteCategoriesSmart(a, b, groups));
+    } else {
+      final merged = _mergeOrder(groups.keys);
+      groupKeys = merged.where(groups.containsKey).toList();
+    }
     final showCatHeaders =
         groupKeys.length > 1 ||
         (groupKeys.isNotEmpty && groupKeys.first != null);
@@ -482,19 +540,51 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
 
   @override
   Widget build(BuildContext context) {
+    final smartStream =
+        widget.settingsRepo?.watchSmartSortEnabled() ?? Stream.value(false);
+    final iconsStream =
+        widget.settingsRepo?.watchCategoryIcons() ??
+        Stream.value(<String, String>{});
+
+    return StreamBuilder<bool>(
+      stream: smartStream,
+      builder: (context, smartSnap) {
+        final smartSort = smartSnap.data ?? false;
+        return StreamBuilder<Map<String, String>>(
+          stream: iconsStream,
+          builder: (context, iconsSnap) {
+            final categoryIcons = iconsSnap.data ?? const <String, String>{};
+            return _buildList(
+              context,
+              smartSort: smartSort,
+              categoryIcons: categoryIcons,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildList(
+    BuildContext context, {
+    required bool smartSort,
+    required Map<String, String> categoryIcons,
+  }) {
     final l10n = AppLocalizations.of(context);
     final privateNotes = widget.notes.where((n) => !n.isShared).toList();
     final sharedNotes = widget.notes.where((n) => n.isShared).toList();
     final showShareHeaders =
         widget.hasOtherLinkMembers || sharedNotes.isNotEmpty;
 
-    final allCats = widget.notes.map((n) => n.category).toSet();
-    final merged = _mergeOrder(allCats);
-    if (merged.length != _categoryOrder.length ||
-        !merged.every(_categoryOrder.contains)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _categoryOrder = merged);
-      });
+    if (!smartSort) {
+      final allCats = widget.notes.map((n) => n.category).toSet();
+      final merged = _mergeOrder(allCats);
+      if (merged.length != _categoryOrder.length ||
+          !merged.every(_categoryOrder.contains)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) setState(() => _categoryOrder = merged);
+        });
+      }
     }
 
     final flatItems = <_NoteListItem>[];
@@ -505,6 +595,7 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
           flatItems: flatItems,
           sectionNotes: privateNotes,
           isShared: false,
+          smartSort: smartSort,
         );
       }
       if (sharedNotes.isNotEmpty) {
@@ -513,6 +604,7 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
           flatItems: flatItems,
           sectionNotes: sharedNotes,
           isShared: true,
+          smartSort: smartSort,
         );
       }
     } else {
@@ -520,6 +612,61 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
         flatItems: flatItems,
         sectionNotes: privateNotes,
         isShared: false,
+        smartSort: smartSort,
+      );
+    }
+
+    Widget itemBuilder(BuildContext context, int index) {
+      final item = flatItems[index];
+
+      if (item is _NoteShareHeaderItem) {
+        return _NoteShareSectionHeader(
+          key: ValueKey(item.isShared ? 'share_shared' : 'share_private'),
+          label: item.isShared ? l10n.notesTabShared : l10n.notesTabPrivate,
+        );
+      }
+
+      if (item is _NoteCategoryHeaderItem) {
+        return _NoteCategoryHeader(
+          key: ValueKey(
+            'cat_${item.isShared ? 's' : 'p'}_${item.category ?? '_'}',
+          ),
+          label: item.category ?? l10n.commonNoCategory,
+          icon: CategoryIconCatalog.resolve(
+            item.category == null ? null : categoryIcons[item.category],
+            isNone: item.category == null,
+          ),
+          count: item.count,
+          index: index,
+          canRename: item.category != null,
+          reorderable: !smartSort,
+          onRename: () => _renameCategory(item.category),
+          onSetIcon: () => _setCategoryIcon(item.category),
+          onRemove: () => _removeCategory(item.category),
+        );
+      }
+
+      final noteItem = item as _NoteDataItem;
+      return Padding(
+        key: ValueKey(noteItem.note.id),
+        padding: const EdgeInsets.only(bottom: 10),
+        child: _NoteCard(
+          note: noteItem.note,
+          repo: widget.repo,
+          myLinkId: widget.myLinkId,
+          otherLinkMembers: widget.otherLinkMembers,
+          dragIndex: smartSort ? null : index,
+          categoryIcons: categoryIcons,
+          onTap: () => widget.onEditNote(noteItem.note),
+        ),
+      );
+    }
+
+    if (smartSort) {
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+        itemCount: flatItems.length,
+        itemBuilder: itemBuilder,
       );
     }
 
@@ -527,43 +674,7 @@ class _NoteGroupedListState extends State<_NoteGroupedList> {
       buildDefaultDragHandles: false,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
       itemCount: flatItems.length,
-      itemBuilder: (context, index) {
-        final item = flatItems[index];
-
-        if (item is _NoteShareHeaderItem) {
-          return _NoteShareSectionHeader(
-            key: ValueKey(item.isShared ? 'share_shared' : 'share_private'),
-            label: item.isShared ? l10n.notesTabShared : l10n.notesTabPrivate,
-          );
-        }
-
-        if (item is _NoteCategoryHeaderItem) {
-          return _NoteCategoryHeader(
-            key: ValueKey(
-              'cat_${item.isShared ? 's' : 'p'}_${item.category ?? '_'}',
-            ),
-            label: item.category ?? l10n.commonNoCategory,
-            count: item.count,
-            index: index,
-            canRename: item.category != null,
-            onRename: () => _renameCategory(item.category),
-          );
-        }
-
-        final noteItem = item as _NoteDataItem;
-        return Padding(
-          key: ValueKey(noteItem.note.id),
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _NoteCard(
-            note: noteItem.note,
-            repo: widget.repo,
-            myLinkId: widget.myLinkId,
-            otherLinkMembers: widget.otherLinkMembers,
-            dragIndex: index,
-            onTap: () => widget.onEditNote(noteItem.note),
-          ),
-        );
-      },
+      itemBuilder: itemBuilder,
       onReorder: (oldIndex, newIndex) {
         _onReorder(flatItems, oldIndex, newIndex);
       },
@@ -653,18 +764,26 @@ class _NoteShareSectionHeader extends StatelessWidget {
 
 class _NoteCategoryHeader extends StatelessWidget {
   final String label;
+  final IconData icon;
   final int count;
   final int index;
   final bool canRename;
+  final bool reorderable;
   final VoidCallback onRename;
+  final VoidCallback onSetIcon;
+  final VoidCallback onRemove;
 
   const _NoteCategoryHeader({
     super.key,
     required this.label,
+    required this.icon,
     required this.count,
     required this.index,
     required this.canRename,
+    required this.reorderable,
     required this.onRename,
+    required this.onSetIcon,
+    required this.onRemove,
   });
 
   @override
@@ -677,6 +796,8 @@ class _NoteCategoryHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
           Expanded(
             child: Row(
               children: [
@@ -728,28 +849,39 @@ class _NoteCategoryHeader extends StatelessWidget {
                     ),
                     onSelected: (value) {
                       if (value == 'rename') onRename();
+                      if (value == 'icon') onSetIcon();
+                      if (value == 'remove') onRemove();
                     },
                     itemBuilder: (ctx) => [
                       PopupMenuItem(
                         value: 'rename',
                         child: Text(l10n.categoryRename),
                       ),
+                      PopupMenuItem(
+                        value: 'icon',
+                        child: Text(l10n.categorySetIcon),
+                      ),
+                      PopupMenuItem(
+                        value: 'remove',
+                        child: Text(l10n.categoryRemove),
+                      ),
                     ],
                   )
                 : null,
           ),
-          ReorderableDragStartListener(
-            index: index,
-            child: SizedBox(
-              width: trailingSlot,
-              height: trailingSlot,
-              child: Icon(
-                Icons.drag_indicator,
-                size: 18,
-                color: scheme.outlineVariant,
+          if (reorderable)
+            ReorderableDragStartListener(
+              index: index,
+              child: SizedBox(
+                width: trailingSlot,
+                height: trailingSlot,
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 18,
+                  color: scheme.outlineVariant,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -761,7 +893,8 @@ class _NoteCard extends StatelessWidget {
   final NoteRepository repo;
   final String? myLinkId;
   final List<({String id, String name})> otherLinkMembers;
-  final int dragIndex;
+  final int? dragIndex;
+  final Map<String, String> categoryIcons;
   final VoidCallback onTap;
 
   const _NoteCard({
@@ -770,6 +903,7 @@ class _NoteCard extends StatelessWidget {
     required this.myLinkId,
     required this.otherLinkMembers,
     required this.dragIndex,
+    this.categoryIcons = const {},
     required this.onTap,
   });
 
@@ -815,17 +949,18 @@ class _NoteCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  ReorderableDragStartListener(
-                    index: dragIndex,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 4, top: 2),
-                      child: Icon(
-                        Icons.drag_indicator,
-                        size: 18,
-                        color: scheme.outlineVariant,
+                  if (dragIndex != null)
+                    ReorderableDragStartListener(
+                      index: dragIndex!,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 4, top: 2),
+                        child: Icon(
+                          Icons.drag_indicator,
+                          size: 18,
+                          color: scheme.outlineVariant,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: 6),
@@ -885,6 +1020,7 @@ class _NoteCard extends StatelessWidget {
       context: context,
       existingCategories: categories,
       currentCategory: note.category,
+      categoryIcons: categoryIcons,
     );
     if (result != null) {
       await repo.updateNoteCategory(note.id, result.isEmpty ? null : result);

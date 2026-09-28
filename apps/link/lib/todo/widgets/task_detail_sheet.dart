@@ -685,7 +685,10 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
                   border: InputBorder.none,
                 ),
                 textCapitalization: TextCapitalization.sentences,
-                onSubmitted: (_) => _save(),
+                minLines: 1,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.newline,
               ),
             ),
 

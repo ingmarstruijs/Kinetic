@@ -34,13 +34,37 @@ Future<void> _playCompletionFeedback() async {
   }
 }
 
+/// Marks [taskId] done and offers SnackBar undo (mirrors notes restore clarity).
+Future<void> completeTaskWithUndo({
+  required BuildContext context,
+  required TodoRepository repo,
+  required String taskId,
+}) async {
+  await repo.completeTask(taskId);
+  await _playCompletionFeedback();
+  if (!context.mounted) return;
+  final l10n = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.clearSnackBars();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(l10n.tasksMarkedDone),
+      action: SnackBarAction(
+        label: l10n.commonUndo,
+        onPressed: () {
+          repo.uncompleteTask(taskId);
+        },
+      ),
+    ),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // TaskTile — a single personal task row.
 //
-// Swipe right  → complete / uncomplete
-// Swipe left   → delete (with confirmation snackbar + undo)
+// Swipe right  → complete / uncomplete (with undo SnackBar when completing)
 // Tap          → open TaskDetailSheet
-// Long-press   → context menu (flag, move list)
+// Long-press   → category picker
 // ---------------------------------------------------------------------------
 
 class TaskTile extends StatelessWidget {
@@ -54,6 +78,7 @@ class TaskTile extends StatelessWidget {
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+  final Map<String, String> categoryIcons;
 
   const TaskTile({
     super.key,
@@ -67,6 +92,7 @@ class TaskTile extends StatelessWidget {
     this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
+    this.categoryIcons = const {},
   });
 
   @override
@@ -87,8 +113,11 @@ class TaskTile extends StatelessWidget {
         if (task.isCompleted) {
           await repo.uncompleteTask(task.id);
         } else {
-          await repo.completeTask(task.id);
-          await _playCompletionFeedback();
+          await completeTaskWithUndo(
+            context: context,
+            repo: repo,
+            taskId: task.id,
+          );
         }
         return false;
       },
@@ -103,6 +132,7 @@ class TaskTile extends StatelessWidget {
         otherLinkMembers: otherLinkMembers,
         configRepo: configRepo,
         pullPresence: pullPresence,
+        categoryIcons: categoryIcons,
       ),
     );
   }
@@ -119,6 +149,7 @@ class _TaskTileContent extends StatefulWidget {
   final List<({String id, String name})> otherLinkMembers;
   final WebDavConfigRepository? configRepo;
   final Future<List<PresenceInfo>> Function()? pullPresence;
+  final Map<String, String> categoryIcons;
 
   const _TaskTileContent({
     required this.task,
@@ -131,6 +162,7 @@ class _TaskTileContent extends StatefulWidget {
     this.otherLinkMembers = const [],
     this.configRepo,
     this.pullPresence,
+    this.categoryIcons = const {},
   });
 
   @override
@@ -184,8 +216,11 @@ class _TaskTileContentState extends State<_TaskTileContent> {
     if (widget.task.isCompleted) {
       await widget.repo.uncompleteTask(widget.task.id);
     } else {
-      await widget.repo.completeTask(widget.task.id);
-      await _playCompletionFeedback();
+      await completeTaskWithUndo(
+        context: context,
+        repo: widget.repo,
+        taskId: widget.task.id,
+      );
     }
   }
 
@@ -348,11 +383,6 @@ class _TaskTileContentState extends State<_TaskTileContent> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (widget.task.isFlagged)
-                    const Padding(
-                      padding: EdgeInsets.only(left: 6),
-                      child: Icon(Icons.flag, size: 16, color: kColorGold),
-                    ),
                   if (widget.task.recurrenceRule != null)
                     const Padding(
                       padding: EdgeInsets.only(left: 4),
@@ -472,6 +502,7 @@ class _TaskTileContentState extends State<_TaskTileContent> {
       context: context,
       existingCategories: categories,
       currentCategory: widget.task.customCategory,
+      categoryIcons: widget.categoryIcons,
     );
     if (result != null) {
       await widget.repo.updateTaskCustomCategory(

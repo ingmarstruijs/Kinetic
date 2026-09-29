@@ -9,32 +9,23 @@ IssueTracker: https://github.com/ingmarstruijs/Kinetic/issues
 
 Name: Kinetic Kids
 AutoName: Kinetic Kids
-Description: |-
-  Kinetic Kids shows chores assigned from Kinetic Link.
-  Children mark tasks complete and earn XP. There is no account and no
-  telemetry. Local task data is stored in an encrypted SQLite database.
-
-  Enrollment uses a family QR from the link app; the WebDAV password is
-  typed on the kids device (it is not embedded in the QR). Assigned tasks
-  sync from your own HTTPS WebDAV server and are encrypted with the family key.
-
-  Requires camera permission only for enrollment QR scanning.
-  WebDAV sync requires HTTPS.
-  Privacy policy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 
 RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.4.1
-    versionCode: 11
-    commit: 73c877299d2c5f0cc17fa0a93804621949d3a960
+  - versionName: 0.4.2
+    versionCode: 121
+    commit: REPLACE_WITH_V0_4_2_FULL_SHA
     subdir: apps/kids
-    output: build/app/outputs/flutter-apk/app-release.apk
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
     srclibs:
-      - flutter@3.44.1
+      - flutter@stable
     prebuild:
       - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
       - flutter --version
@@ -42,9 +33,51 @@ Builds:
       - dart pub global run melos bootstrap
     build:
       - export PATH="$$flutter$$/bin:$PATH"
-      - flutter build apk --release --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+      - flutter build apk --release --split-per-abi --target-platform=android-arm --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+
+  - versionName: 0.4.2
+    versionCode: 122
+    commit: REPLACE_WITH_V0_4_2_FULL_SHA
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-arm64 --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+
+  - versionName: 0.4.2
+    versionCode: 123
+    commit: REPLACE_WITH_V0_4_2_FULL_SHA
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-x64 --build-name=$$VERSION$$ --build-number=$$VERCODE$$
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.4.1
-CurrentVersionCode: 11
+CurrentVersion: 0.4.2
+CurrentVersionCode: 123

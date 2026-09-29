@@ -15,7 +15,11 @@ Agents: follow this file end-to-end. F-Droid details live in
 
 1. **Bump PR** (`release/X.Y.Z`) → merge to `main` after CI  
    - `apps/link/pubspec.yaml` + `apps/kids/pubspec.yaml` → `version: X.Y.Z+N`  
-   - Fastlane `changelogs/N.txt` under each app (N = versionCode)  
+   - Move `## [Unreleased]` notes into `## [X.Y.Z] - YYYY-MM-DD` in both  
+     [`apps/link/CHANGELOG.md`](../apps/link/CHANGELOG.md) and  
+     [`apps/kids/CHANGELOG.md`](../apps/kids/CHANGELOG.md) (include `### Store`)  
+   - Run `./tool/sync_fastlane_changelogs.sh` and commit generated  
+     `apps/*/fastlane/.../changelogs/{N,N*10+1,N*10+2,N*10+3}.txt`  
    - Keep `dependenciesInfo { includeInApk = false }` in both
      `android/app/build.gradle.kts` (F-Droid `check apk`)  
    - Draft `metadata/*.yml` updates (version fields; `commit:` filled **after** tag)
@@ -32,7 +36,10 @@ Agents: follow this file end-to-end. F-Droid details live in
 
 1. Open a PR (`release/x.y.z`) that bumps:
    - `apps/link/pubspec.yaml` and `apps/kids/pubspec.yaml` (`version: X.Y.Z+N`)
-   - Fastlane changelogs: `apps/*/fastlane/metadata/android/en-US/changelogs/N.txt`
+   - Per-app changelogs: `apps/link/CHANGELOG.md` and `apps/kids/CHANGELOG.md`
+     (`### Store` = Fastlane source; Added/Changed/Fixed for GitHub)
+   - Run `./tool/sync_fastlane_changelogs.sh` (do not hand-edit Fastlane
+     `changelogs/*.txt`)
    - `metadata/*.yml` (`versionName`, `versionCode`, `CurrentVersion*`; leave
      `commit:` as a placeholder until the tag exists, or update in a tiny
      follow-up commit on `main`)
@@ -57,7 +64,10 @@ Each tag yields two releases:
 - `vX.Y.Z-kids` — `kinetic-kids-X.Y.Z.apk`
 - `vX.Y.Z-link` — `kinetic-link-X.Y.Z.apk`
 
-Each includes `sha256.txt`.
+Each includes `sha256.txt`. Release notes are the matching `## [X.Y.Z]` section
+from that app’s `CHANGELOG.md`, plus checksum and signing fingerprint. The
+release job fails if the section, `### Store`, or synced Fastlane files are
+missing.
 
 ## F-Droid
 

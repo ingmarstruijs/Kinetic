@@ -295,23 +295,47 @@ jobs:
           echo "KIDS_CERT_SHA256=$CERT_FP" >> $GITHUB_ENV
           echo "LINK_CERT_SHA256=$CERT_FP" >> $GITHUB_ENV
 
+      - name: Verify Fastlane changelogs match CHANGELOG Store
+        run: |
+          chmod +x tool/sync_fastlane_changelogs.sh
+          ./tool/sync_fastlane_changelogs.sh --check
+
+      - name: Build GitHub release notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          chmod +x tool/sync_fastlane_changelogs.sh
+          for app in kids link; do
+            {
+              ./tool/sync_fastlane_changelogs.sh --extract-section "$app" "$VERSION"
+              echo
+              echo "## SHA-256 Checksum"
+              echo "Verify the integrity of the downloaded APK:"
+              echo '```'
+              if [[ "$app" == "kids" ]]; then
+                echo "${{ env.KIDS_SHA256 }}  kinetic-kids-${VERSION}.apk"
+              else
+                echo "${{ env.LINK_SHA256 }}  kinetic-link-${VERSION}.apk"
+              fi
+              echo '```'
+              echo
+              echo "## Certificate Fingerprint (AppVerifier)"
+              echo "SHA-256 fingerprint of the signing certificate:"
+              echo '```'
+              if [[ "$app" == "kids" ]]; then
+                echo "${{ env.KIDS_CERT_SHA256 }}"
+              else
+                echo "${{ env.LINK_CERT_SHA256 }}"
+              fi
+              echo '```'
+            } > "release-notes-${app}.md"
+          done
+
       - name: Create Kinetic Kids Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}-kids
           name: Kinetic Kids ${{ github.ref_name }}
-          body: |
-            ## SHA-256 Checksum
-            Verify the integrity of the downloaded APK:
-            ```
-            ${{ env.KIDS_SHA256 }}  kinetic-kids-${{ steps.version.outputs.version }}.apk
-            ```
-
-            ## Certificate Fingerprint (AppVerifier)
-            SHA-256 fingerprint of the signing certificate:
-            ```
-            ${{ env.KIDS_CERT_SHA256 }}
-            ```
+          body_path: release-notes-kids.md
           files: |
             ./artifacts/kids/kinetic-kids-${{ steps.version.outputs.version }}.apk
             ./artifacts/kids/sha256.txt
@@ -323,18 +347,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}-link
           name: Kinetic Link ${{ github.ref_name }}
-          body: |
-            ## SHA-256 Checksum
-            Verify the integrity of the downloaded APK:
-            ```
-            ${{ env.LINK_SHA256 }}  kinetic-link-${{ steps.version.outputs.version }}.apk
-            ```
-
-            ## Certificate Fingerprint (AppVerifier)
-            SHA-256 fingerprint of the signing certificate:
-            ```
-            ${{ env.LINK_CERT_SHA256 }}
-            ```
+          body_path: release-notes-link.md
           files: |
             ./artifacts/link/kinetic-link-${{ steps.version.outputs.version }}.apk
             ./artifacts/link/sha256.txt

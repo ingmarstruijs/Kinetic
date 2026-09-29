@@ -33,7 +33,8 @@ Builds:
       - dart pub global run melos bootstrap
     build:
       - export PATH="$$flutter$$/bin:$PATH"
-      - flutter build apk --release --split-per-abi --target-platform=android-arm --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+      - flutter build apk --release --split-per-abi --target-platform=android-arm
+        --build-name=$$VERSION$$ --build-number=$$VERCODE$$
 
   - versionName: 0.4.2
     versionCode: 122
@@ -54,7 +55,8 @@ Builds:
       - dart pub global run melos bootstrap
     build:
       - export PATH="$$flutter$$/bin:$PATH"
-      - flutter build apk --release --split-per-abi --target-platform=android-arm64 --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+      - flutter build apk --release --split-per-abi --target-platform=android-arm64
+        --build-name=$$VERSION$$ --build-number=$$VERCODE$$
 
   - versionName: 0.4.2
     versionCode: 123
@@ -75,7 +77,8 @@ Builds:
       - dart pub global run melos bootstrap
     build:
       - export PATH="$$flutter$$/bin:$PATH"
-      - flutter build apk --release --split-per-abi --target-platform=android-x64 --build-name=$$VERSION$$ --build-number=$$VERCODE$$
+      - flutter build apk --release --split-per-abi --target-platform=android-x64
+        --build-name=$$VERSION$$ --build-number=$$VERCODE$$
 
 AutoUpdateMode: None
 UpdateCheckMode: None

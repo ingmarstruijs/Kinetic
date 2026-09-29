@@ -1,4 +1,4 @@
-Categories:
+ategories:
   - Note
   - Task
 License: Apache-2.0
@@ -16,7 +16,7 @@ Repo: https://github.com/ingmarstruijs/Kinetic.git
 Builds:
   - versionName: 0.4.2
     versionCode: 121
-    commit: e3290836eac0aba9c91b12259ccbc558270749f1
+    commit: 22d7ae2d9ef08d5c71887fa0f6503fa05e19634b
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
     srclibs:
@@ -37,7 +37,7 @@ Builds:
 
   - versionName: 0.4.2
     versionCode: 122
-    commit: e3290836eac0aba9c91b12259ccbc558270749f1
+    commit: 22d7ae2d9ef08d5c71887fa0f6503fa05e19634b
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
     srclibs:
@@ -58,7 +58,7 @@ Builds:
 
   - versionName: 0.4.2
     versionCode: 123
-    commit: e3290836eac0aba9c91b12259ccbc558270749f1
+    commit: 22d7ae2d9ef08d5c71887fa0f6503fa05e19634b
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-x86_64-release.apk
     srclibs:
@@ -81,4 +81,5 @@ AutoUpdateMode: None
 UpdateCheckMode: None
 CurrentVersion: 0.4.2
 CurrentVersionCode: 123
+
 

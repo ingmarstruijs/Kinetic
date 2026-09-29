@@ -1,0 +1,1 @@
+F-Droid review follow-up: extract Flutter from .flutter-version, drop YAML Description (Fastlane only), ship ABI-split APKs.

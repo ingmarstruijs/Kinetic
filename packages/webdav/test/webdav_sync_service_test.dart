@@ -35,7 +35,8 @@ void main() {
     late _SequenceHttpClient httpClient;
 
     setUp(() {
-      httpClient = _SequenceHttpClient([409, 201, 201]);
+      // PUT 409 → MKCOL /kinetic, /kinetic/shared, /kinetic/shared/xp-reset → PUT
+      httpClient = _SequenceHttpClient([409, 201, 201, 201, 201]);
       final davClient = WebDavClient(
         baseUrl: 'https://dav.example.com',
         username: 'alice',
@@ -55,15 +56,23 @@ void main() {
       );
     });
 
-    test('creates collection and retries when first PUT returns 409', () async {
+    test('creates ancestor collections and retries when first PUT returns 409',
+        () async {
       await service.pushXpReset('kid-123', DateTime.utc(2026, 6, 11, 12));
 
-      expect(httpClient.methods, ['PUT', 'MKCOL', 'PUT']);
+      expect(
+        httpClient.methods,
+        ['PUT', 'MKCOL', 'MKCOL', 'MKCOL', 'PUT'],
+      );
       expect(httpClient.paths.first, '/kinetic/shared/xp-reset/kid-123.json');
       expect(httpClient.paths.last, '/kinetic/shared/xp-reset/kid-123.json');
       expect(
-        httpClient.paths[1],
-        '/kinetic/shared/xp-reset/',
+        httpClient.paths.sublist(1, 4),
+        [
+          '/kinetic/',
+          '/kinetic/shared/',
+          '/kinetic/shared/xp-reset/',
+        ],
       );
     });
 
@@ -91,8 +100,8 @@ void main() {
       );
     });
 
-    test('pushGoal creates collection on 409', () async {
-      httpClient = _SequenceHttpClient([409, 201, 201]);
+    test('pushGoal creates ancestor collections on 409', () async {
+      httpClient = _SequenceHttpClient([409, 201, 201, 201, 201]);
       final davClient = WebDavClient(
         baseUrl: 'https://dav.example.com',
         username: 'alice',
@@ -120,8 +129,49 @@ void main() {
         ),
       );
 
-      expect(httpClient.methods, ['PUT', 'MKCOL', 'PUT']);
+      expect(
+        httpClient.methods,
+        ['PUT', 'MKCOL', 'MKCOL', 'MKCOL', 'PUT'],
+      );
       expect(httpClient.paths.first, '/kinetic/shared/goals/kid-1.json');
+    });
+
+    test('pushSharedTask creates ancestor collections on 409', () async {
+      httpClient = _SequenceHttpClient([409, 201, 201, 201, 201]);
+      final davClient = WebDavClient(
+        baseUrl: 'https://dav.example.com',
+        username: 'alice',
+        password: 'secret',
+        httpClient: httpClient,
+      );
+      service = WebDavSyncService(
+        client: davClient,
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'alice',
+          password: 'secret',
+          linkId: 'link-1',
+          personalKeyBytes: KineticEncryption.generatePersonalKey(),
+          familyKeyBytes: KineticEncryption.generateFamilyKey(),
+        ),
+      );
+
+      final now = DateTime.utc(2026, 6, 11);
+      await service.pushSharedTask(
+        ICalTask(
+          uid: 'task-1',
+          summary: 'Chore',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      expect(
+        httpClient.methods,
+        ['PUT', 'MKCOL', 'MKCOL', 'MKCOL', 'PUT'],
+      );
+      expect(httpClient.paths.first, '/kinetic/shared/tasks/task-1.ics');
     });
   });
 

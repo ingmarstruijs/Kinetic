@@ -154,14 +154,14 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withAlpha(20),
+                  color: errorColor.withAlpha(30),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withAlpha(80)),
+                  border: Border.all(color: errorColor.withAlpha(100)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.sync_problem, color: Colors.red, size: 18),
+                    Icon(Icons.block, color: errorColor, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -176,7 +176,7 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
           ],
         ),
         actions: [
-          if (!urlMatches)
+          if (!urlMatches || alreadyPaired)
             FilledButton(
               onPressed: () => Navigator.of(ctx).pop(false),
               child: Text(l10n.commonOk),
@@ -197,8 +197,8 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
 
     if (!mounted) return;
 
-    // Same WebDAV server is required for family sync — never import on mismatch.
-    if (confirmed == true && urlMatches) {
+    // Same WebDAV server required; never import when this device already has a key.
+    if (confirmed == true && urlMatches && !alreadyPaired) {
       await _importKey(payload.familyKey, entropy: payload.entropy);
     } else {
       setState(() => _processing = false);

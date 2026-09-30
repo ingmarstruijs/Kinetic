@@ -9,12 +9,14 @@ class KidsTaskDetailScreen extends StatefulWidget {
   final KidsTaskRepository repository;
   final String taskId;
   final Future<void> Function()? onRequestComplete;
+  final bool xpEnabled;
 
   const KidsTaskDetailScreen({
     super.key,
     required this.repository,
     required this.taskId,
     this.onRequestComplete,
+    this.xpEnabled = true,
   });
 
   @override
@@ -215,31 +217,34 @@ class _KidsTaskDetailScreenState extends State<KidsTaskDetailScreen> {
                 const SizedBox(height: 12),
 
                 // XP
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Icon(Icons.star, color: scheme.primaryContainer),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.experience,
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                            Text(
-                              '${task.xpReward} XP',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ],
+                if (widget.xpEnabled) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.star, color: scheme.primaryContainer),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.experience,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                              Text(
+                                '${task.xpReward} XP',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                ] else
+                  const SizedBox(height: 12),
 
                 // Notes section
                 if (task.notes != null && task.notes!.isNotEmpty) ...[

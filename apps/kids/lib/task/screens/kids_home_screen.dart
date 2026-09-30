@@ -18,6 +18,8 @@ class KidsHomeScreen extends StatefulWidget {
   final VoidCallback? onLeaveFamily;
   final DateTime? xpResetAt;
   final KidGoal? goal;
+  /// When false, hide the XP/goals hero and per-task XP chips (adult preference).
+  final bool xpEnabled;
   final VoidCallback? onOpenDemoScenarios;
   final VoidCallback? onOpenSettings;
 
@@ -29,6 +31,7 @@ class KidsHomeScreen extends StatefulWidget {
     this.onLeaveFamily,
     this.xpResetAt,
     this.goal,
+    this.xpEnabled = true,
     this.onOpenDemoScenarios,
     this.onOpenSettings,
   });
@@ -213,15 +216,16 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Material(
-                color: scheme.surface,
-                elevation: 1,
-                shadowColor: scheme.shadow.withValues(alpha: 0.12),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                              child: _buildXpHero(),
+              if (widget.xpEnabled)
+                Material(
+                  color: scheme.surface,
+                  elevation: 1,
+                  shadowColor: scheme.shadow.withValues(alpha: 0.12),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    child: _buildXpHero(),
+                  ),
                 ),
-              ),
               Expanded(
                 child: !hasVisibleTasks
                     ? Center(
@@ -423,28 +427,30 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.star_rounded, size: 14, color: scheme.primary),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${task.xpReward} XP',
-                    style: TextStyle(
-                      color: scheme.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
+            if (widget.xpEnabled)
+              Container(
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.star_rounded, size: 14, color: scheme.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${task.xpReward} XP',
+                      style: TextStyle(
+                        color: scheme.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             Icon(Icons.chevron_right, color: scheme.outline),
           ],
         ),
@@ -455,6 +461,7 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
               builder: (context) => KidsTaskDetailScreen(
                 repository: _taskRepository,
                 taskId: task.id,
+                xpEnabled: widget.xpEnabled,
                 onRequestComplete: () => _requestComplete(task),
               ),
             ),

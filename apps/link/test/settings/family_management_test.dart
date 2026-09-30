@@ -26,7 +26,7 @@ void main() {
   });
 
   group('Settings family kids participation', () {
-    testWidgets('shows kids participation switch on Settings family section', (
+    testWidgets('hides kids participation when only local kids are enrolled', (
       tester,
     ) async {
       await tester.runAsync(() async {
@@ -67,13 +67,64 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 50));
         await tester.pumpAndSettle();
 
-        expect(find.text('Kids tasks on this device'), findsOneWidget);
-        expect(find.byType(SwitchListTile), findsWidgets);
+        expect(find.text('Kids tasks on this device'), findsNothing);
 
         await tester.pumpWidget(const SizedBox.shrink());
         await db.close();
       });
     });
+
+    testWidgets(
+      'shows kids participation when kids come with another adult',
+      (tester) async {
+        await tester.runAsync(() async {
+          final db = createTestDatabase();
+          final store = InMemoryKeyValueStore();
+          final configRepo = WebDavConfigRepository(store);
+          await configRepo.save(
+            SyncConfig(
+              serverUrl: 'https://dav.example.com',
+              username: 'user',
+              password: 'pass',
+              linkId: 'link-1',
+              personalKeyBytes: Uint8List.fromList(List.filled(32, 1)),
+              familyKeyBytes: Uint8List.fromList(List.filled(32, 2)),
+            ),
+          );
+          await configRepo.saveKidsParticipation(true);
+          await configRepo.setHasOtherLinkMembers(true);
+          await configRepo.restoreEnrolledKids([
+            EnrolledKid(
+              id: 'kid-1',
+              name: 'Mees',
+              enrolledAt: DateTime.utc(2026, 1, 1),
+            ),
+          ]);
+
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('en'),
+              home: SettingsScreen(
+                db: db,
+                configRepo: configRepo,
+                settingsRepo: SettingsRepository(db: db),
+              ),
+            ),
+          );
+          await tester.pump();
+          await Future<void>.delayed(const Duration(milliseconds: 50));
+          await tester.pumpAndSettle();
+
+          expect(find.text('Kids tasks on this device'), findsOneWidget);
+          expect(find.byType(SwitchListTile), findsWidgets);
+
+          await tester.pumpWidget(const SizedBox.shrink());
+          await db.close();
+        });
+      },
+    );
 
     testWidgets('hides kids participation switch when no kids enrolled', (
       tester,
@@ -133,7 +184,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Kids tasks on this device'), findsNothing);
-        expect(find.text('Link kids app'), findsOneWidget);
+        expect(find.text('Invite kid'), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox.shrink());
       });

@@ -13,6 +13,7 @@ const _kPersonalKey = 'kinetic_webdav_personal_key';
 const _kFamilyKey = 'kinetic_webdav_family_key';
 const _kKidId = 'kinetic_kid_id';
 const _kLastSyncAt = 'kinetic_kids_last_sync_at';
+const _kXpEnabled = 'kinetic_xp_enabled';
 
 /// Loads [SyncConfig] from [SecureKeyValueStore].
 ///
@@ -99,6 +100,17 @@ class WebDavConfigRepository {
         value: at.toUtc().toIso8601String(),
       );
 
+  /// Whether adults still want XP/goals shown for this kid (roster mirror).
+  /// Defaults to true until the first roster pull says otherwise.
+  Future<bool> loadXpEnabled() async {
+    final val = await _store.read(key: _kXpEnabled);
+    if (val == null) return true;
+    return val == '1';
+  }
+
+  Future<void> saveXpEnabled(bool enabled) =>
+      _store.write(key: _kXpEnabled, value: enabled ? '1' : '0');
+
   /// Removes all enrollment credentials, returning the app to unenrolled state.
   Future<void> clearEnrollment() async {
     await _store.delete(key: _kServerUrl);
@@ -108,6 +120,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kFamilyKey);
     await _store.delete(key: _kKidId);
     await _store.delete(key: _kLastSyncAt);
+    await _store.delete(key: _kXpEnabled);
   }
 
   Future<String> _generateAndStorePersonalKey() async {

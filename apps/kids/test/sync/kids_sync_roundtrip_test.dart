@@ -191,6 +191,37 @@ void main() {
       expect(received!.targetXp, 100);
     });
 
+    test('roster xpEnabled false invokes onXpEnabledReceived', () async {
+      bool? received;
+      final link = _makeLinkService(storage);
+      final now = DateTime.now().toUtc();
+      await link.pushRoster(
+        FamilyRoster(
+          linkMembers: const [],
+          kids: [
+            FamilyKidMember(
+              id: kidId,
+              name: 'Mees',
+              enrolledAt: now,
+              xpEnabled: false,
+              updatedAt: now,
+            ),
+          ],
+          updatedAt: now,
+        ),
+      );
+
+      final kids = makeKidsOrchestrator(
+        createTestDatabase(),
+        storage,
+        myKidId: kidId,
+        onXpEnabledReceived: (v) => received = v,
+      );
+      await kids.orchestrator.syncWithService(kids.service);
+
+      expect(received, isFalse);
+    });
+
     test('link delete of shared task hard-deletes clean local row', () async {
       final link = _makeLinkService(storage);
       final now = DateTime.now().toUtc();

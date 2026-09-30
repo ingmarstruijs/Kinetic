@@ -202,6 +202,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
   bool _initDone = false;
   DateTime? _xpResetAt;
   KidGoal? _goal;
+  bool _xpEnabled = true;
 
   @override
   void initState() {
@@ -231,12 +232,14 @@ class _KidsAppShellState extends State<_KidsAppShell>
     final kidId = await configRepo.loadKidId() ?? '';
     final resetAtStr = await store.read(key: 'kinetic_xp_reset_at');
     final xpResetAt = resetAtStr != null ? DateTime.tryParse(resetAtStr) : null;
+    final xpEnabled = await configRepo.loadXpEnabled();
     if (!mounted) return;
     if (config != null) {
       setState(() {
         _enrolled = true;
         _initDone = true;
         _xpResetAt = xpResetAt;
+        _xpEnabled = xpEnabled;
         _orchestrator = KidsSyncOrchestrator(
           db: widget.appDb,
           repo: _repository,
@@ -256,6 +259,10 @@ class _KidsAppShellState extends State<_KidsAppShell>
           },
           onGoalReceived: (goal) {
             if (mounted) setState(() => _goal = goal);
+          },
+          onXpEnabledReceived: (enabled) async {
+            await configRepo.saveXpEnabled(enabled);
+            if (mounted) setState(() => _xpEnabled = enabled);
           },
           onNewTaskReceived: (taskTitle) {
             final l10n = AppLocalizations.of(context);
@@ -342,6 +349,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
         _orchestrator = null;
         _goal = null;
         _xpResetAt = null;
+        _xpEnabled = true;
       });
     }
   }
@@ -379,7 +387,8 @@ class _KidsAppShellState extends State<_KidsAppShell>
       repository: _repository,
       orchestrator: _orchestrator,
       xpResetAt: _xpResetAt,
-      goal: _goal,
+      goal: _xpEnabled ? _goal : null,
+      xpEnabled: _xpEnabled,
       onLeaveFamily: _enrolled ? _leaveFamily : null,
       onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
       onOpenSettings: _openSettings,

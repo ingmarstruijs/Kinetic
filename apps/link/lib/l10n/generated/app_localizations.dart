@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsFamilyMemberLinkHint.
   ///
   /// In en, this message translates to:
-  /// **'Start, join, invite adults, or link kids'**
+  /// **'Invite adults or kids, or join a family'**
   String get settingsFamilyMemberLinkHint;
 
   /// No description provided for @settingsFamilyHubStatusNoKey.
@@ -427,6 +427,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Family key ready'**
   String get settingsFamilyHubStatusReady;
+
+  /// No description provided for @settingsFamilyHubKeyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Family key'**
+  String get settingsFamilyHubKeyLabel;
+
+  /// No description provided for @settingsFamilyHubKeyMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get settingsFamilyHubKeyMissing;
 
   /// No description provided for @settingsFamilyHubStart.
   ///
@@ -467,26 +479,32 @@ abstract class AppLocalizations {
   /// No description provided for @settingsFamilyHubLinkKids.
   ///
   /// In en, this message translates to:
-  /// **'Link kids app'**
+  /// **'Invite kid'**
   String get settingsFamilyHubLinkKids;
 
   /// No description provided for @settingsFamilyHubLinkKidsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enroll a child device with a QR (creates a key if needed)'**
+  /// **'Enter the child’s name, then show a QR for the kids app'**
   String get settingsFamilyHubLinkKidsSubtitle;
 
-  /// No description provided for @settingsFamilyHubAdoptDifferent.
+  /// No description provided for @settingsFamilyHubAdultsSection.
   ///
   /// In en, this message translates to:
-  /// **'Use a different family key'**
-  String get settingsFamilyHubAdoptDifferent;
+  /// **'ADULTS'**
+  String get settingsFamilyHubAdultsSection;
 
-  /// No description provided for @settingsFamilyHubAdoptDifferentSubtitle.
+  /// No description provided for @settingsFamilyHubKidsSection.
   ///
   /// In en, this message translates to:
-  /// **'Replace this key — current shared data becomes unreadable'**
-  String get settingsFamilyHubAdoptDifferentSubtitle;
+  /// **'KIDS'**
+  String get settingsFamilyHubKidsSection;
+
+  /// No description provided for @settingsFamilyHubAdultsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No other adults linked yet.'**
+  String get settingsFamilyHubAdultsNone;
 
   /// No description provided for @settingsKids.
   ///
@@ -641,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyKeyAlreadyPairedWarning.
   ///
   /// In en, this message translates to:
-  /// **'You already have a family key. Importing a new one will make data encrypted with the current key unreadable until you sync again.'**
+  /// **'This device already has a family key. Leave the current family first (Family → Leave family), then join again. Importing another key on the same WebDAV server is not supported.'**
   String get familyKeyAlreadyPairedWarning;
 
   /// No description provided for @familyKeyEnterTitle.
@@ -1079,7 +1097,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyMemberUnlinkBody.
   ///
   /// In en, this message translates to:
-  /// **'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.'**
+  /// **'This device leaves the family on this WebDAV server (only one family per shared folder).\n\n• Shared notes and proposals are removed locally\n• Linked kids are unenrolled (their apps disconnect on next sync)\n• The family key is deleted from this device\n\nYour personal tasks and private notes stay. Shared files on the server remain until someone with the old key removes them — this device cannot read them afterward.\n\nTo join another family, leave first, then use Join family.'**
   String get familyMemberUnlinkBody;
 
   /// No description provided for @familyMemberShareViaQr.
@@ -1151,7 +1169,7 @@ abstract class AppLocalizations {
   /// No description provided for @familyMemberUnlinkSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Remove the family key and shared notes from this device.'**
+  /// **'Unenroll kids, remove shared data and the family key from this device.'**
   String get familyMemberUnlinkSubtitle;
 
   /// No description provided for @familyMemberRemoveTooltip.
@@ -1325,13 +1343,13 @@ abstract class AppLocalizations {
   /// No description provided for @kidsLinkApp.
   ///
   /// In en, this message translates to:
-  /// **'Link kids app'**
+  /// **'Invite kid'**
   String get kidsLinkApp;
 
   /// No description provided for @kidsLinkAppSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Have the kids app scan the QR code.'**
+  /// **'Enter the child’s name, then show a QR for the kids app.'**
   String get kidsLinkAppSubtitle;
 
   /// No description provided for @kidsEnrolledSection.

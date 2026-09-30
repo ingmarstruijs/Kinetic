@@ -696,8 +696,12 @@ class SyncOrchestrator {
       _db.personalNotes,
     )..where((t) => t.syncState.equals('dirty'))).get();
 
+    var pushed = 0;
+    var pushErrors = 0;
+    var localOnlySkipped = 0;
     for (final row in dirtyRows) {
       if (row.isLocalOnly) {
+        localOnlySkipped++;
         await (_db.update(
           _db.personalNotes,
         )..where((t) => t.id.equals(row.id))).write(
@@ -728,14 +732,19 @@ class SyncOrchestrator {
           // iCal timestamp and the local timestamp remain in sync.
           const PersonalNotesCompanion(syncState: Value('clean')),
         );
+        pushed++;
       } catch (e) {
-        if (kDebugMode) debugPrint('Error pushing note ${row.id}: $e');
+        pushErrors++;
+        if (kDebugMode) {
+          debugPrint('[notes] push failed ${row.id}: $e');
+        }
         // Leave dirty for next cycle.
       }
     }
 
     // 1b. Push dirty note image assets (skip local-only notes).
     final dirtyAssets = await assetStore.dirtyAssets();
+    var assetsPushed = 0;
     for (final asset in dirtyAssets) {
       final note = await (_db.select(_db.personalNotes)
             ..where((t) => t.id.equals(asset.noteId)))
@@ -751,9 +760,10 @@ class SyncOrchestrator {
           isShared: note.isShared,
         );
         await assetStore.markClean(asset.id);
+        assetsPushed++;
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Error pushing note asset ${asset.id}: $e');
+          debugPrint('[notes] asset push failed ${asset.id}: $e');
         }
       }
     }
@@ -763,6 +773,7 @@ class SyncOrchestrator {
       _db.personalNotes,
     )..where((t) => t.syncState.equals('deleted'))).get();
 
+    var tombstonesCleared = 0;
     for (final row in deletedRows) {
       try {
         if (!row.isLocalOnly) {
@@ -773,30 +784,40 @@ class SyncOrchestrator {
         await (_db.delete(
           _db.personalNotes,
         )..where((t) => t.id.equals(row.id))).go();
+        tombstonesCleared++;
       } catch (_) {}
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[notes] sync start '
+        'dirty:${dirtyRows.length} pushed:$pushed'
+        '${localOnlySkipped > 0 ? ' localOnly:$localOnlySkipped' : ''}'
+        '${pushErrors > 0 ? ' pushErrors:$pushErrors' : ''} '
+        'assets:$assetsPushed tombstones:$tombstonesCleared',
+      );
     }
 
     // 3. Pull from server.
     final remoteList = await service.pullNotes();
-    if (kDebugMode) {
-      debugPrint(
-        'Pulled ${remoteList.length} notes from server (personal + shared)',
-      );
-    }
 
     final localList = await _db.select(_db.personalNotes).get();
     final remoteIds = remoteList.map((n) => n.uid).toSet();
+    final localShared = localList.where((n) => n.isShared).length;
+    final localPersonal = localList.length - localShared;
 
     // 3a. Detect and remove shared notes that were deleted on the other Link device.
     // If a shared note exists locally but not on the server, and it's clean (not dirty),
     // then it was deleted remotely and should be removed locally too.
+    var removedRemoteDeleted = 0;
     for (final local in localList) {
       if (local.isShared &&
           local.syncState == 'clean' &&
           !remoteIds.contains(local.id)) {
+        removedRemoteDeleted++;
         if (kDebugMode) {
           debugPrint(
-            'Shared note deleted on another Link device, removing locally: ${local.id}',
+            '[notes] remote-deleted shared → remove local ${local.id}',
           );
         }
         await assetStore.deleteForNote(local.id);
@@ -806,12 +827,26 @@ class SyncOrchestrator {
       }
     }
 
-    if (remoteList.isEmpty) return;
+    if (remoteList.isEmpty) {
+      if (kDebugMode) {
+        debugPrint(
+          '[notes] sync done '
+          'remote:0 localBefore:P$localPersonal/S$localShared '
+          'removedShared:$removedRemoteDeleted (no merge)',
+        );
+      }
+      return;
+    }
 
     // 4. Apply Last-Write-Wins merge: remote wins only when it is strictly
     //    newer than the local copy AND the local copy is clean (unmodified).
     //    If the local copy is dirty the user has unsaved changes — we keep
     //    them and they will be pushed on the next sync cycle.
+    var inserted = 0;
+    var updated = 0;
+    var skippedAudience = 0;
+    var skippedLocalOnly = 0;
+    var keptLocalDirtyOrNewer = 0;
     for (final note in remoteList) {
       // Audience filter: selected-member shares are only for listed link members.
       if (note.isShared) {
@@ -820,32 +855,32 @@ class SyncOrchestrator {
           final myId = _config.linkId.isNotEmpty
               ? _config.linkId
               : _config.username;
-          if (!audience.contains(myId)) continue;
+          if (!audience.contains(myId)) {
+            skippedAudience++;
+            continue;
+          }
         }
       }
       final existing = localList.where((r) => r.id == note.uid).firstOrNull;
-      if (existing?.isLocalOnly == true) continue;
+      if (existing?.isLocalOnly == true) {
+        skippedLocalOnly++;
+        continue;
+      }
       if (existing == null) {
         // New from server — insert.
-        if (kDebugMode) {
-          debugPrint(
-            'Inserting new note from server: ${note.uid} (isShared=${note.isShared})',
-          );
-        }
+        inserted++;
         await _db
             .into(_db.personalNotes)
             .insertOnConflictUpdate(_icalNoteToCompanion(note, etag: null));
       } else if (existing.syncState != 'dirty' &&
           note.updatedAt.isAfter(existing.updatedAt)) {
         // Remote is newer and local has no pending changes — adopt remote.
-        if (kDebugMode) {
-          debugPrint(
-            'Updating existing note from server: ${note.uid} (isShared=${note.isShared})',
-          );
-        }
+        updated++;
         await (_db.update(_db.personalNotes)
               ..where((t) => t.id.equals(note.uid)))
             .write(_icalNoteToCompanion(note, etag: existing.webdavEtag));
+      } else {
+        keptLocalDirtyOrNewer++;
       }
 
       // Pull encrypted image assets for this note (personal then shared).
@@ -863,9 +898,21 @@ class SyncOrchestrator {
         }
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Error pulling note assets for ${note.uid}: $e');
+          debugPrint('[notes] asset pull failed ${note.uid}: $e');
         }
       }
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[notes] sync done '
+        'remote:${remoteList.length} localBefore:P$localPersonal/S$localShared '
+        'removedShared:$removedRemoteDeleted '
+        'insert:$inserted update:$updated '
+        'keepLocal:$keptLocalDirtyOrNewer'
+        '${skippedAudience > 0 ? ' skipAudience:$skippedAudience' : ''}'
+        '${skippedLocalOnly > 0 ? ' skipLocalOnly:$skippedLocalOnly' : ''}',
+      );
     }
   }
 

@@ -7,7 +7,6 @@ import '../sync/sync_orchestrator.dart';
 import '../sync/webdav_config_repository.dart';
 import '../theme/app_header.dart';
 import 'family_members_settings_screen.dart';
-import 'kids_settings_screen.dart';
 import 'settings_repository.dart';
 import 'settings_screen.dart' show WebDavSetupScreen;
 
@@ -104,9 +103,11 @@ class _FamilySetupWizardState extends State<FamilySetupWizard> {
   Future<void> _openKids() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => KidsSettingsScreen(
+        builder: (_) => FamilyMembersSettingsScreen(
+          db: widget.db,
           configRepo: widget.configRepo,
           syncOrchestrator: widget.syncOrchestrator,
+          initialAction: FamilyHubAction.kids,
           onConfigSaved: () {
             widget.onConfigSaved?.call();
             _refresh();

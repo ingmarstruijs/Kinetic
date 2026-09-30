@@ -52,6 +52,9 @@ Future<void> completeTaskWithUndo({
   messenger.showSnackBar(
     SnackBar(
       content: Text(l10n.tasksMarkedDone),
+      // Flutter defaults persist=true when an action is set; keep undo brief.
+      persist: false,
+      duration: const Duration(seconds: 4),
       action: SnackBarAction(
         label: l10n.commonUndo,
         onPressed: () {

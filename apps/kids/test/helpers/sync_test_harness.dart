@@ -22,6 +22,7 @@ final kidsSyncTestPersonalKey =
   void Function()? onDisconnected,
   void Function(String taskTitle)? onNewTaskReceived,
   void Function(KidGoal? goal)? onGoalReceived,
+  void Function(bool xpEnabled)? onXpEnabledReceived,
 }) {
   final config = SyncConfig(
     serverUrl: 'https://fake-dav',
@@ -47,6 +48,7 @@ final kidsSyncTestPersonalKey =
     onDisconnected: onDisconnected,
     onNewTaskReceived: onNewTaskReceived,
     onGoalReceived: onGoalReceived,
+    onXpEnabledReceived: onXpEnabledReceived,
   );
   return (orchestrator: orchestrator, service: service, config: config);
 }

@@ -170,7 +170,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settingsFamilyMemberLinkHint =>
-      'Start, join, nodig volwassenen uit of koppel kids';
+      'Nodig volwassenen of kids uit, of join een gezin';
 
   @override
   String get settingsFamilyHubStatusNoKey => 'Nog geen familiesleutel';
@@ -181,6 +181,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settingsFamilyHubStatusReady => 'Familiesleutel klaar';
+
+  @override
+  String get settingsFamilyHubKeyLabel => 'Familiesleutel';
+
+  @override
+  String get settingsFamilyHubKeyMissing => 'Niet gezet';
 
   @override
   String get settingsFamilyHubStart => 'Gezin starten';
@@ -204,19 +210,21 @@ class AppLocalizationsNl extends AppLocalizations {
       'Deel je familiesleutel zodat een andere Link kan joinen';
 
   @override
-  String get settingsFamilyHubLinkKids => 'Kinderenapp koppelen';
+  String get settingsFamilyHubLinkKids => 'Kind uitnodigen';
 
   @override
   String get settingsFamilyHubLinkKidsSubtitle =>
-      'Schrijf een kindertoestel in met een QR (maakt een sleutel aan indien nodig)';
+      'Vul de naam van het kind in en toon een QR voor de kids-app';
 
   @override
-  String get settingsFamilyHubAdoptDifferent =>
-      'Andere familiesleutel gebruiken';
+  String get settingsFamilyHubAdultsSection => 'VOLWASSENEN';
 
   @override
-  String get settingsFamilyHubAdoptDifferentSubtitle =>
-      'Vervangt deze sleutel — huidige gedeelde data wordt onleesbaar';
+  String get settingsFamilyHubKidsSection => 'KINDEREN';
+
+  @override
+  String get settingsFamilyHubAdultsNone =>
+      'Nog geen andere volwassenen gekoppeld.';
 
   @override
   String get settingsKids => 'Kinderen';
@@ -314,7 +322,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyKeyAlreadyPairedWarning =>
-      'Je hebt al een familiesleutel. Als je een nieuwe importeert, wordt data die al met de huidige sleutel is versleuteld onleesbaar totdat je opnieuw synchroniseert.';
+      'Dit apparaat heeft al een familiesleutel. Verlaat eerst het huidige gezin (Familie → Familie verlaten) en join daarna opnieuw. Een andere sleutel importeren op dezelfde WebDAV-server wordt niet ondersteund.';
 
   @override
   String get familyKeyEnterTitle => 'Familiesleutel invoeren';
@@ -575,7 +583,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyMemberUnlinkBody =>
-      'Alle gedeelde notities worden van dit apparaat verwijderd. Je eigen taken en privé-notities blijven behouden. Andere gezinsleden verliezen de verbinding niet — alleen jij verlaat de gedeelde werkruimte.';
+      'Dit apparaat verlaat het gezin op deze WebDAV-server (één gezin per gedeelde map).\n\n• Gedeelde notities en voorstellen verdwijnen lokaal\n• Gekoppelde kids worden uitgeschreven (hun apps ontkoppelen bij de volgende sync)\n• De familiesleutel wordt van dit apparaat gewist\n\nJe persoonlijke taken en privé-notities blijven. Gedeelde bestanden op de server blijven staan tot iemand met de oude sleutel ze opruimt — dit apparaat kan ze daarna niet meer lezen.\n\nOm een ander gezin te joinen: verlaat eerst dit gezin, gebruik daarna Gezin joinen.';
 
   @override
   String get familyMemberShareViaQr => 'Familiesleutel delen via QR';
@@ -616,7 +624,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get familyMemberUnlinkSubtitle =>
-      'Verwijder de familiesleutel en gedeelde notities van dit apparaat.';
+      'Schrijf kids uit, verwijder gedeelde data en de familiesleutel van dit apparaat.';
 
   @override
   String get familyMemberRemoveTooltip => 'Uit familie verwijderen';
@@ -724,10 +732,11 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get kidsLinkApp => 'Kinderenapp koppelen';
+  String get kidsLinkApp => 'Kind uitnodigen';
 
   @override
-  String get kidsLinkAppSubtitle => 'Laat de kinderenapp de QR-code scannen.';
+  String get kidsLinkAppSubtitle =>
+      'Vul de naam van het kind in en toon een QR voor de kids-app.';
 
   @override
   String get kidsEnrolledSection => 'GEKOPPELDE KINDEREN';

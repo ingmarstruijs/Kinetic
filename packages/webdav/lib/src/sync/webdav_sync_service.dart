@@ -63,7 +63,7 @@ class WebDavSyncService {
     final plain = Uint8List.fromList(utf8.encode(ical));
     final blob =
         await KineticEncryption.encrypt(plain, config.personalKeyBytes);
-    await client.put('$_tasksPath/${task.uid}.ics', blob);
+    await _putWithCollectionFallback('$_tasksPath/${task.uid}.ics', blob);
   }
 
   /// Deletes the task file for [uid] from the server.
@@ -93,94 +93,109 @@ class WebDavSyncService {
   /// Pulls all personal notes (personal key) and shared notes (family key).
   Future<List<ICalNote>> pullNotes() async {
     final notes = <ICalNote>[];
+    var personalListed = 0;
+    var personalOk = 0;
+    var personalMissing = 0;
+    var personalErrors = 0;
+    var sharedListed = 0;
+    var sharedOk = 0;
+    var sharedMissing = 0;
+    var sharedMacFail = 0;
+    var sharedErrors = 0;
+    var sharedSkippedNoKey = false;
+
     // Personal notes
     final personalEntries = await _listIcsFiles(_personalNotesPath);
-    if (kDebugMode) {
-      debugPrint('Found ${personalEntries.length} personal note files');
-    }
+    personalListed = personalEntries.length;
     for (final entry in personalEntries) {
       try {
         final href = _relativizeHref(entry.href);
-        if (kDebugMode) debugPrint('Attempting to GET personal note: $href');
         final blob = await client.get(href);
         final plain =
             await KineticEncryption.decrypt(blob, config.personalKeyBytes);
         notes.add(ICalSerializer.vjournalToNote(utf8.decode(plain)));
+        personalOk++;
       } on WebDavException catch (e) {
         // Skip 404s — file may have been deleted or PROPFIND returned stale entry
         if (e.message.contains('404')) {
-          if (kDebugMode) {
-            debugPrint(
-              'Personal note file not found (may be stale): ${entry.href}',
-            );
-          }
+          personalMissing++;
           continue;
         }
+        personalErrors++;
         if (kDebugMode) {
-          debugPrint('Error decrypting personal note from ${entry.href}: $e');
+          debugPrint('[notes] personal GET/decrypt failed ${entry.href}: $e');
         }
-        continue;
       } catch (e) {
+        personalErrors++;
         if (kDebugMode) {
-          debugPrint('Error decrypting personal note from ${entry.href}: $e');
+          debugPrint('[notes] personal decrypt failed ${entry.href}: $e');
         }
-        continue;
       }
     }
+
     // Shared notes — only if family key is available.
     final familyKey = config.familyKeyBytes;
     if (familyKey != null) {
       final sharedEntries = await _listIcsFiles(_sharedNotesPath);
-      if (kDebugMode) {
-        debugPrint('Found ${sharedEntries.length} shared note files');
-      }
-      var decryptedShared = 0;
+      sharedListed = sharedEntries.length;
       final staleSharedHrefs = <String>[];
       for (final entry in sharedEntries) {
         try {
           final href = _relativizeHref(entry.href);
-          if (kDebugMode) debugPrint('Attempting to GET shared note: $href');
           final blob = await client.get(href);
           final plain = await KineticEncryption.decrypt(blob, familyKey);
           notes.add(ICalSerializer.vjournalToNote(utf8.decode(plain)));
-          decryptedShared++;
+          sharedOk++;
         } on SecretBoxAuthenticationError {
           final href = _relativizeHref(entry.href);
-          if (kDebugMode) {
-            debugPrint(
-              'Shared note MAC failed (wrong family key or leftover blob): $href',
-            );
-          }
+          sharedMacFail++;
           staleSharedHrefs.add(href);
         } on WebDavException catch (e) {
-          // Skip 404s — file may have been deleted or PROPFIND returned stale entry
           if (e.message.contains('404')) {
-            if (kDebugMode) {
-              debugPrint(
-                'Shared note file not found (may be stale): ${entry.href}',
-              );
-            }
+            sharedMissing++;
             continue;
           }
+          sharedErrors++;
           if (kDebugMode) {
-            debugPrint('Error reading shared note from ${entry.href}: $e');
+            debugPrint('[notes] shared GET failed ${entry.href}: $e');
           }
-          continue;
         } catch (e) {
+          sharedErrors++;
           if (kDebugMode) {
-            debugPrint('Error decrypting shared note from ${entry.href}: $e');
+            debugPrint('[notes] shared decrypt failed ${entry.href}: $e');
           }
-          continue;
         }
       }
       // Current family key opened at least one file, so MAC failures are
       // leftovers from an old key — delete them. If *nothing* decrypted,
       // the key itself may be wrong; leave the files alone.
-      if (decryptedShared > 0 && staleSharedHrefs.isNotEmpty) {
+      if (sharedOk > 0 && staleSharedHrefs.isNotEmpty) {
         await _deleteStaleSharedNotes(staleSharedHrefs);
       }
     } else {
-      if (kDebugMode) debugPrint('No family key available, skipping shared notes');
+      sharedSkippedNoKey = true;
+    }
+
+    if (kDebugMode) {
+      final sharedPart = sharedSkippedNoKey
+          ? 'shared=skipped(no family key)'
+          : 'shared=listed:$sharedListed ok:$sharedOk'
+              '${sharedMacFail > 0 ? ' macFail:$sharedMacFail' : ''}'
+              '${sharedMissing > 0 ? ' missing404:$sharedMissing' : ''}'
+              '${sharedErrors > 0 ? ' errors:$sharedErrors' : ''}';
+      debugPrint(
+        '[notes] pull '
+        'personal=listed:$personalListed ok:$personalOk'
+        '${personalMissing > 0 ? ' missing404:$personalMissing' : ''}'
+        '${personalErrors > 0 ? ' errors:$personalErrors' : ''} '
+        '$sharedPart → total:${notes.length}',
+      );
+      if (notes.isNotEmpty) {
+        final ids = notes
+            .map((n) => '${n.uid.substring(0, 8)}${n.isShared ? 'S' : 'P'}')
+            .join(', ');
+        debugPrint('[notes] pull ids: $ids');
+      }
     }
     return notes;
   }
@@ -196,11 +211,17 @@ class WebDavSyncService {
         throw StateError('Family key required to push shared note');
       }
       final blob = await KineticEncryption.encrypt(plain, familyKey);
-      await client.put('$_sharedNotesPath/${note.uid}.ics', blob);
+      await _putWithCollectionFallback(
+        '$_sharedNotesPath/${note.uid}.ics',
+        blob,
+      );
     } else {
       final blob =
           await KineticEncryption.encrypt(plain, config.personalKeyBytes);
-      await client.put('$_personalNotesPath/${note.uid}.ics', blob);
+      await _putWithCollectionFallback(
+        '$_personalNotesPath/${note.uid}.ics',
+        blob,
+      );
     }
   }
 
@@ -230,12 +251,7 @@ class WebDavSyncService {
     }
     final blob = await KineticEncryption.encrypt(plainBytes, key!);
     final dir = _noteAssetsDir(noteUid, isShared: isShared);
-    try {
-      await client.mkcol(dir);
-    } catch (_) {
-      // Collection may already exist.
-    }
-    await client.put('$dir/$assetId.bin', blob);
+    await _putWithCollectionFallback('$dir/$assetId.bin', blob);
   }
 
   /// Lists and decrypts note image assets for [noteUid].
@@ -330,12 +346,12 @@ class WebDavSyncService {
     for (final href in hrefs) {
       try {
         if (kDebugMode) {
-          debugPrint('Deleting undecryptable shared note: $href');
+          debugPrint('[notes] deleting undecryptable leftover: $href');
         }
         await client.delete(href);
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Failed to delete undecryptable shared note $href: $e');
+          debugPrint('[notes] failed deleting leftover $href: $e');
         }
       }
     }
@@ -388,7 +404,12 @@ class WebDavSyncService {
     final ical = ICalSerializer.taskToVtodo(task);
     final plain = Uint8List.fromList(utf8.encode(ical));
     final blob = await KineticEncryption.encrypt(plain, familyKey);
-    await client.put('$_sharedTasksPath/${task.uid}.ics', blob);
+    // Same MKCOL fallback as goals/presence — Link enrollment may never have
+    // run setupDirectories on this server, so /kinetic/shared/tasks can be absent.
+    await _putWithCollectionFallback(
+      '$_sharedTasksPath/${task.uid}.ics',
+      blob,
+    );
   }
 
   /// Deletes a shared task from `/kinetic/shared/tasks/{uid}.ics`.
@@ -501,19 +522,34 @@ class WebDavSyncService {
   bool _isMissingCollectionError(WebDavException e) =>
       _missingCollectionStatuses.any(e.message.contains);
 
-  /// PUTs [bytes] to [path], creating the parent collection on-demand if needed.
+  /// PUTs [bytes] to [path], creating missing parent collections on demand.
+  ///
+  /// Walks ancestors from the deepest parent up to `/kinetic` so a wiped
+  /// shared tree (e.g. only `/kinetic/shared/presence` missing mid-path) is
+  /// rebuilt instead of failing the write after a single MKCOL attempt.
   Future<void> _putWithCollectionFallback(String path, Uint8List bytes) async {
     try {
       await client.put(path, bytes);
     } on WebDavException catch (e) {
       if (!_isMissingCollectionError(e)) rethrow;
-      final lastSlash = path.lastIndexOf('/');
-      if (lastSlash <= 0) rethrow;
-      final collectionPath = path.substring(0, lastSlash);
-      try {
-        await client.mkcol(collectionPath);
-      } catch (_) {
-        // Directory may already exist, silently ignore.
+      final parents = <String>[];
+      var cursor = path;
+      while (true) {
+        final lastSlash = cursor.lastIndexOf('/');
+        if (lastSlash <= 0) break;
+        cursor = cursor.substring(0, lastSlash);
+        if (cursor.isEmpty || cursor == '/') break;
+        parents.add(cursor);
+        // Stop at the kinetic root — do not MKCOL the WebDAV base itself.
+        if (cursor == '/kinetic') break;
+      }
+      for (final collectionPath in parents.reversed) {
+        try {
+          await client.mkcol(collectionPath);
+        } catch (_) {
+          // Directory may already exist, or a deeper parent is still missing;
+          // continue so later MKCOLs / the final PUT can succeed.
+        }
       }
       await client.put(path, bytes);
     }

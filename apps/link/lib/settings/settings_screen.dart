@@ -225,7 +225,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   if (isConnected || DemoSession.instance.active) ...[
                     _SectionHeader(label: l10n.settingsSectionFamily),
-                    if (_kidsParticipationLoaded && _displayKidsCount > 0)
+                    // Opt-out for devices that inherit kids via the family
+                    // roster (another adult enrolled them). Solo parents who
+                    // enrolled kids themselves do not need this switch.
+                    if (_kidsParticipationLoaded &&
+                        _displayKidsCount > 0 &&
+                        _displayHasOtherLinkMembers)
                       SwitchListTile(
                         secondary: Icon(
                           Icons.child_care_outlined,

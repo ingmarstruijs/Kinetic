@@ -112,11 +112,15 @@ void main() {
       await repo.ensureFamilySetupEligibleSince(t0);
 
       expect(
-        await repo.shouldShowFamilySetupPrompt(now: t0.add(const Duration(hours: 12))),
+        await repo.shouldShowFamilySetupPrompt(
+          now: t0.add(const Duration(hours: 12)),
+        ),
         isFalse,
       );
       expect(
-        await repo.shouldShowFamilySetupPrompt(now: t0.add(const Duration(days: 1))),
+        await repo.shouldShowFamilySetupPrompt(
+          now: t0.add(const Duration(days: 1)),
+        ),
         isTrue,
       );
     });
@@ -157,5 +161,50 @@ void main() {
         isFalse,
       );
     });
+  });
+
+  group('leave family local cleanup', () {
+    test(
+      'clearEnrolledKids + clearFamilyKey wipe kids, key, and other-members',
+      () async {
+        final store = InMemoryKeyValueStore();
+        final repo = WebDavConfigRepository(store);
+        final familyKey = Uint8List.fromList(List.filled(32, 3));
+        await repo.save(
+          SyncConfig(
+            serverUrl: 'https://dav.example.com',
+            username: 'user',
+            password: 'secret',
+            linkId: 'link-1',
+            personalKeyBytes: Uint8List.fromList(List.filled(32, 7)),
+            familyKeyBytes: familyKey,
+          ),
+        );
+        await repo.setHasOtherLinkMembers(true);
+        await repo.addEnrolledKid('Mees');
+        await repo.saveCachedRoster(
+          FamilyRoster(
+            linkMembers: const [],
+            kids: const [],
+            updatedAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+
+        expect(await repo.loadFamilyKey(), isNotNull);
+        expect(await repo.loadEnrolledKids(), isNotEmpty);
+        expect(await repo.hasOtherLinkMembers(), isTrue);
+        expect(await repo.loadCachedRoster(), isNotNull);
+
+        // Mirrors FamilyMembersSettingsScreen._leaveFamily local steps.
+        await repo.clearEnrolledKids();
+        await repo.clearFamilyKey();
+
+        expect(await repo.loadFamilyKey(), isNull);
+        expect(await repo.loadEnrolledKids(), isEmpty);
+        expect(await repo.hasOtherLinkMembers(), isFalse);
+        expect(await repo.loadCachedRoster(), isNull);
+        expect(await repo.load(), isNotNull); // WebDAV account stays
+      },
+    );
   });
 }

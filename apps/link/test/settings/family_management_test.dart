@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:link/l10n/generated/app_localizations.dart';
+import 'package:link/settings/family_members_settings_screen.dart';
 import 'package:link/settings/kids_settings_screen.dart';
 import 'package:link/settings/models/enrolled_kid.dart';
 import 'package:link/settings/settings_repository.dart';
@@ -187,6 +188,128 @@ void main() {
         expect(find.text('Invite kid'), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox.shrink());
+      });
+    });
+  });
+
+  group('Family hub join / leave', () {
+    Future<WebDavConfigRepository> _keyedRepoWithKid() async {
+      final store = InMemoryKeyValueStore();
+      final configRepo = WebDavConfigRepository(store);
+      await configRepo.save(
+        SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'user',
+          password: 'pass',
+          linkId: 'link-1',
+          personalKeyBytes: Uint8List.fromList(List.filled(32, 1)),
+          familyKeyBytes: Uint8List.fromList(List.filled(32, 2)),
+        ),
+      );
+      await configRepo.setHasOtherLinkMembers(true);
+      await configRepo.restoreEnrolledKids([
+        EnrolledKid(
+          id: 'kid-1',
+          name: 'Mees',
+          enrolledAt: DateTime.utc(2026, 1, 1),
+        ),
+      ]);
+      return configRepo;
+    }
+
+    testWidgets(
+      'Join family when already keyed shows already-paired warning',
+      (tester) async {
+        await tester.runAsync(() async {
+          final db = createTestDatabase();
+          final configRepo = await _keyedRepoWithKid();
+
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: const Locale('en'),
+              home: FamilyMembersSettingsScreen(
+                db: db,
+                configRepo: configRepo,
+                initialAction: FamilyHubAction.join,
+              ),
+            ),
+          );
+          await tester.pump();
+          await Future<void>.delayed(const Duration(milliseconds: 80));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.textContaining('already has a family key'),
+            findsOneWidget,
+          );
+
+          await tester.pumpWidget(const SizedBox.shrink());
+          await db.close();
+        });
+      },
+    );
+
+    testWidgets('Leave family clears kids and family key locally', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        final db = createTestDatabase();
+        final configRepo = await _keyedRepoWithKid();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => FamilyMembersSettingsScreen(
+                          db: db,
+                          configRepo: configRepo,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('open hub'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.tap(find.text('open hub'));
+        await tester.pump();
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Invite adult'), findsOneWidget);
+        expect(await configRepo.loadFamilyKey(), isNotNull);
+        expect(await configRepo.loadEnrolledKids(), isNotEmpty);
+
+        await tester.tap(find.byTooltip('Family'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Leave family').last);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Leave family?'), findsOneWidget);
+        await tester.tap(find.widgetWithText(TextButton, 'Leave'));
+        await tester.pump();
+        await Future<void>.delayed(const Duration(milliseconds: 80));
+        await tester.pumpAndSettle();
+
+        expect(await configRepo.loadFamilyKey(), isNull);
+        expect(await configRepo.loadEnrolledKids(), isEmpty);
+        expect(await configRepo.hasOtherLinkMembers(), isFalse);
+        expect(find.text('open hub'), findsOneWidget);
+
+        await tester.pumpWidget(const SizedBox.shrink());
+        await db.close();
       });
     });
   });

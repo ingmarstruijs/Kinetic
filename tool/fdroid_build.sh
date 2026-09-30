@@ -30,7 +30,9 @@ if [[ ! -f "$PUBSPEC" ]]; then
   echo "Missing $PUBSPEC" >&2
   exit 1
 fi
-# version: 0.4.2+12 → build-name; F-Droid uses ABI-specific versionCodes (121/122/123).
+# version: 0.4.3+13 → build-name; --build-number is N*10+slot.
+# Flutter then writes APK versionCode = abiIndex*1000 + build-number
+# (armeabi-v7a=1, arm64-v8a=2, x86_64=4) — match metadata versionCode to that.
 VERSION_LINE="$(grep -E '^version:' "$PUBSPEC" | head -1 | sed 's/^version:[[:space:]]*//')"
 if [[ ! "$VERSION_LINE" =~ ^([^+]+)\+([0-9]+)$ ]]; then
   echo "Could not parse version from $PUBSPEC (got: ${VERSION_LINE:-empty})" >&2
@@ -41,30 +43,32 @@ BASE_CODE="${BASH_REMATCH[2]}"
 
 build_one() {
   local platform="$1"
-  local vercode="$2"
-  local out_name="$3"
+  local build_number="$2"
+  local abi_index="$3"
+  local out_name="$4"
+  local expected_vc=$((abi_index * 1000 + build_number))
   (
     cd "apps/$APP"
     flutter build apk --release --split-per-abi --target-platform="$platform" \
-      --build-name="$BUILD_NAME" --build-number="$vercode"
+      --build-name="$BUILD_NAME" --build-number="$build_number"
   )
-  echo "APK: apps/$APP/build/app/outputs/flutter-apk/$out_name"
+  echo "APK: apps/$APP/build/app/outputs/flutter-apk/$out_name (expect versionCode $expected_vc)"
 }
 
 case "$ABI" in
   arm)
-    build_one android-arm "$((BASE_CODE * 10 + 1))" app-armeabi-v7a-release.apk
+    build_one android-arm "$((BASE_CODE * 10 + 1))" 1 app-armeabi-v7a-release.apk
     ;;
   arm64)
-    build_one android-arm64 "$((BASE_CODE * 10 + 2))" app-arm64-v8a-release.apk
+    build_one android-arm64 "$((BASE_CODE * 10 + 2))" 2 app-arm64-v8a-release.apk
     ;;
   x64)
-    build_one android-x64 "$((BASE_CODE * 10 + 3))" app-x86_64-release.apk
+    build_one android-x64 "$((BASE_CODE * 10 + 3))" 4 app-x86_64-release.apk
     ;;
   all)
-    build_one android-arm "$((BASE_CODE * 10 + 1))" app-armeabi-v7a-release.apk
-    build_one android-arm64 "$((BASE_CODE * 10 + 2))" app-arm64-v8a-release.apk
-    build_one android-x64 "$((BASE_CODE * 10 + 3))" app-x86_64-release.apk
+    build_one android-arm "$((BASE_CODE * 10 + 1))" 1 app-armeabi-v7a-release.apk
+    build_one android-arm64 "$((BASE_CODE * 10 + 2))" 2 app-arm64-v8a-release.apk
+    build_one android-x64 "$((BASE_CODE * 10 + 3))" 4 app-x86_64-release.apk
     ;;
   *)
     echo "Unknown ABI '$ABI' (use arm|arm64|x64|all)" >&2

@@ -64,6 +64,8 @@ These must match for each release:
 - [ ] Fastlane `changelogs/{N,N*10+1,N*10+2,N*10+3}.txt` synced
       (`./tool/sync_fastlane_changelogs.sh --check`)
 - [ ] Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit: <full SHA>`
+      (with `--split-per-abi`, `versionCode` = Flutter `abiIndex*1000+build-number`:
+      arm `1xxx`, arm64 `2xxx`, x86_64 `4xxx` — not the raw `--build-number`)
 - [ ] Annotated git tag `vX.Y.Z` on `main`
 - [ ] Flutter pin in metadata `srclibs` matches `.flutter-version` (and CI / FVM)
 - [ ] `dependenciesInfo.includeInApk = false` still set (no Dependency metadata block)

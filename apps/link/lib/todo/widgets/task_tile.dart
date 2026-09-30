@@ -35,16 +35,19 @@ Future<void> _playCompletionFeedback() async {
 }
 
 /// Marks [taskId] done and offers SnackBar undo (mirrors notes restore clarity).
+///
+/// Captures [ScaffoldMessenger] / l10n before awaiting: completing removes the
+/// task from the open list and disposes the tile, so a post-await
+/// `context.mounted` check would skip the SnackBar on later completions.
 Future<void> completeTaskWithUndo({
   required BuildContext context,
   required TodoRepository repo,
   required String taskId,
 }) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final l10n = AppLocalizations.of(context);
   await repo.completeTask(taskId);
   await _playCompletionFeedback();
-  if (!context.mounted) return;
-  final l10n = AppLocalizations.of(context);
-  final messenger = ScaffoldMessenger.of(context);
   messenger.clearSnackBars();
   messenger.showSnackBar(
     SnackBar(

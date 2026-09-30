@@ -113,6 +113,11 @@ Every version has **two** publish steps:
    (Fastlane/screenshots stay in this repo). Tagging alone does not update
    f-droid.org.
 
+Changelogs (Keep a Changelog; `### Store` syncs to Fastlane):
+
+- [Kinetic Link](apps/link/CHANGELOG.md)
+- [Kinetic Kids](apps/kids/CHANGELOG.md)
+
 Full maintainer/agent checklist:
 [`docs/RELEASING.md`](docs/RELEASING.md) · F-Droid details:
 [`metadata/FDROID_SUBMISSION.md`](metadata/FDROID_SUBMISSION.md).

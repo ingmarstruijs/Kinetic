@@ -29,8 +29,9 @@ Kinetic release needs a manual fdroiddata update.
 
 1. **Version bump PR** on this repo (`release/X.Y.Z`):
    - Bump `apps/link/pubspec.yaml` and `apps/kids/pubspec.yaml` to `X.Y.Z+N`
-   - Add Fastlane `changelogs/N.txt` (and refresh screenshots/copy if needed)
-     under `apps/*/fastlane/metadata/android/en-US/`
+   - Update `apps/*/CHANGELOG.md` (`### Store` + detail sections), then run
+     `./tool/sync_fastlane_changelogs.sh` (writes `N.txt` and ABI
+     `N*10+{1,2,3}.txt`; refresh screenshots/copy if needed)
    - Update both `metadata/*.yml`: `versionName`, `versionCode`,
      `CurrentVersion`, `CurrentVersionCode` (set `commit:` to the **full SHA**
      after the tag exists)
@@ -59,7 +60,9 @@ Kinetic release needs a manual fdroiddata update.
 These must match for each release:
 
 - [ ] `apps/*/pubspec.yaml` → `version: X.Y.Z+N`
-- [ ] Fastlane `changelogs/N.txt` present for that versionCode
+- [ ] `apps/*/CHANGELOG.md` has `## [X.Y.Z]` with `### Store`
+- [ ] Fastlane `changelogs/{N,N*10+1,N*10+2,N*10+3}.txt` synced
+      (`./tool/sync_fastlane_changelogs.sh --check`)
 - [ ] Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit: <full SHA>`
 - [ ] Annotated git tag `vX.Y.Z` on `main`
 - [ ] Flutter pin in metadata `srclibs` matches `.flutter-version` (and CI / FVM)

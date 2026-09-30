@@ -1,0 +1,1 @@
+Prepare Kinetic Kids for F-Droid submission with Fastlane metadata and polish.

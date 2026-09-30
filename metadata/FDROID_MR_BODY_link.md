@@ -49,7 +49,7 @@ srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: fl
 
 Reproducible Builds not enabled: Flutter + Melos monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI splits: three Builds entries (`131` armeabi-v7a / `132` arm64-v8a / `133` x86_64) with `--split-per-abi`.
+ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versionCode` to `abiIndex*1000+build-number` (arm=1 → `1131`, arm64=2 → `2132`, x86_64=4 → `4133`); metadata `versionCode` matches the APK.
 
 ### Pipeline
 

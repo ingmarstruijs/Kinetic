@@ -12,9 +12,11 @@
 #
 # For pubspec version X.Y.Z+N writes the Store text to:
 #   changelogs/N.txt
-#   changelogs/$((N*10+1)).txt  # armeabi-v7a (F-Droid)
-#   changelogs/$((N*10+2)).txt  # arm64-v8a
-#   changelogs/$((N*10+3)).txt  # x86_64
+#   # Flutter --split-per-abi APK versionCode = abiIndex*1000 + (N*10+abiSlot)
+#   # abiIndex: armeabi-v7a=1, arm64-v8a=2, x86_64=4 (slot 3 retired with x86)
+#   changelogs/$((1000 + N*10 + 1)).txt  # armeabi-v7a
+#   changelogs/$((2000 + N*10 + 2)).txt  # arm64-v8a
+#   changelogs/$((4000 + N*10 + 3)).txt  # x86_64
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -171,7 +173,13 @@ sync_app() {
   store="$(extract_store "$changelog" "$version")"
 
   mkdir -p "$out_dir"
-  local codes=("$base" "$((base * 10 + 1))" "$((base * 10 + 2))" "$((base * 10 + 3))")
+  # Base pubspec code + Flutter split-per-abi APK versionCodes (see header).
+  local codes=(
+    "$base"
+    "$((1000 + base * 10 + 1))"
+    "$((2000 + base * 10 + 2))"
+    "$((4000 + base * 10 + 3))"
+  )
   local dirty=0
   local code dest
   for code in "${codes[@]}"; do

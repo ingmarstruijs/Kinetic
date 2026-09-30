@@ -10,6 +10,18 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-09-30
+
+### Store
+Family leave/join sync hardening and XP UI polish for Kids.
+
+### Changed
+- Harden sync when leaving or joining a family.
+- XP-enabled UI polish.
+
+### Fixed
+- Leave cleanup keeps local key file handling consistent with Link.
+
 ## [0.4.2] - 2026-09-29
 
 ### Store

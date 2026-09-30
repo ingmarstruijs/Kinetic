@@ -22,7 +22,7 @@ bool disconnectIncludesSelf(String myId, List<String> disconnectedIds) =>
 /// Call [sync] in the background (e.g. on app resume or a timer).
 class SyncOrchestrator {
   final AppDatabase _db;
-  final SyncConfig _config;
+  SyncConfig _config;
   final WebDavConfigRepository? _configRepo;
 
   /// Optional callback invoked after disconnect tombstones are processed.
@@ -53,7 +53,17 @@ class SyncOrchestrator {
   /// The full sync config (used by screens that need WebDAV access).
   SyncConfig get config => _config;
 
+  /// Reloads WebDAV/family config from the repository when available.
+  ///
+  /// Keeps long-lived orchestrator instances (e.g. Family hub) in sync after
+  /// join/create without waiting for a full app re-init.
+  Future<void> _reloadConfigFromRepo() async {
+    final live = await _configRepo?.load();
+    if (live != null) _config = live;
+  }
+
   Future<void> sync() async {
+    await _reloadConfigFromRepo();
     final client = WebDavClient(
       baseUrl: _config.baseUrl,
       username: _config.username,
@@ -69,6 +79,27 @@ class SyncOrchestrator {
       await _syncRoster(service);
       await _activateKidsFromPresence(service);
       await _pushLoadMetrics(service);
+      await _pushPresence(service);
+    } finally {
+      client.dispose();
+    }
+  }
+
+  /// Roster + presence only — used by Family hub so Adults/Kids update without
+  /// a full home sync (tasks/notes/proposals).
+  Future<void> syncFamilyState() async {
+    await _reloadConfigFromRepo();
+    if (_config.familyKeyBytes == null) return;
+    final client = WebDavClient(
+      baseUrl: _config.baseUrl,
+      username: _config.username,
+      password: _config.password,
+    );
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      await _processDisconnects(service);
+      await _syncRoster(service);
+      await _activateKidsFromPresence(service);
       await _pushPresence(service);
     } finally {
       client.dispose();

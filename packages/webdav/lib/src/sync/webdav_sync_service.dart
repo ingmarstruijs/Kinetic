@@ -191,9 +191,10 @@ class WebDavSyncService {
         '$sharedPart → total:${notes.length}',
       );
       if (notes.isNotEmpty) {
-        final ids = notes
-            .map((n) => '${n.uid.substring(0, 8)}${n.isShared ? 'S' : 'P'}')
-            .join(', ');
+        final ids = notes.map((n) {
+          final id = n.uid.length <= 8 ? n.uid : n.uid.substring(0, 8);
+          return '$id${n.isShared ? 'S' : 'P'}';
+        }).join(', ');
         debugPrint('[notes] pull ids: $ids');
       }
     }

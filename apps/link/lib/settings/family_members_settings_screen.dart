@@ -51,7 +51,8 @@ class FamilyMembersSettingsScreen extends StatefulWidget {
 }
 
 class _FamilyMembersSettingsScreenState
-    extends State<FamilyMembersSettingsScreen> {
+    extends State<FamilyMembersSettingsScreen>
+    with WidgetsBindingObserver {
   SyncConfig? _config;
   bool _hasOtherLinkMembers = false;
   List<PresenceInfo> _presenceList = [];
@@ -60,12 +61,14 @@ class _FamilyMembersSettingsScreenState
   List<EnrolledKid> _kids = const [];
   String? _fingerprint;
   var _didRunInitialAction = false;
+  var _refreshing = false;
 
   bool get _hasFamilyKey => _config?.familyKeyBytes != null;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     DemoSession.instance.addListener(_onDemoChanged);
     unawaited(_bootstrap());
   }
@@ -73,7 +76,9 @@ class _FamilyMembersSettingsScreenState
   Future<void> _bootstrap() async {
     await _loadConfig();
     if (!mounted) return;
-    await _loadPresence();
+    // Pull roster/presence so Adults update after a partner joins without
+    // requiring a full home sync first.
+    await _refreshFamily();
     if (!mounted || _didRunInitialAction) return;
     _didRunInitialAction = true;
     final action = widget.initialAction;
@@ -93,8 +98,33 @@ class _FamilyMembersSettingsScreenState
     });
   }
 
+  /// Syncs roster + presence from WebDAV, then reloads local hub state.
+  Future<void> _refreshFamily() async {
+    if (_refreshing || DemoSession.instance.active) return;
+    _refreshing = true;
+    if (mounted) setState(() {});
+    try {
+      await widget.syncOrchestrator?.syncFamilyState();
+      if (!mounted) return;
+      await _loadConfig();
+      if (!mounted) return;
+      await _loadPresence();
+    } finally {
+      _refreshing = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshFamily());
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     DemoSession.instance.removeListener(_onDemoChanged);
     super.dispose();
   }
@@ -221,13 +251,15 @@ class _FamilyMembersSettingsScreenState
     if ((keyWasGenerated ?? false) && mounted) {
       await widget.configRepo.setHasOtherLinkMembers(true);
       await FamilyVaultSync.pushIfPossible(widget.configRepo);
-      await _loadConfig();
-      widget.onConfigSaved?.call();
     }
+    // Always refresh: the partner may have joined while the QR was open.
+    await _refreshFamily();
+    if (mounted) widget.onConfigSaved?.call();
   }
 
   Future<void> _startFamily() async {
     if (!await _ensureFamilyVault()) return;
+    await _refreshFamily();
     if (mounted) widget.onConfigSaved?.call();
   }
 
@@ -247,8 +279,7 @@ class _FamilyMembersSettingsScreenState
         ),
       ),
     );
-    await _loadConfig();
-    await _loadPresence();
+    await _refreshFamily();
     if (mounted) widget.onConfigSaved?.call();
   }
 
@@ -273,9 +304,9 @@ class _FamilyMembersSettingsScreenState
     if (result == true && mounted) {
       await widget.configRepo.setHasOtherLinkMembers(true);
       await FamilyVaultSync.pushIfPossible(widget.configRepo);
-      await _loadConfig();
-      widget.onConfigSaved?.call();
     }
+    await _refreshFamily();
+    if (mounted) widget.onConfigSaved?.call();
   }
 
   Future<void> _leaveFamily() async {
@@ -614,9 +645,17 @@ class _FamilyMembersSettingsScreenState
             ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
+      body: RefreshIndicator(
+        onRefresh: _refreshFamily,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+          if (_refreshing)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
           if (config != null) ...[
             _HubCard(
               children: [
@@ -704,6 +743,7 @@ class _FamilyMembersSettingsScreenState
               ),
           ],
         ],
+        ),
       ),
     );
   }

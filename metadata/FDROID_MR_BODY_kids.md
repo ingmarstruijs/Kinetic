@@ -6,7 +6,7 @@
 * [x] The original app author has been notified (and does not oppose the inclusion). If you are not the author, please paste the link of the reply from the author.
 * [x] The upstream app source code repo contains the app metadata in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure. The summary and description must be included and images, icon, and changelog should also be provided for better user experience. The `en-US` locale must be included.
 
-Submitter is the original author. Fastlane is in upstream at `apps/kids/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic tag `v0.4.1`). Kids is Android-only on F-Droid (companion to Kinetic Link).
+Submitter is the original author. Fastlane is in upstream at `apps/kids/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic tag `v0.4.3`). Kids is Android-only on F-Droid (companion to Kinetic Link).
 
 ### Docs
 
@@ -36,20 +36,20 @@ No related fdroiddata/RFP issues. Companion app Kinetic Link is submitted in a s
 * [x] An AuthorName must be added. It doesn't need to be the real name.
 * [ ] External repos are added as git submodules instead of srclibs. You can update git submodules without opening an MR in this repo and the submodule is covered by our scanner.
 * [ ] Enable [Reproducible Builds](https://f-droid.org/docs/Reproducible_Builds). We'll use your signature for improved security/reliability, also allowing users to switch between different channels. Do note that if you don't enable reproducible build then the apk will be signed with our key so you can't enable it later. If you can't enable this, please add the reasons here.
-* [ ] Setup abi split if the APK is large and the splitted ones can be much smaller.
+* [x] Setup abi split if the APK is large and the splitted ones can be much smaller.
 * [x] Only the latest versions should be kept in the metadata before it's merged. If you update the metadata, please replace the old versions with the new ones.
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `73c877299d2c5f0cc17fa0a93804621949d3a960` (annotated tag `v0.4.1`).
+Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `93a7a946ff30da330142782511f0b5c65bbe5273` (annotated tag `v0.4.3`).
 
 Special reason for auto update: `AutoUpdateMode: None` / `UpdateCheckMode: None` because this is a Melos monorepo (`subdir: apps/kids`); happy to add UpdateCheckData once maintainers prefer a specific pattern.
 
-srclibs: Flutter is pinned with `srclibs: flutter@3.44.1` following the fdroiddata Flutter template (not a git submodule).
+srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule).
 
 Reproducible Builds not enabled: Flutter + Melos monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI split not set for the first listing (single release APK).
+ABI splits: three Builds entries (`131` armeabi-v7a / `132` arm64-v8a / `133` x86_64) with `--split-per-abi`.
 
 ### Pipeline
 
@@ -57,4 +57,4 @@ ABI split not set for the first listing (single release APK).
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Fork CI for this branch previously passed (`fdroid build`, `check apk`, `rewritemeta`, `lint`). Replaces closed !50467 (custom description instead of this template).
+Updated metadata to **0.4.3** (`v0.4.3` / `93a7a946ff30da330142782511f0b5c65bbe5273`). Local `./tool/fdroid_build.sh kids` verified.

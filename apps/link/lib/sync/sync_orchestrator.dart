@@ -192,10 +192,13 @@ class SyncOrchestrator {
     if (linkId.isEmpty) return;
 
     try {
+      // Match watchOpenTasks: kids-delegated rows live in Kids panel, not the
+      // personal open list — including them inflates ambient/load-balance counts.
       final openRows = await (_db.select(_db.personalTasks)..where(
             (t) =>
                 t.isCompleted.equals(false) &
-                t.syncState.equals('deleted').not(),
+                t.syncState.equals('deleted').not() &
+                t.kidsTaskId.isNull(),
           ))
           .get();
 
@@ -452,8 +455,14 @@ class SyncOrchestrator {
   Future<void> _syncTasks(WebDavSyncService service) async {
     // 1a. Push dirty tasks delegated to kids FIRST (shared tasks folder).
     //     Must happen before step 1b marks them clean.
+    var kidsSharedListed = 0;
+    var kidsDirty = 0;
+    var kidsPushed = 0;
     if (_config.familyKeyBytes != null) {
-      await _syncKidsTasks(service);
+      final kids = await _syncKidsTasks(service);
+      kidsSharedListed = kids.sharedListed;
+      kidsDirty = kids.dirty;
+      kidsPushed = kids.pushed;
     }
 
     // 1b. Push dirty local tasks (personal tasks folder).
@@ -463,6 +472,10 @@ class SyncOrchestrator {
       _db.personalTasks,
     )..where((t) => t.syncState.equals('dirty') & t.kidsTaskId.isNull())).get();
 
+    var pushed = 0;
+    var pushErrors = 0;
+    var pushedDone = 0;
+    var pushedOpen = 0;
     for (final row in dirtyRows) {
       final icalTask = _rowToICalTask(row);
       try {
@@ -475,7 +488,17 @@ class SyncOrchestrator {
             updatedAt: Value(DateTime.now()),
           ),
         );
-      } catch (_) {
+        pushed++;
+        if (row.isCompleted) {
+          pushedDone++;
+        } else {
+          pushedOpen++;
+        }
+      } catch (e) {
+        pushErrors++;
+        if (kDebugMode) {
+          debugPrint('[tasks] push failed ${row.id}: $e');
+        }
         // Leave dirty for next cycle.
       }
     }
@@ -486,6 +509,8 @@ class SyncOrchestrator {
       _db.personalTasks,
     )..where((t) => t.syncState.equals('deleted'))).get();
 
+    var tombstonesCleared = 0;
+    final deletedIds = <String>[];
     for (final row in deletedRows) {
       try {
         await service.deleteTask(row.id);
@@ -500,29 +525,98 @@ class SyncOrchestrator {
         await (_db.delete(
           _db.personalTasks,
         )..where((t) => t.id.equals(row.id))).go();
+        tombstonesCleared++;
+        deletedIds.add(row.id);
       } catch (_) {}
+    }
+
+    if (kDebugMode) {
+      final dirtyDone = dirtyRows.where((r) => r.isCompleted).length;
+      final dirtyOpen = dirtyRows.length - dirtyDone;
+      debugPrint(
+        '[tasks] sync start '
+        'dirty:${dirtyRows.length}(open:$dirtyOpen done:$dirtyDone) '
+        'pushed:$pushed(open:$pushedOpen done:$pushedDone)'
+        '${pushErrors > 0 ? ' pushErrors:$pushErrors' : ''} '
+        'tombstones:$tombstonesCleared '
+        'kidsSharedListed:$kidsSharedListed kidsDirty:$kidsDirty '
+        'kidsPushed:$kidsPushed',
+      );
+      if (deletedIds.isNotEmpty) {
+        final ids = deletedIds
+            .map((id) => id.length <= 8 ? id : id.substring(0, 8))
+            .join(', ');
+        debugPrint('[tasks] deleted → server: $ids');
+      }
+      if (pushedDone > 0) {
+        final ids = dirtyRows
+            .where((r) => r.isCompleted)
+            .map((r) => r.id.length <= 8 ? r.id : r.id.substring(0, 8))
+            .join(', ');
+        debugPrint('[tasks] marked done → server: $ids');
+      }
     }
 
     // 3. Pull from server.
     final remoteList = await service.pullTasks();
-    if (remoteList.isEmpty) return;
 
     final localList = await _db.select(_db.personalTasks).get();
+    final localOpen = localList
+        .where((r) => !r.isCompleted && r.syncState != 'deleted')
+        .length;
+    final localDone = localList
+        .where((r) => r.isCompleted && r.syncState != 'deleted')
+        .length;
+    final localKids = localList.where((r) => r.kidsTaskId != null).length;
+    final remoteOpen = remoteList
+        .where(
+          (t) =>
+              t.status == ICalTaskStatus.needsAction ||
+              t.status == ICalTaskStatus.inProcess,
+        )
+        .length;
+    final remoteDone =
+        remoteList.where((t) => t.status == ICalTaskStatus.completed).length;
+
+    if (remoteList.isEmpty) {
+      if (kDebugMode) {
+        debugPrint(
+          '[tasks] sync done '
+          'remote:0 localBefore:open$localOpen/done$localDone/kids$localKids '
+          '(no merge)',
+        );
+      }
+      return;
+    }
+
     final merge = WebDavSyncService.mergeTasks(
       localList.map(_rowToICalTask).toList(),
       remoteList,
     );
 
     // 4. Apply merged result.
+    var inserted = 0;
+    var updated = 0;
+    var adoptedDone = 0;
+    var adoptedReopen = 0;
     for (final task in merge.merged) {
       final existing = localList.where((r) => r.id == task.uid).firstOrNull;
+      final remoteDoneTask = task.status == ICalTaskStatus.completed;
       if (existing == null) {
         // New from server — insert.
+        inserted++;
+        if (remoteDoneTask) adoptedDone++;
         await _db
             .into(_db.personalTasks)
             .insertOnConflictUpdate(_icalTaskToCompanion(task, etag: null));
       } else if (!existing.updatedAt.isAtSameMomentAs(task.updatedAt)) {
         // Remote is different — update.
+        updated++;
+        if (remoteDoneTask && !existing.isCompleted) {
+          adoptedDone++;
+        } else if (!remoteDoneTask && existing.isCompleted) {
+          adoptedReopen++;
+        }
         await (_db.update(_db.personalTasks)
               ..where((t) => t.id.equals(task.uid)))
             .write(_icalTaskToCompanion(task, etag: existing.webdavEtag));
@@ -530,16 +624,32 @@ class SyncOrchestrator {
     }
 
     // 5. Push tasks that were newer locally.
+    var rePushed = 0;
     for (final task in merge.toPush) {
       try {
         await service.pushTask(task);
+        rePushed++;
       } catch (_) {}
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[tasks] sync done '
+        'remote:${remoteList.length}(open:$remoteOpen done:$remoteDone) '
+        'localBefore:open$localOpen/done$localDone/kids$localKids '
+        'insert:$inserted update:$updated '
+        'adoptDone:$adoptedDone'
+        '${adoptedReopen > 0 ? ' adoptReopen:$adoptedReopen' : ''} '
+        'rePush:$rePushed mergeKeep:${merge.merged.length}',
+      );
     }
   }
 
   /// Pushes tasks with a kidsTaskId to the shared tasks folder and preserves
   /// kid-side IN-PROCESS (awaiting link-app verification) on the wire.
-  Future<void> _syncKidsTasks(WebDavSyncService service) async {
+  Future<({int sharedListed, int dirty, int pushed})> _syncKidsTasks(
+    WebDavSyncService service,
+  ) async {
     Map<String, ICalTask> sharedByUid = {};
     try {
       final sharedTasks = await service.pullSharedTasks();
@@ -554,6 +664,7 @@ class SyncOrchestrator {
               (t) => t.kidsTaskId.isNotNull() & t.syncState.equals('dirty'),
             ))
             .get();
+    var pushed = 0;
     for (final row in rows) {
       final remote = sharedByUid[row.kidsTaskId!];
       final kidsTask = _sharedKidsTaskFromRow(row, remote: remote);
@@ -561,10 +672,19 @@ class SyncOrchestrator {
         await service.pushSharedTask(kidsTask);
         await (_db.update(_db.personalTasks)..where((t) => t.id.equals(row.id)))
             .write(const PersonalTasksCompanion(syncState: Value('clean')));
-      } catch (_) {
+        pushed++;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[tasks] kids push failed ${row.id}: $e');
+        }
         // Leave dirty for retry next cycle.
       }
     }
+    return (
+      sharedListed: sharedByUid.length,
+      dirty: rows.length,
+      pushed: pushed,
+    );
   }
 
   /// Link app accepts a kid's completion request — awards XP on the wire.
@@ -805,6 +925,7 @@ class SyncOrchestrator {
     )..where((t) => t.syncState.equals('deleted'))).get();
 
     var tombstonesCleared = 0;
+    final deletedIds = <String>[];
     for (final row in deletedRows) {
       try {
         if (!row.isLocalOnly) {
@@ -816,6 +937,7 @@ class SyncOrchestrator {
           _db.personalNotes,
         )..where((t) => t.id.equals(row.id))).go();
         tombstonesCleared++;
+        deletedIds.add('${row.id.length <= 8 ? row.id : row.id.substring(0, 8)}${row.isShared ? 'S' : 'P'}');
       } catch (_) {}
     }
 
@@ -827,6 +949,9 @@ class SyncOrchestrator {
         '${pushErrors > 0 ? ' pushErrors:$pushErrors' : ''} '
         'assets:$assetsPushed tombstones:$tombstonesCleared',
       );
+      if (deletedIds.isNotEmpty) {
+        debugPrint('[notes] deleted → server: ${deletedIds.join(', ')}');
+      }
     }
 
     // 3. Pull from server.
@@ -841,11 +966,15 @@ class SyncOrchestrator {
     // If a shared note exists locally but not on the server, and it's clean (not dirty),
     // then it was deleted remotely and should be removed locally too.
     var removedRemoteDeleted = 0;
+    final remoteDeletedIds = <String>[];
     for (final local in localList) {
       if (local.isShared &&
           local.syncState == 'clean' &&
           !remoteIds.contains(local.id)) {
         removedRemoteDeleted++;
+        remoteDeletedIds.add(
+          local.id.length <= 8 ? local.id : local.id.substring(0, 8),
+        );
         if (kDebugMode) {
           debugPrint(
             '[notes] remote-deleted shared → remove local ${local.id}',
@@ -865,6 +994,11 @@ class SyncOrchestrator {
           'remote:0 localBefore:P$localPersonal/S$localShared '
           'removedShared:$removedRemoteDeleted (no merge)',
         );
+        if (remoteDeletedIds.isNotEmpty) {
+          debugPrint(
+            '[notes] deleted ← remote: ${remoteDeletedIds.join(', ')}',
+          );
+        }
       }
       return;
     }
@@ -944,6 +1078,11 @@ class SyncOrchestrator {
         '${skippedAudience > 0 ? ' skipAudience:$skippedAudience' : ''}'
         '${skippedLocalOnly > 0 ? ' skipLocalOnly:$skippedLocalOnly' : ''}',
       );
+      if (remoteDeletedIds.isNotEmpty) {
+        debugPrint(
+          '[notes] deleted ← remote: ${remoteDeletedIds.join(', ')}',
+        );
+      }
     }
   }
 

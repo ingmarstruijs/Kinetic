@@ -49,6 +49,8 @@ void main() {
         final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
         expect(snackBar.persist, isFalse);
         expect(snackBar.duration, const Duration(seconds: 4));
+        expect(snackBar.behavior, SnackBarBehavior.floating);
+        expect(snackBar.actionOverflowThreshold, 1);
 
         await tester.pumpWidget(const SizedBox.shrink());
         await db.close();

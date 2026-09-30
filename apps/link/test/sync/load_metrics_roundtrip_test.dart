@@ -62,4 +62,54 @@ void main() {
     expect(aliceMetrics.openByCategory['household'], 2);
     expect(aliceMetrics.openByCategory['admin'], 1);
   });
+
+  test('load metrics exclude kids-delegated open tasks', () async {
+    final storage = SharedStorage();
+    final aliceRepo = WebDavConfigRepository(InMemoryKeyValueStore());
+    final bobRepo = WebDavConfigRepository(InMemoryKeyValueStore());
+
+    final aliceDb = createTestDatabase();
+    final bobDb = createTestDatabase();
+    addTearDown(aliceDb.close);
+    addTearDown(bobDb.close);
+
+    final aliceTodos = TodoRepository(db: aliceDb);
+    final personal = await aliceTodos.createTask(
+      title: 'Buy milk',
+      category: TaskCategory.household,
+    );
+    final kidsMission = await aliceTodos.createTask(
+      title: 'Brush teeth',
+      category: TaskCategory.household,
+    );
+    await aliceTodos.sendToKids(kidsMission.id);
+
+    final openOnDevice = await aliceTodos.watchOpenTasks().first;
+    expect(openOnDevice.map((t) => t.id), [personal.id]);
+
+    final alice = await makeLinkOrchestrator(
+      aliceDb,
+      storage,
+      username: 'alice',
+      linkId: 'link-alice',
+      personalKey: syncTestPersonalKeyA,
+      configRepo: aliceRepo,
+    );
+    final bob = await makeLinkOrchestrator(
+      bobDb,
+      storage,
+      username: 'bob',
+      linkId: 'link-bob',
+      personalKey: syncTestPersonalKeyB,
+      configRepo: bobRepo,
+    );
+
+    await alice.orchestrator.syncWithService(alice.service);
+
+    final peerMetrics = await bob.service.pullLoadMetrics();
+    final aliceMetrics =
+        peerMetrics.singleWhere((m) => m.linkId == 'link-alice');
+    expect(aliceMetrics.totalOpen, 1);
+    expect(aliceMetrics.openByCategory['household'], 1);
+  });
 }

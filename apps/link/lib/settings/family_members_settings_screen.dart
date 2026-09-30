@@ -596,12 +596,7 @@ class _FamilyMembersSettingsScreenState
     }
 
     final config = _config;
-    final paired = _hasOtherLinkMembers;
     final hasKey = _hasFamilyKey;
-
-    final partnerPresence = _presenceList
-        .where((p) => p.deviceType == 'link')
-        .toList();
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
@@ -659,11 +654,7 @@ class _FamilyMembersSettingsScreenState
           if (config != null) ...[
             _HubCard(
               children: [
-                _FamilyKeySummary(
-                  fingerprint: _fingerprint,
-                  paired: paired,
-                  presenceList: partnerPresence,
-                ),
+                _FamilyKeySummary(fingerprint: _fingerprint),
                 if (!hasKey) ...[
                   const _CardDivider(),
                   _hubActionRow(
@@ -767,7 +758,9 @@ class _FamilyMembersSettingsScreenState
             Expanded(
               child: Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w400,
+                    ),
               ),
             ),
             IconTheme(
@@ -1083,68 +1076,28 @@ class _QrChevron extends StatelessWidget {
 /// Family-key row: theme badge + label, fingerprint value on the right.
 class _FamilyKeySummary extends StatelessWidget {
   final String? fingerprint;
-  final bool paired;
-  final List<PresenceInfo> presenceList;
 
-  const _FamilyKeySummary({
-    required this.fingerprint,
-    required this.paired,
-    required this.presenceList,
-  });
+  const _FamilyKeySummary({required this.fingerprint});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final muted = scheme.onSurfaceVariant;
-
-    final now = DateTime.now().toUtc();
-    final partnerPresence = presenceList.isNotEmpty ? presenceList.first : null;
-    final isStale = paired &&
-        partnerPresence != null &&
-        now.difference(partnerPresence.lastSeen) > const Duration(days: 14);
-    final lastSeenText = paired && partnerPresence != null
-        ? formatLastSeen(l10n, now, partnerPresence.lastSeen)
-        : null;
-
     final hasKey = fingerprint != null;
-    final valueColor = isStale
-        ? scheme.error
-        : hasKey
-            ? scheme.onSurface
-            : muted;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          _HubIconBadge(
-            icon: isStale ? Icons.warning_amber_rounded : Icons.vpn_key_outlined,
-            emphasize: !isStale,
-          ),
+          const _HubIconBadge(icon: Icons.vpn_key_outlined, emphasize: true),
           const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.settingsFamilyHubKeyLabel,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (lastSeenText != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    isStale
-                        ? l10n.familyMemberLastSeenWarning(lastSeenText)
-                        : l10n.familyMemberLastSeen(lastSeenText),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: isStale ? scheme.error : muted,
-                        ),
+            child: Text(
+              l10n.settingsFamilyHubKeyLabel,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
                   ),
-                ],
-              ],
             ),
           ),
           const SizedBox(width: 12),
@@ -1153,7 +1106,7 @@ class _FamilyKeySummary extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontFamily: hasKey ? 'monospace' : null,
                   letterSpacing: hasKey ? 1.0 : null,
-                  color: valueColor,
+                  color: hasKey ? scheme.onSurface : muted,
                   fontWeight: hasKey ? FontWeight.w600 : FontWeight.w400,
                 ),
           ),

@@ -41,6 +41,8 @@ class WebDavSyncService {
   Future<List<ICalTask>> pullTasks() async {
     final entries = await _listIcsFiles(_tasksPath);
     final tasks = <ICalTask>[];
+    var ok = 0;
+    var errors = 0;
     for (final entry in entries) {
       try {
         final href = _relativizeHref(entry.href);
@@ -49,9 +51,49 @@ class WebDavSyncService {
             await KineticEncryption.decrypt(blob, config.personalKeyBytes);
         final ical = utf8.decode(plain);
         tasks.add(ICalSerializer.vtodoToTask(ical));
+        ok++;
       } catch (e) {
+        errors++;
+        if (kDebugMode) {
+          debugPrint('[tasks] GET/decrypt failed ${entry.href}: $e');
+        }
         // Skip corrupted or unreadable files — do not abort the sync.
         continue;
+      }
+    }
+    if (kDebugMode) {
+      var open = 0;
+      var done = 0;
+      var other = 0;
+      for (final t in tasks) {
+        switch (t.status) {
+          case ICalTaskStatus.completed:
+            done++;
+          case ICalTaskStatus.needsAction:
+          case ICalTaskStatus.inProcess:
+            open++;
+          case ICalTaskStatus.cancelled:
+            other++;
+        }
+      }
+      debugPrint(
+        '[tasks] pull listed:${entries.length} ok:$ok'
+        '${errors > 0 ? ' errors:$errors' : ''} '
+        '→ total:${tasks.length} open:$open done:$done'
+        '${other > 0 ? ' other:$other' : ''}',
+      );
+      if (tasks.isNotEmpty) {
+        final ids = tasks.map((t) {
+          final id = t.uid.length <= 8 ? t.uid : t.uid.substring(0, 8);
+          final mark = switch (t.status) {
+            ICalTaskStatus.completed => 'D',
+            ICalTaskStatus.cancelled => 'X',
+            ICalTaskStatus.inProcess => 'P',
+            ICalTaskStatus.needsAction => 'O',
+          };
+          return '$id$mark';
+        }).join(', ');
+        debugPrint('[tasks] pull ids: $ids');
       }
     }
     return tasks;

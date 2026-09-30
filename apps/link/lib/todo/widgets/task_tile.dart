@@ -55,6 +55,10 @@ Future<void> completeTaskWithUndo({
       // Flutter defaults persist=true when an action is set; keep undo brief.
       persist: false,
       duration: const Duration(seconds: 4),
+      // Floating + high overflow threshold: NL "Ongedaan maken" otherwise
+      // stacks under the label and makes a fixed SnackBar ~2× taller.
+      behavior: SnackBarBehavior.floating,
+      actionOverflowThreshold: 1,
       action: SnackBarAction(
         label: l10n.commonUndo,
         onPressed: () {

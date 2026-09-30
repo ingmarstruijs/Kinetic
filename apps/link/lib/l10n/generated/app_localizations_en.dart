@@ -170,7 +170,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFamilyMemberLinkHint =>
-      'Start, join, invite adults, or link kids';
+      'Invite adults or kids, or join a family';
 
   @override
   String get settingsFamilyHubStatusNoKey => 'No family key yet';
@@ -181,6 +181,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFamilyHubStatusReady => 'Family key ready';
+
+  @override
+  String get settingsFamilyHubKeyLabel => 'Family key';
+
+  @override
+  String get settingsFamilyHubKeyMissing => 'Not set';
 
   @override
   String get settingsFamilyHubStart => 'Start family';
@@ -204,18 +210,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Share your family key so another Link can join';
 
   @override
-  String get settingsFamilyHubLinkKids => 'Link kids app';
+  String get settingsFamilyHubLinkKids => 'Invite kid';
 
   @override
   String get settingsFamilyHubLinkKidsSubtitle =>
-      'Enroll a child device with a QR (creates a key if needed)';
+      'Enter the child’s name, then show a QR for the kids app';
 
   @override
-  String get settingsFamilyHubAdoptDifferent => 'Use a different family key';
+  String get settingsFamilyHubAdultsSection => 'ADULTS';
 
   @override
-  String get settingsFamilyHubAdoptDifferentSubtitle =>
-      'Replace this key — current shared data becomes unreadable';
+  String get settingsFamilyHubKidsSection => 'KIDS';
+
+  @override
+  String get settingsFamilyHubAdultsNone => 'No other adults linked yet.';
 
   @override
   String get settingsKids => 'Kids';
@@ -312,7 +320,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyKeyAlreadyPairedWarning =>
-      'You already have a family key. Importing a new one will make data encrypted with the current key unreadable until you sync again.';
+      'This device already has a family key. Leave the current family first (Family → Leave family), then join again. Importing another key on the same WebDAV server is not supported.';
 
   @override
   String get familyKeyEnterTitle => 'Enter family key';
@@ -573,7 +581,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyMemberUnlinkBody =>
-      'All shared notes will be removed from this device. Your own tasks and private notes stay. Other family members keep their connection — only you leave the shared workspace.';
+      'This device leaves the family on this WebDAV server (only one family per shared folder).\n\n• Shared notes and proposals are removed locally\n• Linked kids are unenrolled (their apps disconnect on next sync)\n• The family key is deleted from this device\n\nYour personal tasks and private notes stay. Shared files on the server remain until someone with the old key removes them — this device cannot read them afterward.\n\nTo join another family, leave first, then use Join family.';
 
   @override
   String get familyMemberShareViaQr => 'Share family key via QR';
@@ -615,7 +623,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get familyMemberUnlinkSubtitle =>
-      'Remove the family key and shared notes from this device.';
+      'Unenroll kids, remove shared data and the family key from this device.';
 
   @override
   String get familyMemberRemoveTooltip => 'Remove from family';
@@ -722,10 +730,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get kidsLinkApp => 'Link kids app';
+  String get kidsLinkApp => 'Invite kid';
 
   @override
-  String get kidsLinkAppSubtitle => 'Have the kids app scan the QR code.';
+  String get kidsLinkAppSubtitle =>
+      'Enter the child’s name, then show a QR for the kids app.';
 
   @override
   String get kidsEnrolledSection => 'ENROLLED KIDS';

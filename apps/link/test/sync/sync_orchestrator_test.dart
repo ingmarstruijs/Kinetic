@@ -1,8 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'dart:typed_data';
+import 'package:link/sync/sync_orchestrator.dart';
+import 'package:link/sync/webdav_config_repository.dart';
 import 'package:link/todo/models/enums.dart';
 import 'package:link/todo/models/personal_task.dart';
+
+import '../helpers/test_database.dart';
 
 void main() {
   group('SyncConfig WebDAV Configuration', () {
@@ -260,6 +264,53 @@ void main() {
             updated.updatedAt.isAtSameMomentAs(originalCreatedAt),
         isTrue,
       );
+    });
+  });
+
+  group('syncFamilyState', () {
+    test('no-ops when family key is missing', () async {
+      final db = createTestDatabase();
+      addTearDown(db.close);
+      final orch = SyncOrchestrator(
+        db: db,
+        config: SyncConfig(
+          serverUrl: 'https://dav.example.com',
+          username: 'user',
+          password: 'pass',
+          linkId: 'link-1',
+          personalKeyBytes: Uint8List.fromList(List.filled(32, 1)),
+        ),
+      );
+      await orch.syncFamilyState();
+    });
+
+    test('picks up family key saved to config repo after construct', () async {
+      final db = createTestDatabase();
+      addTearDown(db.close);
+      final store = InMemoryKeyValueStore();
+      final repo = WebDavConfigRepository(store);
+      final personal = Uint8List.fromList(List.filled(32, 1));
+      // Unreachable local port so WebDAV calls fail fast after reload.
+      await repo.save(
+        SyncConfig(
+          serverUrl: 'https://127.0.0.1:1',
+          username: 'user',
+          password: 'pass',
+          linkId: 'link-1',
+          personalKeyBytes: personal,
+        ),
+      );
+      final orch = SyncOrchestrator(
+        db: db,
+        config: (await repo.load())!,
+        configRepository: repo,
+      );
+      expect(orch.config.familyKeyBytes, isNull);
+
+      final familyKey = Uint8List.fromList(List.filled(32, 9));
+      await repo.saveFamilyKey(familyKey);
+      await orch.syncFamilyState();
+      expect(orch.config.familyKeyBytes, familyKey);
     });
   });
 }

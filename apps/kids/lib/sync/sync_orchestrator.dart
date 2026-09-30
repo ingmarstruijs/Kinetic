@@ -47,6 +47,7 @@ class KidsSyncOrchestrator {
     this.onDisconnected,
     this.onXpResetReceived,
     this.onGoalReceived,
+    this.onXpEnabledReceived,
     this.onNewTaskReceived,
   }) : _db = db,
        _repo = repo,
@@ -63,6 +64,10 @@ class KidsSyncOrchestrator {
 
   /// Optional callback when the kid's goal document is pulled (or null if removed).
   final void Function(KidGoal? goal)? onGoalReceived;
+
+  /// Optional callback when the roster's [FamilyKidMember.xpEnabled] for this
+  /// kid is pulled. Adults can turn XP/goals off per kid on Link.
+  final void Function(bool xpEnabled)? onXpEnabledReceived;
 
   /// Optional callback invoked for each new task received from the link app.
   /// The caller can use this to show a local notification.
@@ -99,6 +104,8 @@ class KidsSyncOrchestrator {
     await _checkDisconnect(service);
     // Pull XP reset timestamp set by the link app
     await _pullXpReset(service);
+    // Pull whether adults still want XP/goals shown for this kid
+    await _pullXpEnabled(service);
     // Pull goal for this kid (hero UI)
     await _pullGoal(service);
     await configRepo?.saveLastSyncAt(DateTime.now().toUtc());
@@ -144,6 +151,19 @@ class KidsSyncOrchestrator {
       if (resetAt != null) {
         onXpResetReceived!(resetAt);
       }
+    } catch (_) {
+      // Non-critical.
+    }
+  }
+
+  Future<void> _pullXpEnabled(WebDavSyncService service) async {
+    if (_myKidId.isEmpty || onXpEnabledReceived == null) return;
+    try {
+      final roster = await service.pullRoster();
+      if (roster == null) return;
+      final me = roster.kids.where((k) => k.id == _myKidId).firstOrNull;
+      if (me == null) return;
+      onXpEnabledReceived!(me.xpEnabled);
     } catch (_) {
       // Non-critical.
     }

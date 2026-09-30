@@ -116,6 +116,11 @@ class DemoSession extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeKid(String kidId) {
+    kids = [for (final k in kids) if (k.id != kidId) k];
+    notifyListeners();
+  }
+
   void clear() {
     active = false;
     hasOtherLinkMembers = false;

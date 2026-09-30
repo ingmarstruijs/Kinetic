@@ -337,6 +337,11 @@ class WebDavConfigRepository {
     await _writeEnrolledKids(kids);
   }
 
+  /// Clears the enrolled-kids list (after disconnect tombstones on leave).
+  Future<void> clearEnrolledKids() async {
+    await _store.delete(key: _kEnrolledKids);
+  }
+
   /// Removes a kid by ID from the enrolled list.
   Future<void> removeEnrolledKid(String kidId) async {
     final kids = await loadEnrolledKids();

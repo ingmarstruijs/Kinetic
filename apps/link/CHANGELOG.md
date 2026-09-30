@@ -10,6 +10,21 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-09-30
+
+### Store
+Family hub polish: clearer leave/join, compact undo toast, and fairer load metrics.
+
+### Changed
+- Family hub refreshes the roster on open with clearer leave, join, and invite flows.
+- Complete-task undo SnackBar is compact and floating.
+- Ambient load metrics exclude kids-linked tasks from open counts.
+- Richer tasks/notes sync debug logging.
+
+### Fixed
+- Leave family clears local key state without deleting personal `family.key.enc`.
+- Short-UID notes debug no longer throws on short IDs.
+
 ## [0.4.2] - 2026-09-29
 
 ### Store

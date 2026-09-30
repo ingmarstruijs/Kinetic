@@ -9,8 +9,8 @@ Maintainer/agent release order (GitHub **and** F-Droid):
 
 | App | Application ID | Listing |
 | --- | --- | --- |
-| Kinetic Link | `net.moonbaseone.kinetic.link` | **MR open** — [!50470](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50470); updating to **0.4.2** (Flutter extract, no YAML Description, ABI splits) |
-| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **MR open** — [!50471](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50471); updating to **0.4.2** (same recipe fixes) |
+| Kinetic Link | `net.moonbaseone.kinetic.link` | **MR open** — [!50470](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50470); updating to **0.4.3** (Family hub leave/join polish) |
+| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **MR open** — [!50471](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50471); updating to **0.4.3** (same family sync hardening) |
 
 Kids on F-Droid is the Android companion to Link; other Kids platforms in the
 monorepo are out of scope for fdroiddata.

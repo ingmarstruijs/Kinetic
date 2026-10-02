@@ -192,7 +192,9 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
       ),
       child: Scaffold(
+        backgroundColor: scheme.surfaceContainerLowest,
         appBar: AppBar(
+          backgroundColor: scheme.surfaceContainerLowest,
           title: AppHeader(
             title: AppLocalizations.of(context).notesTitle,
             centerTitle: false,
@@ -924,8 +926,16 @@ class _NoteCard extends StatelessWidget {
         note.remindAt != null || note.isContentHidden || note.isLocalOnly;
 
     return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      color: scheme.surface,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: scheme.outlineVariant.withValues(alpha: 0.45),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         onLongPress: () => _pickCategory(context),

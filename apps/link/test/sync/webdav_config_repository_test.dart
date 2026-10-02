@@ -207,4 +207,39 @@ void main() {
       },
     );
   });
+
+  group('cached shared kids tasks', () {
+    test('save/load roundtrip preserves uid, summary, and status', () async {
+      final store = InMemoryKeyValueStore();
+      final repo = WebDavConfigRepository(store);
+      final now = DateTime.utc(2026, 9, 15);
+
+      await repo.saveCachedSharedKidsTasks([
+        ICalTask(
+          uid: 'open-1',
+          summary: 'Make bed',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+        ),
+        ICalTask(
+          uid: 'pending-1',
+          summary: 'Brush teeth',
+          status: ICalTaskStatus.inProcess,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+
+      final loaded = await repo.loadCachedSharedKidsTasks();
+      expect(loaded, isNotNull);
+      expect(loaded!, hasLength(2));
+      expect(loaded[0].uid, 'open-1');
+      expect(loaded[0].summary, 'Make bed');
+      expect(loaded[0].status, ICalTaskStatus.needsAction);
+      expect(loaded[1].uid, 'pending-1');
+      expect(loaded[1].summary, 'Brush teeth');
+      expect(loaded[1].status, ICalTaskStatus.inProcess);
+    });
+  });
 }

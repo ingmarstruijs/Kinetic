@@ -3950,6 +3950,60 @@ abstract class AppLocalizations {
   /// **'Kids'**
   String get kidsSectionTitle;
 
+  /// No description provided for @adultsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adults'**
+  String get adultsSectionTitle;
+
+  /// No description provided for @nudgeSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Nudge'**
+  String get nudgeSend;
+
+  /// No description provided for @nudgeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nudge sent to {name}'**
+  String nudgeSent(String name);
+
+  /// No description provided for @nudgeCooldown.
+  ///
+  /// In en, this message translates to:
+  /// **'You already sent a nudge recently — try again in a few minutes.'**
+  String get nudgeCooldown;
+
+  /// No description provided for @nudgeReceivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Need a hand?'**
+  String get nudgeReceivedTitle;
+
+  /// No description provided for @nudgeReceivedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} asks: can I take over some of your tasks?'**
+  String nudgeReceivedBody(String name);
+
+  /// No description provided for @nudgeDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get nudgeDismiss;
+
+  /// No description provided for @nudgeSendTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a task'**
+  String get nudgeSendTask;
+
+  /// No description provided for @nudgeSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t send nudge'**
+  String get nudgeSendFailed;
+
   /// No description provided for @kidsAllFilter.
   ///
   /// In en, this message translates to:

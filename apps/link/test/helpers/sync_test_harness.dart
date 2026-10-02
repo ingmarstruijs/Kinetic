@@ -29,6 +29,7 @@ Future<({SyncOrchestrator orchestrator, WebDavSyncService service, SyncConfig co
   WebDavConfigRepository? configRepo,
   void Function(List<String> disconnectedIds)? onDisconnectsDetected,
   void Function(FamilyRoster roster)? onRosterUpdated,
+  void Function(List<FamilyNudge> nudges)? onNudgesReceived,
 }) async {
   final config = SyncConfig(
     serverUrl: 'https://fake-dav',
@@ -54,6 +55,8 @@ Future<({SyncOrchestrator orchestrator, WebDavSyncService service, SyncConfig co
     configRepository: configRepo,
     onDisconnectsDetected: onDisconnectsDetected,
     onRosterUpdated: onRosterUpdated,
+    onNudgesReceived: onNudgesReceived,
+    debugHttpClientFactory: () => FakeHttpClient(storage),
   );
   return (orchestrator: orchestrator, service: service, config: config);
 }

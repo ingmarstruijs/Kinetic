@@ -10,6 +10,25 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-02
+
+### Store
+Family ambient popover with nudges, clearer kid reminders, and accurate offline open counts.
+
+### Added
+- Ambient strip opens a full-height kids/adults popover over tasks.
+- Family nudges over WebDAV with in-app banner and local notification.
+- Sent-task cancel/skip for kids and adults in the creator app.
+
+### Changed
+- Collapsed kid rows show only name + open count; XP/goals stay expanded.
+- Ambient strip is a borderless soft card; chips mute on sync error.
+- Kid task due times labeled as reminders (not bare day/month).
+
+### Fixed
+- Offline kids open counts stay correct via cached shared status merge.
+- Ambient presence no longer looks online while the header shows sync error.
+
 ## [0.4.3] - 2026-09-30
 
 ### Store

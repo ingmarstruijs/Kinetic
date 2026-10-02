@@ -14,6 +14,75 @@ RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
+  - versionName: 0.4.4
+    versionCode: 1141
+    commit: b5d20a89d3d82b02aeec165f163366465c193843
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      # Flutter split-per-abi sets APK versionCode to abiIndex*1000+build-number
+      # (armeabi-v7a=1). Metadata versionCode must match the APK, not build-number.
+      - flutter build apk --release --split-per-abi --target-platform=android-arm
+        --build-name=$$VERSION$$ --build-number=141
+
+  - versionName: 0.4.4
+    versionCode: 2142
+    commit: b5d20a89d3d82b02aeec165f163366465c193843
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-arm64
+        --build-name=$$VERSION$$ --build-number=142
+
+  - versionName: 0.4.4
+    versionCode: 4143
+    commit: b5d20a89d3d82b02aeec165f163366465c193843
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$$flutter$$/bin:$PATH"
+      # x86_64 abiIndex is 4 (3 was retired with 32-bit x86).
+      - flutter build apk --release --split-per-abi --target-platform=android-x64
+        --build-name=$$VERSION$$ --build-number=143
+
   - versionName: 0.4.3
     versionCode: 1131
     commit: e464a1ab0844e5b888747d1f380836606d1b588f
@@ -151,5 +220,5 @@ Builds:
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.4.3
-CurrentVersionCode: 4133
+CurrentVersion: 0.4.4
+CurrentVersionCode: 4143

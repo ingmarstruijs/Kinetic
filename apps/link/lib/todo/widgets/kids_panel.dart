@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../sync/sync_status.dart';
 import '../../sync/webdav_config_repository.dart';
+import '../../theme/app_themes.dart';
 import '../services/todo_repository.dart';
 import 'tasks_section_header.dart';
 
@@ -1222,11 +1223,18 @@ class _KidsTaskTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final due = task.dueAt;
+    final due = task.dueAt ?? task.remindAt;
     final pending = task.status == ICalTaskStatus.inProcess;
+    // Timed when a remindAt is set (or due has a clock time); bare day/month
+    // looked like a created-on stamp.
+    final allDay = task.remindAt == null &&
+        due != null &&
+        due.toLocal().hour == 0 &&
+        due.toLocal().minute == 0;
     final subtitleParts = [
       if (pending) l10n.kidsPendingVerification,
-      if (due != null) '${due.toLocal().day}/${due.toLocal().month}',
+      if (due != null)
+        '${l10n.commonReminder} · ${formatDueDate(due, l10n, allDay: allDay)}',
     ];
 
     return Column(

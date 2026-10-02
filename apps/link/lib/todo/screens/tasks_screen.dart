@@ -395,6 +395,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   pullPresence: widget.pullPresence,
                   pullLoadMetrics: widget.pullLoadMetrics,
                   syncDoneCount: widget.syncDoneCount,
+                  syncStatus: widget.syncStatus,
                   configRepo: widget.configRepo,
                   enrolledKidsCount: widget.enrolledKidsCount,
                   onOpenKids: _showFamilyPopover ? _toggleFamilyPopover : null,

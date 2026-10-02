@@ -4,6 +4,7 @@ import 'package:kinetic_webdav/kinetic_webdav.dart';
 import '../../family/family_connection_service.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../settings/models/enrolled_kid.dart';
+import '../../sync/sync_status.dart';
 import '../../sync/webdav_config_repository.dart';
 
 /// Subtle presence + coarse load chips for the Tasks header (no messaging).
@@ -19,6 +20,10 @@ class FamilyAmbientStrip extends StatefulWidget {
   final Future<List<PresenceInfo>> Function()? pullPresence;
   final Future<List<LoadMetrics>> Function()? pullLoadMetrics;
   final ValueNotifier<int>? syncDoneCount;
+
+  /// When sync is in error (e.g. offline), chips show as disconnected even if
+  /// the last successful presence pull still looks fresh.
+  final ValueNotifier<SyncStatusInfo>? syncStatus;
 
   /// When set, tapping the strip opens the kids popover.
   final VoidCallback? onOpenKids;
@@ -42,6 +47,7 @@ class FamilyAmbientStrip extends StatefulWidget {
     this.pullPresence,
     this.pullLoadMetrics,
     this.syncDoneCount,
+    this.syncStatus,
     this.onOpenKids,
     this.kidsPopoverOpen = false,
     this.kidsPendingCount = 0,
@@ -61,6 +67,7 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
   void initState() {
     super.initState();
     widget.syncDoneCount?.addListener(_reload);
+    widget.syncStatus?.addListener(_onSyncStatusChanged);
     if (widget.visible) _reload();
   }
 
@@ -70,6 +77,10 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
     if (oldWidget.syncDoneCount != widget.syncDoneCount) {
       oldWidget.syncDoneCount?.removeListener(_reload);
       widget.syncDoneCount?.addListener(_reload);
+    }
+    if (oldWidget.syncStatus != widget.syncStatus) {
+      oldWidget.syncStatus?.removeListener(_onSyncStatusChanged);
+      widget.syncStatus?.addListener(_onSyncStatusChanged);
     }
     if (widget.visible &&
         (oldWidget.visible != widget.visible ||
@@ -82,8 +93,16 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
   @override
   void dispose() {
     widget.syncDoneCount?.removeListener(_reload);
+    widget.syncStatus?.removeListener(_onSyncStatusChanged);
     super.dispose();
   }
+
+  void _onSyncStatusChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _syncUnreachable =>
+      widget.syncStatus?.value.status == SyncStatus.error;
 
   Future<void> _reload() async {
     if (!widget.visible) return;
@@ -116,6 +135,18 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
     });
   }
 
+  FamilyMemberStatus _displayStatus(FamilyMemberStatus member) {
+    if (!_syncUnreachable || !member.isConnected) return member;
+    return FamilyMemberStatus(
+      id: member.id,
+      name: member.name,
+      type: member.type,
+      isConnected: false,
+      isStale: false,
+      lastSeen: member.lastSeen,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!widget.visible) return const SizedBox.shrink();
@@ -125,6 +156,7 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
     final scheme = theme.colorScheme;
     final now = DateTime.now();
     final loadById = {for (final m in _loadMetrics) m.linkId: m};
+    final syncUnreachable = _syncUnreachable;
 
     final linkMembers = FamilyConnectionService.linkStatuses(
       otherLinkMembers: [
@@ -145,7 +177,9 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
       presenceList: _presence,
       now: now,
     );
-    final members = [...linkMembers, ...kids];
+    final members = [
+      for (final m in [...linkMembers, ...kids]) _displayStatus(m),
+    ];
     final canOpen = widget.onOpenKids != null;
     if (members.isEmpty && !canOpen) return const SizedBox.shrink();
 
@@ -174,10 +208,13 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
                           _AmbientChip(
                             label: member.name,
                             count: _openCount(l10n, member, loadById, now),
-                            countMuted:
-                                member.type == FamilyMemberType.linkMember
-                                ? _loadMetricsStale(loadById[member.id], now)
-                                : false,
+                            countMuted: syncUnreachable ||
+                                (member.type == FamilyMemberType.linkMember
+                                    ? _loadMetricsStale(
+                                        loadById[member.id],
+                                        now,
+                                      )
+                                    : false),
                             tooltip: member.statusLabel(l10n),
                             dotColor: _dotColor(scheme, member),
                           ),

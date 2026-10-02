@@ -151,6 +151,15 @@ class KidsPanel extends StatefulWidget {
   /// When false, hide create/delete/goal actions (still show list if any).
   final bool kidsParticipation;
 
+  /// When true, hide the collapsible section header (used inside ambient popover).
+  final bool popoverMode;
+
+  /// Called when pending-verification total changes (for ambient bar badge).
+  final ValueChanged<int>? onPendingCountChanged;
+
+  /// Called with open-task counts per kid id (for ambient bar chips).
+  final ValueChanged<Map<String, int>>? onOpenCountsChanged;
+
   const KidsPanel({
     super.key,
     required this.configRepo,
@@ -165,6 +174,9 @@ class KidsPanel extends StatefulWidget {
     this.onCreateTask,
     this.myLinkId,
     this.kidsParticipation = true,
+    this.popoverMode = false,
+    this.onPendingCountChanged,
+    this.onOpenCountsChanged,
   });
 
   @override
@@ -176,6 +188,8 @@ class KidsPanelState extends State<KidsPanel> {
   bool _expanded = true;
   String? _filterKey;
   String? _openKidKey;
+  int _lastPendingReported = -1;
+  Map<String, int>? _lastOpenCountsReported;
 
   @override
   void initState() {
@@ -220,6 +234,14 @@ class KidsPanelState extends State<KidsPanel> {
     return true;
   }
 
+  bool _mapEquals(Map<String, int> a, Map<String, int> b) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (b[e.key] != e.value) return false;
+    }
+    return true;
+  }
+
   void reload() {
     final next = _load();
     setState(() {
@@ -250,8 +272,11 @@ class KidsPanelState extends State<KidsPanel> {
     final enrolledKids = await _resolveEnrolledKids();
 
     Future<List<ICalTask>> localFallback() async {
-      final local = await widget.todoRepo?.loadLocalKidsTasksAsShared();
-      return local ?? const [];
+      final cached = await widget.configRepo.loadCachedSharedKidsTasks();
+      final local = await widget.todoRepo?.loadLocalKidsTasksAsShared(
+        cachedShared: cached,
+      );
+      return local ?? cached ?? const [];
     }
 
     if (widget.pullSharedTasks != null) {
@@ -259,6 +284,7 @@ class KidsPanelState extends State<KidsPanel> {
         final tasks = await widget.pullSharedTasks!().timeout(
           const Duration(seconds: 10),
         );
+        await widget.configRepo.saveCachedSharedKidsTasks(tasks);
         return _KidsPanelData(
           tasks: tasks,
           enrolledKids: enrolledKids,
@@ -293,6 +319,7 @@ class KidsPanelState extends State<KidsPanel> {
       final tasks = await service.pullSharedTasks().timeout(
         const Duration(seconds: 10),
       );
+      await widget.configRepo.saveCachedSharedKidsTasks(tasks);
       Map<String, KidGoal> goals = const {};
       try {
         goals = await service
@@ -663,14 +690,38 @@ class KidsPanelState extends State<KidsPanel> {
             : groups.where((g) => g.key == _filterKey).toList();
         final pendingTotal =
             groups.fold<int>(0, (sum, g) => sum + g.pendingCount);
+        if (pendingTotal != _lastPendingReported) {
+          _lastPendingReported = pendingTotal;
+          final notify = widget.onPendingCountChanged;
+          if (notify != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              notify(pendingTotal);
+            });
+          }
+        }
 
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+        final openCounts = <String, int>{
+          for (final g in groups)
+            if (g.key != '__everyone__') g.key: g.openCount,
+        };
+        if (_lastOpenCountsReported == null ||
+            !_mapEquals(_lastOpenCountsReported!, openCounts)) {
+          _lastOpenCountsReported = openCounts;
+          final notifyOpen = widget.onOpenCountsChanged;
+          if (notifyOpen != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              notifyOpen(openCounts);
+            });
+          }
+        }
+
+        final showBody = widget.popoverMode || _expanded;
+
+        final content = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!widget.popoverMode)
               TasksSectionHeader(
                 icon: Icons.people_outline,
                 title: l10n.kidsSectionTitle,
@@ -692,130 +743,153 @@ class KidsPanelState extends State<KidsPanel> {
                         ),
                         visualDensity: VisualDensity.compact,
                       ),
-              ),
-              if (data.offline ||
-                  widget.syncStatus?.value.status == SyncStatus.error)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.cloud_off_outlined,
-                        size: 16,
-                        color: scheme.error,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          l10n.kidsOfflineBanner,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.error,
-                          ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 18,
+                      color: scheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.kidsSectionTitle.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    if (widget.onCreateTask != null)
+                      IconButton(
+                        tooltip: l10n.kidsCreateForEveryone,
+                        icon: Icon(
+                          Icons.group_add_outlined,
+                          size: 20,
+                          color: scheme.primary,
+                        ),
+                        onPressed: () => widget.onCreateTask!(
+                          kidId: null,
+                          everyone: true,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
                 ),
-              if (_expanded) ...[
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
+              ),
+            if (showBody) ...[
+              const SizedBox(height: 8),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _KidChip(
+                      selected: _filterKey == null,
+                      label: l10n.kidsAllFilter,
+                      onTap: () => setState(() {
+                        _filterKey = null;
+                        _openKidKey = null;
+                      }),
+                    ),
+                    for (final kid in data.enrolledKids) ...[
+                      const SizedBox(width: 8),
                       _KidChip(
-                        selected: _filterKey == null,
-                        label: l10n.kidsAllFilter,
+                        selected: _filterKey == kid.id,
+                        label: kid.name,
+                        color: kidAvatarColor(kid.name),
+                        initials: kidInitials(kid.name),
                         onTap: () => setState(() {
-                          _filterKey = null;
-                          _openKidKey = null;
+                          _filterKey = kid.id;
+                          _openKidKey = kid.id;
                         }),
                       ),
-                      for (final kid in data.enrolledKids) ...[
-                        const SizedBox(width: 8),
-                        _KidChip(
-                          selected: _filterKey == kid.id,
-                          label: kid.name,
-                          color: kidAvatarColor(kid.name),
-                          initials: kidInitials(kid.name),
-                          onTap: () => setState(() {
-                            _filterKey = kid.id;
-                            _openKidKey = kid.id;
-                          }),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                if (visible.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      l10n.tasksNoKidsAssignments,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+              ),
+              const SizedBox(height: 10),
+              if (visible.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    l10n.tasksNoKidsAssignments,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
-                  )
-                else
-                  for (final group in visible)
-                    _KidGroupCard(
-                      group: group,
-                      xpEnabled: _xpEnabledFor(data.enrolledKids, group.key),
-                      expanded: _openKidKey == group.key,
-                      onToggle: () => setState(() {
-                        _openKidKey = _openKidKey == group.key
-                            ? null
-                            : group.key;
-                      }),
-                      onCreate: !widget.kidsParticipation ||
-                              widget.onCreateTask == null
-                          ? null
-                          : () => widget.onCreateTask!(
-                              kidId: group.key == '__everyone__'
-                                  ? null
-                                  : group.key,
-                              everyone: group.key == '__everyone__',
-                            ),
-                      onSetGoal: !widget.kidsParticipation ||
-                              group.key == '__everyone__' ||
-                              !_xpEnabledFor(data.enrolledKids, group.key)
-                          ? null
-                          : () => _editGoal(group),
-                      onRenameGoal: !widget.kidsParticipation ||
-                              group.goal == null ||
-                              !_xpEnabledFor(data.enrolledKids, group.key)
-                          ? null
-                          : () => _editGoal(group, renameOnly: true),
-                      onRemoveGoal: !widget.kidsParticipation ||
-                              group.goal == null ||
-                              !_xpEnabledFor(data.enrolledKids, group.key)
-                          ? null
-                          : () => _removeGoal(group),
-                      onResetGoal: !widget.kidsParticipation ||
-                              group.key == '__everyone__' ||
-                              !_xpEnabledFor(data.enrolledKids, group.key)
-                          ? null
-                          : () => _resetXpAndGoal(group),
-                      onDeleteTask: _canDeleteKidTask ? _deleteKidTask : null,
-                      onAccept: widget.onAcceptKidTask == null
-                          ? null
-                          : (task) async {
-                              if (!_canVerify(task)) return;
-                              await _accept(task);
-                            },
-                      onReject: widget.onRejectKidTask == null
-                          ? null
-                          : (task) async {
-                              if (!_canVerify(task)) return;
-                              await _reject(task);
-                            },
-                      canVerify: _canVerify,
-                    ),
-              ],
+                  ),
+                )
+              else
+                for (final group in visible)
+                  _KidGroupCard(
+                    group: group,
+                    xpEnabled: _xpEnabledFor(data.enrolledKids, group.key),
+                    expanded: _openKidKey == group.key,
+                    onToggle: () => setState(() {
+                      _openKidKey =
+                          _openKidKey == group.key ? null : group.key;
+                    }),
+                    onCreate: !widget.kidsParticipation ||
+                            widget.onCreateTask == null
+                        ? null
+                        : () => widget.onCreateTask!(
+                            kidId: group.key == '__everyone__'
+                                ? null
+                                : group.key,
+                            everyone: group.key == '__everyone__',
+                          ),
+                    onSetGoal: !widget.kidsParticipation ||
+                            group.key == '__everyone__' ||
+                            !_xpEnabledFor(data.enrolledKids, group.key)
+                        ? null
+                        : () => _editGoal(group),
+                    onRenameGoal: !widget.kidsParticipation ||
+                            group.goal == null ||
+                            !_xpEnabledFor(data.enrolledKids, group.key)
+                        ? null
+                        : () => _editGoal(group, renameOnly: true),
+                    onRemoveGoal: !widget.kidsParticipation ||
+                            group.goal == null ||
+                            !_xpEnabledFor(data.enrolledKids, group.key)
+                        ? null
+                        : () => _removeGoal(group),
+                    onResetGoal: !widget.kidsParticipation ||
+                            group.key == '__everyone__' ||
+                            !_xpEnabledFor(data.enrolledKids, group.key)
+                        ? null
+                        : () => _resetXpAndGoal(group),
+                    onDeleteTask: _canDeleteKidTask ? _deleteKidTask : null,
+                    onAccept: widget.onAcceptKidTask == null
+                        ? null
+                        : (task) async {
+                            if (!_canVerify(task)) return;
+                            await _accept(task);
+                          },
+                    onReject: widget.onRejectKidTask == null
+                        ? null
+                        : (task) async {
+                            if (!_canVerify(task)) return;
+                            await _reject(task);
+                          },
+                    canVerify: _canVerify,
+                  ),
             ],
-            ),
-          ),
+          ],
+        );
+
+        // In popover mode the parent provides the vertical scroll so adults +
+        // kids share one scrollbar; otherwise keep the section self-scrolling.
+        return Padding(
+          padding: widget.popoverMode
+              ? const EdgeInsets.fromLTRB(16, 8, 16, 12)
+              : const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: widget.popoverMode
+              ? content
+              : SingleChildScrollView(child: content),
         );
       },
     );
@@ -934,143 +1008,46 @@ class _KidGroupCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 10,
+                  vertical: 8,
                 ),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 18,
+                      radius: 14,
                       backgroundColor: kidAvatarColor(group.name),
                       foregroundColor: Colors.white,
                       child: Text(
                         kidInitials(group.name),
-                        style: const TextStyle(fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            group.name,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            l10n.kidsOpenTasks(group.openCount),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                          if (goal != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              goal.title,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.primary,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: group.name,
+                              style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 6,
+                            TextSpan(
+                              text: '  ${group.openCount}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: scheme.onSurface,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              l10n.kidsXpProgress(
-                                group.displayXp,
-                                goal.targetXp,
-                              ),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ] else if (xpEnabled)
-                            Text(
-                              l10n.kidsXpTotal(group.displayXp),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          if (group.pendingCount > 0)
-                            Text(
-                              expanded
-                                  ? l10n.kidsPendingVerification
-                                  : l10n.kidsPendingExpandHint(
-                                      group.pendingCount,
-                                    ),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.tertiary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                        ],
+                          ],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (onCreate != null)
-                      IconButton(
-                        tooltip: l10n.kidsCreateTask,
-                        icon: Icon(
-                          Icons.add_circle_outline,
-                          color: scheme.primary,
-                          size: 22,
-                        ),
-                        onPressed: onCreate,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    if (onSetGoal != null || onResetGoal != null)
-                      PopupMenuButton<String>(
-                        icon: Icon(
-                          Icons.more_horiz,
-                          color: scheme.outline,
-                          size: 20,
-                        ),
-                        onSelected: (value) {
-                          switch (value) {
-                            case 'set':
-                              onSetGoal?.call();
-                            case 'rename':
-                              onRenameGoal?.call();
-                            case 'remove':
-                              onRemoveGoal?.call();
-                            case 'reset':
-                              onResetGoal?.call();
-                          }
-                        },
-                        itemBuilder: (ctx) => [
-                          if (onSetGoal != null)
-                            PopupMenuItem(
-                              value: 'set',
-                              child: Text(
-                                goal == null
-                                    ? l10n.kidsGoalSet
-                                    : l10n.kidsGoalEdit,
-                              ),
-                            ),
-                          if (onRenameGoal != null)
-                            PopupMenuItem(
-                              value: 'rename',
-                              child: Text(l10n.kidsGoalRename),
-                            ),
-                          if (onRemoveGoal != null)
-                            PopupMenuItem(
-                              value: 'remove',
-                              child: Text(l10n.kidsGoalRemove),
-                            ),
-                          if (onResetGoal != null)
-                            PopupMenuItem(
-                              value: 'reset',
-                              child: Text(l10n.kidsGoalReset),
-                            ),
-                        ],
-                      ),
                     Icon(
                       expanded ? Icons.expand_less : Icons.chevron_right,
                       color: scheme.outline,
@@ -1084,7 +1061,118 @@ class _KidGroupCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (goal != null) ...[
+                                Text(
+                                  goal.title,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    minHeight: 6,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.kidsXpProgress(
+                                    group.displayXp,
+                                    goal.targetXp,
+                                  ),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ] else if (xpEnabled)
+                                Text(
+                                  l10n.kidsXpTotal(group.displayXp),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              if (group.pendingCount > 0)
+                                Text(
+                                  l10n.kidsPendingVerification,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: scheme.tertiary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (onCreate != null)
+                          IconButton(
+                            tooltip: l10n.kidsCreateTask,
+                            icon: Icon(
+                              Icons.add_circle_outline,
+                              color: scheme.primary,
+                              size: 22,
+                            ),
+                            onPressed: onCreate,
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        if (onSetGoal != null || onResetGoal != null)
+                          PopupMenuButton<String>(
+                            icon: Icon(
+                              Icons.more_horiz,
+                              color: scheme.outline,
+                              size: 20,
+                            ),
+                            onSelected: (value) {
+                              switch (value) {
+                                case 'set':
+                                  onSetGoal?.call();
+                                case 'rename':
+                                  onRenameGoal?.call();
+                                case 'remove':
+                                  onRemoveGoal?.call();
+                                case 'reset':
+                                  onResetGoal?.call();
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              if (onSetGoal != null)
+                                PopupMenuItem(
+                                  value: 'set',
+                                  child: Text(
+                                    goal == null
+                                        ? l10n.kidsGoalSet
+                                        : l10n.kidsGoalEdit,
+                                  ),
+                                ),
+                              if (onRenameGoal != null)
+                                PopupMenuItem(
+                                  value: 'rename',
+                                  child: Text(l10n.kidsGoalRename),
+                                ),
+                              if (onRemoveGoal != null)
+                                PopupMenuItem(
+                                  value: 'remove',
+                                  child: Text(l10n.kidsGoalRemove),
+                                ),
+                              if (onResetGoal != null)
+                                PopupMenuItem(
+                                  value: 'reset',
+                                  child: Text(l10n.kidsGoalReset),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     if (open.isEmpty)
                       Align(
                         alignment: Alignment.centerLeft,

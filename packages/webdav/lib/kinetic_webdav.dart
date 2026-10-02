@@ -40,3 +40,6 @@ export 'src/kinetic_folder_probe.dart';
 
 // Kids XP goals
 export 'src/kid_goal.dart';
+
+// Adult attention nudges
+export 'src/nudge_info.dart';

@@ -11,6 +11,7 @@ import '../ical/ical_task.dart';
 import '../presence_info.dart';
 import '../kid_goal.dart';
 import '../load_metrics.dart';
+import '../nudge_info.dart';
 import '../sync_config.dart';
 import '../webdav_client.dart';
 
@@ -509,6 +510,51 @@ class WebDavSyncService {
       client.delete('$_proposalsPath/$id.json');
 
   // ---------------------------------------------------------------------------
+  // Family nudges (JSON-based attention pings)
+  // ---------------------------------------------------------------------------
+
+  String get _nudgesPath => '/kinetic/shared/nudges';
+
+  /// Pulls all family nudges (encrypted with family key).
+  Future<List<FamilyNudge>> pullNudges() async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) return [];
+
+    final entries = await _listJsonFiles(_nudgesPath);
+    final nudges = <FamilyNudge>[];
+    for (final entry in entries) {
+      try {
+        final href = _relativizeHref(entry.href);
+        final blob = await client.get(href);
+        final plain = await KineticEncryption.decrypt(blob, familyKey);
+        final json = jsonDecode(utf8.decode(plain)) as Map<String, dynamic>;
+        final parsed = FamilyNudge.tryFromJson(json);
+        if (parsed != null) nudges.add(parsed);
+      } catch (_) {
+        continue;
+      }
+    }
+    return nudges;
+  }
+
+  /// Encrypts and PUTs [nudge] to `/kinetic/shared/nudges/{id}.json`.
+  Future<void> pushNudge(FamilyNudge nudge) async {
+    final familyKey = config.familyKeyBytes;
+    if (familyKey == null) {
+      throw StateError('Family key required to push a nudge');
+    }
+
+    final plain =
+        Uint8List.fromList(utf8.encode(jsonEncode(nudge.toJson())));
+    final blob = await KineticEncryption.encrypt(plain, familyKey);
+    await _putWithCollectionFallback('$_nudgesPath/${nudge.id}.json', blob);
+  }
+
+  /// Deletes a nudge file from the server.
+  Future<void> deleteNudge(String id) =>
+      client.delete('$_nudgesPath/$id.json');
+
+  // ---------------------------------------------------------------------------
   // Load Metrics (JSON-based)
   // ---------------------------------------------------------------------------
 
@@ -838,6 +884,7 @@ class WebDavSyncService {
       _loadPath,
       _presencePath,
       _disconnectPath,
+      _nudgesPath,
       _xpResetPath,
       _goalsPath,
     ]) {

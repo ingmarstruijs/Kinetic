@@ -19,6 +19,7 @@ const _kEnrolledKids = 'kinetic_enrolled_kids';
 const _kHasOtherLinkMembers = 'kinetic_has_other_link_members';
 const _kKidsParticipation = 'kinetic_kids_participation';
 const _kCachedRoster = 'kinetic_family_roster';
+const _kCachedSharedKidsTasks = 'kinetic_shared_kids_tasks_cache';
 const _kFamilySetupEligibleAt = 'kinetic_family_setup_eligible_at';
 const _kFamilySetupPromptSkipped = 'kinetic_family_setup_prompt_skipped';
 const _kFamilySetupPromptSnoozedUntil =
@@ -185,6 +186,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kFamilyEntropy);
     await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kCachedRoster);
+    await _store.delete(key: _kCachedSharedKidsTasks);
   }
 
   /// Drops family/kids linkage when switching to a different WebDAV identity
@@ -252,6 +254,73 @@ class WebDavConfigRepository {
     if (roster.otherLinkMembers(myId).isNotEmpty) {
       await setHasOtherLinkMembers(true);
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cached shared kids tasks (offline Kids panel)
+  // ---------------------------------------------------------------------------
+
+  /// Last successful pull of shared kids tasks — used when WebDAV is offline.
+  Future<List<ICalTask>?> loadCachedSharedKidsTasks() async {
+    final raw = await _store.read(key: _kCachedSharedKidsTasks);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return [
+        for (final item in list)
+          _icalTaskFromCacheJson(item as Map<String, dynamic>),
+      ];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveCachedSharedKidsTasks(List<ICalTask> tasks) async {
+    final encoded = jsonEncode([
+      for (final t in tasks) _icalTaskToCacheJson(t),
+    ]);
+    await _store.write(key: _kCachedSharedKidsTasks, value: encoded);
+  }
+
+  Future<void> clearCachedSharedKidsTasks() async {
+    await _store.delete(key: _kCachedSharedKidsTasks);
+  }
+
+  static Map<String, dynamic> _icalTaskToCacheJson(ICalTask t) => {
+    'uid': t.uid,
+    'summary': t.summary,
+    'description': t.description,
+    'status': t.status.toICalString(),
+    'priority': t.priority,
+    'createdAt': t.createdAt.toUtc().toIso8601String(),
+    'updatedAt': t.updatedAt.toUtc().toIso8601String(),
+    'dueAt': t.dueAt?.toUtc().toIso8601String(),
+    'remindAt': t.remindAt?.toUtc().toIso8601String(),
+    'rrule': t.rrule,
+  };
+
+  static ICalTask _icalTaskFromCacheJson(Map<String, dynamic> json) {
+    DateTime? parseDt(Object? v) {
+      if (v is! String || v.isEmpty) return null;
+      return DateTime.tryParse(v)?.toUtc();
+    }
+
+    final created =
+        parseDt(json['createdAt']) ??
+        DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    final updated = parseDt(json['updatedAt']) ?? created;
+    return ICalTask(
+      uid: json['uid'] as String? ?? '',
+      summary: json['summary'] as String? ?? '',
+      description: json['description'] as String?,
+      status: ICalTaskStatus.fromICalString(json['status'] as String? ?? ''),
+      priority: (json['priority'] as num?)?.toInt() ?? 0,
+      createdAt: created,
+      updatedAt: updated,
+      dueAt: parseDt(json['dueAt']),
+      remindAt: parseDt(json['remindAt']),
+      rrule: json['rrule'] as String?,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -437,6 +506,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kKidsParticipation);
     await _store.delete(key: _kCachedRoster);
+    await _store.delete(key: _kCachedSharedKidsTasks);
     await _store.delete(key: _kEnrolledKids);
     await clearFamilySetupPrompt();
   }
@@ -453,6 +523,7 @@ class WebDavConfigRepository {
     await _store.delete(key: _kHasOtherLinkMembers);
     await _store.delete(key: _kKidsParticipation);
     await _store.delete(key: _kCachedRoster);
+    await _store.delete(key: _kCachedSharedKidsTasks);
     await _store.delete(key: _kEnrolledKids);
     await clearFamilySetupPrompt();
   }

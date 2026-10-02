@@ -3,6 +3,7 @@ import '../../l10n/generated/app_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../debug/demo_session.dart';
+import '../../family/family_connection_service.dart';
 import '../../family/proposals/link_member_proposal_repository.dart';
 import '../../settings/models/enrolled_kid.dart';
 import '../../settings/settings_repository.dart';
@@ -13,6 +14,7 @@ import '../../todo/models/personal_task.dart';
 import '../../todo/services/ai_suggestion_repository.dart';
 import '../../todo/services/note_repository.dart';
 import '../../todo/services/todo_repository.dart';
+import '../../todo/widgets/family_adults_section.dart';
 import '../../todo/widgets/kids_panel.dart';
 import '../../todo/widgets/quick_add_bar.dart';
 import '../../todo/widgets/suggestions_panel.dart';
@@ -47,6 +49,7 @@ class TasksScreen extends StatefulWidget {
   final Future<void> Function(ICalTask task)? onDeleteKidTask;
   final Future<void> Function(ICalTask task)? onAcceptKidTask;
   final Future<void> Function(ICalTask task)? onRejectKidTask;
+  final Future<void> Function(String toLinkId, String toName)? onSendNudge;
 
   /// False when this link member turned off kids panels in settings.
   final bool kidsParticipation;
@@ -75,6 +78,7 @@ class TasksScreen extends StatefulWidget {
     this.onDeleteKidTask,
     this.onAcceptKidTask,
     this.onRejectKidTask,
+    this.onSendNudge,
     this.kidsParticipation = true,
   });
 
@@ -84,12 +88,18 @@ class TasksScreen extends StatefulWidget {
 
 class _TasksScreenState extends State<TasksScreen> {
   final _kidsKey = GlobalKey<KidsPanelState>();
+  final _ambientKey = GlobalKey();
   bool _suggestionsVisible = false;
+  bool _familyPopoverOpen = false;
+  int _kidsPendingCount = 0;
+  Map<String, int> _kidsOpenCounts = const {};
+  List<PresenceInfo> _presence = const [];
 
   @override
   void initState() {
     super.initState();
     widget.syncDoneCount?.addListener(_onSyncDone);
+    _reloadPresence();
   }
 
   @override
@@ -99,9 +109,26 @@ class _TasksScreenState extends State<TasksScreen> {
       old.syncDoneCount?.removeListener(_onSyncDone);
       widget.syncDoneCount?.addListener(_onSyncDone);
     }
+    if (old.pullPresence != widget.pullPresence ||
+        old.otherLinkMembers != widget.otherLinkMembers) {
+      _reloadPresence();
+    }
   }
 
-  void _onSyncDone() => _kidsKey.currentState?.reload();
+  void _onSyncDone() {
+    _kidsKey.currentState?.reload();
+    _reloadPresence();
+  }
+
+  Future<void> _reloadPresence() async {
+    final pull = widget.pullPresence;
+    if (pull == null) return;
+    try {
+      final list = await pull();
+      if (!mounted) return;
+      setState(() => _presence = list);
+    } catch (_) {}
+  }
 
   Future<void> _showKidsCreateSheet(
     BuildContext context, {
@@ -181,9 +208,125 @@ class _TasksScreenState extends State<TasksScreen> {
     return widget.pullSharedTasks != null || widget.syncConfig != null;
   }
 
+  bool get _showFamilyPopover =>
+      _showKids || (widget.hasFamilyKey && widget.hasOtherLinkMembers);
+
+  bool get _showAdultsSection => widget.otherLinkMembers.isNotEmpty;
+
+  bool get _showAmbientStrip =>
+      widget.hasFamilyKey &&
+      (widget.hasOtherLinkMembers || widget.enrolledKidsCount > 0);
+
+  void _toggleFamilyPopover() {
+    if (!_showFamilyPopover) return;
+    setState(() => _familyPopoverOpen = !_familyPopoverOpen);
+    if (_familyPopoverOpen) {
+      _kidsKey.currentState?.reload();
+      _reloadPresence();
+    }
+  }
+
+  bool _mapEquals(Map<String, int> a, Map<String, int> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (b[e.key] != e.value) return false;
+    }
+    return true;
+  }
+
+  Future<void> _handleNudge(FamilyMemberStatus member) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final send = widget.onSendNudge;
+      if (send != null) {
+        await send(member.id, member.name);
+      } else if (!DemoSession.instance.active) {
+        throw StateError('nudge unavailable');
+      }
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.nudgeSent(member.name))),
+      );
+    } on StateError catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message == 'nudge_cooldown'
+                ? l10n.nudgeCooldown
+                : l10n.nudgeSendFailed,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.nudgeSendFailed)),
+      );
+    }
+  }
+
+  Widget _buildKidsPanel() {
+    return KidsPanel(
+      key: _kidsKey,
+      configRepo: widget.configRepo!,
+      syncConfig: widget.syncConfig,
+      pullSharedTasks: widget.pullSharedTasks,
+      enrolledKidsOverride: widget.enrolledKidsOverride,
+      todoRepo: widget.repo,
+      syncStatus: widget.syncStatus,
+      onDeleteKidTask: widget.onDeleteKidTask,
+      onAcceptKidTask: widget.onAcceptKidTask,
+      onRejectKidTask: widget.onRejectKidTask,
+      myLinkId: widget.myLinkId,
+      kidsParticipation: widget.kidsParticipation,
+      popoverMode: true,
+      onPendingCountChanged: (count) {
+        if (!mounted || _kidsPendingCount == count) return;
+        setState(() => _kidsPendingCount = count);
+      },
+      onOpenCountsChanged: (counts) {
+        if (!mounted) return;
+        if (_mapEquals(_kidsOpenCounts, counts)) return;
+        setState(() => _kidsOpenCounts = counts);
+      },
+      onCreateTask: ({String? kidId, required bool everyone}) {
+        _showKidsCreateSheet(
+          context,
+          kidId: kidId,
+          everyone: everyone,
+        );
+      },
+    );
+  }
+
+  Widget _buildFamilyPopoverBody() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_showAdultsSection)
+            FamilyAdultsSection(
+              otherLinkMembers: widget.otherLinkMembers,
+              presence: _presence,
+              onNudge: widget.onSendNudge != null || DemoSession.instance.active
+                  ? _handleNudge
+                  : null,
+            ),
+          if (_showKids) _buildKidsPanel(),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final barColor =
+        Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).scaffoldBackgroundColor;
     return Theme(
       data: Theme.of(context).copyWith(
         bottomSheetTheme: BottomSheetThemeData(
@@ -239,98 +382,110 @@ class _TasksScreenState extends State<TasksScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.hasFamilyKey &&
-                (widget.hasOtherLinkMembers || widget.enrolledKidsCount > 0))
+            if (_showAmbientStrip)
               Material(
-                color: scheme.surface,
+                key: _ambientKey,
+                color: Colors.transparent,
                 elevation: 0,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: FamilyAmbientStrip(
-                    visible: true,
-                    otherLinkMembers: widget.otherLinkMembers,
-                    enrolledKids: widget.enrolledKidsOverride ??
-                        const <EnrolledKid>[],
-                    pullPresence: widget.pullPresence,
-                    pullLoadMetrics: widget.pullLoadMetrics,
-                    syncDoneCount: widget.syncDoneCount,
-                    configRepo: widget.configRepo,
-                    enrolledKidsCount: widget.enrolledKidsCount,
-                  ),
+                child: FamilyAmbientStrip(
+                  visible: true,
+                  otherLinkMembers: widget.otherLinkMembers,
+                  enrolledKids: widget.enrolledKidsOverride ??
+                      const <EnrolledKid>[],
+                  pullPresence: widget.pullPresence,
+                  pullLoadMetrics: widget.pullLoadMetrics,
+                  syncDoneCount: widget.syncDoneCount,
+                  configRepo: widget.configRepo,
+                  enrolledKidsCount: widget.enrolledKidsCount,
+                  onOpenKids: _showFamilyPopover ? _toggleFamilyPopover : null,
+                  kidsPopoverOpen: _familyPopoverOpen,
+                  kidsPendingCount: _kidsPendingCount,
+                  kidsOpenCounts: _kidsOpenCounts,
                 ),
               ),
             Expanded(
-              child: _TasksBody(
-                repo: widget.repo,
-                noteRepo: widget.noteRepo,
-                hasFamilyKey: widget.hasFamilyKey,
-                hasOtherLinkMembers: widget.hasOtherLinkMembers,
-                // Compact personal empty only when Suggestions or Kids chrome is up —
-                // family-linked alone still gets the centered "All done!" state.
-                familyContext: _showKids || _suggestionsVisible,
-                settingsRepo: widget.settingsRepo,
-                proposalRepo: widget.proposalRepo,
-                myLinkId: widget.myLinkId,
-                otherLinkMembers: widget.otherLinkMembers,
-                configRepo: widget.configRepo,
-                pullPresence: widget.pullPresence,
-                header: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (widget.suggestionRepo != null)
-                      SuggestionsPanel(
-                        suggestionRepo: widget.suggestionRepo!,
-                        todoRepo: widget.repo,
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _TasksBody(
+                          repo: widget.repo,
+                          noteRepo: widget.noteRepo,
+                          hasFamilyKey: widget.hasFamilyKey,
+                          hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                          // Compact personal empty only when Suggestions chrome is up —
+                          // kids live in the ambient popover now.
+                          familyContext: _suggestionsVisible,
+                          settingsRepo: widget.settingsRepo,
+                          proposalRepo: widget.proposalRepo,
+                          myLinkId: widget.myLinkId,
+                          otherLinkMembers: widget.otherLinkMembers,
+                          configRepo: widget.configRepo,
+                          pullPresence: widget.pullPresence,
+                          header: widget.suggestionRepo == null
+                              ? const SizedBox.shrink()
+                              : SuggestionsPanel(
+                                  suggestionRepo: widget.suggestionRepo!,
+                                  todoRepo: widget.repo,
+                                  proposalRepo: widget.proposalRepo,
+                                  myLinkId: widget.myLinkId,
+                                  hasOtherLinkMembers:
+                                      widget.hasOtherLinkMembers,
+                                  otherLinkMembers: widget.otherLinkMembers,
+                                  onSyncRequested: widget.onSyncRetry,
+                                  onVisibilityChanged: (visible) {
+                                    if (!mounted ||
+                                        _suggestionsVisible == visible) {
+                                      return;
+                                    }
+                                    setState(
+                                      () => _suggestionsVisible = visible,
+                                    );
+                                  },
+                                ),
+                        ),
+                      ),
+                      QuickAddBar(
+                        repo: widget.repo,
+                        hasFamilyKey: widget.hasFamilyKey,
+                        hasOtherLinkMembers: widget.hasOtherLinkMembers,
                         proposalRepo: widget.proposalRepo,
                         myLinkId: widget.myLinkId,
-                        hasOtherLinkMembers: widget.hasOtherLinkMembers,
                         otherLinkMembers: widget.otherLinkMembers,
-                        onSyncRequested: widget.onSyncRetry,
-                        onVisibilityChanged: (visible) {
-                          if (!mounted || _suggestionsVisible == visible) {
-                            return;
-                          }
-                          setState(() => _suggestionsVisible = visible);
-                        },
-                      ),
-                    if (_showKids)
-                      KidsPanel(
-                        key: _kidsKey,
-                        configRepo: widget.configRepo!,
-                        syncConfig: widget.syncConfig,
-                        pullSharedTasks: widget.pullSharedTasks,
-                        enrolledKidsOverride: widget.enrolledKidsOverride,
-                        todoRepo: widget.repo,
-                        syncStatus: widget.syncStatus,
-                        onDeleteKidTask: widget.onDeleteKidTask,
-                        onAcceptKidTask: widget.onAcceptKidTask,
-                        onRejectKidTask: widget.onRejectKidTask,
-                        myLinkId: widget.myLinkId,
+                        configRepo: widget.configRepo,
+                        pullPresence: widget.pullPresence,
                         kidsParticipation: widget.kidsParticipation,
-                        onCreateTask: ({String? kidId, required bool everyone}) {
-                          _showKidsCreateSheet(
-                            context,
-                            kidId: kidId,
-                            everyone: everyone,
-                          );
-                        },
                       ),
-                  ],
-                ),
+                    ],
+                  ),
+                  // Full-height panel over tasks + QuickAdd; ambient strip stays above.
+                  // Kept mounted when closed so kids open/pending counts stay fresh.
+                  if (_showFamilyPopover)
+                    Positioned.fill(
+                      child: Offstage(
+                        offstage: !_familyPopoverOpen,
+                        child: IgnorePointer(
+                          ignoring: !_familyPopoverOpen,
+                          child: Material(
+                            elevation: _familyPopoverOpen ? 6 : 0,
+                            color: barColor,
+                            shadowColor:
+                                scheme.shadow.withValues(alpha: 0.25),
+                            child: SafeArea(
+                              top: false,
+                              child: _buildFamilyPopoverBody(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
-        ),
-        bottomSheet: QuickAddBar(
-          repo: widget.repo,
-          hasFamilyKey: widget.hasFamilyKey,
-          hasOtherLinkMembers: widget.hasOtherLinkMembers,
-          proposalRepo: widget.proposalRepo,
-          myLinkId: widget.myLinkId,
-          otherLinkMembers: widget.otherLinkMembers,
-          configRepo: widget.configRepo,
-          pullPresence: widget.pullPresence,
-          kidsParticipation: widget.kidsParticipation,
         ),
       ),
     );
@@ -339,8 +494,8 @@ class _TasksScreenState extends State<TasksScreen> {
 
 sealed class _ListItem {}
 
-/// Space so the last row clears [QuickAddBar] (bar ~56 + breathing room).
-const _kQuickAddClearance = 128.0;
+/// Small breathing room under the last task row (QuickAdd sits in layout below).
+const _kQuickAddClearance = 16.0;
 
 class _HeaderItem extends _ListItem {
   final String? category;

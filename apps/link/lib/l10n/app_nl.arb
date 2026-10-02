@@ -1118,6 +1118,25 @@
   },
   "tasksDecline": "Weigeren",
   "kidsSectionTitle": "Kinderen",
+  "adultsSectionTitle": "Volwassenen",
+  "nudgeSend": "Seintje",
+  "nudgeSent": "Seintje gestuurd naar {name}",
+  "@nudgeSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "nudgeCooldown": "Je hebt net al een seintje gestuurd — probeer zo opnieuw.",
+  "nudgeReceivedTitle": "Hulp nodig?",
+  "nudgeReceivedBody": "{name} vraagt: kan ik taken van je overnemen?",
+  "@nudgeReceivedBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "nudgeDismiss": "Sluiten",
+  "nudgeSendTask": "Stuur een taak",
+  "nudgeSendFailed": "Seintje versturen mislukt",
   "kidsAllFilter": "Alle kinderen",
   "kidsOpenTasks": "{count, plural, =1{1 open taak} other{{count} open taken}}",
   "@kidsOpenTasks": {

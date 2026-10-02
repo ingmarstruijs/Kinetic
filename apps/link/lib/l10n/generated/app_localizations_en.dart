@@ -2257,6 +2257,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsSectionTitle => 'Kids';
 
   @override
+  String get adultsSectionTitle => 'Adults';
+
+  @override
+  String get nudgeSend => 'Nudge';
+
+  @override
+  String nudgeSent(String name) {
+    return 'Nudge sent to $name';
+  }
+
+  @override
+  String get nudgeCooldown =>
+      'You already sent a nudge recently — try again in a few minutes.';
+
+  @override
+  String get nudgeReceivedTitle => 'Need a hand?';
+
+  @override
+  String nudgeReceivedBody(String name) {
+    return '$name asks: can I take over some of your tasks?';
+  }
+
+  @override
+  String get nudgeDismiss => 'Close';
+
+  @override
+  String get nudgeSendTask => 'Send a task';
+
+  @override
+  String get nudgeSendFailed => 'Couldn\'t send nudge';
+
+  @override
   String get kidsAllFilter => 'All kids';
 
   @override

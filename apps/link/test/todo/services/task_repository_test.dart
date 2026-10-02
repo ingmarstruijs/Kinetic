@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kinetic_webdav/kinetic_webdav.dart';
 import 'package:link/todo/models/personal_task.dart';
 import 'package:link/todo/services/todo_repository.dart';
 import 'package:link/notifications/notification_service.dart';
@@ -206,6 +207,127 @@ void main() {
       expect(
         updated.remindAt!.difference(until.toUtc()).inSeconds.abs(),
         lessThan(2),
+      );
+    });
+
+    test('cancels reminder when task is sent to kids', () async {
+      final future = DateTime.now().add(const Duration(hours: 2));
+      final task = await repo.createTask(
+        title: 'Kamer opruimen',
+        remindAt: future.toUtc(),
+      );
+      expect(notif.scheduled, hasLength(1));
+      notif.scheduled.clear();
+      notif.cancelled.clear();
+
+      await repo.sendToKids(task.id, targetKidId: 'jim');
+      expect(notif.cancelled, hasLength(1));
+      expect(notif.scheduled, isEmpty);
+
+      // Reschedule-all must not bring the reminder back for kids-delegated tasks.
+      await repo.rescheduleAllReminders();
+      expect(notif.scheduled, isEmpty);
+    });
+
+    test('cancels reminder when task is sent to another adult', () async {
+      final future = DateTime.now().add(const Duration(hours: 2));
+      final task = await repo.createTask(
+        title: 'Belastingaangifte',
+        dueDate: future.toUtc(),
+        isAllDay: false,
+        remindAt: future.toUtc(),
+      );
+      expect(notif.scheduled, hasLength(1));
+      notif.scheduled.clear();
+      notif.cancelled.clear();
+
+      // Simulate outgoing link-member proposal (adult send).
+      final now = DateTime.now().toUtc();
+      await repo.debugInsertOutgoingProposal(
+        sourceTaskId: task.id,
+        fromLinkId: 'me',
+        toMemberId: 'partner',
+        receivedAt: now,
+      );
+
+      await repo.suppressReminderForSentTask(task.id);
+      expect(notif.cancelled, hasLength(1));
+
+      await repo.rescheduleAllReminders();
+      expect(notif.scheduled, isEmpty);
+    });
+
+    test('cancels reminder when kids-delegated task is completed', () async {
+      final future = DateTime.now().add(const Duration(hours: 2));
+      final task = await repo.createTask(
+        title: 'Tanden poetsen',
+        remindAt: future.toUtc(),
+      );
+      await repo.sendToKids(task.id, targetKidId: 'jim');
+      notif.cancelled.clear();
+
+      await repo.completeTask(task.id);
+      expect(notif.cancelled, hasLength(1));
+    });
+
+    test('mergeOfflineKidsTasks keeps cached inProcess as pending not open', () {
+      final now = DateTime.utc(2026, 10, 1);
+      final cached = [
+        ICalTask(
+          uid: 'a',
+          summary: 'Open',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+          description: 'xKineticTargetKidId:jim',
+        ),
+        ICalTask(
+          uid: 'b',
+          summary: 'Pending',
+          status: ICalTaskStatus.inProcess,
+          createdAt: now,
+          updatedAt: now,
+          description: 'xKineticTargetKidId:jim',
+        ),
+        ICalTask(
+          uid: 'c',
+          summary: 'Done',
+          status: ICalTaskStatus.completed,
+          createdAt: now,
+          updatedAt: now,
+          description: 'xKineticTargetKidId:jim',
+        ),
+      ];
+      // Local projection wrongly marks pending as needsAction.
+      final local = [
+        for (final t in cached)
+          t.copyWith(
+            status: t.status == ICalTaskStatus.completed
+                ? ICalTaskStatus.completed
+                : ICalTaskStatus.needsAction,
+          ),
+        ICalTask(
+          uid: 'd',
+          summary: 'Offline new',
+          status: ICalTaskStatus.needsAction,
+          createdAt: now,
+          updatedAt: now,
+          description: 'xKineticTargetKidId:jim',
+        ),
+      ];
+
+      final merged = TodoRepository.mergeOfflineKidsTasks(
+        cached: cached,
+        local: local,
+      );
+      expect(merged.map((t) => t.uid), unorderedEquals(['a', 'b', 'c', 'd']));
+      expect(
+        merged.firstWhere((t) => t.uid == 'b').status,
+        ICalTaskStatus.inProcess,
+      );
+      expect(
+        merged.where((t) => t.status == ICalTaskStatus.needsAction).length,
+        2, // a + d
       );
     });
 

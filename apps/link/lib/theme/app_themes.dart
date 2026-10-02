@@ -216,14 +216,18 @@ ThemeData buildTheme(AppTheme theme) {
       ),
     ),
     // Warm sand surfaces with terracotta accents.
+    // Container steps stay close to the scaffold so cards/notes stay light.
     AppTheme.calm => _themeFromScheme(
       ColorScheme.fromSeed(
         seedColor: const Color(0xFFC45C26),
         brightness: Brightness.light,
         primary: const Color(0xFFC45C26),
-        surface: const Color(0xFFF3E6D8),
-        surfaceContainerLow: const Color(0xFFEAD9C8),
-        surfaceContainerHigh: const Color(0xFFE0CDB8),
+        surface: const Color(0xFFF7EDE3),
+        surfaceContainerLowest: const Color(0xFFF9F3EB),
+        surfaceContainerLow: const Color(0xFFF4EBE2),
+        surfaceContainer: const Color(0xFFF1E7DC),
+        surfaceContainerHigh: const Color(0xFFEDE2D5),
+        surfaceContainerHighest: const Color(0xFFE8DCCE),
         onSurface: const Color(0xFF3D2C22),
       ),
       scaffold: const Color(0xFFF7EDE3),

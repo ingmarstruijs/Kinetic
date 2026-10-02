@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../db/app_database.dart';
@@ -34,15 +35,33 @@ class SyncOrchestrator {
   /// Called after the shared roster is merged so UI can refresh link members/kids.
   final void Function(FamilyRoster roster)? onRosterUpdated;
 
+  /// Called when new inbound nudges addressed to this device are discovered.
+  final void Function(List<FamilyNudge> nudges)? onNudgesReceived;
+
+  /// Test-only: when set, methods that open a fresh WebDAV client (e.g.
+  /// [sendNudge] / [dismissNudge]) use this factory instead of a real HTTP
+  /// client so SharedStorage fakes work.
+  @visibleForTesting
+  final http.Client? Function()? debugHttpClientFactory;
+
   SyncOrchestrator({
     required AppDatabase db,
     required SyncConfig config,
     WebDavConfigRepository? configRepository,
     this.onDisconnectsDetected,
     this.onRosterUpdated,
+    this.onNudgesReceived,
+    this.debugHttpClientFactory,
   }) : _db = db,
        _config = config,
        _configRepo = configRepository;
+
+  WebDavClient _newClient() => WebDavClient(
+        baseUrl: _config.baseUrl,
+        username: _config.username,
+        password: _config.password,
+        httpClient: debugHttpClientFactory?.call(),
+      );
 
   /// The WebDAV username (used as the local link ID).
   String get username => _config.username;
@@ -80,6 +99,7 @@ class SyncOrchestrator {
       await _activateKidsFromPresence(service);
       await _pushLoadMetrics(service);
       await _pushPresence(service);
+      await _syncNudges(service);
     } finally {
       client.dispose();
     }
@@ -101,6 +121,7 @@ class SyncOrchestrator {
       await _syncRoster(service);
       await _activateKidsFromPresence(service);
       await _pushPresence(service);
+      await _syncNudges(service);
     } finally {
       client.dispose();
     }
@@ -119,6 +140,7 @@ class SyncOrchestrator {
     await _activateKidsFromPresence(service);
     await _pushLoadMetrics(service);
     await _pushPresence(service);
+    await _syncNudges(service);
   }
 
   // ---------------------------------------------------------------------------
@@ -163,6 +185,112 @@ class SyncOrchestrator {
     } finally {
       client.dispose();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Family nudges
+  // ---------------------------------------------------------------------------
+
+  static const nudgeTtl = Duration(hours: 24);
+  static const nudgeCooldown = Duration(minutes: 5);
+
+  final Map<String, DateTime> _lastNudgeSentAt = {};
+  final Set<String> _notifiedNudgeIds = {};
+
+  /// Test-only: pretends a nudge was just sent so cooldown can be asserted
+  /// without hitting the network.
+  @visibleForTesting
+  void debugMarkNudgeSent(String toLinkId, [DateTime? at]) {
+    _lastNudgeSentAt[toLinkId] = at ?? DateTime.now().toUtc();
+  }
+
+  /// Sends an attention nudge to [toLinkId].
+  Future<void> sendNudge({
+    required String toLinkId,
+    String fromDisplayName = '',
+  }) async {
+    if (_config.familyKeyBytes == null) {
+      throw StateError('Family key required to send a nudge');
+    }
+    final myId =
+        _config.linkId.isNotEmpty ? _config.linkId : _config.username;
+    if (toLinkId.isEmpty || toLinkId == myId) {
+      throw ArgumentError('Invalid nudge recipient');
+    }
+    final last = _lastNudgeSentAt[toLinkId];
+    final now = DateTime.now().toUtc();
+    if (last != null && now.difference(last) < nudgeCooldown) {
+      throw StateError('nudge_cooldown');
+    }
+
+    final nudge = FamilyNudge(
+      id: _nudgeId(),
+      fromLinkId: myId,
+      toLinkId: toLinkId,
+      fromDisplayName: fromDisplayName.isNotEmpty
+          ? fromDisplayName
+          : _config.username,
+      createdAt: now,
+      expiresAt: now.add(nudgeTtl),
+    );
+
+    final client = _newClient();
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      await service.pushNudge(nudge);
+      _lastNudgeSentAt[toLinkId] = now;
+    } finally {
+      client.dispose();
+    }
+  }
+
+  /// Removes a nudge the user dismissed (or acted on).
+  Future<void> dismissNudge(String nudgeId) async {
+    if (_config.familyKeyBytes == null || nudgeId.isEmpty) return;
+    final client = _newClient();
+    final service = WebDavSyncService(client: client, config: _config);
+    try {
+      await service.deleteNudge(nudgeId);
+    } catch (_) {
+      // Best-effort — file may already be gone.
+    } finally {
+      client.dispose();
+    }
+  }
+
+  Future<void> _syncNudges(WebDavSyncService service) async {
+    if (_config.familyKeyBytes == null) return;
+    final myId =
+        _config.linkId.isNotEmpty ? _config.linkId : _config.username;
+    List<FamilyNudge> all;
+    try {
+      all = await service.pullNudges();
+    } catch (_) {
+      return;
+    }
+
+    final now = DateTime.now().toUtc();
+    final inbound = <FamilyNudge>[];
+    for (final nudge in all) {
+      if (nudge.isExpired(now)) {
+        try {
+          await service.deleteNudge(nudge.id);
+        } catch (_) {}
+        continue;
+      }
+      if (nudge.toLinkId != myId) continue;
+      if (_notifiedNudgeIds.contains(nudge.id)) continue;
+      _notifiedNudgeIds.add(nudge.id);
+      inbound.add(nudge);
+    }
+    if (inbound.isNotEmpty) {
+      onNudgesReceived?.call(inbound);
+    }
+  }
+
+  String _nudgeId() {
+    final millis = DateTime.now().toUtc().microsecondsSinceEpoch;
+    return 'nudge-$millis-${_config.linkId.hashCode.abs()}';
   }
 
   /// Pulls coarse load metrics for other family link devices (excludes self).
@@ -654,6 +782,9 @@ class SyncOrchestrator {
     try {
       final sharedTasks = await service.pullSharedTasks();
       sharedByUid = {for (final t in sharedTasks) t.uid: t};
+      try {
+        await _configRepo?.saveCachedSharedKidsTasks(sharedTasks);
+      } catch (_) {}
     } catch (_) {
       // Unreachable WebDAV — still try to push dirty kids tasks below.
     }

@@ -8,6 +8,7 @@ import 'package:link/todo/models/ai_suggestion.dart';
 import 'package:link/todo/screens/tasks_screen.dart';
 import 'package:link/todo/services/ai_suggestion_repository.dart';
 import 'package:link/todo/services/todo_repository.dart';
+import 'package:link/todo/widgets/family_ambient_strip.dart';
 import 'package:link/todo/widgets/suggestions_panel.dart';
 
 import '../../helpers/test_database.dart';
@@ -283,7 +284,9 @@ void main() {
             TasksScreen(
               repo: todoRepo,
               suggestionRepo: suggestionRepo,
+              hasFamilyKey: true,
               hasOtherLinkMembers: true,
+              otherLinkMembers: const [(id: 'link-sam', name: 'Sam')],
               configRepo: WebDavConfigRepository(InMemoryKeyValueStore()),
               enrolledKidsCount: 2,
               enrolledKidsOverride: [
@@ -291,6 +294,15 @@ void main() {
                 EnrolledKid(id: 'fien', name: 'Fien', enrolledAt: enrolledAt),
               ],
               pullSharedTasks: () async => const [],
+              pullPresence: () async => [
+                PresenceInfo(
+                  deviceId: 'link-sam',
+                  deviceType: 'link',
+                  displayName: 'Sam',
+                  lastSeen: DateTime.now().toUtc(),
+                ),
+              ],
+              onSendNudge: (toLinkId, toName) async {},
             ),
           ),
         );
@@ -300,7 +312,14 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.text('SUGGESTIONS'), findsOneWidget);
+        // Kids + adults live under the ambient strip; open the popover.
+        expect(find.byType(FamilyAmbientStrip), findsOneWidget);
+        await tester.tap(find.byType(FamilyAmbientStrip));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(find.text('ADULTS'), findsOneWidget);
         expect(find.text('KIDS'), findsOneWidget);
+        expect(find.text('Nudge'), findsOneWidget);
         expect(find.byType(Scrollable), findsWidgets);
 
         await tester.pumpWidget(const SizedBox.shrink());

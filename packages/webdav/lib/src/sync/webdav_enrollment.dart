@@ -90,6 +90,7 @@ class WebDavEnrollment {
       '/kinetic/shared/load',
       '/kinetic/shared/presence',
       '/kinetic/shared/disconnect',
+      '/kinetic/shared/nudges',
       '/kinetic/shared/xp-reset',
       '/kinetic/shared/goals',
     ];

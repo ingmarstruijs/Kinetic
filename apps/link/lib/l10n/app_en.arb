@@ -1118,6 +1118,25 @@
   },
   "tasksDecline": "Decline",
   "kidsSectionTitle": "Kids",
+  "adultsSectionTitle": "Adults",
+  "nudgeSend": "Nudge",
+  "nudgeSent": "Nudge sent to {name}",
+  "@nudgeSent": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "nudgeCooldown": "You already sent a nudge recently — try again in a few minutes.",
+  "nudgeReceivedTitle": "Need a hand?",
+  "nudgeReceivedBody": "{name} asks: can I take over some of your tasks?",
+  "@nudgeReceivedBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "nudgeDismiss": "Close",
+  "nudgeSendTask": "Send a task",
+  "nudgeSendFailed": "Couldn't send nudge",
   "kidsAllFilter": "All kids",
   "kidsOpenTasks": "{count, plural, =1{1 open task} other{{count} open tasks}}",
   "@kidsOpenTasks": {

@@ -355,6 +355,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
               taskPriority: _priority,
               taskDueDate: _dueDate,
             );
+            await widget.repo.suppressReminderForSentTask(created.id);
           }
         }
       } else {
@@ -557,6 +558,7 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       taskPriority: task.priority,
       taskDueDate: task.dueDate,
     );
+    await widget.repo.suppressReminderForSentTask(task.id);
     // Task stays in the sender's list until the family member accepts the proposal.
     // When the family member accepts, the sync orchestrator will detect the status change
     // and clean up the task automatically.

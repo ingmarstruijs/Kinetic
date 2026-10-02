@@ -345,6 +345,7 @@ class TodoRepository {
         ),
       );
       await _archiveProposalsForTask(taskId);
+      await _notifications?.cancelReminder(_notifId(taskId));
       onWrite?.call();
       return;
     }
@@ -541,18 +542,34 @@ class TodoRepository {
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
+    // Reminders belong with the kids assignment — stop firing in this Link app.
+    await _notifications?.cancelReminder(_notifId(taskId));
     onWrite?.call();
   }
 
+  /// Cancels any scheduled reminder for a task that was sent to another adult.
+  ///
+  /// Call after creating an outgoing link-member proposal so the sender's app
+  /// no longer notifies for a task that left their responsibility.
+  Future<void> suppressReminderForSentTask(String taskId) async {
+    await _notifications?.cancelReminder(_notifId(taskId));
+  }
+
   /// Local kids-assigned tasks projected as shared [ICalTask]s for offline UI.
-  Future<List<ICalTask>> loadLocalKidsTasksAsShared() async {
+  ///
+  /// When [cachedShared] is provided (last successful online pull), that list
+  /// is the source of truth for statuses (so IN-PROCESS stays pending, not
+  /// open). Local-only kids tasks missing from the cache are appended.
+  Future<List<ICalTask>> loadLocalKidsTasksAsShared({
+    List<ICalTask>? cachedShared,
+  }) async {
     final rows =
         await (_db.select(_db.personalTasks)..where(
               (t) =>
                   t.kidsTaskId.isNotNull() & t.syncState.equals('deleted').not(),
             ))
             .get();
-    return [
+    final local = [
       for (final row in rows)
         if (row.kidsTaskId != null)
           ICalTask(
@@ -574,6 +591,24 @@ class TodoRepository {
             rrule: row.recurrenceRule,
           ),
     ];
+    return mergeOfflineKidsTasks(cached: cachedShared, local: local);
+  }
+
+  /// Merges a last-known online shared-kids snapshot with local projections.
+  ///
+  /// Cached entries keep their wire status (needsAction / inProcess /
+  /// completed). Local tasks absent from the cache (e.g. assigned while
+  /// offline) are appended. When [cached] is null, returns [local] as-is.
+  static List<ICalTask> mergeOfflineKidsTasks({
+    List<ICalTask>? cached,
+    required List<ICalTask> local,
+  }) {
+    if (cached == null) return local;
+    final byUid = <String, ICalTask>{for (final t in cached) t.uid: t};
+    for (final t in local) {
+      byUid.putIfAbsent(t.uid, () => t);
+    }
+    return byUid.values.toList();
   }
 
   String _kidsDescriptionFromRow(PersonalTaskRow row) {
@@ -837,6 +872,10 @@ class TodoRepository {
     if (notif == null) return;
     // Never schedule reminders for completed tasks.
     if (task.isCompleted) return;
+    // Sent to kids — reminders must not fire in the creating Link app.
+    if (task.kidsTaskId != null) return;
+    // Sent to another adult (pending outgoing proposal) — same rule.
+    if (await _hasOutgoingPendingProposal(task.id)) return;
     // Use explicit remindAt if set; otherwise fall back to timed due date.
     final at = task.remindAt ?? (task.isAllDay ? null : task.dueDate);
     if (at == null) return;
@@ -852,6 +891,18 @@ class TodoRepository {
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail task operations.
     }
+  }
+
+  Future<bool> _hasOutgoingPendingProposal(String taskId) async {
+    final rows =
+        await (_db.select(_db.linkMemberProposals)..where(
+              (p) =>
+                  p.sourceTaskId.equals(taskId) &
+                  p.status.equals('pending') &
+                  p.syncState.equals('deleted').not(),
+            ))
+            .get();
+    return rows.isNotEmpty;
   }
 
   PersonalTask _taskFromRow(PersonalTaskRow r) => PersonalTask.fromRow(r);
@@ -921,5 +972,30 @@ class TodoRepository {
     await (_db.update(_db.personalTasks)..where((t) => t.id.equals(id))).write(
       const PersonalTasksCompanion(syncState: Value('clean')),
     );
+  }
+
+  /// Inserts a pending outgoing proposal linked to [sourceTaskId]. Tests only.
+  @visibleForTesting
+  Future<void> debugInsertOutgoingProposal({
+    required String sourceTaskId,
+    required String fromLinkId,
+    required String toMemberId,
+    required DateTime receivedAt,
+  }) async {
+    await _db
+        .into(_db.linkMemberProposals)
+        .insert(
+          LinkMemberProposalsCompanion.insert(
+            id: const Uuid().v4(),
+            fromLinkId: fromLinkId,
+            toMemberId: Value(toMemberId),
+            taskTitle: 'proposal',
+            status: const Value('pending'),
+            syncState: const Value('dirty'),
+            sourceTaskId: Value(sourceTaskId),
+            receivedAt: receivedAt,
+            updatedAt: receivedAt,
+          ),
+        );
   }
 }

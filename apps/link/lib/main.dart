@@ -26,6 +26,7 @@ import 'todo/services/ai_suggestion_repository.dart';
 import 'todo/services/note_repository.dart';
 import 'todo/services/todo_repository.dart';
 import 'todo/widgets/snooze_dialog.dart';
+import 'todo/widgets/task_detail_sheet.dart';
 import 'vault/vault_gate.dart';
 import 'debug/demo_session.dart';
 
@@ -128,6 +129,10 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
 
   /// Incremented after every successful sync — lets the kids panel reload.
   final _syncDoneCount = ValueNotifier<int>(0);
+
+  /// Inbound nudges waiting to show as MaterialBanners (FIFO).
+  final List<FamilyNudge> _pendingNudgeBanners = [];
+  bool _nudgeBannerShowing = false;
 
   /// False when the user has permanently blocked notifications in system settings.
   final notificationsEnabled = ValueNotifier<bool>(true);
@@ -265,6 +270,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
           ];
           if (mounted) setState(() {});
         },
+        onNudgesReceived: _onNudgesReceived,
       );
       webDavConfigured.value = true;
     } else {
@@ -399,6 +405,115 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     final kids = await _webDavConfig.loadEnrolledKids();
     hasOtherLinkMembers.value = isPaired;
     enrolledKidsCount.value = kids.length;
+  }
+
+  void _onNudgesReceived(List<FamilyNudge> nudges) {
+    if (nudges.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      for (final nudge in nudges) {
+        _pendingNudgeBanners.add(nudge);
+        final name = nudge.fromDisplayName.trim().isNotEmpty
+            ? nudge.fromDisplayName.trim()
+            : 'Family';
+        unawaited(
+          _notifSvc.sendLocalNotification(
+            title: l10n.nudgeReceivedTitle,
+            body: l10n.nudgeReceivedBody(name),
+            payload: 'nudge:${nudge.id}',
+          ),
+        );
+      }
+      _showNextNudgeBanner();
+    });
+  }
+
+  void _showNextNudgeBanner() {
+    if (!mounted || _nudgeBannerShowing || _pendingNudgeBanners.isEmpty) {
+      return;
+    }
+    final nudge = _pendingNudgeBanners.removeAt(0);
+    _nudgeBannerShowing = true;
+    final l10n = AppLocalizations.of(context);
+    final name = nudge.fromDisplayName.trim().isNotEmpty
+        ? nudge.fromDisplayName.trim()
+        : 'Family';
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearMaterialBanners();
+    messenger.showMaterialBanner(
+      MaterialBanner(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: const Icon(Icons.waving_hand_outlined),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.nudgeReceivedTitle,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(l10n.nudgeReceivedBody(name)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              messenger.hideCurrentMaterialBanner();
+              _nudgeBannerShowing = false;
+              final orch = _syncOrchestrator;
+              if (orch != null) unawaited(orch.dismissNudge(nudge.id));
+              _showNextNudgeBanner();
+            },
+            child: Text(l10n.nudgeDismiss),
+          ),
+          TextButton(
+            onPressed: () {
+              messenger.hideCurrentMaterialBanner();
+              _nudgeBannerShowing = false;
+              final orch = _syncOrchestrator;
+              if (orch != null) unawaited(orch.dismissNudge(nudge.id));
+              _openTaskSheetForNudge(nudge);
+              _showNextNudgeBanner();
+            },
+            child: Text(l10n.nudgeSendTask),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openTaskSheetForNudge(FamilyNudge nudge) {
+    if (!mounted) return;
+    setState(() => _selectedIndex = 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final fromName = nudge.fromDisplayName.trim().isNotEmpty
+          ? nudge.fromDisplayName.trim()
+          : 'Family';
+      final members = <({String id, String name})>[
+        (id: nudge.fromLinkId, name: fromName),
+        for (final m in _otherLinkMembers)
+          if (m.id != nudge.fromLinkId) m,
+      ];
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => TaskDetailSheet(
+          repo: _todoRepository,
+          noteRepo: _noteRepository,
+          hasFamilyKey: true,
+          hasOtherLinkMembers: true,
+          proposalRepo: _proposalRepository,
+          myLinkId: _syncOrchestrator?.linkId,
+          otherLinkMembers: members,
+          configRepo: _webDavConfig,
+          pullPresence: _syncOrchestrator?.pullPresence,
+        ),
+      );
+    });
   }
 
   /// Called when this device's link id appears in a disconnect tombstone
@@ -551,6 +666,16 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                                 await _syncOrchestrator
                                     ?.rejectKidsTaskCompletion(task);
                               },
+                        onSendNudge: demo.active || _syncOrchestrator != null
+                            ? (toLinkId, toName) async {
+                                if (demo.active) return;
+                                await _syncOrchestrator!.sendNudge(
+                                  toLinkId: toLinkId,
+                                  fromDisplayName:
+                                      _syncOrchestrator!.username,
+                                );
+                              }
+                            : null,
                       ),
                       NotesScreen(
                         repo: _noteRepository,

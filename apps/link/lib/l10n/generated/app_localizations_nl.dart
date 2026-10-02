@@ -2266,6 +2266,38 @@ class AppLocalizationsNl extends AppLocalizations {
   String get kidsSectionTitle => 'Kinderen';
 
   @override
+  String get adultsSectionTitle => 'Volwassenen';
+
+  @override
+  String get nudgeSend => 'Seintje';
+
+  @override
+  String nudgeSent(String name) {
+    return 'Seintje gestuurd naar $name';
+  }
+
+  @override
+  String get nudgeCooldown =>
+      'Je hebt net al een seintje gestuurd — probeer zo opnieuw.';
+
+  @override
+  String get nudgeReceivedTitle => 'Hulp nodig?';
+
+  @override
+  String nudgeReceivedBody(String name) {
+    return '$name vraagt: kan ik taken van je overnemen?';
+  }
+
+  @override
+  String get nudgeDismiss => 'Sluiten';
+
+  @override
+  String get nudgeSendTask => 'Stuur een taak';
+
+  @override
+  String get nudgeSendFailed => 'Seintje versturen mislukt';
+
+  @override
   String get kidsAllFilter => 'Alle kinderen';
 
   @override

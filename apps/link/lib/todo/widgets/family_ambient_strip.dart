@@ -7,6 +7,9 @@ import '../../settings/models/enrolled_kid.dart';
 import '../../sync/webdav_config_repository.dart';
 
 /// Subtle presence + coarse load chips for the Tasks header (no messaging).
+///
+/// When [onOpenKids] is set, the strip is styled as a tappable control that
+/// opens the family popover.
 class FamilyAmbientStrip extends StatefulWidget {
   final bool visible;
   final List<({String id, String name})> otherLinkMembers;
@@ -16,6 +19,18 @@ class FamilyAmbientStrip extends StatefulWidget {
   final Future<List<PresenceInfo>> Function()? pullPresence;
   final Future<List<LoadMetrics>> Function()? pullLoadMetrics;
   final ValueNotifier<int>? syncDoneCount;
+
+  /// When set, tapping the strip opens the kids popover.
+  final VoidCallback? onOpenKids;
+
+  /// Whether the kids popover is currently open (chevron direction).
+  final bool kidsPopoverOpen;
+
+  /// Optional pending-verification count shown next to the kids affordance.
+  final int kidsPendingCount;
+
+  /// Open-task counts per kid id (from the kids panel / shared tasks).
+  final Map<String, int> kidsOpenCounts;
 
   const FamilyAmbientStrip({
     super.key,
@@ -27,6 +42,10 @@ class FamilyAmbientStrip extends StatefulWidget {
     this.pullPresence,
     this.pullLoadMetrics,
     this.syncDoneCount,
+    this.onOpenKids,
+    this.kidsPopoverOpen = false,
+    this.kidsPendingCount = 0,
+    this.kidsOpenCounts = const {},
   });
 
   @override
@@ -36,6 +55,7 @@ class FamilyAmbientStrip extends StatefulWidget {
 class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
   List<PresenceInfo> _presence = const [];
   List<LoadMetrics> _loadMetrics = const [];
+  List<EnrolledKid> _enrolledKids = const [];
 
   @override
   void initState() {
@@ -96,14 +116,13 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
     });
   }
 
-  List<EnrolledKid> _enrolledKids = const [];
-
   @override
   Widget build(BuildContext context) {
     if (!widget.visible) return const SizedBox.shrink();
 
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final now = DateTime.now();
     final loadById = {for (final m in _loadMetrics) m.linkId: m};
 
@@ -121,45 +140,128 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
       now: now,
     );
     final kids = FamilyConnectionService.kidStatuses(
-      enrolledKids: _enrolledKids.isNotEmpty ? _enrolledKids : widget.enrolledKids,
+      enrolledKids:
+          _enrolledKids.isNotEmpty ? _enrolledKids : widget.enrolledKids,
       presenceList: _presence,
       now: now,
     );
     final members = [...linkMembers, ...kids];
-    if (members.isEmpty) return const SizedBox.shrink();
+    final canOpen = widget.onOpenKids != null;
+    if (members.isEmpty && !canOpen) return const SizedBox.shrink();
 
-    return Padding(
-      padding: EdgeInsets.zero,
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        children: [
-          for (final member in members)
-            _AmbientChip(
-              label: member.name,
-              loadLabel: _loadLabel(l10n, member, loadById, now),
-              tooltip: member.statusLabel(l10n),
-              dotColor: _dotColor(scheme, member),
-              loadMuted: _loadMetricsStale(loadById[member.id], now),
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: members.isEmpty
+                  ? Text(
+                      l10n.kidsSectionTitle,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        for (final member in members)
+                          _AmbientChip(
+                            label: member.name,
+                            count: _openCount(l10n, member, loadById, now),
+                            countMuted:
+                                member.type == FamilyMemberType.linkMember
+                                ? _loadMetricsStale(loadById[member.id], now)
+                                : false,
+                            tooltip: member.statusLabel(l10n),
+                            dotColor: _dotColor(scheme, member),
+                          ),
+                      ],
+                    ),
             ),
-        ],
+            if (canOpen) ...[
+              const SizedBox(width: 8),
+              _OpenChevron(
+                open: widget.kidsPopoverOpen,
+                pendingCount: widget.kidsPendingCount,
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+
+    if (!canOpen) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: content,
+        ),
+      );
+    }
+
+    final radius = BorderRadius.circular(22);
+    final open = widget.kidsPopoverOpen;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: open ? scheme.surfaceContainer : scheme.surfaceContainerLow,
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: open ? 0.12 : 0.07),
+              blurRadius: open ? 14 : 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: widget.onOpenKids,
+            borderRadius: radius,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: content,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  String _loadLabel(
+  /// Open count to show beside [member.name], or `—` when adult load is unknown.
+  String? _openCount(
     AppLocalizations l10n,
     FamilyMemberStatus member,
     Map<String, LoadMetrics> loadById,
     DateTime now,
   ) {
-    if (member.type != FamilyMemberType.linkMember) {
-      return '';
+    if (member.type == FamilyMemberType.kid) {
+      final count = widget.kidsOpenCounts[member.id];
+      if (count == null) return null;
+      return '$count';
     }
     final metrics = loadById[member.id];
-    if (metrics == null) return l10n.tasksAmbientLoadUnknown;
-    if (_loadMetricsStale(metrics, now)) return l10n.tasksAmbientLoadUnknown;
-    return l10n.tasksAmbientLoadOpen(metrics.totalOpen);
+    if (metrics == null || _loadMetricsStale(metrics, now)) {
+      return l10n.tasksAmbientLoadUnknown;
+    }
+    return '${metrics.totalOpen}';
   }
 
   bool _loadMetricsStale(LoadMetrics? metrics, DateTime now) {
@@ -182,36 +284,102 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
   }
 }
 
-class _AmbientChip extends StatelessWidget {
-  final String label;
-  final String loadLabel;
-  final String tooltip;
-  final Color dotColor;
-  final bool loadMuted;
+class _OpenChevron extends StatelessWidget {
+  final bool open;
+  final int pendingCount;
 
-  const _AmbientChip({
-    required this.label,
-    required this.loadLabel,
-    required this.tooltip,
-    required this.dotColor,
-    required this.loadMuted,
+  const _OpenChevron({
+    required this.open,
+    required this.pendingCount,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer.withValues(alpha: 0.85),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            open ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+            size: 22,
+            color: scheme.onPrimaryContainer,
+          ),
+        ),
+        if (pendingCount > 0)
+          Positioned(
+            top: -3,
+            right: -3,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: scheme.error,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                pendingCount > 9 ? '9+' : '$pendingCount',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onError,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 9,
+                      height: 1,
+                    ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _AmbientChip extends StatelessWidget {
+  final String label;
+  final String? count;
+  final bool countMuted;
+  final String tooltip;
+  final Color dotColor;
+
+  const _AmbientChip({
+    required this.label,
+    required this.count,
+    required this.countMuted,
+    required this.tooltip,
+    required this.dotColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final nameStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
           fontSize: 11,
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
         );
+    final countStyle = nameStyle?.copyWith(
+      fontWeight: FontWeight.w700,
+      fontSize: 12,
+      color: countMuted
+          ? scheme.outline
+          : scheme.onSurface.withValues(alpha: 0.92),
+    );
 
     return Tooltip(
       message: tooltip,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+          color: scheme.surface.withValues(alpha: 0.72),
           borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -222,17 +390,10 @@ class _AmbientChip extends StatelessWidget {
               decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(label, style: textStyle, overflow: TextOverflow.ellipsis),
-            if (loadLabel.isNotEmpty) ...[
-              const SizedBox(width: 4),
-              Text(
-                loadLabel,
-                style: textStyle?.copyWith(
-                  color: loadMuted
-                      ? scheme.outline
-                      : scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
-              ),
+            Text(label, style: nameStyle, overflow: TextOverflow.ellipsis),
+            if (count != null && count!.isNotEmpty) ...[
+              const SizedBox(width: 5),
+              Text(count!, style: countStyle),
             ],
           ],
         ),

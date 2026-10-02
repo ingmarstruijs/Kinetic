@@ -6,7 +6,7 @@
 * [x] The original app author has been notified (and does not oppose the inclusion). If you are not the author, please paste the link of the reply from the author.
 * [x] The upstream app source code repo contains the app metadata in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure. The summary and description must be included and images, icon, and changelog should also be provided for better user experience. The `en-US` locale must be included.
 
-Submitter is the original author. Fastlane is in upstream at `apps/link/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic tag `v0.4.3`).
+Submitter is the original author. Fastlane is in upstream at `apps/link/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic tag `v0.4.4`).
 
 ### Docs
 
@@ -41,7 +41,7 @@ No related fdroiddata/RFP issues. Companion app Kinetic Kids is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `93a7a946ff30da330142782511f0b5c65bbe5273` (annotated tag `v0.4.3`).
+Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `fe298265d1bdb1dfb824aae7449796ccded1a8a0` (annotated tag `v0.4.4`).
 
 Special reason for auto update: `AutoUpdateMode: None` / `UpdateCheckMode: None` because this is a Melos monorepo (`subdir: apps/link`); happy to add UpdateCheckData once maintainers prefer a specific pattern.
 
@@ -49,7 +49,7 @@ srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: fl
 
 Reproducible Builds not enabled: Flutter + Melos monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versionCode` to `abiIndex*1000+build-number` (arm=1 → `1131`, arm64=2 → `2132`, x86_64=4 → `4133`); metadata `versionCode` matches the APK.
+ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versionCode` to `abiIndex*1000+build-number` (arm=1 → `1141`, arm64=2 → `2142`, x86_64=4 → `4143`); metadata `versionCode` matches the APK.
 
 ### Pipeline
 
@@ -57,4 +57,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versi
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.3** (`v0.4.3` / `93a7a946ff30da330142782511f0b5c65bbe5273`). Local `./tool/fdroid_build.sh link` verified.
+Updated metadata to **0.4.4** (`v0.4.4` / `fe298265d1bdb1dfb824aae7449796ccded1a8a0`). Local `./tool/fdroid_build.sh link` verified.

@@ -10,6 +10,14 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-02
+
+### Store
+Version alignment with Link 0.4.4 family ambient and nudge sync.
+
+### Changed
+- Keep Kids release train aligned with Link 0.4.4 (no Kids UI changes).
+
 ## [0.4.3] - 2026-09-30
 
 ### Store

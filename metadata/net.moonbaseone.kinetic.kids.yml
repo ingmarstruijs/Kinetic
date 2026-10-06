@@ -14,6 +14,71 @@ RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
+  - versionName: 0.4.5
+    versionCode: 1151
+    commit: 7477aae08403faf0daf9802d8dcb13048aba0f9b
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $flutter$ checkout -f $flutterVersion
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-arm
+        --build-name=$VERSION$ --build-number=151
+
+  - versionName: 0.4.5
+    versionCode: 2152
+    commit: 7477aae08403faf0daf9802d8dcb13048aba0f9b
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $flutter$ checkout -f $flutterVersion
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-arm64
+        --build-name=$VERSION$ --build-number=152
+
+  - versionName: 0.4.5
+    versionCode: 4153
+    commit: 7477aae08403faf0daf9802d8dcb13048aba0f9b
+    subdir: apps/kids
+    output: build/app/outputs/flutter-apk/app-x86_64-release.apk
+    srclibs:
+      - flutter@stable
+    prebuild:
+      - cd ../..
+      - flutterVersion=$(tr -d '\r\n' < .flutter-version)
+      - '[[ $flutterVersion ]]'
+      - git -C $flutter$ checkout -f $flutterVersion
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter config --no-analytics
+      - flutter --version
+      - dart pub global activate melos
+      - dart pub global run melos bootstrap
+    build:
+      - export PATH="$flutter$/bin:$PATH"
+      - flutter build apk --release --split-per-abi --target-platform=android-x64
+        --build-name=$VERSION$ --build-number=153
   - versionName: 0.4.4
     versionCode: 1141
     commit: fe298265d1bdb1dfb824aae7449796ccded1a8a0
@@ -214,5 +279,5 @@ Builds:
 
 AutoUpdateMode: None
 UpdateCheckMode: None
-CurrentVersion: 0.4.4
-CurrentVersionCode: 4143
+CurrentVersion: 0.4.5
+CurrentVersionCode: 4153

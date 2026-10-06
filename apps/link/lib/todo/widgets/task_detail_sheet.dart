@@ -260,10 +260,10 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
       for (final m in _linkStatuses)
         if (m.isConnected && widget.proposalRepo != null) m,
     ];
+    // Same enrolled kids as the kids section, including ones without a fresh
+    // presence ping. Connection is not required to assign a chore.
     final kids = [
-      if (widget.kidsParticipation)
-        for (final m in _kidStatuses)
-          if (m.isConnected) m,
+      if (widget.kidsParticipation) ..._kidStatuses,
     ];
     return [...link, ...kids];
   }

@@ -11,6 +11,9 @@
 
     <!-- Notifications for new task alerts (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Background sync so a new chore can notify before the app is opened. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:label="Kinetic Kids"

@@ -14,6 +14,7 @@ import 'enrollment/kids_language_picker.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'notifications/kids_notification_service.dart';
 import 'settings/kids_settings_screen.dart';
+import 'sync/kids_background_sync.dart';
 import 'sync/sync_orchestrator.dart';
 import 'sync/webdav_config_repository.dart';
 import 'task/goal_xp.dart';
@@ -29,6 +30,11 @@ Future<void> main() async {
   final appDb = AppDatabase();
   final notificationService = KidsNotificationService();
   await notificationService.initialize();
+  try {
+    await registerKidsBackgroundSync();
+  } catch (e) {
+    debugPrint('Kids background sync not scheduled: $e');
+  }
   runApp(
     KineticKidsApp(appDb: appDb, notificationService: notificationService),
   );
@@ -198,6 +204,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
     with WidgetsBindingObserver {
   late final KidsTaskRepository _repository;
   KidsSyncOrchestrator? _orchestrator;
+  Timer? _pollTimer;
   bool _enrolled = false;
   bool _initDone = false;
   DateTime? _xpResetAt;
@@ -214,8 +221,24 @@ class _KidsAppShellState extends State<_KidsAppShell>
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  /// While the process is alive, poll even if the screen is off. Opening the
+  /// app is no longer the only moment a new chore can notify.
+  void _startPolling() {
+    _pollTimer ??= Timer.periodic(const Duration(minutes: 1), (_) {
+      final orchestrator = _orchestrator;
+      if (orchestrator == null) return;
+      unawaited(orchestrator.sync());
+    });
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 
   @override
@@ -273,8 +296,10 @@ class _KidsAppShellState extends State<_KidsAppShell>
           },
         );
       });
+      _startPolling();
       unawaited(_orchestrator!.sync());
     } else {
+      _stopPolling();
       setState(() {
         _enrolled = false;
         _initDone = true;
@@ -343,6 +368,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
     await store.delete(key: kGoalCelebratedStoreKey);
     final configRepo = WebDavConfigRepository(store);
     await configRepo.clearEnrollment();
+    _stopPolling();
     if (mounted) {
       setState(() {
         _enrolled = false;

@@ -68,5 +68,14 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is needed to scan the enrollment QR code from Kinetic Link.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>kinetic-kids-sync</string>
+	</array>
 </dict>
 </plist>

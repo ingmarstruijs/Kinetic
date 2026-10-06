@@ -10,6 +10,39 @@ import 'package:kids/task/services/kids_task_repository.dart';
 import '../helpers/test_database.dart';
 
 void main() {
+  test('same-name roster duplicate still targets this kid', () {
+    final roster = [
+      FamilyKidMember(
+        id: 'kid-old',
+        name: 'Mees',
+        enrolledAt: DateTime.utc(2026, 1, 1),
+        updatedAt: DateTime.utc(2026, 1, 1),
+      ),
+      FamilyKidMember(
+        id: 'kid-new',
+        name: 'Mees',
+        enrolledAt: DateTime.utc(2026, 2, 1),
+        updatedAt: DateTime.utc(2026, 2, 1),
+      ),
+    ];
+    expect(
+      taskTargetsThisKid(
+        targetKidId: 'kid-old',
+        myKidId: 'kid-new',
+        rosterKids: roster,
+      ),
+      isTrue,
+    );
+    expect(
+      taskTargetsThisKid(
+        targetKidId: 'someone-else',
+        myKidId: 'kid-new',
+        rosterKids: roster,
+      ),
+      isFalse,
+    );
+  });
+
   group('KidsSyncOrchestrator', () {
     late AppDatabase db;
     late KidsTaskRepository repository;

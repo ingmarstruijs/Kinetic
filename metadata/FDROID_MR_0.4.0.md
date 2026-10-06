@@ -28,7 +28,7 @@ Add **Kinetic Link** (`net.moonbaseone.kinetic.link`) and **Kinetic Kids**
 
 - Source: https://github.com/ingmarstruijs/Kinetic
 - Annotated tag on `main`: `v0.4.0`
-- License: Apache-2.0
+- License: AGPL-3.0-or-later
 - Privacy: https://raw.githubusercontent.com/ingmarstruijs/Kinetic/main/PRIVACY.md
 - Flutter srclibs pin: `flutter@3.44.1` (matches repo `.flutter-version`)
 - Kids is **Android-only** (companion to Link); separate application IDs

@@ -40,6 +40,7 @@ QueryExecutor openEncryptedDatabase({
           );
         }
         rawDb.execute("PRAGMA key = '${_escape(key)}'");
+        rawDb.execute('PRAGMA busy_timeout = 5000');
         rawDb.execute('SELECT count(*) FROM sqlite_master');
       },
     );

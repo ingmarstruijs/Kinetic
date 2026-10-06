@@ -233,47 +233,35 @@ class _FamilyAmbientStripState extends State<FamilyAmbientStrip> {
       ],
     );
 
-    if (!canOpen) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: content,
-        ),
-      );
-    }
-
-    final radius = BorderRadius.circular(22);
+    final headerColor =
+        theme.appBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor;
     final open = widget.kidsPopoverOpen;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: open ? scheme.surfaceContainer : scheme.surfaceContainerLow,
-          borderRadius: radius,
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withValues(alpha: open ? 0.12 : 0.07),
-              blurRadius: open ? 14 : 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: radius,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: widget.onOpenKids,
-            borderRadius: radius,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 52),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: content,
+    // Closed: same surface as the app bar, full width, no radius — it reads as
+    // part of the header. Open: same fill as the dropdown sheet below.
+    final barColor = open ? scheme.surfaceContainerHigh : headerColor;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: barColor,
+        border: open
+            ? null
+            : Border(
+                bottom: BorderSide(
+                  color: scheme.outlineVariant.withValues(alpha: 0.45),
                 ),
+              ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: canOpen ? widget.onOpenKids : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: content,
               ),
             ),
           ),

@@ -6,6 +6,32 @@ import '../task/models/kids_task.dart';
 import '../task/services/kids_task_repository.dart';
 import 'webdav_config_repository.dart';
 
+/// Whether a shared task should show up on this kids device.
+///
+/// An empty target, or an empty [myKidId], means "every kid". A target id that
+/// belongs to another roster row with the same name is a re-enrollment
+/// duplicate, not a different child — those tasks belong here too.
+bool taskTargetsThisKid({
+  required String? targetKidId,
+  required String myKidId,
+  List<FamilyKidMember> rosterKids = const [],
+}) {
+  if (targetKidId == null || targetKidId.isEmpty || myKidId.isEmpty) {
+    return true;
+  }
+  if (targetKidId == myKidId) return true;
+  final mine = _rosterKidName(rosterKids, myKidId);
+  final theirs = _rosterKidName(rosterKids, targetKidId);
+  return mine != null && mine.isNotEmpty && mine == theirs;
+}
+
+String? _rosterKidName(List<FamilyKidMember> kids, String id) {
+  for (final kid in kids) {
+    if (kid.id == id) return kid.name.trim().toLowerCase();
+  }
+  return null;
+}
+
 /// KidsSyncOrchestrator — WebDAV sync for assigned tasks
 ///
 /// Pulls tasks assigned from the link app and pushes local completion status updates.
@@ -73,8 +99,26 @@ class KidsSyncOrchestrator {
   /// The caller can use this to show a local notification.
   final void Function(String taskTitle)? onNewTaskReceived;
 
-  /// Main sync cycle: pull remote tasks, push local changes
-  Future<void> sync() async {
+  /// Roster snapshot used to treat a re-enrolled duplicate (same name, other
+  /// id) as this device. Empty until [syncWithService] pulls the roster.
+  List<FamilyKidMember> _rosterKids = const [];
+
+  Future<void>? _syncInFlight;
+
+  /// Main sync cycle: pull remote tasks, push local changes.
+  ///
+  /// Overlapping calls (resume + the periodic poll) share one in-flight run.
+  Future<void> sync() {
+    final current = _syncInFlight;
+    if (current != null) return current;
+    final run = _syncOnce();
+    _syncInFlight = run;
+    return run.whenComplete(() {
+      if (identical(_syncInFlight, run)) _syncInFlight = null;
+    });
+  }
+
+  Future<void> _syncOnce() async {
     final client = WebDavClient(
       baseUrl: _config.baseUrl,
       username: _config.username,
@@ -179,8 +223,18 @@ class KidsSyncOrchestrator {
     }
   }
 
+  Future<void> _refreshRosterKids(WebDavSyncService service) async {
+    try {
+      final roster = await service.pullRoster();
+      if (roster != null) _rosterKids = roster.kids;
+    } catch (_) {
+      // Keep the previous snapshot so a blip does not drop name matching.
+    }
+  }
+
   /// Pull tasks from the link app (from /kinetic/shared/tasks/)
   Future<void> _pullRemoteTasks(WebDavSyncService service) async {
+    await _refreshRosterKids(service);
     final iCalTasks = await service.pullSharedTasks();
 
     final localList = await _db.select(_db.kidsTasks).get();
@@ -214,10 +268,11 @@ class KidsSyncOrchestrator {
         ical.description,
         'xKineticTargetKidId',
       );
-      if (targetKidId != null &&
-          targetKidId.isNotEmpty &&
-          _myKidId.isNotEmpty &&
-          targetKidId != _myKidId) {
+      if (!taskTargetsThisKid(
+        targetKidId: targetKidId,
+        myKidId: _myKidId,
+        rosterKids: _rosterKids,
+      )) {
         continue;
       }
 

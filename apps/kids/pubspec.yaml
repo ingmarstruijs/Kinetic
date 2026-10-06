@@ -57,6 +57,9 @@ dependencies:
   # Local notifications for task alerts
   flutter_local_notifications: ^18.0.1
 
+  # Poll WebDAV while the app is not open so new chores can notify.
+  workmanager: ^0.9.0+3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

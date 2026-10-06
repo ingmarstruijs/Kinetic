@@ -96,3 +96,43 @@ class EnrolledKid {
         isActive: m.isActive,
       );
 }
+
+String enrolledKidNameKey(String name) => name.trim().toLowerCase();
+
+/// One kid per name.
+///
+/// Re-enrollment can leave two roster rows with the same name and different
+/// ids. Task lists and assign chips should show one child; the row we keep is
+/// an active kid when there is one, and otherwise the earliest enrollment.
+List<EnrolledKid> canonicalEnrolledKids(List<EnrolledKid> kids) {
+  final order = <String>[];
+  final grouped = <String, List<EnrolledKid>>{};
+  for (final kid in kids) {
+    final key = enrolledKidNameKey(kid.name);
+    grouped.putIfAbsent(key, () {
+      order.add(key);
+      return [];
+    }).add(kid);
+  }
+  return [
+    for (final key in order) _pickCanonicalKid(grouped[key]!),
+  ];
+}
+
+EnrolledKid _pickCanonicalKid(List<EnrolledKid> sameName) {
+  final active = sameName.where((k) => k.isActive).toList();
+  final pool = active.isEmpty ? sameName : active;
+  pool.sort((a, b) => a.enrolledAt.compareTo(b.enrolledAt));
+  return pool.first;
+}
+
+/// Maps every enrolled id, including duplicate-name aliases, to the canonical id.
+Map<String, String> enrolledKidAliasIds(List<EnrolledKid> kids) {
+  final canonical = canonicalEnrolledKids(kids);
+  final byName = {
+    for (final kid in canonical) enrolledKidNameKey(kid.name): kid.id,
+  };
+  return {
+    for (final kid in kids) kid.id: byName[enrolledKidNameKey(kid.name)]!,
+  };
+}

@@ -127,10 +127,19 @@ class FamilyConnectionService {
   }) {
     final clock = now ?? DateTime.now();
     final byId = {for (final p in presenceList) p.deviceId: p};
+    final visible = canonicalEnrolledKids(enrolledKids).where((k) => k.isActive);
     return [
-      for (final kid in enrolledKids.where((k) => k.isActive))
+      for (final kid in visible)
         () {
-          final presence = byId[kid.id];
+          // A re-enrolled duplicate can be the device that is actually online.
+          final presence = _freshestPresence(
+            enrolledKids.where(
+              (other) =>
+                  enrolledKidNameKey(other.name) ==
+                  enrolledKidNameKey(kid.name),
+            ),
+            byId,
+          );
           final lastSeen = presence?.lastSeen;
           final (connected, stale) = _evaluate(
             lastSeen,
@@ -147,6 +156,21 @@ class FamilyConnectionService {
           );
         }(),
     ];
+  }
+
+  static PresenceInfo? _freshestPresence(
+    Iterable<EnrolledKid> kids,
+    Map<String, PresenceInfo> byId,
+  ) {
+    PresenceInfo? best;
+    for (final kid in kids) {
+      final presence = byId[kid.id];
+      if (presence == null) continue;
+      if (best == null || presence.lastSeen.isAfter(best.lastSeen)) {
+        best = presence;
+      }
+    }
+    return best;
   }
 
   static bool canSend({

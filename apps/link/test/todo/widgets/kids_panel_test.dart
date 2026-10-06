@@ -147,6 +147,46 @@ void main() {
     expect(job.goal?.title, 'Bike');
   });
 
+  test('same-name enrollments collapse onto one kid card', () {
+    final enrolledAt = DateTime.utc(2026, 1, 1);
+    final duplicate = [
+      EnrolledKid(id: 'job-old', name: 'Job', enrolledAt: enrolledAt),
+      EnrolledKid(
+        id: 'job-new',
+        name: 'Job',
+        enrolledAt: enrolledAt.add(const Duration(days: 3)),
+      ),
+      EnrolledKid(
+        id: 'jolise',
+        name: 'Jolise',
+        enrolledAt: enrolledAt,
+      ),
+    ];
+    final groups = groupKidsTasks(
+      tasks: [
+        task(uid: '1', summary: 'From quick add', kidId: 'job-new'),
+        task(uid: '2', summary: 'From kids section', kidId: 'job-old'),
+      ],
+      enrolledKids: duplicate,
+      everyoneLabel: 'Everyone',
+    );
+
+    expect(groups.map((g) => g.name), ['Job', 'Jolise']);
+    final job = groups.firstWhere((g) => g.name == 'Job');
+    expect(job.key, 'job-old');
+    expect(job.tasks.map((t) => t.summary), [
+      'From quick add',
+      'From kids section',
+    ]);
+    expect(
+      kidTaskGroupKey(
+        task(uid: '1', summary: 'From quick add', kidId: 'job-new'),
+        duplicate,
+      ),
+      'job-old',
+    );
+  });
+
   test('includes enrolled kids with zero tasks', () {
     final groups = groupKidsTasks(
       tasks: const [],

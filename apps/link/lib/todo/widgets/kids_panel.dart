@@ -71,16 +71,16 @@ List<KidTaskGroup> groupKidsTasks({
 }) {
   final xpPerKid = <String, int>{};
   final grouped = <String, List<ICalTask>>{};
-  final enrolledIds = enrolledKids.map((k) => k.id).toSet();
-  final soleKidId = enrolledKids.length == 1 ? enrolledKids.first.id : null;
+  final visibleKids = canonicalEnrolledKids(enrolledKids);
+  final aliasIds = enrolledKidAliasIds(enrolledKids);
+  final soleKidId = visibleKids.length == 1 ? visibleKids.first.id : null;
 
   for (final task in tasks) {
     final targetId = icalProp(task.description, 'xKineticTargetKidId');
     String key;
-    if (targetId != null &&
-        targetId.isNotEmpty &&
-        enrolledIds.contains(targetId)) {
-      key = targetId;
+    final aliased = targetId == null ? null : aliasIds[targetId];
+    if (aliased != null) {
+      key = aliased;
     } else if (soleKidId != null) {
       // One enrolled kid: show shared/"everyone" tasks on that kid's card.
       key = soleKidId;
@@ -97,14 +97,19 @@ List<KidTaskGroup> groupKidsTasks({
   }
 
   final groups = <KidTaskGroup>[];
-  for (final kid in enrolledKids) {
+  for (final kid in visibleKids) {
+    final aliasGoal = goals[kid.id] ??
+        goals.entries
+            .where((e) => aliasIds[e.key] == kid.id)
+            .map((e) => e.value)
+            .firstOrNull;
     groups.add(
       KidTaskGroup(
         key: kid.id,
         name: kid.name,
         tasks: grouped[kid.id] ?? const [],
         xp: xpPerKid[kid.id] ?? 0,
-        goal: goals[kid.id],
+        goal: aliasGoal,
       ),
     );
   }
@@ -124,13 +129,11 @@ List<KidTaskGroup> groupKidsTasks({
 /// Group key for a shared kids task (matches [groupKidsTasks]).
 String kidTaskGroupKey(ICalTask task, List<EnrolledKid> enrolledKids) {
   final targetId = icalProp(task.description, 'xKineticTargetKidId');
-  final enrolledIds = enrolledKids.map((k) => k.id).toSet();
-  if (targetId != null &&
-      targetId.isNotEmpty &&
-      enrolledIds.contains(targetId)) {
-    return targetId;
-  }
-  if (enrolledKids.length == 1) return enrolledKids.first.id;
+  final aliasIds = enrolledKidAliasIds(enrolledKids);
+  final aliased = targetId == null ? null : aliasIds[targetId];
+  if (aliased != null) return aliased;
+  final visible = canonicalEnrolledKids(enrolledKids);
+  if (visible.length == 1) return visible.first.id;
   return '__everyone__';
 }
 
@@ -797,7 +800,7 @@ class KidsPanelState extends State<KidsPanel> {
                         _openKidKey = null;
                       }),
                     ),
-                    for (final kid in data.enrolledKids) ...[
+                    for (final kid in canonicalEnrolledKids(data.enrolledKids)) ...[
                       const SizedBox(width: 8),
                       _KidChip(
                         selected: _filterKey == kid.id,

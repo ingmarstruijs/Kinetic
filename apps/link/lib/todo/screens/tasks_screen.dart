@@ -303,30 +303,26 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _buildFamilyPopoverBody() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (_showAdultsSection)
-            FamilyAdultsSection(
-              otherLinkMembers: widget.otherLinkMembers,
-              presence: _presence,
-              onNudge: widget.onSendNudge != null || DemoSession.instance.active
-                  ? _handleNudge
-                  : null,
-            ),
-          if (_showKids) _buildKidsPanel(),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_showAdultsSection)
+          FamilyAdultsSection(
+            otherLinkMembers: widget.otherLinkMembers,
+            presence: _presence,
+            onNudge: widget.onSendNudge != null || DemoSession.instance.active
+                ? _handleNudge
+                : null,
+          ),
+        if (_showKids) _buildKidsPanel(),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final barColor =
-        Theme.of(context).appBarTheme.backgroundColor ??
-        Theme.of(context).scaffoldBackgroundColor;
     return Theme(
       data: Theme.of(context).copyWith(
         bottomSheetTheme: BottomSheetThemeData(
@@ -462,23 +458,38 @@ class _TasksScreenState extends State<TasksScreen> {
                       ),
                     ],
                   ),
-                  // Full-height panel over tasks + QuickAdd; ambient strip stays above.
-                  // Kept mounted when closed so kids open/pending counts stay fresh.
+                  // Sheet under the ambient strip. Kept mounted when closed so
+                  // kids open/pending counts stay fresh.
                   if (_showFamilyPopover)
                     Positioned.fill(
                       child: Offstage(
                         offstage: !_familyPopoverOpen,
                         child: IgnorePointer(
                           ignoring: !_familyPopoverOpen,
-                          child: Material(
-                            elevation: _familyPopoverOpen ? 6 : 0,
-                            color: barColor,
-                            shadowColor:
-                                scheme.shadow.withValues(alpha: 0.25),
-                            child: SafeArea(
-                              top: false,
-                              child: _buildFamilyPopoverBody(),
-                            ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: GestureDetector(
+                                      onTap: _toggleFamilyPopover,
+                                      child: ColoredBox(
+                                        color: scheme.scrim.withValues(
+                                          alpha: 0.32,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: _FamilyPopoverSheet(
+                                      maxHeight: constraints.maxHeight * 0.86,
+                                      child: _buildFamilyPopoverBody(),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -1083,6 +1094,67 @@ class _DraggableTaskRow extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Dropdown under the ambient bar. Same cues as a modal bottom sheet
+/// (surface, shadow, drag handle, rounded free edge), hanging from the header.
+class _FamilyPopoverSheet extends StatelessWidget {
+  final double maxHeight;
+  final Widget child;
+
+  const _FamilyPopoverSheet({
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh,
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(28),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withValues(alpha: 0.22),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(28),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                child,
+                const SizedBox(height: 4),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: scheme.outlineVariant.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

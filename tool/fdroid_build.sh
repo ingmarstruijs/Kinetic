@@ -21,9 +21,7 @@ if [[ "$ACTUAL" != "$EXPECTED_FLUTTER" ]]; then
   exit 1
 fi
 
-dart pub global activate melos
-# Same as F-Droid prebuild; `dart pub global run` avoids PATH issues on Windows Git Bash.
-dart pub global run melos bootstrap
+flutter pub get
 
 PUBSPEC="apps/$APP/pubspec.yaml"
 if [[ ! -f "$PUBSPEC" ]]; then

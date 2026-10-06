@@ -10,6 +10,17 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-06
+
+### Store
+Background chore notifications and same-name assignment fix.
+
+### Added
+- Background sync so a new chore can notify without opening the app.
+
+### Fixed
+- Accept chores assigned to a same-name roster duplicate of this device.
+
 ## [0.4.4] - 2026-10-02
 
 ### Store

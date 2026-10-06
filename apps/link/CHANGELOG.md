@@ -10,6 +10,19 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-06
+
+### Store
+Ambient popover restyle, reliable kids chore assignment, and AGPL-3.0-or-later.
+
+### Changed
+- Ambient strip attaches to the app header as a full-width bar; open state uses a clearer popover sheet.
+- Relicense the project to AGPL-3.0-or-later.
+
+### Fixed
+- Quick-add assign-to no longer creates a duplicate same-name kid card.
+- Kids chores targeted at a re-enrollment alias reach the live device.
+
 ## [0.4.4] - 2026-10-02
 
 ### Store

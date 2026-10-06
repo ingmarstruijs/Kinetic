@@ -25,16 +25,16 @@ Builds:
       - cd ../..
       - flutterVersion=$(tr -d '\r\n' < .flutter-version)
       - '[[ $flutterVersion ]]'
-      - git -C $flutter$ checkout -f $flutterVersion
-      - export PATH="$flutter$/bin:$PATH"
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
       - flutter --version
       - dart pub global activate melos
       - dart pub global run melos bootstrap
     build:
-      - export PATH="$flutter$/bin:$PATH"
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter build apk --release --split-per-abi --target-platform=android-arm
-        --build-name=$VERSION$ --build-number=151
+        --build-name=$$VERSION$$ --build-number=151
 
   - versionName: 0.4.5
     versionCode: 2152
@@ -47,16 +47,16 @@ Builds:
       - cd ../..
       - flutterVersion=$(tr -d '\r\n' < .flutter-version)
       - '[[ $flutterVersion ]]'
-      - git -C $flutter$ checkout -f $flutterVersion
-      - export PATH="$flutter$/bin:$PATH"
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
       - flutter --version
       - dart pub global activate melos
       - dart pub global run melos bootstrap
     build:
-      - export PATH="$flutter$/bin:$PATH"
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter build apk --release --split-per-abi --target-platform=android-arm64
-        --build-name=$VERSION$ --build-number=152
+        --build-name=$$VERSION$$ --build-number=152
 
   - versionName: 0.4.5
     versionCode: 4153
@@ -69,16 +69,16 @@ Builds:
       - cd ../..
       - flutterVersion=$(tr -d '\r\n' < .flutter-version)
       - '[[ $flutterVersion ]]'
-      - git -C $flutter$ checkout -f $flutterVersion
-      - export PATH="$flutter$/bin:$PATH"
+      - git -C $$flutter$$ checkout -f $flutterVersion
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
       - flutter --version
       - dart pub global activate melos
       - dart pub global run melos bootstrap
     build:
-      - export PATH="$flutter$/bin:$PATH"
+      - export PATH="$$flutter$$/bin:$PATH"
       - flutter build apk --release --split-per-abi --target-platform=android-x64
-        --build-name=$VERSION$ --build-number=153
+        --build-name=$$VERSION$$ --build-number=153
   - versionName: 0.4.4
     versionCode: 1141
     commit: fe298265d1bdb1dfb824aae7449796ccded1a8a0

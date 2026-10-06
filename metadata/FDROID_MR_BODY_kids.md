@@ -41,7 +41,7 @@ No related fdroiddata/RFP issues. Companion app Kinetic Link is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `RELEASE_COMMIT_SHA` (annotated tag `v0.4.5`).
+Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `d26b4da47b20c56ec1df0466cfd129988ead694f` (annotated tag `v0.4.5`).
 
 Special reason for auto update: `AutoUpdateMode: None` / `UpdateCheckMode: None` because this is a Melos monorepo (`subdir: apps/kids`); happy to add UpdateCheckData once maintainers prefer a specific pattern.
 
@@ -57,4 +57,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versi
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.5** (`v0.4.5` / `RELEASE_COMMIT_SHA`). Local `./tool/fdroid_build.sh kids` verified.
+Updated metadata to **0.4.5** (`v0.4.5` / `d26b4da47b20c56ec1df0466cfd129988ead694f`). Local `./tool/fdroid_build.sh kids` verified.

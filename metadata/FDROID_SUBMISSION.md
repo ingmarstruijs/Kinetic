@@ -109,12 +109,12 @@ run it natively). Flutter on `PATH` must match `.flutter-version` (FVM:
 | --- | --- |
 | Flutter | `.flutter-version`, `.fvmrc`, CI workflows, metadata `srclibs: flutter@…` |
 | Android NDK | Flutter-bundled (`flutter.ndkVersion` in `apps/*/android/app/build.gradle.kts`); no separate fdroiddata NDK pin |
-| Melos | `dart pub global activate melos` in `prebuild` / `fdroid_build.sh` |
+| Workspace deps | `flutter pub get` at repo root in `prebuild` / `fdroid_build.sh` |
 | Native SQLite | sqlite3mc via workspace hooks |
 
 ### Reproducibility
 
-- Melos bootstrap is required in `prebuild` (monorepo packages must resolve)
+- Root `flutter pub get` is required in `prebuild` (monorepo packages must resolve)
 - F-Droid rebuilds and **re-signs** APKs with the F-Droid key; GitHub Release
   signing is independent (different certificate fingerprint)
 - Local DB encryption uses SQLite3MultipleCiphers via pub workspace hooks

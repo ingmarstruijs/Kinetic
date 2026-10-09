@@ -41,7 +41,7 @@ No related fdroiddata/RFP issues. Companion app Kinetic Link is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `083785f61347989e3c4d8cdfb800f0310f41862b` (annotated tag `v0.4.5` plus follow-up for F-Droid ABI `versionCode` scheme).
+Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `f4134acc6f9505b9ba80a458402b0591b6ba6f95` (annotated tag `v0.4.5` plus follow-up for F-Droid ABI `versionCode` scheme).
 
 `AutoUpdateMode: Version` / `UpdateCheckMode: Tags` with `UpdateCheckData` on `apps/kids/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
 
@@ -57,4 +57,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/b
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.5** with F-Droid ABI `versionCode` scheme (`083785f61347989e3c4d8cdfb800f0310f41862b`). Local `./tool/fdroid_build.sh kids` verified.
+Updated metadata to **0.4.5** with F-Droid ABI `versionCode` scheme (`f4134acc6f9505b9ba80a458402b0591b6ba6f95`). Local `./tool/fdroid_build.sh kids` verified.

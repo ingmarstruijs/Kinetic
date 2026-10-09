@@ -24,8 +24,10 @@ GitHub Releases and F-Droid are **separate**. Tagging `main` publishes GitHub
 APKs automatically; F-Droid stays on the previous version until you open an
 fdroiddata MR.
 
-Metadata uses `AutoUpdateMode: None` / `UpdateCheckMode: None`, so **every**
-Kinetic release needs a manual fdroiddata update.
+Metadata uses `AutoUpdateMode: Version` / `UpdateCheckMode: Tags` with
+`UpdateCheckData` on each app `pubspec.yaml` and `VercodeOperation` for the
+ABI `versionCode` scheme. New GitHub tags still need a fdroiddata bump until
+auto-update has produced a Builds entry that F-Droid has shipped.
 
 1. **Version bump PR** on this repo (`release/X.Y.Z`):
    - Bump `apps/link/pubspec.yaml` and `apps/kids/pubspec.yaml` to `X.Y.Z+N`
@@ -64,8 +66,8 @@ These must match for each release:
 - [ ] Fastlane `changelogs/{N,N*10+1,N*10+2,N*10+3}.txt` synced
       (`./tool/sync_fastlane_changelogs.sh --check`)
 - [ ] Metadata `versionName` / `versionCode` / `CurrentVersion*` / `commit: <full SHA>`
-      (with `--split-per-abi`, `versionCode` = Flutter `abiIndex*1000+build-number`:
-      arm `1xxx`, arm64 `2xxx`, x86_64 `4xxx` — not the raw `--build-number`)
+      (ABI split: Gradle `versionCodeOverride = base * 10 + abi` with
+      armeabi-v7a=1, arm64-v8a=2, x86_64=3 — e.g. pubspec `+15` → `151/152/153`)
 - [ ] Annotated git tag `vX.Y.Z` on `main`
 - [ ] Flutter pin in metadata `srclibs` matches `.flutter-version` (and CI / FVM)
 - [ ] `dependenciesInfo.includeInApk = false` still set (no Dependency metadata block)

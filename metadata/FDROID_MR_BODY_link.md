@@ -41,15 +41,15 @@ No related fdroiddata/RFP issues. Companion app Kinetic Kids is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `d26b4da47b20c56ec1df0466cfd129988ead694f` (annotated tag `v0.4.5`).
+Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `RELEASE_COMMIT_SHA` (annotated tag `v0.4.5` plus follow-up for F-Droid ABI `versionCode` scheme).
 
-Special reason for auto update: `AutoUpdateMode: None` / `UpdateCheckMode: None` because this is a Melos monorepo (`subdir: apps/link`); happy to add UpdateCheckData once maintainers prefer a specific pattern.
+`AutoUpdateMode: Version` / `UpdateCheckMode: Tags` with `UpdateCheckData` on `apps/link/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
 
-srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule).
+srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule). Prebuild runs `flutter pub get --enforce-lockfile` at the repo root.
 
-Reproducible Builds not enabled: Flutter + Melos monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
+Reproducible Builds not enabled: Flutter monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versionCode` to `abiIndex*1000+build-number` (arm=1 → `1151`, arm64=2 → `2152`, x86_64=4 → `4153`); metadata `versionCode` matches the APK.
+ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.5 (`+15`) that is **151 / 152 / 153**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
 
 ### Pipeline
 
@@ -57,4 +57,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Flutter sets APK `versi
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.5** (`v0.4.5` / `d26b4da47b20c56ec1df0466cfd129988ead694f`). Local `./tool/fdroid_build.sh link` verified.
+Updated metadata to **0.4.5** with F-Droid ABI `versionCode` scheme (`RELEASE_COMMIT_SHA`). Local `./tool/fdroid_build.sh link` verified.

@@ -14,9 +14,12 @@ workspace:
 dev_dependencies:
   melos: ^7.5.1
 
-# Bundle SQLite3MultipleCiphers so on-disk Drift DBs can be encrypted.
-# See https://drift.simonbinder.eu/platforms/encryption/
+# Compile SQLite3MultipleCiphers from the vendored amalgamation so on-disk
+# Drift DBs can be encrypted without downloading prebuilt libsqlite3mc.so
+# (required for F-Droid). See third_party/sqlite3mc/ and
+# https://drift.simonbinder.eu/platforms/encryption/
 hooks:
   user_defines:
     sqlite3:
-      source: sqlite3mc
+      source: source
+      path: third_party/sqlite3mc/sqlite3mc_amalgamation.c

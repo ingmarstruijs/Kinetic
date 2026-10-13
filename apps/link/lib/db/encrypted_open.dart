@@ -38,7 +38,8 @@ QueryExecutor openEncryptedDatabase({
         if (ciphers.isEmpty) {
           throw UnsupportedError(
             'SQLite3MultipleCiphers is not available. '
-            'Set hooks.user_defines.sqlite3.source to sqlite3mc in the '
+            'Compile the vendored amalgamation via hooks.user_defines.sqlite3 '
+            '(source: source, path: third_party/sqlite3mc/...) in the '
             'workspace root pubspec.yaml.',
           );
         }

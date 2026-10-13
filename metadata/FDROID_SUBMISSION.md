@@ -112,7 +112,7 @@ run it natively). Flutter on `PATH` must match `.flutter-version` (FVM:
 | Flutter | `.flutter-version`, `.fvmrc`, CI workflows, metadata `srclibs: flutter@…` |
 | Android NDK | Flutter-bundled (`flutter.ndkVersion` in `apps/*/android/app/build.gradle.kts`); no separate fdroiddata NDK pin |
 | Workspace deps | `flutter pub get` at repo root in `prebuild` / `fdroid_build.sh` |
-| Native SQLite | sqlite3mc via workspace hooks |
+| Native SQLite | sqlite3mc amalgamation compiled via workspace hooks (third_party/sqlite3mc) |
 
 ### Reproducibility
 

@@ -1,0 +1,1 @@
+Ask for notifications after linking, with a banner if they stay off.

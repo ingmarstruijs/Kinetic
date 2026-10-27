@@ -10,6 +10,15 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-10-27
+
+### Store
+Ask for notifications after linking, with a banner if they stay off.
+
+### Fixed
+- Request notification permission after successful family enrollment instead of on first launch before language choice.
+- Show a settings banner when notifications are disabled after linking.
+
 ## [0.4.5] - 2026-10-06
 
 ### Store

@@ -6,7 +6,7 @@
 * [x] The original app author has been notified (and does not oppose the inclusion). If you are not the author, please paste the link of the reply from the author.
 * [x] The upstream app source code repo contains the app metadata in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure. The summary and description must be included and images, icon, and changelog should also be provided for better user experience. The `en-US` locale must be included.
 
-Submitter is the original author. Fastlane is in upstream at `apps/link/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic tag `v0.4.5`).
+Submitter is the original author. Fastlane is in upstream at `apps/link/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic). Icon is at `images/icon.png`.
 
 ### Docs
 
@@ -41,15 +41,17 @@ No related fdroiddata/RFP issues. Companion app Kinetic Kids is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `f4134acc6f9505b9ba80a458402b0591b6ba6f95` (annotated tag `v0.4.5` plus follow-up for F-Droid ABI `versionCode` scheme).
+Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (annotated tag `v0.4.6` / release bump including F-Droid review UX fixes — https://github.com/ingmarstruijs/Kinetic/pull/93 + https://github.com/ingmarstruijs/Kinetic/pull/94).
 
-`AutoUpdateMode: Version` / `UpdateCheckMode: Tags` with `UpdateCheckData` on `apps/link/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
+`AutoUpdateMode: Version` / `UpdateCheckMode: Tags ^v[0-9.]+-link$` with `UpdateCheckData` on `apps/link/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
 
-srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule). Prebuild runs `flutter pub get --enforce-lockfile` at the repo root.
+srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule). Prebuild runs `flutter pub get --enforce-lockfile` at the repo root. Redundant `flutter --version` removed from prebuild (linsui suggestion).
+
+Native SQLite encryption: workspace hooks use `source: source` with `third_party/sqlite3mc/sqlite3mc_amalgamation.c` (MIT, SQLite3MultipleCiphers v2.6.1) so F-Droid builds compile from source instead of downloading prebuilt `libsqlite3mc.so`.
 
 Reproducible Builds not enabled: Flutter monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.5 (`+15`) that is **151 / 152 / 153**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
+ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.6 (`+16`) that is **161 / 162 / 163**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
 
 ### Pipeline
 
@@ -57,4 +59,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/b
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.5** with F-Droid ABI `versionCode` scheme (`f4134acc6f9505b9ba80a458402b0591b6ba6f95`). Local `./tool/fdroid_build.sh link` verified.
+Updated metadata to **0.4.6** at `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (review UX: deferred notification/exact-alarm prompts + banners, WebDAV folder-not-found, reminder suggestion labels). Thanks @junkerderprovinz for the test feedback — addressed upstream in 0.4.6.

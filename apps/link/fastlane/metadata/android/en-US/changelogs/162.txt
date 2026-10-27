@@ -1,0 +1,1 @@
+Gentler notification permissions, clearer WebDAV folder errors, and smarter overdue reminder suggestions.

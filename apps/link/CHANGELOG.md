@@ -10,6 +10,16 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-10-27
+
+### Store
+Gentler notification permissions, clearer WebDAV folder errors, and smarter overdue reminder suggestions.
+
+### Fixed
+- Ask for notification and exact-alarm permission when scheduling a reminder, not on every cold start; banners stay under the status bar and reminders re-arm after enabling via Settings.
+- Treat a missing WebDAV folder (PROPFIND 404) as not found instead of a false connection success; verify MKCOL 409 before treating it as “already exists”.
+- Overdue/stale suggestions use Ignore / New reminder instead of Decline / Accept.
+
 ## [0.4.5] - 2026-10-06
 
 ### Store

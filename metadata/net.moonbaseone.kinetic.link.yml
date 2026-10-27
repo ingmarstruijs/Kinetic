@@ -14,9 +14,9 @@ RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.4.5
-    versionCode: 151
-    commit: f4134acc6f9505b9ba80a458402b0591b6ba6f95
+  - versionName: 0.4.6
+    versionCode: 161
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
     srclibs:
@@ -28,16 +28,15 @@ Builds:
       - git -C $$flutter$$ checkout -f $flutterVersion
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
-      - flutter --version
       - flutter pub get --enforce-lockfile
     build:
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter build apk --release --split-per-abi --target-platform=android-arm
         --build-name=$$VERSION$$ --build-number=$(($$VERCODE$$ / 10))
 
-  - versionName: 0.4.5
-    versionCode: 152
-    commit: f4134acc6f9505b9ba80a458402b0591b6ba6f95
+  - versionName: 0.4.6
+    versionCode: 162
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
     srclibs:
@@ -49,16 +48,15 @@ Builds:
       - git -C $$flutter$$ checkout -f $flutterVersion
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
-      - flutter --version
       - flutter pub get --enforce-lockfile
     build:
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter build apk --release --split-per-abi --target-platform=android-arm64
         --build-name=$$VERSION$$ --build-number=$(($$VERCODE$$ / 10))
 
-  - versionName: 0.4.5
-    versionCode: 153
-    commit: f4134acc6f9505b9ba80a458402b0591b6ba6f95
+  - versionName: 0.4.6
+    versionCode: 163
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-x86_64-release.apk
     srclibs:
@@ -70,7 +68,6 @@ Builds:
       - git -C $$flutter$$ checkout -f $flutterVersion
       - export PATH="$$flutter$$/bin:$PATH"
       - flutter config --no-analytics
-      - flutter --version
       - flutter pub get --enforce-lockfile
     build:
       - export PATH="$$flutter$$/bin:$PATH"
@@ -78,11 +75,12 @@ Builds:
         --build-name=$$VERSION$$ --build-number=$(($$VERCODE$$ / 10))
 
 AutoUpdateMode: Version
-UpdateCheckMode: Tags
+UpdateCheckMode: Tags ^v[0-9.]+-link$
 VercodeOperation:
   - '%c * 10 + 1'
   - '%c * 10 + 2'
   - '%c * 10 + 3'
 UpdateCheckData: apps/link/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 0.4.5
-CurrentVersionCode: 153
+CurrentVersion: 0.4.6
+CurrentVersionCode: 163
+

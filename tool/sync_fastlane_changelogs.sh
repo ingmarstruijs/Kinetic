@@ -169,8 +169,10 @@ sync_app() {
     base="${BASH_REMATCH[2]}"
   fi
 
+  # Command substitution strips trailing newlines; append a sentinel and peel it off.
   local store
-  store="$(extract_store "$changelog" "$version")"
+  store="$(extract_store "$changelog" "$version"; printf x)"
+  store="${store%x}"
 
   mkdir -p "$out_dir"
   # Base pubspec code + F-Droid ABI versionCodes (see header).

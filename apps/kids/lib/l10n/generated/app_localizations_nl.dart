@@ -179,6 +179,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get newTaskNotificationTitle => 'Nieuwe opdracht';
 
   @override
+  String get notifDisabledBanner =>
+      'Meldingen staan uit. Zet ze aan in Instellingen om nieuwe opdrachten te horen.';
+
+  @override
   String get chooseLanguage => 'Kies taal';
 
   @override
@@ -251,6 +255,10 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get connectionErrorAuth =>
       'Verkeerd wachtwoord of gebruikersnaam. Controleer het WebDAV-wachtwoord uit Kinetic Link.';
+
+  @override
+  String get connectionErrorNotFound =>
+      'Deze map bestaat niet op de server. Controleer het adres.';
 
   @override
   String get connectionErrorNoWebDav =>

@@ -69,7 +69,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 - `KidsTask`: Domain model for child-assigned tasks
 - `KidGoal`: Per-kid XP goal document under `/kinetic/shared/goals/{kidId}.json`
 - `KineticFolderProbe` / `KineticFolderProbeResult`: Discover peer Kinetic folders / shared family markers on a server
-- `WebDavConnectionStatus`: Result of `probeConnection()` (`ok`, `authFailed`, `noWebDav`, `unreachable`)
+- `WebDavConnectionStatus`: Result of `probeConnection()` (`ok`, `authFailed`, `notFound`, `noWebDav`, `unreachable`)
 
 ### Key Methods
 
@@ -93,7 +93,7 @@ v2 has **no** `pw`. The kids app asks for the WebDAV password after the scan. Im
 
 **WebDavClient**:
 - `propfind(path)` → `List<WebDavEntry>` for a collection (direct children only); empty dirs are collections, not “files”
-- `probeConnection()` → `WebDavConnectionStatus` via authenticated Depth-0 PROPFIND (auth vs no WebDAV vs unreachable)
+- `probeConnection()` → `WebDavConnectionStatus` via authenticated Depth-0 PROPFIND (auth vs not found vs no WebDAV vs unreachable; 404 is never OPTIONS-success)
 - `supportsWebDav()` → `true` when `probeConnection()` is `ok`
 - `put(path, bytes)` → Upload file; optional `etag` for conditional PUT
 - `get(path)` → Download raw bytes

@@ -16,7 +16,8 @@ class WebDavEnrollment {
   /// given credentials.
   ///
   /// Returns `null` on success, or a stable error code on failure:
-  /// `auth`, `no_webdav`, `timeout`, `unreachable`, or `bad_url:<message>`.
+  /// `auth`, `not_found`, `no_webdav`, `timeout`, `unreachable`, or
+  /// `bad_url:<message>`.
   /// Times out after 10 seconds.
   static Future<String?> testConnection(
     String serverUrl,
@@ -45,6 +46,7 @@ class WebDavEnrollment {
       return switch (status) {
         WebDavConnectionStatus.ok => null,
         WebDavConnectionStatus.authFailed => 'auth',
+        WebDavConnectionStatus.notFound => 'not_found',
         WebDavConnectionStatus.noWebDav => 'no_webdav',
         WebDavConnectionStatus.unreachable => 'unreachable',
       };

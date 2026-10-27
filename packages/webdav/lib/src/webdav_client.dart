@@ -143,8 +143,12 @@ class WebDavClient {
   // MKCOL — create a collection
   // ---------------------------------------------------------------------------
 
-  /// Creates the collection at [path].  Succeeds silently if it already exists
-  /// (405 Method Not Allowed on Nextcloud/Apache, 409 Conflict on some servers).
+  /// Creates the collection at [path].
+  ///
+  /// Succeeds silently if it already exists (405 on Nextcloud/Apache). A 409
+  /// Conflict is only treated as success when a follow-up Depth-0 PROPFIND
+  /// confirms the collection is present — otherwise 409 often means the parent
+  /// path is missing.
   Future<void> mkcol(String path) async {
     // WebDAV collections require trailing slashes
     final pathWithSlash = path.endsWith('/') ? path : '$path/';
@@ -153,10 +157,27 @@ class WebDavClient {
         ..headers.addAll(_authHeaders),
     );
     final statusCode = response.statusCode;
-    if (statusCode != 201 && statusCode != 405 && statusCode != 409) {
-      final body = await response.stream.bytesToString();
-      throw WebDavException('MKCOL $path → $statusCode', body, statusCode);
+    final body = await response.stream.bytesToString();
+    if (statusCode == 201 || statusCode == 405) {
+      return;
     }
+    if (statusCode == 409) {
+      final verify = await _http.send(
+        http.Request('PROPFIND', Uri.parse(_url(pathWithSlash)))
+          ..headers.addAll({
+            ..._authHeaders,
+            'Depth': '0',
+            'Content-Type': 'application/xml',
+          })
+          ..body = '<?xml version="1.0"?><d:propfind xmlns:d="DAV:">'
+              '<d:prop><d:resourcetype/></d:prop></d:propfind>',
+      );
+      await verify.stream.drain<void>();
+      if (verify.statusCode == 207 || verify.statusCode == 200) {
+        return;
+      }
+    }
+    throw WebDavException('MKCOL $path → $statusCode', body, statusCode);
   }
 
   // ---------------------------------------------------------------------------
@@ -171,8 +192,9 @@ class WebDavClient {
 
   /// Probes the server with an authenticated Depth-0 PROPFIND.
   ///
-  /// Distinguishes bad credentials (401/403) from missing WebDAV support and
-  /// network failures — OPTIONS alone often looks identical for all three.
+  /// Distinguishes bad credentials (401/403), a missing folder (404), missing
+  /// WebDAV support, and network failures — OPTIONS alone often looks identical
+  /// for several of those cases. A 404 is never treated as success via OPTIONS.
   Future<WebDavConnectionStatus> probeConnection() async {
     try {
       final response = await _http.send(
@@ -193,8 +215,11 @@ class WebDavClient {
       if (code == 207 || code == 200) {
         return WebDavConnectionStatus.ok;
       }
+      if (code == 404) {
+        return WebDavConnectionStatus.notFound;
+      }
       // Fall back to OPTIONS when PROPFIND is blocked but auth succeeded.
-      if (code == 404 || code == 405 || code == 501) {
+      if (code == 405 || code == 501) {
         final options = await _http.send(
           http.Request('OPTIONS', Uri.parse(_url('/')))
             ..headers.addAll(_authHeaders),
@@ -275,6 +300,8 @@ class WebDavClient {
 enum WebDavConnectionStatus {
   ok,
   authFailed,
+  /// The configured base path does not exist (PROPFIND 404).
+  notFound,
   noWebDav,
   unreachable,
 }

@@ -1235,6 +1235,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get webdavErrorAuth => 'Verkeerde gebruikersnaam of wachtwoord.';
 
   @override
+  String get webdavErrorNotFound =>
+      'Deze map bestaat niet op de server. Controleer het pad in de URL.';
+
+  @override
   String get webdavErrorNoWebDav =>
       'Deze server lijkt geen WebDAV te ondersteunen. Controleer de URL (bij Nextcloud vaak …/remote.php/dav).';
 
@@ -2258,6 +2262,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String suggestionsProposedByFamilyMember(String name) {
     return 'Voorgesteld door $name';
   }
+
+  @override
+  String get suggestionsIgnore => 'Negeren';
+
+  @override
+  String get suggestionsNewReminder => 'Nieuwe reminder';
 
   @override
   String get tasksDecline => 'Weigeren';

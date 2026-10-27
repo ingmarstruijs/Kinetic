@@ -416,6 +416,12 @@ abstract class AppLocalizations {
   /// **'New task'**
   String get newTaskNotificationTitle;
 
+  /// No description provided for @notifDisabledBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off. Turn them on in Settings to hear about new tasks.'**
+  String get notifDisabledBanner;
+
   /// No description provided for @chooseLanguage.
   ///
   /// In en, this message translates to:
@@ -547,6 +553,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wrong password or username. Check the WebDAV password from Kinetic Link.'**
   String get connectionErrorAuth;
+
+  /// No description provided for @connectionErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder was not found on the server. Check the address.'**
+  String get connectionErrorNotFound;
 
   /// No description provided for @connectionErrorNoWebDav.
   ///

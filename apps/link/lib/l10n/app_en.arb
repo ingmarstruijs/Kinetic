@@ -610,6 +610,7 @@
   "webdavTestingConnection": "Testing connection…",
   "webdavConnectionOk": "Connection succeeded",
   "webdavErrorAuth": "Wrong username or password.",
+  "webdavErrorNotFound": "This folder was not found on the server. Check the path in the URL.",
   "webdavErrorNoWebDav": "This server does not appear to support WebDAV. Check the URL (for Nextcloud often …/remote.php/dav).",
   "webdavErrorTimeout": "Connection timed out. Check the server URL and your network.",
   "webdavErrorUnreachable": "Could not reach the server. Check the URL and your network.",
@@ -1116,6 +1117,8 @@
       "name": {"type": "String"}
     }
   },
+  "suggestionsIgnore": "Ignore",
+  "suggestionsNewReminder": "New reminder",
   "tasksDecline": "Decline",
   "kidsSectionTitle": "Kids",
   "adultsSectionTitle": "Adults",

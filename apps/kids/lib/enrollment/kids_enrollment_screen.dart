@@ -135,6 +135,7 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
     }
     return switch (code) {
       'auth' => l10n.connectionErrorAuth,
+      'not_found' => l10n.connectionErrorNotFound,
       'no_webdav' => l10n.connectionErrorNoWebDav,
       'timeout' => l10n.connectionErrorTimeout,
       'unreachable' => l10n.connectionErrorUnreachable,

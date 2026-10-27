@@ -7,6 +7,7 @@ String localizeWebDavConnectionError(AppLocalizations l10n, String code) {
   }
   return switch (code) {
     'auth' => l10n.webdavErrorAuth,
+    'not_found' => l10n.webdavErrorNotFound,
     'no_webdav' => l10n.webdavErrorNoWebDav,
     'timeout' => l10n.webdavErrorTimeout,
     'unreachable' => l10n.webdavErrorUnreachable,

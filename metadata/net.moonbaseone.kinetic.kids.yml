@@ -16,7 +16,7 @@ Repo: https://github.com/ingmarstruijs/Kinetic.git
 Builds:
   - versionName: 0.4.6
     versionCode: 161
-    commit: PLACEHOLDER_AFTER_BUMP
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/kids
     output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
     srclibs:
@@ -36,7 +36,7 @@ Builds:
 
   - versionName: 0.4.6
     versionCode: 162
-    commit: PLACEHOLDER_AFTER_BUMP
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/kids
     output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
     srclibs:
@@ -56,7 +56,7 @@ Builds:
 
   - versionName: 0.4.6
     versionCode: 163
-    commit: PLACEHOLDER_AFTER_BUMP
+    commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/kids
     output: build/app/outputs/flutter-apk/app-x86_64-release.apk
     srclibs:
@@ -83,3 +83,4 @@ VercodeOperation:
 UpdateCheckData: apps/kids/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
 CurrentVersion: 0.4.6
 CurrentVersionCode: 163
+

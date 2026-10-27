@@ -2192,6 +2192,12 @@ abstract class AppLocalizations {
   /// **'Wrong username or password.'**
   String get webdavErrorAuth;
 
+  /// No description provided for @webdavErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder was not found on the server. Check the path in the URL.'**
+  String get webdavErrorNotFound;
+
   /// No description provided for @webdavErrorNoWebDav.
   ///
   /// In en, this message translates to:
@@ -3937,6 +3943,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Suggested by {name}'**
   String suggestionsProposedByFamilyMember(String name);
+
+  /// No description provided for @suggestionsIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get suggestionsIgnore;
+
+  /// No description provided for @suggestionsNewReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'New reminder'**
+  String get suggestionsNewReminder;
 
   /// No description provided for @tasksDecline.
   ///

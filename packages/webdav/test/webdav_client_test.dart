@@ -96,6 +96,39 @@ void main() {
     expect(await client.probeConnection(), WebDavConnectionStatus.ok);
   });
 
+  test('probeConnection returns notFound on PROPFIND 404', () async {
+    when(mockHttp.send(any)).thenAnswer((invocation) async {
+      final request = invocation.positionalArguments[0] as http.BaseRequest;
+      expect(request.method, 'PROPFIND');
+      return http.StreamedResponse(Stream.value([]), 404);
+    });
+
+    expect(
+      await client.probeConnection(),
+      WebDavConnectionStatus.notFound,
+    );
+  });
+
+  test('probeConnection falls back to OPTIONS on PROPFIND 405', () async {
+    var call = 0;
+    when(mockHttp.send(any)).thenAnswer((invocation) async {
+      final request = invocation.positionalArguments[0] as http.BaseRequest;
+      call++;
+      if (call == 1) {
+        expect(request.method, 'PROPFIND');
+        return http.StreamedResponse(Stream.value([]), 405);
+      }
+      expect(request.method, 'OPTIONS');
+      return http.StreamedResponse(
+        Stream.value([]),
+        200,
+        headers: {'dav': '1,2'},
+      );
+    });
+
+    expect(await client.probeConnection(), WebDavConnectionStatus.ok);
+  });
+
   // ---------------------------------------------------------------------------
   // PUT
   // ---------------------------------------------------------------------------
@@ -149,14 +182,40 @@ void main() {
   // MKCOL
   // ---------------------------------------------------------------------------
 
-  test('MKCOL treats 409 as success when collection already exists', () async {
+  test('MKCOL treats 409 as success when PROPFIND confirms collection',
+      () async {
+    var call = 0;
     when(mockHttp.send(any)).thenAnswer((invocation) async {
       final request = invocation.positionalArguments[0] as http.BaseRequest;
-      expect(request.method, 'MKCOL');
-      return http.StreamedResponse(Stream.value([]), 409);
+      call++;
+      if (call == 1) {
+        expect(request.method, 'MKCOL');
+        return http.StreamedResponse(Stream.value([]), 409);
+      }
+      expect(request.method, 'PROPFIND');
+      return http.StreamedResponse(Stream.value([]), 207);
     });
 
     await expectLater(client.mkcol('/kinetic/shared/xp-reset'), completes);
+  });
+
+  test('MKCOL throws on 409 when PROPFIND cannot find collection', () async {
+    var call = 0;
+    when(mockHttp.send(any)).thenAnswer((invocation) async {
+      final request = invocation.positionalArguments[0] as http.BaseRequest;
+      call++;
+      if (call == 1) {
+        expect(request.method, 'MKCOL');
+        return http.StreamedResponse(Stream.value([]), 409);
+      }
+      expect(request.method, 'PROPFIND');
+      return http.StreamedResponse(Stream.value([]), 404);
+    });
+
+    expect(
+      () => client.mkcol('/kinetic'),
+      throwsA(isA<WebDavException>()),
+    );
   });
 
   // ---------------------------------------------------------------------------

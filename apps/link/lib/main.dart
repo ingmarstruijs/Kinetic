@@ -176,8 +176,8 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
     _reminderSub = ReminderActionBus.instance.stream.listen(_onReminderAction);
 
     _initSync();
-    // Request notification permissions immediately so the Android dialog
-    // is shown on first launch rather than waiting for the first reminder.
+    // Init the notification plugin for banners / launch-from-notification.
+    // Android permission dialogs run on the first reminder schedule instead.
     _notifSvc.init().then((_) => _checkNotificationPermission()).catchError((
       Object e,
       StackTrace st,
@@ -236,9 +236,17 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   Future<void> _checkNotificationPermission() async {
     final enabled = await _notifSvc.areNotificationsEnabled();
     final exact = await _notifSvc.canScheduleExactAlarms();
+    final gainedNotifications = enabled && !notificationsEnabled.value;
+    final gainedExact = exact && !exactAlarmsGranted.value;
     if (mounted) {
       notificationsEnabled.value = enabled;
       exactAlarmsGranted.value = exact;
+    }
+    // Reminders scheduled while permission was denied never fire; re-arm them
+    // after the user grants access via the banner → system Settings path.
+    if (gainedNotifications || gainedExact) {
+      await _todoRepository.rescheduleAllReminders();
+      await _noteRepository.rescheduleAllReminders();
     }
   }
 
@@ -538,7 +546,7 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _triggerSync();
-      _checkNotificationPermission();
+      unawaited(_checkNotificationPermission());
       unawaited(_aiSuggestionEngine?.runIfDue());
       unawaited(_maybeShowFamilySetupPrompt());
     }
@@ -730,81 +738,100 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                       screens.length - 1,
                     );
 
+                    final bannerChildren = <Widget>[
+                      if (initErr != null)
+                        MaterialBanner(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          content: Text(l10n.notifServiceFailed(initErr)),
+                          leading: const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => notifInitError.value = null,
+                              child: Text(l10n.commonClose),
+                            ),
+                          ],
+                        ),
+                      if (!notifEnabled)
+                        MaterialBanner(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          content: Text(l10n.notifDisabledBanner),
+                          leading: const Icon(
+                            Icons.notifications_off_outlined,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                const channel = MethodChannel(
+                                  'net.moonbaseone.kinetic.link/settings',
+                                );
+                                channel
+                                    .invokeMethod<void>(
+                                      'openNotificationSettings',
+                                    )
+                                    .catchError((_) {});
+                              },
+                              child: Text(l10n.navSettings),
+                            ),
+                          ],
+                        ),
+                      if (notifEnabled && !exactEnabled)
+                        MaterialBanner(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          content: Text(l10n.notifExactAlarmBanner),
+                          leading: const Icon(Icons.alarm_off_outlined),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                const channel = MethodChannel(
+                                  'net.moonbaseone.kinetic.link/settings',
+                                );
+                                channel
+                                    .invokeMethod<void>(
+                                      'openExactAlarmSettings',
+                                    )
+                                    .catchError((_) {});
+                              },
+                              child: Text(l10n.navSettings),
+                            ),
+                          ],
+                        ),
+                    ];
+
                     return Scaffold(
                       body: Column(
                         children: [
-                          if (initErr != null)
-                            MaterialBanner(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
+                          // Only apply SafeArea when a banner is visible —
+                          // an empty SafeArea still reserves status-bar height.
+                          if (bannerChildren.isNotEmpty)
+                            SafeArea(
+                              bottom: false,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: bannerChildren,
                               ),
-                              content: Text(l10n.notifServiceFailed(initErr)),
-                              leading: const Icon(
-                                Icons.error_outline,
-                                color: Colors.red,
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => notifInitError.value = null,
-                                  child: Text(l10n.commonClose),
-                                ),
-                              ],
-                            ),
-                          if (!notifEnabled)
-                            MaterialBanner(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              content: Text(l10n.notifDisabledBanner),
-                              leading: const Icon(
-                                Icons.notifications_off_outlined,
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    const channel = MethodChannel(
-                                      'net.moonbaseone.kinetic.link/settings',
-                                    );
-                                    channel
-                                        .invokeMethod<void>(
-                                          'openNotificationSettings',
-                                        )
-                                        .catchError((_) {});
-                                  },
-                                  child: Text(l10n.navSettings),
-                                ),
-                              ],
-                            ),
-                          if (notifEnabled && !exactEnabled)
-                            MaterialBanner(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              content: Text(l10n.notifExactAlarmBanner),
-                              leading: const Icon(Icons.alarm_off_outlined),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    const channel = MethodChannel(
-                                      'net.moonbaseone.kinetic.link/settings',
-                                    );
-                                    channel
-                                        .invokeMethod<void>(
-                                          'openExactAlarmSettings',
-                                        )
-                                        .catchError((_) {});
-                                  },
-                                  child: Text(l10n.navSettings),
-                                ),
-                              ],
                             ),
                           Expanded(
-                            child: IndexedStack(
-                              index: clampedIndex,
-                              children: screens,
+                            // Banner SafeArea already cleared the status bar;
+                            // strip top padding so nested AppBars don't add a gap.
+                            child: MediaQuery.removePadding(
+                              context: context,
+                              removeTop: bannerChildren.isNotEmpty,
+                              child: IndexedStack(
+                                index: clampedIndex,
+                                children: screens,
+                              ),
                             ),
                           ),
                         ],

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
@@ -207,6 +208,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
   Timer? _pollTimer;
   bool _enrolled = false;
   bool _initDone = false;
+  bool _notificationsEnabled = true;
   DateTime? _xpResetAt;
   KidGoal? _goal;
   bool _xpEnabled = true;
@@ -245,7 +247,27 @@ class _KidsAppShellState extends State<_KidsAppShell>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _orchestrator?.sync();
+      if (_enrolled) unawaited(_checkNotificationPermission());
     }
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final enabled =
+        await widget.notificationService.areNotificationsEnabled();
+    if (mounted) setState(() => _notificationsEnabled = enabled);
+  }
+
+  void _openNotificationSettings() {
+    const channel = MethodChannel('net.moonbaseone.kinetic.kids/settings');
+    channel
+        .invokeMethod<void>('openNotificationSettings')
+        .catchError((_) {});
+  }
+
+  Future<void> _onEnrollmentSucceeded() async {
+    await widget.notificationService.requestPermissions();
+    await _checkNotificationPermission();
+    await _initSync();
   }
 
   Future<void> _initSync() async {
@@ -298,12 +320,14 @@ class _KidsAppShellState extends State<_KidsAppShell>
       });
       _startPolling();
       unawaited(_orchestrator!.sync());
+      unawaited(_checkNotificationPermission());
     } else {
       _stopPolling();
       setState(() {
         _enrolled = false;
         _initDone = true;
         _orchestrator = null;
+        _notificationsEnabled = true;
       });
     }
   }
@@ -376,6 +400,7 @@ class _KidsAppShellState extends State<_KidsAppShell>
         _goal = null;
         _xpResetAt = null;
         _xpEnabled = true;
+        _notificationsEnabled = true;
       });
     }
   }
@@ -403,7 +428,9 @@ class _KidsAppShellState extends State<_KidsAppShell>
     if (!_enrolled) {
       return KidsEnrollmentScreen(
         configRepo: WebDavConfigRepository(FlutterSecureKeyValueStore()),
-        onEnrolled: _initSync,
+        onEnrolled: () {
+          unawaited(_onEnrollmentSucceeded());
+        },
         onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
       );
     }
@@ -415,6 +442,8 @@ class _KidsAppShellState extends State<_KidsAppShell>
       xpResetAt: _xpResetAt,
       goal: _xpEnabled ? _goal : null,
       xpEnabled: _xpEnabled,
+      showNotificationsDisabledBanner: !_notificationsEnabled,
+      onOpenNotificationSettings: _openNotificationSettings,
       onLeaveFamily: _enrolled ? _leaveFamily : null,
       onOpenDemoScenarios: kDebugMode ? _openDemoScenarios : null,
       onOpenSettings: _openSettings,

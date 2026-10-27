@@ -610,6 +610,7 @@
   "webdavTestingConnection": "Verbinding testen…",
   "webdavConnectionOk": "Verbinding geslaagd",
   "webdavErrorAuth": "Verkeerde gebruikersnaam of wachtwoord.",
+  "webdavErrorNotFound": "Deze map bestaat niet op de server. Controleer het pad in de URL.",
   "webdavErrorNoWebDav": "Deze server lijkt geen WebDAV te ondersteunen. Controleer de URL (bij Nextcloud vaak …/remote.php/dav).",
   "webdavErrorTimeout": "Verbinding time-out. Controleer de server-URL en je netwerk.",
   "webdavErrorUnreachable": "Server niet bereikbaar. Controleer de URL en je netwerk.",
@@ -1116,6 +1117,8 @@
       "name": {"type": "String"}
     }
   },
+  "suggestionsIgnore": "Negeren",
+  "suggestionsNewReminder": "Nieuwe reminder",
   "tasksDecline": "Weigeren",
   "kidsSectionTitle": "Kinderen",
   "adultsSectionTitle": "Volwassenen",

@@ -25,6 +25,9 @@ class KidsNotificationService {
   }
 
   /// Must be called once at app start before showing any notifications.
+  ///
+  /// Does not show the Android permission dialog — call [requestPermissions]
+  /// after enrollment so the prompt has context.
   Future<void> initialize() async {
     final l10n = lookupAppLocalizations(_resolveLocale());
     _notifDetails = NotificationDetails(
@@ -41,13 +44,24 @@ class KidsNotificationService {
     const androidSettings = AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
+  }
 
-    // Request permission on Android 13+
+  /// Asks for notification permission (Android 13+). Call after enrollment.
+  Future<void> requestPermissions() async {
     await _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.requestNotificationsPermission();
+  }
+
+  Future<bool> areNotificationsEnabled() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (android == null) return true;
+    return await android.areNotificationsEnabled() ?? true;
   }
 
   /// Shows a new-task notification for the given [taskTitle].

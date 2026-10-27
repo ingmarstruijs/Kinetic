@@ -292,11 +292,23 @@ class _SelfSuggestionRow extends StatelessWidget {
     required this.onChanged,
   });
 
+  /// Stale/overdue cards propose a reminder on an existing task — not a new
+  /// task to accept — so the actions read Ignore / New reminder.
+  bool get _isReminderSuggestion =>
+      (suggestion.reason == SuggestionReason.stale ||
+          suggestion.reason == SuggestionReason.overdue) &&
+      suggestion.suggestedDueDate != null;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final date = suggestion.suggestedDueDate;
+    final declineLabel =
+        _isReminderSuggestion ? l10n.suggestionsIgnore : l10n.tasksDecline;
+    final acceptLabel = _isReminderSuggestion
+        ? l10n.suggestionsNewReminder
+        : l10n.tasksAccept;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
@@ -311,7 +323,11 @@ class _SelfSuggestionRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const _LeadingIcon(icon: Icons.lightbulb_outline),
+                  _LeadingIcon(
+                    icon: _isReminderSuggestion
+                        ? Icons.alarm_outlined
+                        : Icons.lightbulb_outline,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -347,7 +363,7 @@ class _SelfSuggestionRow extends StatelessWidget {
                       await suggestionRepo.dismiss(suggestion.id);
                       onChanged();
                     },
-                    child: Text(l10n.tasksDecline),
+                    child: Text(declineLabel),
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
@@ -360,7 +376,7 @@ class _SelfSuggestionRow extends StatelessWidget {
                       );
                       onChanged();
                     },
-                    child: Text(l10n.tasksAccept),
+                    child: Text(acceptLabel),
                   ),
                 ],
               ),

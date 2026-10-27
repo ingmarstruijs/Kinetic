@@ -1232,6 +1232,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdavErrorAuth => 'Wrong username or password.';
 
   @override
+  String get webdavErrorNotFound =>
+      'This folder was not found on the server. Check the path in the URL.';
+
+  @override
   String get webdavErrorNoWebDav =>
       'This server does not appear to support WebDAV. Check the URL (for Nextcloud often …/remote.php/dav).';
 
@@ -2249,6 +2253,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String suggestionsProposedByFamilyMember(String name) {
     return 'Suggested by $name';
   }
+
+  @override
+  String get suggestionsIgnore => 'Ignore';
+
+  @override
+  String get suggestionsNewReminder => 'New reminder';
 
   @override
   String get tasksDecline => 'Decline';

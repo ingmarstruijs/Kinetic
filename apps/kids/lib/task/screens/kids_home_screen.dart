@@ -20,6 +20,8 @@ class KidsHomeScreen extends StatefulWidget {
   final KidGoal? goal;
   /// When false, hide the XP/goals hero and per-task XP chips (adult preference).
   final bool xpEnabled;
+  final bool showNotificationsDisabledBanner;
+  final VoidCallback? onOpenNotificationSettings;
   final VoidCallback? onOpenDemoScenarios;
   final VoidCallback? onOpenSettings;
 
@@ -32,6 +34,8 @@ class KidsHomeScreen extends StatefulWidget {
     this.xpResetAt,
     this.goal,
     this.xpEnabled = true,
+    this.showNotificationsDisabledBanner = false,
+    this.onOpenNotificationSettings,
     this.onOpenDemoScenarios,
     this.onOpenSettings,
   });
@@ -216,6 +220,21 @@ class _KidsHomeScreenState extends State<KidsHomeScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (widget.showNotificationsDisabledBanner)
+                MaterialBanner(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  content: Text(l10n.notifDisabledBanner),
+                  leading: const Icon(Icons.notifications_off_outlined),
+                  actions: [
+                    TextButton(
+                      onPressed: widget.onOpenNotificationSettings,
+                      child: Text(l10n.settings),
+                    ),
+                  ],
+                ),
               if (widget.xpEnabled)
                 Material(
                   color: scheme.surface,

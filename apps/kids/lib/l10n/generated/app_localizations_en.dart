@@ -179,6 +179,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newTaskNotificationTitle => 'New task';
 
   @override
+  String get notifDisabledBanner =>
+      'Notifications are off. Turn them on in Settings to hear about new tasks.';
+
+  @override
   String get chooseLanguage => 'Choose language';
 
   @override
@@ -251,6 +255,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionErrorAuth =>
       'Wrong password or username. Check the WebDAV password from Kinetic Link.';
+
+  @override
+  String get connectionErrorNotFound =>
+      'This folder was not found on the server. Check the address.';
 
   @override
   String get connectionErrorNoWebDav =>

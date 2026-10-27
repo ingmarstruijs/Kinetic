@@ -26,6 +26,7 @@ class LinkNotificationService implements NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _reminderPermissionsRequested = false;
 
   Object? initError;
 
@@ -97,17 +98,8 @@ class LinkNotificationService implements NotificationService {
         onDidReceiveBackgroundNotificationResponse: reminderTapBackground,
       );
 
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestExactAlarmsPermission();
+      // Android notification / exact-alarm prompts are deferred to the first
+      // [scheduleReminder] so cold start does not open system settings pages.
 
       final launch = await _plugin.getNotificationAppLaunchDetails();
       if (launch?.didNotificationLaunchApp == true) {
@@ -163,6 +155,17 @@ class LinkNotificationService implements NotificationService {
     );
   }
 
+  Future<void> _ensureReminderPermissions() async {
+    if (_reminderPermissionsRequested) return;
+    _reminderPermissionsRequested = true;
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    await android?.requestNotificationsPermission();
+    await android?.requestExactAlarmsPermission();
+  }
+
   @override
   Future<void> scheduleReminder({
     required int id,
@@ -172,6 +175,7 @@ class LinkNotificationService implements NotificationService {
     String? payload,
   }) async {
     await _ensureInitialized();
+    await _ensureReminderPermissions();
 
     final scheduled = tz.TZDateTime.from(at, tz.local);
     if (scheduled.isBefore(DateTime.now())) return;

@@ -1,0 +1,52 @@
+---
+description: >-
+  Update F-Droid fdroiddata MRs for Kinetic Link (!50470) and Kids (!50471):
+  YAML only, rewritemeta/checkupdates, MR description paste kits. Apply when
+  editing metadata/*.yml, FDROID_MR_BODY_*, or pushing to the fdroiddata fork.
+alwaysApply: false
+---
+
+# F-Droid MR updates (agents)
+
+Details: [`metadata/FDROID_SUBMISSION.md`](metadata/FDROID_SUBMISSION.md).
+Release order: [`docs/RELEASING.md`](docs/RELEASING.md).
+
+## Open MRs (first listing still open)
+
+| App | MR | Fork branch |
+| --- | --- | --- |
+| Link | [!50470](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50470) | `new/kinetic-link-0.4.1` |
+| Kids | [!50471](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50471) | `new/kinetic-kids-0.4.1` |
+
+One app per MR until both are merged upstream. Pipelines run on the **fork**
+(`ingmarstruijs/fdroiddata`), not only on `fdroid/fdroiddata`.
+
+## What to push
+
+- **Only** `metadata/net.moonbaseone.kinetic.{link,kids}.yml`
+- Never Fastlane, screenshots, or other Kinetic tree paths
+- Source of truth: this repo’s `metadata/*.yml` after the GitHub release is green
+- `commit:` = full SHA of annotated `vX.Y.Z` (not the tag name)
+- ABI codes for pubspec `+N`: `N*10+1` / `+2` / `+3` → highest is
+  `CurrentVersionCode`
+
+## Before `git push` to GitLab
+
+1. Confirm GitHub Releases exist: `vX.Y.Z-link` and `vX.Y.Z-kids`
+2. Normalize YAML to LF; trim so file ends with one newline after last key
+3. Prefer writing bytes explicitly on Windows (PowerShell redirect can be UTF-16)
+4. Do not leave an empty line after `CurrentVersionCode` (`rewritemeta` fails)
+
+## After push
+
+1. Watch fork pipelines until `fdroid rewritemeta`, `checkupdates`, and
+   `fdroid build` finish (failed early jobs can leave the pipeline “running”)
+2. Update MR description from `metadata/FDROID_MR_BODY_{link,kids}.md` if the
+   version/commit story changed; reply to open review threads
+3. Do not mark “all pipelines should pass” until the latest pipeline is green
+
+## Local dirty fork
+
+If checkout fails (`index.lock`, untracked YAML on the wrong branch): clean the
+untracked file, remove the lock, pull the target branch, then copy YAML again.
+Never commit Link YAML onto the Kids branch (or the reverse).

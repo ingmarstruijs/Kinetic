@@ -3,7 +3,15 @@
 Metadata drafts live under `metadata/` in this repo. Listing on f-droid.org
 needs merge requests against [fdroiddata](https://gitlab.com/fdroid/fdroiddata).
 Maintainer/agent release order (GitHub **and** F-Droid):
-[`docs/RELEASING.md`](../docs/RELEASING.md).
+[`docs/RELEASING.md`](../docs/RELEASING.md). Agent rules:
+[`.cursor/rules/releasing.mdc`](../.cursor/rules/releasing.mdc),
+[`.cursor/rules/fdroid-mr.mdc`](../.cursor/rules/fdroid-mr.mdc).
+
+**Gates before pushing this YAML to GitLab:** GitHub `release` job green
+(`vX.Y.Z-link` / `vX.Y.Z-kids` exist); YAML is LF with **no** trailing blank
+line after `CurrentVersionCode` (`rewritemeta`); Fastlane
+`./tool/sync_fastlane_changelogs.sh --check` already passed on the tagged
+commit.
 
 ## Status
 
@@ -32,13 +40,14 @@ auto-update has produced a Builds entry that F-Droid has shipped.
 1. **Version bump PR** on this repo (`release/X.Y.Z`):
    - Bump `apps/link/pubspec.yaml` and `apps/kids/pubspec.yaml` to `X.Y.Z+N`
    - Update `apps/*/CHANGELOG.md` (`### Store` + detail sections), then run
-     `./tool/sync_fastlane_changelogs.sh` (writes `N.txt` and ABI
-     `N*10+{1,2,3}.txt`; refresh screenshots/copy if needed)
+     `./tool/sync_fastlane_changelogs.sh` **and** `--check` (writes `N.txt` and
+     ABI `N*10+{1,2,3}.txt`; never hand-edit those `.txt` files)
    - Update both `metadata/*.yml`: `versionName`, `versionCode`,
      `CurrentVersion`, `CurrentVersionCode` (set `commit:` to the **full SHA**
-     after the tag exists)
+     after the tag exists; LF; no trailing blank line)
    - Merge to `main` after CI
-2. **Tag** the merge commit on `main` (see [`docs/RELEASING.md`](../docs/RELEASING.md)) → GitHub APKs
+2. **Tag** the merge commit on `main` (see [`docs/RELEASING.md`](../docs/RELEASING.md))
+   → wait for Build & Sign **`release`** green (`vX.Y.Z-link` / `-kids`)
 3. **Verify** the F-Droid recipe locally (Git Bash / WSL / Linux / macOS):
 
    ```bash

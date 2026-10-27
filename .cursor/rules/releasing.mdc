@@ -1,0 +1,57 @@
+---
+description: >-
+  Kinetic dual-channel release: version bump, Fastlane sync, annotated vX.Y.Z
+  tag, GitHub Releases, then F-Droid fdroiddata MR updates (!50470/!50471).
+  Apply whenever releasing, tagging, bumping pubspec/CHANGELOG/Fastlane, or
+  editing metadata/*.yml for a ship.
+alwaysApply: false
+---
+
+# Kinetic release (agents)
+
+Read and follow [`docs/RELEASING.md`](docs/RELEASING.md) end-to-end. Do not
+improvise order.
+
+## Hard order (do not skip)
+
+1. Bump PR → merge to `main` (CI green)
+2. On that commit: Fastlane `--check` must pass **before** tagging
+3. Annotated tag `vX.Y.Z` → push → wait until **Build & Sign** `release` job is **green**
+4. Only then: `vX.Y.Z-link` / `vX.Y.Z-kids` exist; put full SHA in `metadata/*.yml`
+5. Only then: push YAML to fdroiddata MRs and refresh MR descriptions
+
+GitHub Releases and F-Droid do **not** auto-sync. Tagging alone does not update
+f-droid.org.
+
+## Recurring failures — prevent these
+
+### Fastlane / release job
+
+- `### Store` in `apps/*/CHANGELOG.md` is the source of truth
+- Run `./tool/sync_fastlane_changelogs.sh` (Git Bash/WSL); **never** hand-edit
+  `changelogs/{N,N*10+1,N*10+2,N*10+3}.txt`
+- Before tag: `./tool/sync_fastlane_changelogs.sh --check` must exit 0
+- Keep CHANGELOG + Fastlane files **LF** in git (CRLF on Windows breaks local
+  checks; CI uses LF)
+
+### F-Droid `rewritemeta`
+
+- YAML must end with `CurrentVersionCode: …` then **exactly one** final `\n`
+- **No** trailing blank line after the last key
+- **LF only** (checklist item on the MR template)
+- After writing on Windows, verify: no `\r`, no extra blank at EOF
+
+### F-Droid `checkupdates`
+
+- Recipes use `UpdateCheckMode: Tags ^v[0-9.]+-link$` / `-kids$`
+- Those tags are created by the **successful** GitHub `release` job, not by
+  tagging `vX.Y.Z` alone
+- Do not set `CurrentVersionCode` to the new ABI codes until `-link`/`-kids`
+  tags exist (or pipelines will fail: old discovered vercode < CurrentVersionCode)
+
+## Stop conditions
+
+- Do **not** push fdroiddata or claim the release is done while the GitHub
+  `release` job is red or still running
+- Do **not** move/retag `vX.Y.Z` unless the release job failed before publishing
+  and the user explicitly wants the tag moved

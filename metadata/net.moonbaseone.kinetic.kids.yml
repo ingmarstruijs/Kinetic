@@ -83,4 +83,3 @@ VercodeOperation:
 UpdateCheckData: apps/kids/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
 CurrentVersion: 0.4.6
 CurrentVersionCode: 163
-

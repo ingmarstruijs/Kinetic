@@ -20,6 +20,7 @@ class _FakeNotifService implements NotificationService {
     required String body,
     required DateTime at,
     String? payload,
+    bool requestPermissions = true,
   }) async {
     if (shouldThrow) throw Exception('notification failed');
     scheduled.add(id);

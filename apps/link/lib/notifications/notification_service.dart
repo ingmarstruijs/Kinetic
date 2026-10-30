@@ -7,12 +7,16 @@ abstract class NotificationService {
   /// Call once at app startup so the Android permission dialog is shown early.
   Future<void> init();
 
+  /// Schedules a reminder. When [requestPermissions] is true (default), Android
+  /// may prompt for notifications / exact alarms. Silent re-arm after the user
+  /// returns from system Settings must pass false so no system page opens.
   Future<void> scheduleReminder({
     required int id,
     required String title,
     required String body,
     required DateTime at,
     String? payload,
+    bool requestPermissions = true,
   });
 
   Future<void> cancelReminder(int id);

@@ -210,8 +210,10 @@ Future<void> acceptSelfSuggestion({
 /// Shows what the family member will see, then sends. Returns false if cancelled
 /// or if pairing data is missing.
 ///
-/// For [SuggestionReason.loadBalance], the sender must pick a concrete
-/// shareable task so the recipient gets an actionable title.
+/// For [SuggestionReason.loadBalance] and
+/// [SuggestionReason.familyMemberComplement], the sender must pick a concrete
+/// shareable task so the recipient gets an actionable title (not the vague
+/// suggestion headline).
 Future<bool> confirmAndSendSuggestionToFamilyMember({
   required BuildContext context,
   required AiSuggestion suggestion,
@@ -266,9 +268,12 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
   }
 
   PersonalTask? pickedTask;
-  if (suggestion.reason == SuggestionReason.loadBalance) {
+  final needsConcreteTask =
+      suggestion.reason == SuggestionReason.loadBalance ||
+      suggestion.reason == SuggestionReason.familyMemberComplement;
+  if (needsConcreteTask) {
     if (todoRepo == null) return false;
-    final candidates = await _shareableLoadBalanceTasks(
+    final candidates = await _shareableFamilySendTasks(
       todoRepo: todoRepo,
       suggestion: suggestion,
     );
@@ -342,9 +347,7 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
             Text(
               pickedTask != null
                   ? dialogL10n.suggestPickTaskSubtitle
-                  : suggestion.isFamilyMemberTargeted
-                      ? dialogL10n.suggestFamilyMemberSeesGeneric
-                      : dialogL10n.suggestFamilyMemberSeesFull,
+                  : dialogL10n.suggestFamilyMemberSeesFull,
               style: tt.bodySmall,
             ),
           ],
@@ -394,10 +397,10 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
   return true;
 }
 
-/// Shareable open tasks for a load-balance send: prefer [relatedTaskIds],
+/// Shareable open tasks for a family send: prefer [relatedTaskIds],
 /// otherwise open non-private tasks matching the suggestion category
 /// (auto category **or** custom label aliases like "Household" / "Huishouden").
-Future<List<PersonalTask>> _shareableLoadBalanceTasks({
+Future<List<PersonalTask>> _shareableFamilySendTasks({
   required TodoRepository todoRepo,
   required AiSuggestion suggestion,
 }) async {

@@ -857,17 +857,23 @@ class TodoRepository {
 
   /// Re-schedule notifications for all non-completed tasks that have a future
   /// reminder. Call after restoring a backup on a new install.
+  ///
+  /// Does not request Android notification / exact-alarm permissions (silent
+  /// re-arm after Settings); user-initiated scheduling still prompts.
   Future<void> rescheduleAllReminders() async {
     final rows = await (_db.select(
       _db.personalTasks,
     )..where((t) => t.isCompleted.equals(false))).get();
     for (final row in rows) {
       final task = _taskFromRow(row);
-      await _scheduleReminderFor(task);
+      await _scheduleReminderFor(task, requestPermissions: false);
     }
   }
 
-  Future<void> _scheduleReminderFor(PersonalTask task) async {
+  Future<void> _scheduleReminderFor(
+    PersonalTask task, {
+    bool requestPermissions = true,
+  }) async {
     final notif = _notifications;
     if (notif == null) return;
     // Never schedule reminders for completed tasks.
@@ -887,6 +893,7 @@ class TodoRepository {
         body: task.title,
         at: at,
         payload: ReminderPayload.task(task.id).encode(),
+        requestPermissions: requestPermissions,
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail task operations.

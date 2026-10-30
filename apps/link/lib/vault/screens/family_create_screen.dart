@@ -109,11 +109,13 @@ class _FamilyCreateScreenState extends State<FamilyCreateScreen> {
           _step == 0 ? l10n.familyCreateTitle : l10n.vaultConfirm,
         ),
       ),
-      body: words == null
-          ? const Center(child: CircularProgressIndicator())
-          : _step == 0
-          ? _buildShowWords(context, words, l10n)
-          : _buildQuiz(context, l10n),
+      body: SafeArea(
+        child: words == null
+            ? const Center(child: CircularProgressIndicator())
+            : _step == 0
+            ? _buildShowWords(context, words, l10n)
+            : _buildQuiz(context, l10n),
+      ),
     );
   }
 

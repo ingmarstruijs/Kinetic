@@ -173,9 +173,12 @@ class LinkNotificationService implements NotificationService {
     required String body,
     required DateTime at,
     String? payload,
+    bool requestPermissions = true,
   }) async {
     await _ensureInitialized();
-    await _ensureReminderPermissions();
+    if (requestPermissions) {
+      await _ensureReminderPermissions();
+    }
 
     final scheduled = tz.TZDateTime.from(at, tz.local);
     if (scheduled.isBefore(DateTime.now())) return;

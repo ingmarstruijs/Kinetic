@@ -315,6 +315,17 @@ class AiSuggestionEngine {
         continue;
       }
 
+      // All open tasks that match this family theme — Send picks one concrete
+      // shareable task instead of forwarding the vague suggestion title.
+      final relatedIds = [
+        for (final t in openTasks)
+          if (!t.isCompleted &&
+              !t.isPrivate &&
+              matchFamilyMemberHint(title: t.title, notes: t.notes)?.familyId ==
+                  hint.familyId)
+            t.id,
+      ];
+
       out.add(
         await _candidate(
           score: suggestionBaseScore(SuggestionReason.familyMemberComplement),
@@ -327,6 +338,7 @@ class AiSuggestionEngine {
             reason: SuggestionReason.familyMemberComplement,
             dedupeKey: 'familyMemberComplement:${hint.familyId}',
             explanation: hint.explanation,
+            relatedTaskIds: relatedIds,
           ),
         ),
       );

@@ -26,6 +26,7 @@ class _FakeNotificationService implements NotificationService {
     required String body,
     required DateTime at,
     String? payload,
+    bool requestPermissions = true,
   }) async {
     if (shouldThrow) throw Exception('notification permission denied');
     scheduled.add(id);

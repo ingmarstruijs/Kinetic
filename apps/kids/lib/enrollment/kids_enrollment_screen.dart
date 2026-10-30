@@ -56,7 +56,7 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
     } on FormatException catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
-      _showError(l10n.invalidQrCode(e));
+      await _showBlockingError(l10n.invalidQrCode(e));
       if (mounted) setState(() => _processing = false);
     }
   }
@@ -107,8 +107,10 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
     Navigator.of(context).pop(); // dismiss progress dialog
 
     if (errorCode != null) {
-      _showError(_localizeConnectionError(l10n, errorCode));
-      setState(() => _processing = false);
+      // Keep scanner paused until the user dismisses the error so the QR
+      // cannot immediately re-open the confirm dialog over a dimmed SnackBar.
+      await _showBlockingError(_localizeConnectionError(l10n, errorCode));
+      if (mounted) setState(() => _processing = false);
       return;
     }
 
@@ -143,9 +145,20 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
     };
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+  Future<void> _showBlockingError(String message) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Text(message),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
+          ),
+        ],
+      ),
     );
   }
 
@@ -171,36 +184,41 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
               ],
             ),
           ),
-          Container(
-            color: scheme.surface,
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.scanQrCode,
-                  style: tt.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.scanQrInstructions,
-                  style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                  textAlign: TextAlign.center,
-                ),
-                if (kDebugMode && widget.onOpenDemoScenarios != null) ...[
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: widget.onOpenDemoScenarios,
-                    icon: const Icon(Icons.movie_filter_outlined),
-                    label: Text(
-                      Localizations.localeOf(context).languageCode == 'nl'
-                          ? 'UI-scenario\'s'
-                          : 'UI scenarios',
-                    ),
+          SafeArea(
+            top: false,
+            child: Container(
+              color: scheme.surface,
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.scanQrCode,
+                    style: tt.titleMedium,
+                    textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.scanQrInstructions,
+                    style: tt.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (kDebugMode && widget.onOpenDemoScenarios != null) ...[
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: widget.onOpenDemoScenarios,
+                      icon: const Icon(Icons.movie_filter_outlined),
+                      label: Text(
+                        Localizations.localeOf(context).languageCode == 'nl'
+                            ? 'UI-scenario\'s'
+                            : 'UI scenarios',
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],

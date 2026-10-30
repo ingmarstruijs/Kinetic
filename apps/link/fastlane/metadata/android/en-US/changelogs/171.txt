@@ -1,0 +1,1 @@
+F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and concrete household task proposals.

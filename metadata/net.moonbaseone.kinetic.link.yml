@@ -14,8 +14,8 @@ RepoType: git
 Repo: https://github.com/ingmarstruijs/Kinetic.git
 
 Builds:
-  - versionName: 0.4.6
-    versionCode: 161
+  - versionName: 0.4.7
+    versionCode: 171
     commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
@@ -34,8 +34,8 @@ Builds:
       - flutter build apk --release --split-per-abi --target-platform=android-arm
         --build-name=$$VERSION$$ --build-number=$(($$VERCODE$$ / 10))
 
-  - versionName: 0.4.6
-    versionCode: 162
+  - versionName: 0.4.7
+    versionCode: 172
     commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
@@ -54,8 +54,8 @@ Builds:
       - flutter build apk --release --split-per-abi --target-platform=android-arm64
         --build-name=$$VERSION$$ --build-number=$(($$VERCODE$$ / 10))
 
-  - versionName: 0.4.6
-    versionCode: 163
+  - versionName: 0.4.7
+    versionCode: 173
     commit: 66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e
     subdir: apps/link
     output: build/app/outputs/flutter-apk/app-x86_64-release.apk
@@ -81,5 +81,5 @@ VercodeOperation:
   - '%c * 10 + 2'
   - '%c * 10 + 3'
 UpdateCheckData: apps/link/pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 0.4.6
-CurrentVersionCode: 163
+CurrentVersion: 0.4.7
+CurrentVersionCode: 173

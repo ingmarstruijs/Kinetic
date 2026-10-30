@@ -10,6 +10,15 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-10-30
+
+### Store
+Scan and enroll polish for 3-button navigation and clearer WebDAV folder errors.
+
+### Fixed
+- Enrollment scan hint stays above the system navigation bar.
+- Failed enroll (missing folder / bad QR) shows a blocking error so the confirm dialog cannot cover it immediately.
+
 ## [0.4.6] - 2026-10-27
 
 ### Store

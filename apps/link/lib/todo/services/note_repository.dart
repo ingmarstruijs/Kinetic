@@ -278,7 +278,10 @@ class NoteRepository {
     );
   }
 
-  Future<void> _scheduleReminderFor(PersonalNote note) async {
+  Future<void> _scheduleReminderFor(
+    PersonalNote note, {
+    bool requestPermissions = true,
+  }) async {
     if (note.remindAt == null) return;
     if (note.remindAt!.isBefore(DateTime.now())) return;
     try {
@@ -293,6 +296,7 @@ class NoteRepository {
         body: body,
         at: note.remindAt!,
         payload: ReminderPayload.note(note.id).encode(),
+        requestPermissions: requestPermissions,
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail note operations.
@@ -301,12 +305,14 @@ class NoteRepository {
 
   /// Re-schedule notifications for all notes that have a future reminder.
   /// Call after restoring a backup on a new install.
+  ///
+  /// Silent: does not request Android notification / exact-alarm permissions.
   Future<void> rescheduleAllReminders() async {
     final rows = await _db.select(_db.personalNotes).get();
     for (final row in rows) {
       if (row.deletedAt != null || row.syncState == 'deleted') continue;
       final note = _noteFromRow(row);
-      await _scheduleReminderFor(note);
+      await _scheduleReminderFor(note, requestPermissions: false);
     }
   }
 

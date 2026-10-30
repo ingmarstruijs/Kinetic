@@ -192,11 +192,13 @@ class _VaultCreateScreenState extends State<VaultCreateScreen> {
           _step == 0 ? l10n.vaultRecoveryPhrase : l10n.vaultConfirm,
         ),
       ),
-      body: words == null
-          ? const Center(child: CircularProgressIndicator())
-          : _step == 0
-          ? _buildShowWords(context, words, l10n)
-          : _buildQuiz(context, l10n),
+      body: SafeArea(
+        child: words == null
+            ? const Center(child: CircularProgressIndicator())
+            : _step == 0
+            ? _buildShowWords(context, words, l10n)
+            : _buildQuiz(context, l10n),
+      ),
     );
   }
 

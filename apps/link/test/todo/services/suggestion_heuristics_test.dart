@@ -10,8 +10,23 @@ void main() {
       expect(hint.familyMemberTitle, isNot(contains('GZA')));
     });
 
+    test('maps garden / cleaning Dutch titles to household', () {
+      expect(
+        matchFamilyMemberHint(title: 'voortuin onkruid weghalen')?.familyId,
+        'household',
+      );
+      expect(
+        matchFamilyMemberHint(title: 'Ramen lappen')?.familyId,
+        'household',
+      );
+      expect(
+        matchFamilyMemberHint(title: 'afwas doen')?.familyId,
+        'household',
+      );
+    });
+
     test('does not match a title without keywords', () {
-      expect(matchFamilyMemberHint(title: 'Ramen lappen'), isNull);
+      expect(matchFamilyMemberHint(title: 'Vergadering Q3'), isNull);
     });
   });
 

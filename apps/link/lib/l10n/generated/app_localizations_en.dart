@@ -319,6 +319,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Is this the right family member? Check the username above.';
 
   @override
+  String get familyKeyConfirmRoster =>
+      'Is this the right family? Check the members and fingerprint.';
+
+  @override
+  String get familyKeyRosterAdults => 'Adults';
+
+  @override
+  String get familyKeyRosterKids => 'Kids';
+
+  @override
+  String get familyKeyRosterEmpty => 'No shared member list on the server yet.';
+
+  @override
   String get familyKeyAlreadyPairedWarning =>
       'This device already has a family key. Leave the current family first (Family → Leave family), then join again. Importing another key on the same WebDAV server is not supported.';
 

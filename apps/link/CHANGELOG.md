@@ -24,6 +24,7 @@ F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and
 - Completing a task (including via notification Done) clears related overdue/stale suggestion cards.
 - Add-task sheet actions clear the 3-button navigation bar when MediaQuery.padding already reports the inset.
 - WebDAV setup can replace a remote vault when the server phrase does not match a new local vault.
+- Join-family confirmation shows adults and kids from the shared roster when the key unlocks it.
 
 ## [0.4.6] - 2026-10-27
 

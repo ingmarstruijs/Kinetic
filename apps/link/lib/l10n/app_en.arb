@@ -116,6 +116,10 @@
     }
   },
   "familyKeyConfirmLinkMember": "Is this the right family member? Check the username above.",
+  "familyKeyConfirmRoster": "Is this the right family? Check the members and fingerprint.",
+  "familyKeyRosterAdults": "Adults",
+  "familyKeyRosterKids": "Kids",
+  "familyKeyRosterEmpty": "No shared member list on the server yet.",
   "familyKeyAlreadyPairedWarning": "This device already has a family key. Leave the current family first (Family → Leave family), then join again. Importing another key on the same WebDAV server is not supported.",
   "familyKeyEnterTitle": "Enter family key",
   "familyKeyEnterSubtitle": "Enter their 12 words. You will then see the fingerprint to verify.",

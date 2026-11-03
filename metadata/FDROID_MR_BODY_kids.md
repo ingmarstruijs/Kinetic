@@ -1,62 +1,15 @@
-## Checklist
+## Update: Kinetic Kids 0.4.7
 
-### Policy
+Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic.
 
-* [x] The app complies with the [inclusion criteria](https://f-droid.org/docs/Inclusion_Policy).
-* [x] The original app author has been notified (and does not oppose the inclusion). If you are not the author, please paste the link of the reply from the author.
-* [x] The upstream app source code repo contains the app metadata in a [Fastlane](https://gitlab.com/snippets/1895688) or [Triple-T](https://gitlab.com/snippets/1901490) folder structure. The summary and description must be included and images, icon, and changelog should also be provided for better user experience. The `en-US` locale must be included.
+Commit: `0962d3394643ca993196992a4e9c0e01bc5a5c6e` (annotated tag `v0.4.7` — https://github.com/ingmarstruijs/Kinetic/pull/99).
 
-Submitter is the original author. Fastlane is in upstream at `apps/kids/fastlane/metadata/android/en-US/` (https://github.com/ingmarstruijs/Kinetic). Kids is Android-only on F-Droid (companion to Kinetic Link). Icon is at `images/icon.png`.
+GitHub release tags: `v0.4.7-kids` / `v0.4.7-link` (Build & Sign `release` job green).
 
-### Docs
+**Changes (Kids):** enrollment scan hint stays above 3-button navigation; failed enroll (missing WebDAV folder / bad QR) shows a blocking error so the confirm dialog cannot cover it.
 
-* [x] Please read [the guide](https://gitlab.com/fdroid/fdroiddata/-/blob/master/CONTRIBUTING.md) first if this is your first contribution.
-* [x] Please make sure your metadata follows the best practice in [our templates](https://gitlab.com/fdroid/fdroiddata/tree/master/templates).
-* [x] Please read the [Build Metadata Reference](https://f-droid.org/docs/Build_Metadata_Reference/) and make sure your metadata is valid.
-* [x] Please read the [Quick Start Guide](https://f-droid.org/en/docs/Submitting_to_F-Droid_Quick_Start_Guide/).
+ABI codes for `0.4.7+17`: **171 / 172 / 173** (`CurrentVersionCode: 173`).
 
-### Merge Request Setup
+`AutoUpdateMode: Version` / `UpdateCheckMode: Tags ^v[0-9.]+-kids$` unchanged.
 
-* [x] The title of this merge request should follow "New app: app name" format.
-* [x] Please make sure your fdroiddata fork is public and your branch is not protected. See.
-* [x] Please read [our Git guide](https://gitlab.com/fdroid/wiki/-/wikis/Tips-for-fdroiddata-contributors/Git-Usage) if you don't know how to rebase your branch. Don't rebase your branch if there is no conflict.
-* [x] All related [fdroiddata](https://gitlab.com/fdroid/fdroiddata/issues) and [RFP issues](https://gitlab.com/fdroid/rfp/issues) have been referenced in this merge request
-* [x] Please only submit one app in one MR.
-
-No related fdroiddata/RFP issues. Companion app Kinetic Link is submitted in a separate MR.
-
-### Metadata
-
-* [x] Metadata must be put in `metadata/.yml`.
-* [x] Metadata must be a valid YAML file.
-* [x] Metadata must use LF as line ending.
-* [x] Don't add summary/description/changelog/images or anything that should be provided in upstream repo. Please check the Changes tab to make sure there is no other unrelated files added in the MR.
-* [x] Releases are tagged and auto update is enabled unless there is a special reason.
-* [x] There is an issue tracker and contact info of the author so that we can report bugs and contact the author.
-* [x] An AuthorName must be added. It doesn't need to be the real name.
-* [ ] External repos are added as git submodules instead of srclibs. You can update git submodules without opening an MR in this repo and the submodule is covered by our scanner.
-* [ ] Enable [Reproducible Builds](https://f-droid.org/docs/Reproducible_Builds). We'll use your signature for improved security/reliability, also allowing users to switch between different channels. Do note that if you don't enable reproducible build then the apk will be signed with our key so you can't enable it later. If you can't enable this, please add the reasons here.
-* [x] Setup abi split if the APK is large and the splitted ones can be much smaller.
-* [x] Only the latest versions should be kept in the metadata before it's merged. If you update the metadata, please replace the old versions with the new ones.
-* [x] Don't add any disabled versions in the metadata.
-* [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
-
-Package: `metadata/net.moonbaseone.kinetic.kids.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (annotated tag `v0.4.6` / release bump including F-Droid review UX fixes — https://github.com/ingmarstruijs/Kinetic/pull/93 + https://github.com/ingmarstruijs/Kinetic/pull/94).
-
-`AutoUpdateMode: Version` / `UpdateCheckMode: Tags ^v[0-9.]+-kids$` with `UpdateCheckData` on `apps/kids/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
-
-srclibs: Flutter version is taken from upstream `.flutter-version` (`srclibs: flutter@stable` then checkout that pin), following the fdroiddata Flutter template (not a git submodule). Prebuild runs `flutter pub get --enforce-lockfile` at the repo root. Redundant `flutter --version` removed from prebuild (linsui suggestion).
-
-Native SQLite encryption: workspace hooks use `source: source` with `third_party/sqlite3mc/sqlite3mc_amalgamation.c` (MIT, SQLite3MultipleCiphers v2.6.1) so F-Droid builds compile from source instead of downloading prebuilt `libsqlite3mc.so`.
-
-Reproducible Builds not enabled: Flutter monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
-
-ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.6 (`+16`) that is **161 / 162 / 163**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
-
-### Pipeline
-
-* [x] All pipelines should pass.
-* [x] All warnings and errors in the Reports tab should be fixed or explained.
-* [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
-
-Updated metadata to **0.4.6** at `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (notifications after enrollment + disabled banner). Thanks @junkerderprovinz for the test feedback — addressed upstream in 0.4.6.
+Thanks @junkerderprovinz for the earlier review feedback on the companion Link app; this bump ships the Kids side of that follow-up.

@@ -41,7 +41,7 @@ No related fdroiddata/RFP issues. Companion app Kinetic Kids is submitted in a s
 * [x] Don't add any disabled versions in the metadata.
 * [x] The `commit` field should be the full hash. Please don't use tag or branch in commit.
 
-Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (annotated tag `v0.4.6` / release bump including F-Droid review UX fixes — https://github.com/ingmarstruijs/Kinetic/pull/93 + https://github.com/ingmarstruijs/Kinetic/pull/94).
+Package: `metadata/net.moonbaseone.kinetic.link.yml`. Source: https://github.com/ingmarstruijs/Kinetic. Commit: `0962d3394643ca993196992a4e9c0e01bc5a5c6e` (annotated tag `v0.4.7` — https://github.com/ingmarstruijs/Kinetic/pull/99).
 
 `AutoUpdateMode: Version` / `UpdateCheckMode: Tags ^v[0-9.]+-link$` with `UpdateCheckData` on `apps/link/pubspec.yaml` and `VercodeOperation: '%c * 10 + {1,2,3}'`.
 
@@ -51,7 +51,7 @@ Native SQLite encryption: workspace hooks use `source: source` with `third_party
 
 Reproducible Builds not enabled: Flutter monorepo (workspace packages) and native `sqlite3mc`/NDK make bit-identical APKs a deliberate follow-up. First listing uses F-Droid signing; we understand RB cannot be casually enabled later.
 
-ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.6 (`+16`) that is **161 / 162 / 163**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
+ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/build.gradle.kts` sets `versionCodeOverride = base * 10 + abi` (armeabi-v7a=1, arm64-v8a=2, x86_64=3) so F-Droid keeps the highest codes correctly. For 0.4.7 (`+17`) that is **171 / 172 / 173**. `--build-number` is `$$VERCODE$$ / 10` (the pubspec build number).
 
 ### Pipeline
 
@@ -59,4 +59,4 @@ ABI splits: three Builds entries with `--split-per-abi`. Upstream `android/app/b
 * [x] All warnings and errors in the Reports tab should be fixed or explained.
 * [x] F-Droid CI runners are under GitLab's FOSS program, so there's no need for you to pay for any CI time. If Gitlab starts asking for phone numbers or credit cards don't submit anything, just leave a note in the MR so we know we need to trigger the CI.
 
-Updated metadata to **0.4.6** at `66e9f8e90fc73a7a1e2f9a3b1a033e8ef7a6d05e` (review UX: deferred notification/exact-alarm prompts + banners, WebDAV folder-not-found, reminder suggestion labels). Thanks @junkerderprovinz for the test feedback — addressed upstream in 0.4.6.
+Updated metadata to **0.4.7** at `0962d3394643ca993196992a4e9c0e01bc5a5c6e` (Junker follow-ups: silent re-arm after notification Settings, SafeArea on vault/family screens, concrete household Send picks, 3-button insets, Kids scan/enroll polish). Thanks @junkerderprovinz for the test feedback.

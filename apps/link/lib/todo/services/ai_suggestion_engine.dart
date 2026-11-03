@@ -246,9 +246,13 @@ class AiSuggestionEngine {
       final daysSince = _nowUtc.difference(lastDone).inDays;
       final original = entry.value.last;
 
+      // inDays gaps of 0 (same-day re-completions) must not fire a habit
+      // the moment the user marks the task done.
       final median = times.length >= 2 ? _medianInterval(times) : null;
-      final repeatDue =
-          times.length >= 2 && daysSince >= median! * 0.8;
+      final repeatDue = times.length >= 2 &&
+          median != null &&
+          median >= 1 &&
+          daysSince >= (median * 0.8).ceil().clamp(1, 3650);
       final singleKeywordDue =
           times.length == 1 &&
           isStrongHabitTitle(original.title) &&

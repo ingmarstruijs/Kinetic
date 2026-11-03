@@ -176,6 +176,25 @@ void main() {
         expect(await suggestionRepo.countPending(), 0);
       });
 
+      test('does not suggest habit right after same-day re-completion', () async {
+        await _insertCompletedTask(
+          db,
+          id: 'h1',
+          title: 'Test',
+          completedAt: testNow.subtract(const Duration(hours: 2)),
+        );
+        await _insertCompletedTask(
+          db,
+          id: 'h2',
+          title: 'Test',
+          completedAt: testNow.subtract(const Duration(minutes: 1)),
+        );
+
+        await _engine().runIfDue();
+
+        expect(await suggestionRepo.countPending(), 0);
+      });
+
       test('does not suggest when open task with same title exists', () async {
         await _insertCompletedTask(
           db,

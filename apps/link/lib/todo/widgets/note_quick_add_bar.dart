@@ -8,8 +8,8 @@ import '../services/todo_repository.dart';
 
 /// Persistent text field at the bottom of the notes list.
 ///
-/// Enter (or the ✓ circle) creates a private note with the typed title.
-/// The expand icon opens the full note editor for more options.
+/// Enter, the + circle, or expand all open the note editor with the typed
+/// title prefilled (notes need a body — no silent title-only create).
 class NoteQuickAddBar extends StatefulWidget {
   final NoteRepository repo;
   final TodoRepository? todoRepo;
@@ -47,15 +47,9 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _openEditor({required bool requireTitle}) {
     final title = _ctrl.text.trim();
-    if (title.isEmpty) return;
-    await widget.repo.insert(title: title);
-    _ctrl.clear();
-  }
-
-  void _openFull() {
-    final title = _ctrl.text.trim();
+    if (requireTitle && title.isEmpty) return;
     _ctrl.clear();
     Navigator.of(context).push<PersonalNote?>(
       MaterialPageRoute(
@@ -91,7 +85,7 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
             children: [
               GestureDetector(
                 key: const Key('note-quick-add-submit'),
-                onTap: _submit,
+                onTap: () => _openEditor(requireTitle: true),
                 behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
@@ -131,13 +125,13 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
                     isDense: true,
                   ),
                   textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _submit(),
+                  onSubmitted: (_) => _openEditor(requireTitle: true),
                 ),
               ),
               IconButton(
                 icon: Icon(Icons.expand_less, color: scheme.onSurfaceVariant),
                 tooltip: l10n.quickAddMoreOptions,
-                onPressed: _openFull,
+                onPressed: () => _openEditor(requireTitle: false),
               ),
             ],
           ),

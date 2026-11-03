@@ -29,6 +29,7 @@ F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and
 - Scheduling a reminder asks for notification permission only; exact alarms stay on the in-app banner (no Alarms settings redirect after a deny).
 - Timed tasks stay on-time through their due minute; Overdue starts the minute after the reminder.
 - Family Send task picker lists live shareable tasks in the suggestion category, not only ids frozen when the suggestion was created.
+- Quick-add no longer jumps under a stacked nav+keyboard; new note from the bar opens the editor with the title prefilled.
 
 ## [0.4.6] - 2026-10-27
 

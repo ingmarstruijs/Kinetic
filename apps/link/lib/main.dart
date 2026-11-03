@@ -809,7 +809,14 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                         ),
                     ];
 
+                    // Don't shrink the whole shell for the keyboard — that
+                    // stacked QuickAdd + NavigationBar above the IME and
+                    // hid the task/note list. Tabs pad the composer themselves;
+                    // hide the nav while typing.
+                    final keyboardOpen =
+                        MediaQuery.viewInsetsOf(context).bottom > 0;
                     return Scaffold(
+                      resizeToAvoidBottomInset: false,
                       body: Column(
                         children: [
                           // Only apply SafeArea when a banner is visible —
@@ -836,12 +843,14 @@ class _RootShellState extends State<_RootShell> with WidgetsBindingObserver {
                           ),
                         ],
                       ),
-                      bottomNavigationBar: NavigationBar(
-                        selectedIndex: clampedIndex,
-                        onDestinationSelected: (i) =>
-                            setState(() => _selectedIndex = i),
-                        destinations: destinations,
-                      ),
+                      bottomNavigationBar: keyboardOpen
+                          ? null
+                          : NavigationBar(
+                              selectedIndex: clampedIndex,
+                              onDestinationSelected: (i) =>
+                                  setState(() => _selectedIndex = i),
+                              destinations: destinations,
+                            ),
                     );
                   },
                 );

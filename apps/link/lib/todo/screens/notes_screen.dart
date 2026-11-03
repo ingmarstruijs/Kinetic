@@ -193,6 +193,7 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: AppHeader(
             title: AppLocalizations.of(context).notesTitle,
@@ -235,11 +236,16 @@ class _NotesScreenState extends State<NotesScreen> {
             ),
             // In the body (like Tasks QuickAddBar) — Scaffold.bottomSheet
             // painted a separate surface strip behind the field.
-            NoteQuickAddBar(
-              repo: widget.repo,
-              todoRepo: widget.todoRepo,
-              hasFamilyKey: widget.hasOtherLinkMembers,
-              otherLinkMembers: widget.otherLinkMembers,
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: NoteQuickAddBar(
+                repo: widget.repo,
+                todoRepo: widget.todoRepo,
+                hasFamilyKey: widget.hasOtherLinkMembers,
+                otherLinkMembers: widget.otherLinkMembers,
+              ),
             ),
           ],
         ),

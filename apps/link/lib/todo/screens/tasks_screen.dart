@@ -333,6 +333,7 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: AppHeader(
             title: AppLocalizations.of(context).tasksTitle,
@@ -445,16 +446,21 @@ class _TasksScreenState extends State<TasksScreen> {
                                 ),
                         ),
                       ),
-                      QuickAddBar(
-                        repo: widget.repo,
-                        hasFamilyKey: widget.hasFamilyKey,
-                        hasOtherLinkMembers: widget.hasOtherLinkMembers,
-                        proposalRepo: widget.proposalRepo,
-                        myLinkId: widget.myLinkId,
-                        otherLinkMembers: widget.otherLinkMembers,
-                        configRepo: widget.configRepo,
-                        pullPresence: widget.pullPresence,
-                        kidsParticipation: widget.kidsParticipation,
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.viewInsetsOf(context).bottom,
+                        ),
+                        child: QuickAddBar(
+                          repo: widget.repo,
+                          hasFamilyKey: widget.hasFamilyKey,
+                          hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                          proposalRepo: widget.proposalRepo,
+                          myLinkId: widget.myLinkId,
+                          otherLinkMembers: widget.otherLinkMembers,
+                          configRepo: widget.configRepo,
+                          pullPresence: widget.pullPresence,
+                          kidsParticipation: widget.kidsParticipation,
+                        ),
                       ),
                     ],
                   ),

@@ -617,6 +617,9 @@
   "webdavTestFirst": "Test the connection before saving.",
   "webdavCreateVaultFirst": "Create a vault before linking WebDAV.",
   "webdavPhraseMismatchServer": "This server already has a vault that does not match your recovery phrase.",
+  "webdavPhraseMismatchTitle": "Different vault on server",
+  "webdavPhraseMismatchBody": "This WebDAV folder still has a vault from another recovery phrase. Replace it with the vault on this device? Old encrypted tasks and notes on the server will be removed and cannot be opened with your new phrase.",
+  "webdavPhraseMismatchReplace": "Use this device’s vault",
   "webdavConfigSaved": "WebDAV configuration saved.",
   "webdavSaveError": "Error saving: {error}",
   "@webdavSaveError": {

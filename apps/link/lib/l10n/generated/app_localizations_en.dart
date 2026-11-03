@@ -1258,6 +1258,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'This server already has a vault that does not match your recovery phrase.';
 
   @override
+  String get webdavPhraseMismatchTitle => 'Different vault on server';
+
+  @override
+  String get webdavPhraseMismatchBody =>
+      'This WebDAV folder still has a vault from another recovery phrase. Replace it with the vault on this device? Old encrypted tasks and notes on the server will be removed and cannot be opened with your new phrase.';
+
+  @override
+  String get webdavPhraseMismatchReplace => 'Use this device’s vault';
+
+  @override
   String get webdavConfigSaved => 'WebDAV configuration saved.';
 
   @override

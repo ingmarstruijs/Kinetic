@@ -617,6 +617,9 @@
   "webdavTestFirst": "Test de verbinding eerst voordat je opslaat.",
   "webdavCreateVaultFirst": "Maak eerst een kluis voordat je WebDAV koppelt.",
   "webdavPhraseMismatchServer": "Op deze server staat al een kluis die niet bij jouw herstelzin past.",
+  "webdavPhraseMismatchTitle": "Andere kluis op de server",
+  "webdavPhraseMismatchBody": "In deze WebDAV-map staat nog een kluis van een andere herstelzin. Vervangen door de kluis op dit apparaat? Oude versleutelde taken en notities op de server worden verwijderd en gaan niet open met je nieuwe zin.",
+  "webdavPhraseMismatchReplace": "Gebruik kluis van dit apparaat",
   "webdavConfigSaved": "WebDAV-configuratie opgeslagen.",
   "webdavSaveError": "Fout bij opslaan: {error}",
   "@webdavSaveError": {

@@ -1262,6 +1262,16 @@ class AppLocalizationsNl extends AppLocalizations {
       'Op deze server staat al een kluis die niet bij jouw herstelzin past.';
 
   @override
+  String get webdavPhraseMismatchTitle => 'Andere kluis op de server';
+
+  @override
+  String get webdavPhraseMismatchBody =>
+      'In deze WebDAV-map staat nog een kluis van een andere herstelzin. Vervangen door de kluis op dit apparaat? Oude versleutelde taken en notities op de server worden verwijderd en gaan niet open met je nieuwe zin.';
+
+  @override
+  String get webdavPhraseMismatchReplace => 'Gebruik kluis van dit apparaat';
+
+  @override
   String get webdavConfigSaved => 'WebDAV-configuratie opgeslagen.';
 
   @override

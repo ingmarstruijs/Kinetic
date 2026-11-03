@@ -2234,6 +2234,24 @@ abstract class AppLocalizations {
   /// **'This server already has a vault that does not match your recovery phrase.'**
   String get webdavPhraseMismatchServer;
 
+  /// No description provided for @webdavPhraseMismatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Different vault on server'**
+  String get webdavPhraseMismatchTitle;
+
+  /// No description provided for @webdavPhraseMismatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This WebDAV folder still has a vault from another recovery phrase. Replace it with the vault on this device? Old encrypted tasks and notes on the server will be removed and cannot be opened with your new phrase.'**
+  String get webdavPhraseMismatchBody;
+
+  /// No description provided for @webdavPhraseMismatchReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this device’s vault'**
+  String get webdavPhraseMismatchReplace;
+
   /// No description provided for @webdavConfigSaved.
   ///
   /// In en, this message translates to:

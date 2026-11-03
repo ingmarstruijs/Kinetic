@@ -220,19 +220,28 @@ class _NotesScreenState extends State<NotesScreen> {
             ),
           ],
         ),
-        body: _NotesListBody(
-          repo: widget.repo,
-          settingsRepo: widget.settingsRepo,
-          hasOtherLinkMembers: widget.hasOtherLinkMembers,
-          myLinkId: widget.myLinkId,
-          otherLinkMembers: widget.otherLinkMembers,
-          onEditNote: (note) => _openEditor(note: note),
-        ),
-        bottomSheet: NoteQuickAddBar(
-          repo: widget.repo,
-          todoRepo: widget.todoRepo,
-          hasFamilyKey: widget.hasOtherLinkMembers,
-          otherLinkMembers: widget.otherLinkMembers,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _NotesListBody(
+                repo: widget.repo,
+                settingsRepo: widget.settingsRepo,
+                hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                myLinkId: widget.myLinkId,
+                otherLinkMembers: widget.otherLinkMembers,
+                onEditNote: (note) => _openEditor(note: note),
+              ),
+            ),
+            // In the body (like Tasks QuickAddBar) — Scaffold.bottomSheet
+            // painted a separate surface strip behind the field.
+            NoteQuickAddBar(
+              repo: widget.repo,
+              todoRepo: widget.todoRepo,
+              hasFamilyKey: widget.hasOtherLinkMembers,
+              otherLinkMembers: widget.otherLinkMembers,
+            ),
+          ],
         ),
       ),
     );

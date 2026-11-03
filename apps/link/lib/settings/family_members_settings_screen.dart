@@ -13,7 +13,6 @@ import '../vault/family_vault_sync.dart';
 import '../vault/screens/family_create_screen.dart';
 import '../vault/screens/family_key_rotation_wizard_screen.dart';
 import '../vault/screens/mnemonic_reveal_screen.dart';
-import '../vault/widgets/mnemonic_phrase_field.dart';
 import 'family_key_scan_screen.dart';
 import 'family_key_share_screen.dart';
 import 'kids_enrollment_qr_screen.dart';

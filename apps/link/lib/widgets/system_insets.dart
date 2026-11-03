@@ -1,14 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 /// Bottom inset for modal sheets and sticky footers.
 ///
-/// Combines the keyboard ([MediaQuery.viewInsets]) with any system navigation
-/// bar not already reflected in [MediaQuery.padding] (typical on Android
-/// edge-to-edge with 3-button navigation, where padding.bottom is 0).
+/// [showModalBottomSheet] with `useSafeArea: true` wraps content in
+/// `SafeArea(bottom: false)`, so the sheet still draws under the system
+/// navigation bar. Pad with the larger of keyboard ([MediaQuery.viewInsets])
+/// and system bottom ([MediaQuery.viewPadding] / [MediaQuery.padding]).
 double bottomSystemInset(BuildContext context) {
   final data = MediaQuery.of(context);
-  final uncovered = data.viewPadding.bottom - data.padding.bottom;
-  return data.viewInsets.bottom + (uncovered > 0 ? uncovered : 0.0);
+  final systemBottom = math.max(data.viewPadding.bottom, data.padding.bottom);
+  return math.max(data.viewInsets.bottom, systemBottom);
 }
 
 /// Pads [child] so bottom actions clear the system navigation bar.

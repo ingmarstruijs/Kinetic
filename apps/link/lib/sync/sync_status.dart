@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../widgets/system_insets.dart';
 
 /// High-level sync phase shown in the app bar and settings.
 enum SyncStatus { idle, syncing, error }
@@ -118,7 +119,7 @@ Future<void> showSyncStatusSheet(
     showDragHandle: true,
     builder: (ctx) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        padding: EdgeInsets.fromLTRB(24, 8, 24, 16 + bottomSystemInset(ctx)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

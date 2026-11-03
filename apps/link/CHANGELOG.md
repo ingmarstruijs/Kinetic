@@ -18,6 +18,8 @@ F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and
 ### Fixed
 - Re-arming reminders after enabling notifications in Settings no longer opens the Alarms & reminders page by itself.
 - Recovery phrase, confirm, and family-key screens keep bottom actions above the 3-button navigation bar.
+- Task/note bottom sheets clear Android edge-to-edge / 3-button navigation (Annuleren/Toevoegen no longer under the system bar).
+- Quick-add bars sit flush above the app navigation bar.
 - Family household suggestions require picking a concrete shareable task on Send instead of forwarding the vague headline.
 
 ## [0.4.6] - 2026-10-27

@@ -186,6 +186,11 @@ class _KidsEnrollmentScreenState extends State<KidsEnrollmentScreen> {
           ),
           SafeArea(
             top: false,
+            // Edge-to-edge Android often leaves padding.bottom at 0; reinforce
+            // with viewPadding so the hint clears 3-button navigation.
+            minimum: EdgeInsets.only(
+              bottom: MediaQuery.viewPaddingOf(context).bottom,
+            ),
             child: Container(
               color: scheme.surface,
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/system_insets.dart';
 import '../vault_biometrics.dart';
 
 /// Confirms the device lock (or a warning) and shows [words].
@@ -80,7 +81,9 @@ class MnemonicRevealScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: SafeArea(
-        child: Padding(
+        bottom: false,
+        child: BottomSystemInset(
+          child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -129,6 +132,7 @@ class MnemonicRevealScreen extends StatelessWidget {
                 label: Text(l10n.commonCopy),
               ),
             ],
+          ),
           ),
         ),
       ),

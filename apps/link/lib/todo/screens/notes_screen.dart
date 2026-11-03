@@ -6,6 +6,7 @@ import '../../settings/settings_repository.dart';
 import '../../sync/sync_status.dart';
 import '../../theme/app_header.dart';
 import '../../vault/vault_biometrics.dart';
+import '../../widgets/system_insets.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
 import '../services/todo_repository.dart';
@@ -98,7 +99,7 @@ class _NotesScreenState extends State<NotesScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -129,7 +130,7 @@ class _NotesScreenState extends State<NotesScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

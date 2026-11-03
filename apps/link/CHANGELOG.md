@@ -27,6 +27,7 @@ F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and
 - Join-family confirmation shows adults and kids from the shared roster when the key unlocks it.
 - Habit suggestions no longer appear immediately after completing the same task the same day.
 - Scheduling a reminder asks for notification permission only; exact alarms stay on the in-app banner (no Alarms settings redirect after a deny).
+- Timed tasks stay on-time through their due minute; Overdue starts the minute after the reminder.
 
 ## [0.4.6] - 2026-10-27
 

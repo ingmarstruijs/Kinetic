@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../debug/heuristic_log.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../family/proposals/link_member_proposal_repository.dart';
+import '../../theme/app_themes.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/todo_repository.dart';
@@ -510,13 +511,8 @@ class AiSuggestionEngine {
     return out;
   }
 
-  bool _isTaskOverdue(DateTime due, DateTime now, {required bool isAllDay}) {
-    final local = due.toLocal();
-    final effective = isAllDay
-        ? DateTime(local.year, local.month, local.day, 23, 59, 59)
-        : local;
-    return effective.isBefore(now);
-  }
+  bool _isTaskOverdue(DateTime due, DateTime now, {required bool isAllDay}) =>
+      isOverdue(due, isAllDay: isAllDay, now: now);
 
   // ---------------------------------------------------------------------------
   // Detector 3d — Stale open tasks (→ self)

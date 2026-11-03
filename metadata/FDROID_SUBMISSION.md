@@ -17,8 +17,8 @@ commit.
 
 | App | Application ID | Listing |
 | --- | --- | --- |
-| Kinetic Link | `net.moonbaseone.kinetic.link` | **MR open** — [!50470](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50470); updating to **0.4.6** (F-Droid review UX: gentler permissions, WebDAV not-found) |
-| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **MR open** — [!50471](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50471); updating to **0.4.6** (notifications after enroll + disabled banner) |
+| Kinetic Link | `net.moonbaseone.kinetic.link` | **MR open** — [!50470](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/50470); updating to **0.4.7** (Junker follow-ups) |
+| Kinetic Kids | `net.moonbaseone.kinetic.kids` | **Live** on [f-droid.org](https://f-droid.org/packages/net.moonbaseone.kinetic.kids/) at 0.4.6; update MR for **0.4.7** after each GitHub release |
 
 Kids on F-Droid is the Android companion to Link; other Kids platforms in the
 monorepo are out of scope for fdroiddata.

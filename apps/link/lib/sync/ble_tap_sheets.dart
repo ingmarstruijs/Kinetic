@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../sync/ble_tap_link_controller.dart';
 import '../sync/ble_tap_session.dart';
+import '../widgets/system_insets.dart';
 
 /// Host: wait for a nearby guest, confirm, send QR-equivalent payload.
 class BleTapShareSheet extends StatefulWidget {
@@ -81,7 +82,7 @@ class _BleTapShareSheetState extends State<BleTapShareSheet> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+      padding: EdgeInsets.fromLTRB(24, 8, 24, 16 + bottomSystemInset(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -208,7 +209,7 @@ class _BleTapJoinSheetState extends State<BleTapJoinSheet> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+      padding: EdgeInsets.fromLTRB(24, 8, 24, 16 + bottomSystemInset(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

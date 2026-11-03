@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:kinetic_webdav/kinetic_webdav.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/system_insets.dart';
 
 class FamilyCreateResult {
   const FamilyCreateResult({
@@ -109,11 +110,16 @@ class _FamilyCreateScreenState extends State<FamilyCreateScreen> {
           _step == 0 ? l10n.familyCreateTitle : l10n.vaultConfirm,
         ),
       ),
-      body: words == null
-          ? const Center(child: CircularProgressIndicator())
-          : _step == 0
-          ? _buildShowWords(context, words, l10n)
-          : _buildQuiz(context, l10n),
+      body: SafeArea(
+        bottom: false,
+        child: BottomSystemInset(
+          child: words == null
+              ? const Center(child: CircularProgressIndicator())
+              : _step == 0
+              ? _buildShowWords(context, words, l10n)
+              : _buildQuiz(context, l10n),
+        ),
+      ),
     );
   }
 

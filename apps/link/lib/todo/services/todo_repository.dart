@@ -8,9 +8,11 @@ import '../../notifications/reminder_action.dart';
 
 import '../../db/app_database.dart';
 import '../../family/proposals/link_member_proposal.dart';
+import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
 import '../models/personal_task.dart';
 import 'category_classifier.dart';
+import 'suggestion_heuristics.dart';
 
 // ---------------------------------------------------------------------------
 // TodoRepository
@@ -345,6 +347,7 @@ class TodoRepository {
         ),
       );
       await _archiveProposalsForTask(taskId);
+      await _clearSuggestionsForTask(taskId, title: row.title);
       await _notifications?.cancelReminder(_notifId(taskId));
       onWrite?.call();
       return;
@@ -361,8 +364,49 @@ class TodoRepository {
       ),
     );
     await _archiveProposalsForTask(taskId);
+    await _clearSuggestionsForTask(taskId, title: row?.title);
     await _notifications?.cancelReminder(_notifId(taskId));
     onWrite?.call();
+  }
+
+  /// Pending overdue/stale/categorize cards for [taskId] stay visible after a
+  /// notification "Done" unless cleared here. Also clears habit/seasonal cards
+  /// for the same title group so completing does not immediately re-surface
+  /// "do Test again". Marked accepted (not dismissed) so title-based suppress
+  /// does not block future habit suggestions forever.
+  Future<void> _clearSuggestionsForTask(
+    String taskId, {
+    String? title,
+  }) async {
+    final rows =
+        await (_db.select(_db.aiSuggestions)..where(
+              (t) => t.status.equals('pending') | t.status.equals('snoozed'),
+            ))
+            .get();
+    final now = DateTime.now().toUtc();
+    final group = title == null || title.trim().isEmpty
+        ? null
+        : habitGroupKey(title);
+    for (final row in rows) {
+      final related = parseRelatedTaskIds(row.relatedTaskIds);
+      final keyed =
+          row.dedupeKey == 'overdue:$taskId' ||
+          row.dedupeKey == 'stale:$taskId';
+      final habitMatch = group != null &&
+          (row.dedupeKey == 'habit:$group' ||
+              row.dedupeKey == 'seasonal:$group' ||
+              ((row.reason == 'habit' || row.reason == 'seasonal') &&
+                  habitGroupKey(row.title) == group));
+      if (!related.contains(taskId) && !keyed && !habitMatch) continue;
+      await (_db.update(
+        _db.aiSuggestions,
+      )..where((t) => t.id.equals(row.id))).write(
+        AiSuggestionsCompanion(
+          status: const Value('accepted'),
+          updatedAt: Value(now),
+        ),
+      );
+    }
   }
 
   /// Soft-delete family-member proposals linked to [taskId] so they stop matching
@@ -857,17 +901,23 @@ class TodoRepository {
 
   /// Re-schedule notifications for all non-completed tasks that have a future
   /// reminder. Call after restoring a backup on a new install.
+  ///
+  /// Does not request Android notification / exact-alarm permissions (silent
+  /// re-arm after Settings); user-initiated scheduling still prompts.
   Future<void> rescheduleAllReminders() async {
     final rows = await (_db.select(
       _db.personalTasks,
     )..where((t) => t.isCompleted.equals(false))).get();
     for (final row in rows) {
       final task = _taskFromRow(row);
-      await _scheduleReminderFor(task);
+      await _scheduleReminderFor(task, requestPermissions: false);
     }
   }
 
-  Future<void> _scheduleReminderFor(PersonalTask task) async {
+  Future<void> _scheduleReminderFor(
+    PersonalTask task, {
+    bool requestPermissions = true,
+  }) async {
     final notif = _notifications;
     if (notif == null) return;
     // Never schedule reminders for completed tasks.
@@ -887,6 +937,7 @@ class TodoRepository {
         body: task.title,
         at: at,
         payload: ReminderPayload.task(task.id).encode(),
+        requestPermissions: requestPermissions,
       );
     } catch (_) {
       // Best-effort: notification scheduling errors should not fail task operations.

@@ -18,6 +18,7 @@ import '../../todo/screens/note_editor_screen.dart';
 import '../../todo/services/note_repository.dart';
 import '../../todo/services/todo_repository.dart';
 import '../../vault/vault_biometrics.dart';
+import '../../widgets/system_insets.dart';
 import 'category_sheet.dart';
 import 'detail_meta_row.dart';
 import 'hour_first_time_picker.dart';
@@ -569,16 +570,16 @@ class _TaskDetailSheetState extends State<TaskDetailSheet> {
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final bottomInset = bottomSystemInset(context);
     final maxHeight =
         MediaQuery.sizeOf(context).height -
-        viewInsets.bottom -
-        MediaQuery.paddingOf(context).top;
+        bottomInset -
+        MediaQuery.viewPaddingOf(context).top;
 
     return Material(
       color: scheme.surface,
       child: Padding(
-        padding: EdgeInsets.only(bottom: viewInsets.bottom),
+        padding: EdgeInsets.only(bottom: bottomInset),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: SingleChildScrollView(

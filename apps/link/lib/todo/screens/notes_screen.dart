@@ -6,6 +6,7 @@ import '../../settings/settings_repository.dart';
 import '../../sync/sync_status.dart';
 import '../../theme/app_header.dart';
 import '../../vault/vault_biometrics.dart';
+import '../../widgets/system_insets.dart';
 import '../models/personal_note.dart';
 import '../services/note_repository.dart';
 import '../services/todo_repository.dart';
@@ -98,7 +99,7 @@ class _NotesScreenState extends State<NotesScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -129,7 +130,7 @@ class _NotesScreenState extends State<NotesScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -185,16 +186,15 @@ class _NotesScreenState extends State<NotesScreen> {
     return Theme(
       data: Theme.of(context).copyWith(
         bottomSheetTheme: BottomSheetThemeData(
-          backgroundColor: scheme.surface,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           modalBackgroundColor: scheme.surface,
           modalElevation: 1,
         ),
       ),
       child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          backgroundColor: scheme.surfaceContainerLowest,
           title: AppHeader(
             title: AppLocalizations.of(context).notesTitle,
             centerTitle: false,
@@ -221,19 +221,33 @@ class _NotesScreenState extends State<NotesScreen> {
             ),
           ],
         ),
-        body: _NotesListBody(
-          repo: widget.repo,
-          settingsRepo: widget.settingsRepo,
-          hasOtherLinkMembers: widget.hasOtherLinkMembers,
-          myLinkId: widget.myLinkId,
-          otherLinkMembers: widget.otherLinkMembers,
-          onEditNote: (note) => _openEditor(note: note),
-        ),
-        bottomSheet: NoteQuickAddBar(
-          repo: widget.repo,
-          todoRepo: widget.todoRepo,
-          hasFamilyKey: widget.hasOtherLinkMembers,
-          otherLinkMembers: widget.otherLinkMembers,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _NotesListBody(
+                repo: widget.repo,
+                settingsRepo: widget.settingsRepo,
+                hasOtherLinkMembers: widget.hasOtherLinkMembers,
+                myLinkId: widget.myLinkId,
+                otherLinkMembers: widget.otherLinkMembers,
+                onEditNote: (note) => _openEditor(note: note),
+              ),
+            ),
+            // In the body (like Tasks QuickAddBar) — Scaffold.bottomSheet
+            // painted a separate surface strip behind the field.
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: NoteQuickAddBar(
+                repo: widget.repo,
+                todoRepo: widget.todoRepo,
+                hasFamilyKey: widget.hasOtherLinkMembers,
+                otherLinkMembers: widget.otherLinkMembers,
+              ),
+            ),
+          ],
         ),
       ),
     );

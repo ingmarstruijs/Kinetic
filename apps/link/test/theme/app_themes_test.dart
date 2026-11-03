@@ -258,6 +258,22 @@ void main() {
       expect(isOverdue(tomorrow), isFalse);
     });
 
+    test('timed task is not overdue during its due minute', () {
+      final due = DateTime(2026, 11, 3, 15, 55, 0);
+      expect(
+        isOverdue(due, now: DateTime(2026, 11, 3, 15, 55, 0)),
+        isFalse,
+      );
+      expect(
+        isOverdue(due, now: DateTime(2026, 11, 3, 15, 55, 59)),
+        isFalse,
+      );
+      expect(
+        isOverdue(due, now: DateTime(2026, 11, 3, 15, 56, 0)),
+        isTrue,
+      );
+    });
+
     test('formatDueDate includes time when not allDay', () {
       final date = DateTime(2026, 4, 15, 14, 30);
       final formatted = formatDueDate(date, l10n, allDay: false);

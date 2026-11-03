@@ -116,6 +116,10 @@
     }
   },
   "familyKeyConfirmLinkMember": "Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.",
+  "familyKeyConfirmRoster": "Is dit de juiste familie? Controleer de leden en de vingerafdruk.",
+  "familyKeyRosterAdults": "Volwassenen",
+  "familyKeyRosterKids": "Kinderen",
+  "familyKeyRosterEmpty": "Nog geen gedeelde ledenlijst op de server.",
   "familyKeyAlreadyPairedWarning": "Dit apparaat heeft al een familiesleutel. Verlaat eerst het huidige gezin (Familie → Familie verlaten) en join daarna opnieuw. Een andere sleutel importeren op dezelfde WebDAV-server wordt niet ondersteund.",
   "familyKeyEnterTitle": "Familiesleutel invoeren",
   "familyKeyEnterSubtitle": "Vul hun 12 woorden in. Daarna zie je de vingerafdruk ter controle.",
@@ -617,6 +621,9 @@
   "webdavTestFirst": "Test de verbinding eerst voordat je opslaat.",
   "webdavCreateVaultFirst": "Maak eerst een kluis voordat je WebDAV koppelt.",
   "webdavPhraseMismatchServer": "Op deze server staat al een kluis die niet bij jouw herstelzin past.",
+  "webdavPhraseMismatchTitle": "Andere kluis op de server",
+  "webdavPhraseMismatchBody": "In deze WebDAV-map staat nog een kluis van een andere herstelzin. Vervangen door de kluis op dit apparaat? Oude versleutelde taken en notities op de server worden verwijderd en gaan niet open met je nieuwe zin.",
+  "webdavPhraseMismatchReplace": "Gebruik kluis van dit apparaat",
   "webdavConfigSaved": "WebDAV-configuratie opgeslagen.",
   "webdavSaveError": "Fout bij opslaan: {error}",
   "@webdavSaveError": {

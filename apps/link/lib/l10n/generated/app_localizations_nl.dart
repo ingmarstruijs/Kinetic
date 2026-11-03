@@ -321,6 +321,20 @@ class AppLocalizationsNl extends AppLocalizations {
       'Is dit het juiste gezinslid? Controleer de gebruikersnaam hierboven.';
 
   @override
+  String get familyKeyConfirmRoster =>
+      'Is dit de juiste familie? Controleer de leden en de vingerafdruk.';
+
+  @override
+  String get familyKeyRosterAdults => 'Volwassenen';
+
+  @override
+  String get familyKeyRosterKids => 'Kinderen';
+
+  @override
+  String get familyKeyRosterEmpty =>
+      'Nog geen gedeelde ledenlijst op de server.';
+
+  @override
   String get familyKeyAlreadyPairedWarning =>
       'Dit apparaat heeft al een familiesleutel. Verlaat eerst het huidige gezin (Familie → Familie verlaten) en join daarna opnieuw. Een andere sleutel importeren op dezelfde WebDAV-server wordt niet ondersteund.';
 
@@ -1260,6 +1274,16 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get webdavPhraseMismatchServer =>
       'Op deze server staat al een kluis die niet bij jouw herstelzin past.';
+
+  @override
+  String get webdavPhraseMismatchTitle => 'Andere kluis op de server';
+
+  @override
+  String get webdavPhraseMismatchBody =>
+      'In deze WebDAV-map staat nog een kluis van een andere herstelzin. Vervangen door de kluis op dit apparaat? Oude versleutelde taken en notities op de server worden verwijderd en gaan niet open met je nieuwe zin.';
+
+  @override
+  String get webdavPhraseMismatchReplace => 'Gebruik kluis van dit apparaat';
 
   @override
   String get webdavConfigSaved => 'WebDAV-configuratie opgeslagen.';

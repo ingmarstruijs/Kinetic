@@ -1062,6 +1062,39 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
     }
   }
 
+  /// Overwrite remote vault.meta and drop blobs sealed with the old phrase.
+  Future<void> _replaceRemoteVaultWithLocal({
+    required WebDavClient client,
+    required String username,
+    required Uint8List personalKey,
+  }) async {
+    final taskFiles = await _listServerFiles(
+      client,
+      '/kinetic/$username/tasks',
+    );
+    final noteFiles = await _listServerFiles(
+      client,
+      '/kinetic/$username/notes',
+    );
+    for (final file in [...taskFiles, ...noteFiles]) {
+      try {
+        await client.delete(file);
+      } catch (e) {
+        debugPrint('[WebDAV] Error deleting $file: $e');
+      }
+    }
+    try {
+      await client.delete(KineticVault.familyKeyEncPath(username));
+    } catch (e) {
+      debugPrint('[WebDAV] Error deleting family.key.enc: $e');
+    }
+    await KineticVaultRemote.writeMeta(
+      client: client,
+      username: username,
+      key: personalKey,
+    );
+  }
+
   Future<void> _cleanupRemoteFiles(
     WebDavClient client,
     List<String> taskFiles,
@@ -1155,7 +1188,7 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       if (!isSameAccount) {
         await widget.configRepo.clearFamilyLinkageForNewAccount();
       }
-      final existingFamilyKey =
+      Uint8List? localFamily =
           isSameAccount ? _existing!.familyKeyBytes : null;
 
       // Always ensure directories exist (needed for both new and updated configs)
@@ -1174,19 +1207,47 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
           key: personalKey,
         );
         if (meta == VaultMetaStatus.wrongPhrase) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  AppLocalizations.of(context).webdavPhraseMismatchServer,
-                ),
-              ),
-            );
+          if (!mounted) {
+            setState(() => _saving = false);
+            return;
           }
-          setState(() => _saving = false);
-          return;
+          final replace = await showDialog<bool>(
+            context: context,
+            builder: (ctx) {
+              final d = AppLocalizations.of(ctx);
+              return AlertDialog(
+                title: Text(d.webdavPhraseMismatchTitle),
+                content: Text(d.webdavPhraseMismatchBody),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(d.commonCancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(d.webdavPhraseMismatchReplace),
+                  ),
+                ],
+              );
+            },
+          );
+          if (replace != true) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.webdavPhraseMismatchServer)),
+              );
+            }
+            setState(() => _saving = false);
+            return;
+          }
+          await _replaceRemoteVaultWithLocal(
+            client: client,
+            username: username,
+            personalKey: personalKey,
+          );
+          await widget.configRepo.clearFamilyLinkageForNewAccount();
+          localFamily = null;
         }
-        final localFamily = existingFamilyKey;
         if (localFamily == null) {
           familyRestored = await FamilyVaultSync.pullIfPresent(
             client: client,
@@ -1217,7 +1278,7 @@ class _WebDavSetupScreenState extends State<WebDavSetupScreen> {
       }
 
       final familyKeyToSave =
-          existingFamilyKey ?? await widget.configRepo.loadFamilyKey();
+          localFamily ?? await widget.configRepo.loadFamilyKey();
 
       await widget.configRepo.save(
         SyncConfig(

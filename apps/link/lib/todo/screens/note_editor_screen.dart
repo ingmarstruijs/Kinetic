@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_themes.dart';
 import '../../vault/vault_biometrics.dart';
+import '../../widgets/system_insets.dart';
 import '../models/personal_note.dart';
 import '../reminder_time.dart';
 import '../services/note_asset_store.dart';
@@ -321,7 +322,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     final l10n = AppLocalizations.of(context);
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (ctx) => SafeArea(
+      builder: (ctx) => BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -835,7 +836,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModal) {
-            return SafeArea(
+            return BottomSystemInset(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

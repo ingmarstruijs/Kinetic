@@ -199,17 +199,25 @@ class _TaskTileContentState extends State<_TaskTileContent> {
     }
   }
 
-  /// Schedules a one-shot timer that fires at the exact moment the task
-  /// transitions to overdue, so the tile colour updates without an app restart.
+  /// Schedules a one-shot timer that fires when the task becomes overdue, so
+  /// the tile colour updates without an app restart.
   void _scheduleOverdueTimer() {
     final due = widget.task.dueDate;
     if (due == null || widget.task.isCompleted) return;
-    // For all-day tasks the deadline is end-of-day (23:59:59).
     final local = due.toLocal();
-    final effective = widget.task.isAllDay
+    // Timed: overdue at the start of the next minute after due.
+    // All-day: overdue right after end-of-day.
+    final flipsAt = widget.task.isAllDay
         ? DateTime(local.year, local.month, local.day, 23, 59, 59)
-        : local;
-    final delay = effective.difference(DateTime.now());
+            .add(const Duration(seconds: 1))
+        : DateTime(
+            local.year,
+            local.month,
+            local.day,
+            local.hour,
+            local.minute,
+          ).add(const Duration(minutes: 1));
+    final delay = flipsAt.difference(DateTime.now());
     if (delay <= Duration.zero) return; // already overdue — colour set in build
     _overdueTimer = Timer(delay, () {
       if (mounted) setState(() {});

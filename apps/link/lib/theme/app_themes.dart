@@ -137,14 +137,31 @@ String formatNumericDate(DateTime dt, AppLocalizations l10n) {
 bool _isEnglishLocale(AppLocalizations l10n) =>
     l10n.localeName.toLowerCase().startsWith('en');
 
-bool isOverdue(DateTime due, {bool isAllDay = false}) {
-  final now = DateTime.now();
+bool isOverdue(DateTime due, {bool isAllDay = false, DateTime? now}) {
+  final clock = now ?? DateTime.now();
   final local = due.toLocal();
-  // For all-day tasks the deadline is end-of-day (23:59:59), not midnight.
-  final effective = isAllDay
-      ? DateTime(local.year, local.month, local.day, 23, 59, 59)
-      : local;
-  return effective.isBefore(now);
+  if (isAllDay) {
+    // Deadline is end-of-day; overdue once that second has passed.
+    final effective = DateTime(local.year, local.month, local.day, 23, 59, 59);
+    return effective.isBefore(clock);
+  }
+  // Timed tasks: UI/reminders are minute-granular. Stay "on time" through the
+  // due minute (when the reminder fires); overdue only after that minute.
+  final dueMinute = DateTime(
+    local.year,
+    local.month,
+    local.day,
+    local.hour,
+    local.minute,
+  );
+  final clockMinute = DateTime(
+    clock.year,
+    clock.month,
+    clock.day,
+    clock.hour,
+    clock.minute,
+  );
+  return dueMinute.isBefore(clockMinute);
 }
 
 String _weekday(int w, AppLocalizations l10n) => switch (w) {

@@ -54,6 +54,23 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
     }
   }
 
+  /// Decrypt `/kinetic/shared/roster.json` with the candidate key (preview only).
+  Future<FamilyRoster?> _peekRoster(Uint8List familyKey) async {
+    final cfg = widget.currentConfig.withFamilyKey(familyKey);
+    final client = WebDavClient(
+      baseUrl: cfg.serverUrl,
+      username: cfg.username,
+      password: cfg.password,
+    );
+    try {
+      return await WebDavSyncService(client: client, config: cfg).pullRoster();
+    } catch (_) {
+      return null;
+    } finally {
+      client.dispose();
+    }
+  }
+
   Future<void> _showVerificationDialog(
     ({
       Uint8List familyKey,
@@ -68,10 +85,32 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
     final urlMatches = currentUrl == scannedUrl;
     final alreadyPaired = widget.currentConfig.familyKeyBytes != null;
     final fingerprint = await KineticVault.fingerprint(payload.familyKey);
+    final roster = urlMatches ? await _peekRoster(payload.familyKey) : null;
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     final errorColor = Theme.of(context).colorScheme.error;
+    // Hide this device: after leave/rejoin the roster may still list us, which
+    // looks like "Key found … Adults: <me>".
+    final myId = widget.currentConfig.linkId;
+    final myName = widget.currentConfig.username.trim().toLowerCase();
+    final adultNames = (roster == null
+            ? const <FamilyLinkMember>[]
+            : roster.otherLinkMembers(myId))
+        .map((m) => m.displayName.trim())
+        .where(
+          (n) =>
+              n.isNotEmpty &&
+              (myName.isEmpty || n.toLowerCase() != myName),
+        )
+        .toList();
+    final kidNames = roster?.kids
+            .map((k) => k.name.trim())
+            .where((n) => n.isNotEmpty)
+            .toList() ??
+        const <String>[];
+    final hasRosterNames = adultNames.isNotEmpty || kidNames.isNotEmpty;
+
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -89,91 +128,116 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
             Expanded(child: Text(l10n.familyKeyFound)),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _InfoRow(
-              icon: Icons.person_outline,
-              label: l10n.familyKeyLinkMember,
-              value: payload.username.isNotEmpty
-                  ? payload.username
-                  : l10n.commonUnknown,
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.cloud_outlined,
-              label: l10n.familyKeyServer,
-              value: payload.serverUrl.isNotEmpty
-                  ? payload.serverUrl
-                  : l10n.commonUnknown,
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(
-              icon: Icons.fingerprint,
-              label: l10n.familyKeyFingerprint,
-              value: fingerprint,
-            ),
-            if (!urlMatches) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: errorColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: errorColor.withAlpha(100)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (hasRosterNames) ...[
+                if (adultNames.isNotEmpty) ...[
+                  _InfoRow(
+                    icon: Icons.groups_outlined,
+                    label: l10n.familyKeyRosterAdults,
+                    value: adultNames.join('\n'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                if (kidNames.isNotEmpty) ...[
+                  _InfoRow(
+                    icon: Icons.child_care_outlined,
+                    label: l10n.familyKeyRosterKids,
+                    value: kidNames.join('\n'),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ] else ...[
+                _InfoRow(
+                  icon: Icons.person_outline,
+                  label: l10n.familyKeyLinkMember,
+                  value: payload.username.isNotEmpty
+                      ? payload.username
+                      : (urlMatches
+                            ? l10n.familyKeyRosterEmpty
+                            : l10n.commonUnknown),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.block, color: errorColor, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.familyKeyServerMismatch(
-                          payload.serverUrl,
-                          widget.currentConfig.serverUrl,
+                const SizedBox(height: 8),
+              ],
+              _InfoRow(
+                icon: Icons.cloud_outlined,
+                label: l10n.familyKeyServer,
+                value: payload.serverUrl.isNotEmpty
+                    ? payload.serverUrl
+                    : l10n.commonUnknown,
+              ),
+              const SizedBox(height: 8),
+              _InfoRow(
+                icon: Icons.fingerprint,
+                label: l10n.familyKeyFingerprint,
+                value: fingerprint,
+              ),
+              if (!urlMatches) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: errorColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: errorColor.withAlpha(100)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.block, color: errorColor, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.familyKeyServerMismatch(
+                            payload.serverUrl,
+                            widget.currentConfig.serverUrl,
+                          ),
+                          style: Theme.of(ctx).textTheme.bodySmall,
                         ),
-                        style: Theme.of(ctx).textTheme.bodySmall,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ] else ...[
-              const SizedBox(height: 16),
-              Text(
-                l10n.familyKeyConfirmLinkMember,
-                style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+              ] else ...[
+                const SizedBox(height: 16),
+                Text(
+                  hasRosterNames
+                      ? l10n.familyKeyConfirmRoster
+                      : l10n.familyKeyConfirmLinkMember,
+                  style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
-            if (urlMatches && alreadyPaired) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: errorColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: errorColor.withAlpha(100)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.block, color: errorColor, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.familyKeyAlreadyPairedWarning,
-                        style: Theme.of(ctx).textTheme.bodySmall,
+              ],
+              if (urlMatches && alreadyPaired) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: errorColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: errorColor.withAlpha(100)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.block, color: errorColor, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.familyKeyAlreadyPairedWarning,
+                          style: Theme.of(ctx).textTheme.bodySmall,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
         actions: [
           if (!urlMatches || alreadyPaired)

@@ -13,7 +13,6 @@ import '../vault/family_vault_sync.dart';
 import '../vault/screens/family_create_screen.dart';
 import '../vault/screens/family_key_rotation_wizard_screen.dart';
 import '../vault/screens/mnemonic_reveal_screen.dart';
-import '../vault/widgets/mnemonic_phrase_field.dart';
 import 'family_key_scan_screen.dart';
 import 'family_key_share_screen.dart';
 import 'kids_enrollment_qr_screen.dart';
@@ -356,36 +355,6 @@ class _FamilyMembersSettingsScreenState
     Navigator.of(context).pop();
   }
 
-  Future<void> _verifyFamilyPhrase() async {
-    final stored = await widget.configRepo.loadFamilyKey();
-    if (stored == null || !mounted) return;
-    final l10n = AppLocalizations.of(context);
-    final phrase = await showMnemonicPhraseDialog(
-      context: context,
-      title: l10n.familyMemberVerifyTitle,
-      body: l10n.familyMemberVerifyBody,
-      confirmLabel: l10n.commonVerify,
-    );
-    if (phrase == null || !mounted) return;
-    try {
-      final derived = await KineticVault.deriveAesKey(phrase);
-      final ok = KineticVault.equalKeys(stored, derived);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ok ? l10n.familyMemberVerifyOk : l10n.familyMemberVerifyMismatch,
-          ),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.familyMemberVerifyMismatch)),
-      );
-    }
-  }
-
   Future<void> _revealFamilyPhrase() async {
     final l10n = AppLocalizations.of(context);
     await showMnemonicReveal(
@@ -610,8 +579,6 @@ class _FamilyMembersSettingsScreenState
               tooltip: l10n.settingsFamilyMembers,
               onSelected: (action) {
                 switch (action) {
-                  case _FamilyMenuAction.verify:
-                    _verifyFamilyPhrase();
                   case _FamilyMenuAction.showKey:
                     _revealFamilyPhrase();
                   case _FamilyMenuAction.leave:
@@ -619,10 +586,6 @@ class _FamilyMembersSettingsScreenState
                 }
               },
               itemBuilder: (ctx) => [
-                PopupMenuItem(
-                  value: _FamilyMenuAction.verify,
-                  child: Text(l10n.familyMemberVerifyPhrase),
-                ),
                 PopupMenuItem(
                   value: _FamilyMenuAction.showKey,
                   child: Text(l10n.familyMemberShowKey),
@@ -985,7 +948,7 @@ class _FamilyMembersSettingsScreenState
   }
 }
 
-enum _FamilyMenuAction { verify, showKey, leave }
+enum _FamilyMenuAction { showKey, leave }
 
 class _HubCard extends StatelessWidget {
   final List<Widget> children;

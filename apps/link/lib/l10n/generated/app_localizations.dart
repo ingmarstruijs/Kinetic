@@ -656,6 +656,30 @@ abstract class AppLocalizations {
   /// **'Is this the right family member? Check the username above.'**
   String get familyKeyConfirmLinkMember;
 
+  /// No description provided for @familyKeyConfirmRoster.
+  ///
+  /// In en, this message translates to:
+  /// **'Is this the right family? Check the members and fingerprint.'**
+  String get familyKeyConfirmRoster;
+
+  /// No description provided for @familyKeyRosterAdults.
+  ///
+  /// In en, this message translates to:
+  /// **'Adults'**
+  String get familyKeyRosterAdults;
+
+  /// No description provided for @familyKeyRosterKids.
+  ///
+  /// In en, this message translates to:
+  /// **'Kids'**
+  String get familyKeyRosterKids;
+
+  /// No description provided for @familyKeyRosterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared member list on the server yet.'**
+  String get familyKeyRosterEmpty;
+
   /// No description provided for @familyKeyAlreadyPairedWarning.
   ///
   /// In en, this message translates to:
@@ -2233,6 +2257,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This server already has a vault that does not match your recovery phrase.'**
   String get webdavPhraseMismatchServer;
+
+  /// No description provided for @webdavPhraseMismatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Different vault on server'**
+  String get webdavPhraseMismatchTitle;
+
+  /// No description provided for @webdavPhraseMismatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This WebDAV folder still has a vault from another recovery phrase. Replace it with the vault on this device? Old encrypted tasks and notes on the server will be removed and cannot be opened with your new phrase.'**
+  String get webdavPhraseMismatchBody;
+
+  /// No description provided for @webdavPhraseMismatchReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this device’s vault'**
+  String get webdavPhraseMismatchReplace;
 
   /// No description provided for @webdavConfigSaved.
   ///

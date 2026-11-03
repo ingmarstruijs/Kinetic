@@ -319,6 +319,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Is this the right family member? Check the username above.';
 
   @override
+  String get familyKeyConfirmRoster =>
+      'Is this the right family? Check the members and fingerprint.';
+
+  @override
+  String get familyKeyRosterAdults => 'Adults';
+
+  @override
+  String get familyKeyRosterKids => 'Kids';
+
+  @override
+  String get familyKeyRosterEmpty => 'No shared member list on the server yet.';
+
+  @override
   String get familyKeyAlreadyPairedWarning =>
       'This device already has a family key. Leave the current family first (Family → Leave family), then join again. Importing another key on the same WebDAV server is not supported.';
 
@@ -1256,6 +1269,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get webdavPhraseMismatchServer =>
       'This server already has a vault that does not match your recovery phrase.';
+
+  @override
+  String get webdavPhraseMismatchTitle => 'Different vault on server';
+
+  @override
+  String get webdavPhraseMismatchBody =>
+      'This WebDAV folder still has a vault from another recovery phrase. Replace it with the vault on this device? Old encrypted tasks and notes on the server will be removed and cannot be opened with your new phrase.';
+
+  @override
+  String get webdavPhraseMismatchReplace => 'Use this device’s vault';
 
   @override
   String get webdavConfigSaved => 'WebDAV configuration saved.';

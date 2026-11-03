@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/system_insets.dart';
 import '../models/personal_task.dart';
 import '../services/todo_repository.dart';
 
@@ -27,7 +28,7 @@ Future<List<String>?> showNoteTaskLinkPicker({
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setModal) {
-          return SafeArea(
+          return BottomSystemInset(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

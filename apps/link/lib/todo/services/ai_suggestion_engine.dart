@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../debug/heuristic_log.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../family/proposals/link_member_proposal_repository.dart';
+import '../../theme/app_themes.dart';
 import '../../todo/models/enums.dart';
 import '../../todo/models/personal_task.dart';
 import '../../todo/services/todo_repository.dart';
@@ -246,9 +247,13 @@ class AiSuggestionEngine {
       final daysSince = _nowUtc.difference(lastDone).inDays;
       final original = entry.value.last;
 
+      // inDays gaps of 0 (same-day re-completions) must not fire a habit
+      // the moment the user marks the task done.
       final median = times.length >= 2 ? _medianInterval(times) : null;
-      final repeatDue =
-          times.length >= 2 && daysSince >= median! * 0.8;
+      final repeatDue = times.length >= 2 &&
+          median != null &&
+          median >= 1 &&
+          daysSince >= (median * 0.8).ceil().clamp(1, 3650);
       final singleKeywordDue =
           times.length == 1 &&
           isStrongHabitTitle(original.title) &&
@@ -315,6 +320,22 @@ class AiSuggestionEngine {
         continue;
       }
 
+      // All open shareable tasks in this theme (keyword or category) — Send
+      // picks one concrete task instead of forwarding the vague headline.
+      final relatedIds = [
+        for (final t in openTasks)
+          if (!t.isCompleted &&
+              !t.isPrivate &&
+              taskMatchesFamilyMemberHint(
+                title: t.title,
+                notes: t.notes,
+                category: t.category,
+                customCategory: t.customCategory,
+                hint: hint,
+              ))
+            t.id,
+      ];
+
       out.add(
         await _candidate(
           score: suggestionBaseScore(SuggestionReason.familyMemberComplement),
@@ -327,6 +348,7 @@ class AiSuggestionEngine {
             reason: SuggestionReason.familyMemberComplement,
             dedupeKey: 'familyMemberComplement:${hint.familyId}',
             explanation: hint.explanation,
+            relatedTaskIds: relatedIds,
           ),
         ),
       );
@@ -494,13 +516,8 @@ class AiSuggestionEngine {
     return out;
   }
 
-  bool _isTaskOverdue(DateTime due, DateTime now, {required bool isAllDay}) {
-    final local = due.toLocal();
-    final effective = isAllDay
-        ? DateTime(local.year, local.month, local.day, 23, 59, 59)
-        : local;
-    return effective.isBefore(now);
-  }
+  bool _isTaskOverdue(DateTime due, DateTime now, {required bool isAllDay}) =>
+      isOverdue(due, isAllDay: isAllDay, now: now);
 
   // ---------------------------------------------------------------------------
   // Detector 3d — Stale open tasks (→ self)

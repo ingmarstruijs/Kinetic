@@ -89,11 +89,33 @@ const familyMemberHintTemplates = <FamilyMemberHintTemplate>[
       'boodschappen',
       'wasgoed',
       'stofzuigen',
+      'stofzuiger',
       'afwas',
+      'afwassen',
       'schoonmaak',
+      'schoonmaken',
       'opruimen',
+      'dweilen',
+      'strijken',
+      'tuin',
+      'voortuin',
+      'achtertuin',
+      'onkruid',
+      'wieden',
+      'grasmaaien',
+      'maaien',
+      'snoeien',
+      'ramen',
+      'keuken',
+      'badkamer',
       'groceries',
       'laundry',
+      'dishes',
+      'vacuum',
+      'cleaning',
+      'garden',
+      'weed',
+      'mow',
     ],
     categories: {TaskCategory.household},
     familyMemberTitle: 'Can you pick up something around the house this week?',
@@ -211,6 +233,31 @@ FamilyMemberHintTemplate? matchFamilyMemberHint({required String title, String? 
     if (containsAnyKeyword(corpus, t.keywords)) return t;
   }
   return null;
+}
+
+/// Whether [task] belongs to [hint]'s theme (keyword hit **or** category /
+/// custom-label alias). Used when collecting concrete Send candidates.
+bool taskMatchesFamilyMemberHint({
+  required String title,
+  String? notes,
+  required TaskCategory category,
+  String? customCategory,
+  required FamilyMemberHintTemplate hint,
+}) {
+  if (matchFamilyMemberHint(title: title, notes: notes)?.familyId ==
+      hint.familyId) {
+    return true;
+  }
+  if (hint.categories.contains(category)) return true;
+  final custom = customCategory?.trim().toLowerCase() ?? '';
+  if (custom.isEmpty) return false;
+  for (final cat in hint.categories) {
+    for (final alias in categoryNameAliases(cat.name)) {
+      final a = alias.toLowerCase();
+      if (custom == a || custom.contains(a)) return true;
+    }
+  }
+  return false;
 }
 
 String loadBalanceTitle(String categoryName) => switch (categoryName) {

@@ -6,6 +6,7 @@ import '../../db/app_database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../settings/settings_repository.dart';
 import '../../sync/webdav_config_repository.dart';
+import '../../widgets/system_insets.dart';
 import '../vault_repository.dart';
 import 'vault_restore_screen.dart';
 
@@ -192,11 +193,16 @@ class _VaultCreateScreenState extends State<VaultCreateScreen> {
           _step == 0 ? l10n.vaultRecoveryPhrase : l10n.vaultConfirm,
         ),
       ),
-      body: words == null
-          ? const Center(child: CircularProgressIndicator())
-          : _step == 0
-          ? _buildShowWords(context, words, l10n)
-          : _buildQuiz(context, l10n),
+      body: SafeArea(
+        bottom: false,
+        child: BottomSystemInset(
+          child: words == null
+              ? const Center(child: CircularProgressIndicator())
+              : _step == 0
+              ? _buildShowWords(context, words, l10n)
+              : _buildQuiz(context, l10n),
+        ),
+      ),
     );
   }
 

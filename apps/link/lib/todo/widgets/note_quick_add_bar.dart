@@ -8,8 +8,8 @@ import '../services/todo_repository.dart';
 
 /// Persistent text field at the bottom of the notes list.
 ///
-/// Enter (or the ✓ circle) creates a private note with the typed title.
-/// The expand icon opens the full note editor for more options.
+/// Enter, the + circle, or expand all open the note editor with the typed
+/// title prefilled (notes need a body — no silent title-only create).
 class NoteQuickAddBar extends StatefulWidget {
   final NoteRepository repo;
   final TodoRepository? todoRepo;
@@ -47,15 +47,9 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _openEditor({required bool requireTitle}) {
     final title = _ctrl.text.trim();
-    if (title.isEmpty) return;
-    await widget.repo.insert(title: title);
-    _ctrl.clear();
-  }
-
-  void _openFull() {
-    final title = _ctrl.text.trim();
+    if (requireTitle && title.isEmpty) return;
     _ctrl.clear();
     Navigator.of(context).push<PersonalNote?>(
       MaterialPageRoute(
@@ -75,73 +69,71 @@ class _NoteQuickAddBarState extends State<NoteQuickAddBar> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-        child: Material(
-          color: scheme.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-            side: BorderSide(color: scheme.outline.withAlpha(50)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-            child: Row(
-              children: [
-                GestureDetector(
-                  key: const Key('note-quick-add-submit'),
-                  onTap: _submit,
-                  behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _hasText
-                            ? Theme.of(context).colorScheme.primary
-                            : scheme.outlineVariant,
-                        width: 2,
-                      ),
+    // No bottom SafeArea: sits above Scaffold.bottomNavigationBar.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Material(
+        color: scheme.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(color: scheme.outline.withAlpha(50)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+          child: Row(
+            children: [
+              GestureDetector(
+                key: const Key('note-quick-add-submit'),
+                onTap: () => _openEditor(requireTitle: true),
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
                       color: _hasText
                           ? Theme.of(context).colorScheme.primary
-                          : Colors.transparent,
+                          : scheme.outlineVariant,
+                      width: 2,
                     ),
-                    child: _hasText
-                        ? const Icon(Icons.add, size: 18, color: Colors.white)
-                        : Icon(
-                            Icons.add,
-                            size: 18,
-                            color: scheme.outlineVariant,
-                          ),
+                    color: _hasText
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
                   ),
+                  child: _hasText
+                      ? const Icon(Icons.add, size: 18, color: Colors.white)
+                      : Icon(
+                          Icons.add,
+                          size: 18,
+                          color: scheme.outlineVariant,
+                        ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _ctrl,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    decoration: InputDecoration(
-                      hintText: l10n.notesQuickAddHint,
-                      hintStyle: Theme.of(context).textTheme.bodyLarge
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                      border: InputBorder.none,
-                      isDense: true,
-                    ),
-                    textCapitalization: TextCapitalization.sentences,
-                    onSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _ctrl,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  decoration: InputDecoration(
+                    hintText: l10n.notesQuickAddHint,
+                    hintStyle: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    border: InputBorder.none,
+                    isDense: true,
                   ),
+                  textCapitalization: TextCapitalization.sentences,
+                  onSubmitted: (_) => _openEditor(requireTitle: true),
                 ),
-                IconButton(
-                  icon: Icon(Icons.expand_less, color: scheme.onSurfaceVariant),
-                  tooltip: l10n.quickAddMoreOptions,
-                  onPressed: _openFull,
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                icon: Icon(Icons.expand_less, color: scheme.onSurfaceVariant),
+                tooltip: l10n.quickAddMoreOptions,
+                onPressed: () => _openEditor(requireTitle: false),
+              ),
+            ],
           ),
         ),
       ),

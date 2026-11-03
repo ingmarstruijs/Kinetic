@@ -65,4 +65,24 @@ void main() {
     );
     expect(suggestionDisplayTitle(suggestion, nl), 'Boodschappen');
   });
+
+  test('family-member household copy still promises a concrete pick on Send', () {
+    final suggestion = AiSuggestion.create(
+      title: 'Can you help with household this week?',
+      reason: SuggestionReason.familyMemberComplement,
+      dedupeKey: 'familyMemberComplement:household',
+      category: 'household',
+      relatedTaskIds: const ['t1', 't2'],
+    );
+    expect(
+      suggestionDisplayTitle(suggestion, nl),
+      'Kun jij deze week helpen met huishouden?',
+    );
+    expect(
+      suggestionDisplayExplanation(suggestion, en),
+      contains('pick a concrete shareable task'),
+    );
+    expect(suggestion.reason.isFamilyMemberTargeted, isTrue);
+    expect(suggestion.relatedTaskIds, ['t1', 't2']);
+  });
 }

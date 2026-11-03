@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/system_insets.dart';
 import 'hour_first_time_picker.dart';
 
 enum SnoozeChoice { tenMinutes, oneHour, threeHours, tomorrowMorning, custom }
@@ -35,7 +36,7 @@ Future<DateTime?> showSnoozeDialog(BuildContext context) async {
     showDragHandle: true,
     builder: (ctx) {
       final sheetL10n = AppLocalizations.of(ctx);
-      return SafeArea(
+      return BottomSystemInset(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

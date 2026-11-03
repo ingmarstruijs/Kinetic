@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:link/l10n/generated/app_localizations.dart';
 import 'package:link/todo/screens/notes_screen.dart';
@@ -8,7 +9,10 @@ import '../../helpers/test_database.dart';
 
 Widget _app({required NoteRepository repo, required bool hasOtherLinkMembers}) {
   return MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: const [
+      ...AppLocalizations.localizationsDelegates,
+      FlutterQuillLocalizations.delegate,
+    ],
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('en'),
     home: NotesScreen(repo: repo, hasOtherLinkMembers: hasOtherLinkMembers),
@@ -47,7 +51,7 @@ void main() {
     });
   });
 
-  testWidgets('NotesScreen quick-add creates a note from the bottom bar', (
+  testWidgets('NotesScreen quick-add opens the editor with the typed title', (
     tester,
   ) async {
     await tester.runAsync(() async {
@@ -60,13 +64,12 @@ void main() {
       await tester.enterText(find.byType(TextField), 'Quick title');
       await tester.pump();
       await tester.tap(find.byKey(const Key('note-quick-add-submit')));
-      await tester.pump();
-      await Future<void>.delayed(const Duration(milliseconds: 100));
       await tester.pumpAndSettle();
 
+      // Editor opened with prefilled title — note not saved until the editor saves.
+      expect(find.text('Quick title'), findsWidgets);
       final notes = await repo.watchAll().first;
-      expect(notes.map((n) => n.title), contains('Quick title'));
-      expect(find.text('Quick title'), findsOneWidget);
+      expect(notes, isEmpty);
 
       await tester.pumpWidget(const SizedBox.shrink());
       await db.close();

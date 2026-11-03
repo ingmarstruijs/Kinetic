@@ -41,6 +41,20 @@ void main() {
           equals(TaskCategory.household),
         );
       });
+
+      test('classifies voortuin / onkruid as household', () {
+        expect(
+          classifier.classify('voortuin onkruid weghalen'),
+          equals(TaskCategory.household),
+        );
+      });
+
+      test('classifies afwas doen as household', () {
+        expect(
+          classifier.classify('afwas doen'),
+          equals(TaskCategory.household),
+        );
+      });
     });
 
     group('Health category', () {

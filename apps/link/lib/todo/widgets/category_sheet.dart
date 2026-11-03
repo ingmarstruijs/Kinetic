@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/system_insets.dart';
 import '../category_icons.dart';
 
 // ---------------------------------------------------------------------------
@@ -84,9 +85,7 @@ class _CategoryPickerSheetState extends State<_CategoryPickerSheet> {
     final tt = Theme.of(context).textTheme;
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: bottomSystemInset(context)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,7 +187,7 @@ class _CategoryIconPickerSheet extends StatelessWidget {
     final maxHeight = MediaQuery.sizeOf(context).height * 0.65;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 16 + bottomSystemInset(context)),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Column(

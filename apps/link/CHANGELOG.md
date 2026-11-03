@@ -10,6 +10,28 @@ F-Droid store notes. Run `./tool/sync_fastlane_changelogs.sh` after editing it.
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-10-30
+
+### Store
+F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and concrete household task proposals.
+
+### Fixed
+- Re-arming reminders after enabling notifications in Settings no longer opens the Alarms & reminders page by itself.
+- Recovery phrase, confirm, and family-key screens keep bottom actions above the 3-button navigation bar.
+- Task/note bottom sheets clear Android edge-to-edge / 3-button navigation (Annuleren/Toevoegen no longer under the system bar).
+- Quick-add bars sit flush above the app navigation bar.
+- Family household suggestions require picking a concrete shareable task on Send instead of forwarding the vague headline.
+- Completing a task (including via notification Done) clears related overdue/stale suggestion cards.
+- Add-task sheet actions clear the 3-button navigation bar when MediaQuery.padding already reports the inset.
+- WebDAV setup can replace a remote vault when the server phrase does not match a new local vault.
+- Join-family confirmation shows adults and kids from the shared roster when the key unlocks it.
+- Habit suggestions no longer appear immediately after completing the same task the same day.
+- Scheduling a reminder asks for notification permission only; exact alarms stay on the in-app banner (no Alarms settings redirect after a deny).
+- Timed tasks stay on-time through their due minute; Overdue starts the minute after the reminder.
+- Family Send task picker lists live shareable tasks in the suggestion category, not only ids frozen when the suggestion was created.
+- Quick-add no longer jumps under a stacked nav+keyboard; new note from the bar opens the editor with the title prefilled.
+- Broader household keywords (garden, weeds, dishes, windows, …) for auto-category and family Send matching.
+
 ## [0.4.6] - 2026-10-27
 
 ### Store

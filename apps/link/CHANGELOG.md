@@ -21,6 +21,7 @@ F-Droid review polish: quieter permission re-arm, SafeArea on vault screens, and
 - Task/note bottom sheets clear Android edge-to-edge / 3-button navigation (Annuleren/Toevoegen no longer under the system bar).
 - Quick-add bars sit flush above the app navigation bar.
 - Family household suggestions require picking a concrete shareable task on Send instead of forwarding the vague headline.
+- Completing a task (including via notification Done) clears related overdue/stale suggestion cards.
 
 ## [0.4.6] - 2026-10-27
 

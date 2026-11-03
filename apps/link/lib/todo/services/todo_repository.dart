@@ -8,6 +8,7 @@ import '../../notifications/reminder_action.dart';
 
 import '../../db/app_database.dart';
 import '../../family/proposals/link_member_proposal.dart';
+import '../models/ai_suggestion.dart';
 import '../models/enums.dart';
 import '../models/personal_task.dart';
 import 'category_classifier.dart';
@@ -345,6 +346,7 @@ class TodoRepository {
         ),
       );
       await _archiveProposalsForTask(taskId);
+      await _clearSuggestionsForTask(taskId);
       await _notifications?.cancelReminder(_notifId(taskId));
       onWrite?.call();
       return;
@@ -361,8 +363,36 @@ class TodoRepository {
       ),
     );
     await _archiveProposalsForTask(taskId);
+    await _clearSuggestionsForTask(taskId);
     await _notifications?.cancelReminder(_notifId(taskId));
     onWrite?.call();
+  }
+
+  /// Pending overdue/stale/categorize cards for [taskId] stay visible after a
+  /// notification "Done" unless cleared here. Marked accepted (not dismissed)
+  /// so title-based suppress does not block future habit suggestions.
+  Future<void> _clearSuggestionsForTask(String taskId) async {
+    final rows =
+        await (_db.select(_db.aiSuggestions)..where(
+              (t) => t.status.equals('pending') | t.status.equals('snoozed'),
+            ))
+            .get();
+    final now = DateTime.now().toUtc();
+    for (final row in rows) {
+      final related = parseRelatedTaskIds(row.relatedTaskIds);
+      final keyed =
+          row.dedupeKey == 'overdue:$taskId' ||
+          row.dedupeKey == 'stale:$taskId';
+      if (!related.contains(taskId) && !keyed) continue;
+      await (_db.update(
+        _db.aiSuggestions,
+      )..where((t) => t.id.equals(row.id))).write(
+        AiSuggestionsCompanion(
+          status: const Value('accepted'),
+          updatedAt: Value(now),
+        ),
+      );
+    }
   }
 
   /// Soft-delete family-member proposals linked to [taskId] so they stop matching

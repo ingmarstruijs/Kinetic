@@ -333,9 +333,7 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
       ),
       child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
         appBar: AppBar(
-          backgroundColor: scheme.surfaceContainerLowest,
           title: AppHeader(
             title: AppLocalizations.of(context).tasksTitle,
             centerTitle: false,

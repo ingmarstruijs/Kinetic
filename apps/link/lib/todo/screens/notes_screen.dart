@@ -186,16 +186,14 @@ class _NotesScreenState extends State<NotesScreen> {
     return Theme(
       data: Theme.of(context).copyWith(
         bottomSheetTheme: BottomSheetThemeData(
-          backgroundColor: scheme.surface,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           modalBackgroundColor: scheme.surface,
           modalElevation: 1,
         ),
       ),
       child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
         appBar: AppBar(
-          backgroundColor: scheme.surfaceContainerLowest,
           title: AppHeader(
             title: AppLocalizations.of(context).notesTitle,
             centerTitle: false,

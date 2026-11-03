@@ -155,6 +155,12 @@ class LinkNotificationService implements NotificationService {
     );
   }
 
+  /// Asks for notification permission once when the user schedules a reminder.
+  ///
+  /// Exact-alarm access is **not** requested here: on Android that opens the
+  /// system Alarms & reminders page, which feels pushy after a deny (and is
+  /// useless without notifications). The in-app exact-alarm banner remains
+  /// the path for a deliberate grant.
   Future<void> _ensureReminderPermissions() async {
     if (_reminderPermissionsRequested) return;
     _reminderPermissionsRequested = true;
@@ -163,7 +169,6 @@ class LinkNotificationService implements NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
     await android?.requestNotificationsPermission();
-    await android?.requestExactAlarmsPermission();
   }
 
   @override

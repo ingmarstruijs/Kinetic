@@ -90,11 +90,20 @@ class _FamilyKeyScanScreenState extends State<FamilyKeyScanScreen> {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     final errorColor = Theme.of(context).colorScheme.error;
-    final adultNames = roster?.linkMembers
-            .map((m) => m.displayName.trim())
-            .where((n) => n.isNotEmpty)
-            .toList() ??
-        const <String>[];
+    // Hide this device: after leave/rejoin the roster may still list us, which
+    // looks like "Key found … Adults: <me>".
+    final myId = widget.currentConfig.linkId;
+    final myName = widget.currentConfig.username.trim().toLowerCase();
+    final adultNames = (roster == null
+            ? const <FamilyLinkMember>[]
+            : roster.otherLinkMembers(myId))
+        .map((m) => m.displayName.trim())
+        .where(
+          (n) =>
+              n.isNotEmpty &&
+              (myName.isEmpty || n.toLowerCase() != myName),
+        )
+        .toList();
     final kidNames = roster?.kids
             .map((k) => k.name.trim())
             .where((n) => n.isNotEmpty)

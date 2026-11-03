@@ -320,14 +320,19 @@ class AiSuggestionEngine {
         continue;
       }
 
-      // All open tasks that match this family theme — Send picks one concrete
-      // shareable task instead of forwarding the vague suggestion title.
+      // All open shareable tasks in this theme (keyword or category) — Send
+      // picks one concrete task instead of forwarding the vague headline.
       final relatedIds = [
         for (final t in openTasks)
           if (!t.isCompleted &&
               !t.isPrivate &&
-              matchFamilyMemberHint(title: t.title, notes: t.notes)?.familyId ==
-                  hint.familyId)
+              taskMatchesFamilyMemberHint(
+                title: t.title,
+                notes: t.notes,
+                category: t.category,
+                customCategory: t.customCategory,
+                hint: hint,
+              ))
             t.id,
       ];
 

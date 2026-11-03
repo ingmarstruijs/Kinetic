@@ -213,6 +213,31 @@ FamilyMemberHintTemplate? matchFamilyMemberHint({required String title, String? 
   return null;
 }
 
+/// Whether [task] belongs to [hint]'s theme (keyword hit **or** category /
+/// custom-label alias). Used when collecting concrete Send candidates.
+bool taskMatchesFamilyMemberHint({
+  required String title,
+  String? notes,
+  required TaskCategory category,
+  String? customCategory,
+  required FamilyMemberHintTemplate hint,
+}) {
+  if (matchFamilyMemberHint(title: title, notes: notes)?.familyId ==
+      hint.familyId) {
+    return true;
+  }
+  if (hint.categories.contains(category)) return true;
+  final custom = customCategory?.trim().toLowerCase() ?? '';
+  if (custom.isEmpty) return false;
+  for (final cat in hint.categories) {
+    for (final alias in categoryNameAliases(cat.name)) {
+      final a = alias.toLowerCase();
+      if (custom == a || custom.contains(a)) return true;
+    }
+  }
+  return false;
+}
+
 String loadBalanceTitle(String categoryName) => switch (categoryName) {
   'household' => 'Can you help with household this week?',
   'health' => 'Can you help with care or health this week?',

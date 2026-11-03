@@ -397,21 +397,16 @@ Future<bool> confirmAndSendSuggestionToFamilyMember({
   return true;
 }
 
-/// Shareable open tasks for a family send: prefer [relatedTaskIds],
-/// otherwise open non-private tasks matching the suggestion category
-/// (auto category **or** custom label aliases like "Household" / "Huishouden").
+/// Shareable open tasks for a family send.
+///
+/// Uses **live** open tasks matching the suggestion category (auto or custom
+/// label), not only the frozen [AiSuggestion.relatedTaskIds] — otherwise a
+/// household task added after the suggestion was created never appears in the
+/// picker. Related ids only order matches and act as a fallback.
 Future<List<PersonalTask>> _shareableFamilySendTasks({
   required TodoRepository todoRepo,
   required AiSuggestion suggestion,
 }) async {
-  final fromIds = <PersonalTask>[];
-  for (final id in suggestion.relatedTaskIds) {
-    final task = await todoRepo.getTask(id);
-    if (task == null || task.isCompleted || task.isPrivate) continue;
-    fromIds.add(task);
-  }
-  if (fromIds.isNotEmpty) return fromIds;
-
   final open = await todoRepo.watchOpenTasks().first;
   final category = suggestion.category.trim().toLowerCase();
   final matched = [
@@ -421,7 +416,27 @@ Future<List<PersonalTask>> _shareableFamilySendTasks({
           _taskMatchesLoadCategory(task, category))
         task,
   ];
-  if (matched.isNotEmpty) return matched;
+  if (matched.isNotEmpty) {
+    final preferred = suggestion.relatedTaskIds;
+    if (preferred.isEmpty) return matched;
+    matched.sort((a, b) {
+      final ai = preferred.indexOf(a.id);
+      final bi = preferred.indexOf(b.id);
+      final aRank = ai < 0 ? preferred.length : ai;
+      final bRank = bi < 0 ? preferred.length : bi;
+      if (aRank != bRank) return aRank.compareTo(bRank);
+      return a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    });
+    return matched;
+  }
+
+  final fromIds = <PersonalTask>[];
+  for (final id in suggestion.relatedTaskIds) {
+    final task = await todoRepo.getTask(id);
+    if (task == null || task.isCompleted || task.isPrivate) continue;
+    fromIds.add(task);
+  }
+  if (fromIds.isNotEmpty) return fromIds;
 
   // Last resort: any shareable open task so Send never dead-ends on a stale hint.
   return [

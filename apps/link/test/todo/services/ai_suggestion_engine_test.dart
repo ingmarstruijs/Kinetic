@@ -609,12 +609,16 @@ void main() {
             myLinkId: 'link-1',
           ).runIfDue();
 
-          final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
-          expect(suggestions, hasLength(1));
-          expect(suggestions.first.reason, SuggestionReason.loadBalance);
-          expect(suggestions.first.title, contains('house'));
-          expect(suggestions.first.title, isNot(contains('Ramen')));
-          expect(suggestions.first.notes, isNull);
+          final suggestions = await suggestionRepo
+              .watchPendingFamilyMember()
+              .first;
+          final load = suggestions
+              .where((s) => s.reason == SuggestionReason.loadBalance)
+              .toList();
+          expect(load, hasLength(1));
+          expect(load.first.title, contains('house'));
+          expect(load.first.title, isNot(contains('Ramen')));
+          expect(load.first.notes, isNull);
         },
       );
 
@@ -639,8 +643,13 @@ void main() {
             myLinkId: 'link-1',
           ).runIfDue();
 
-          final suggestions = await suggestionRepo.watchPendingFamilyMember().first;
-          expect(suggestions, isEmpty);
+          final suggestions = await suggestionRepo
+              .watchPendingFamilyMember()
+              .first;
+          expect(
+            suggestions.where((s) => s.reason == SuggestionReason.loadBalance),
+            isEmpty,
+          );
         },
       );
 

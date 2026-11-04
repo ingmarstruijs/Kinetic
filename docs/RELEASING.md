@@ -62,6 +62,13 @@ bumped `CurrentVersionCode` to fdroiddata (or expect `checkupdates` red).
 Do not push fdroiddata, refresh MR descriptions, or tell reviewers “0.4.x is
 ready” until the tag’s Build & Sign **`release`** job is green.
 
+### 5. Update MRs must ADD `Builds:`, not REPLACE
+
+On a live app (Kids) or any version bump after first listing: **append** the
+new ABI `Builds:` blocks and **keep** all older ones. Only
+`CurrentVersion` / `CurrentVersionCode` move forward. Replacing the whole
+`Builds:` list with only the newest version is rejected by maintainers.
+
 ## Dual-channel checklist (every version)
 
 1. **Bump PR** (`release/X.Y.Z`) → merge to `main` after CI
@@ -81,9 +88,10 @@ ready” until the tag’s Build & Sign **`release`** job is green.
    (never a bare tag name for F-Droid); confirm LF + single trailing newline
 4. Verify recipe: `./tool/fdroid_build.sh link` and `./tool/fdroid_build.sh kids`
 5. **fdroiddata MR(s)** — copy YAML only onto fork branches; see
-   [`.cursor/rules/fdroid-mr.mdc`](../.cursor/rules/fdroid-mr.mdc). First listing
-   still uses separate Link/Kids MRs (!50470 / !50471); later bumps can update
-   both YAMLs in one update MR unless a maintainer asks otherwise.
+   [`.cursor/rules/fdroid-mr.mdc`](../.cursor/rules/fdroid-mr.mdc). **ADD** new
+   `Builds:` blocks; never replace older ones on a live app. First listing still
+   uses separate Link/Kids MRs (!50470 / !50471); later bumps can update both
+   YAMLs in one update MR unless a maintainer asks otherwise.
 6. Watch fork pipelines (`rewritemeta`, `checkupdates`, `fdroid build`) and
    [F-Droid build logs](https://f-droid.org/wiki/page/Build) after upstream merge
 

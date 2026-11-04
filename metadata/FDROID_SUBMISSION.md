@@ -59,10 +59,12 @@ auto-update has produced a Builds entry that F-Droid has shipped.
    - `apps/link/build/app/outputs/flutter-apk/app-release.apk`
    - `apps/kids/build/app/outputs/flutter-apk/app-release.apk`
 
-4. **Update fdroiddata**: add a new `Builds:` entry (full SHA in `commit:`) and
-   bump `CurrentVersion` / `CurrentVersionCode` in both YAML copies. Prefer
-   **one update MR** for both apps unless a maintainer asks to split. Do **not**
-   copy Fastlane/screenshot dirs into fdroiddata.
+4. **Update fdroiddata**: **ADD** new `Builds:` blocks for the new version
+   (three ABI entries, full SHA in each `commit:`) — **do not REPLACE** or
+   delete older `Builds:` entries on a live app. Bump only
+   `CurrentVersion` / `CurrentVersionCode`. Prefer **one update MR** for both
+   apps unless a maintainer asks to split. Do **not** copy Fastlane/screenshot
+   dirs into fdroiddata.
 5. After merge, watch [F-Droid build logs](https://f-droid.org/wiki/page/Build)
    for both application IDs; fix the recipe if bootstrap/native hooks fail
 

@@ -49,6 +49,13 @@ f-droid.org.
 - Do not set `CurrentVersionCode` to the new ABI codes until `-link`/`-kids`
   tags exist (or pipelines will fail: old discovered vercode < CurrentVersionCode)
 
+### F-Droid update MRs — ADD Builds, do not REPLACE
+
+- For live apps: append new version `Builds:` blocks; keep all prior blocks
+- Never rewrite `Builds:` to contain only the newest version
+- First-listing “New app” MRs may ship latest-only until merge; afterward ADD
+- Details: [`.cursor/rules/fdroid-mr.mdc`](fdroid-mr.mdc)
+
 ## Stop conditions
 
 - Do **not** push fdroiddata or claim the release is done while the GitHub

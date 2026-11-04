@@ -30,6 +30,20 @@ One app per MR until both are merged upstream. Pipelines run on the **fork**
 - ABI codes for pubspec `+N`: `N*10+1` / `+2` / `+3` → highest is
   `CurrentVersionCode`
 
+## Builds: ADD new versions, never REPLACE (live apps)
+
+For an app **already on f-droid.org** (Kids) or any **update MR**:
+
+- **ADD** three new `Builds:` blocks for the new ABI codes
+- **Keep** every existing older `Builds:` block (e.g. keep 0.4.6 `161/162/163`
+  when adding 0.4.7 `171/172/173`)
+- Only bump `CurrentVersion` / `CurrentVersionCode` to the new suggested release
+- Do **not** delete or overwrite previous version blocks — maintainers reject
+  REPLACE (`@licaon-kter`: “ADD build blocks for new versions, not REPLACE”)
+
+Exception: a **first-listing** “New app” MR may keep only the latest version
+blocks until merge (inclusion checklist). After the app is live, always ADD.
+
 ## Before `git push` to GitLab
 
 1. Confirm GitHub Releases exist: `vX.Y.Z-link` and `vX.Y.Z-kids`
